@@ -74,6 +74,7 @@
         "@vitejs/plugin-react": "^4.3.3",
         "class-variance-authority": "^0.7.0",
         "clsx": "^2.1.1",
+        "convex": "^1.17.3",
         "electron-squirrel-startup": "^1.0.1",
         "i18next": "^23.16.4",
         "lucide-react": "^0.453.0",

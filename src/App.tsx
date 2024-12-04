@@ -6,6 +6,9 @@ import "./localization/i18n";
 import { updateAppLanguage } from "./helpers/language_helpers";
 import { router } from "./routes/router";
 import { RouterProvider } from "@tanstack/react-router";
+import { ConvexProvider, ConvexReactClient } from "convex/react";
+
+const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
 
 export default function App() {
     const { i18n } = useTranslation();
@@ -21,6 +24,8 @@ export default function App() {
 const root = createRoot(document.getElementById("app")!);
 root.render(
     <React.StrictMode>
-        <App />
+        <ConvexProvider client={convex}>
+            <App />
+        </ConvexProvider>
     </React.StrictMode>
 );

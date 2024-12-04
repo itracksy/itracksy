@@ -3,7 +3,10 @@
         "jsx": "react",
         "target": "es2019",
         "module": "commonjs",
-        "lib": ["dom", "es2019"],
+        "lib": [
+            "dom",
+            "es2019"
+        ],
         "experimentalDecorators": true,
         "composite": true,
         "declaration": true,
@@ -15,11 +18,15 @@
         "strict": true,
         "baseUrl": ".",
         "paths": {
-            "@/*": ["./src/*"]
+            "@/*": [
+                "./src/*"
+            ]
         },
         "outDir": "dist",
         "moduleResolution": "node",
         "resolveJsonModule": true
     },
-    "include": ["src/**/*"],
+    "include": [
+        "src/**/*"
+    ],
 }
