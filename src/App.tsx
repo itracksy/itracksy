@@ -6,12 +6,15 @@ import "./localization/i18n";
 import { updateAppLanguage } from "./helpers/language_helpers";
 import { router } from "./routes/router";
 import { RouterProvider } from "@tanstack/react-router";
-import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { ConvexReactClient } from "convex/react";
 import { config } from "./config/env";
+import { ClerkProvider, useAuth, SignIn } from "@clerk/clerk-react";
+import { ConvexProviderWithClerk } from "convex/react-clerk";
+import { Authenticated, Unauthenticated } from "convex/react";
 
 const convex = new ConvexReactClient(config.convexUrl);
 
-export default function App() {
+function AuthenticatedApp() {
     const { i18n } = useTranslation();
 
     useEffect(() => {
@@ -22,11 +25,21 @@ export default function App() {
     return <RouterProvider router={router} />;
 }
 
+export default function App() {
+    return (
+        <>
+            <AuthenticatedApp />
+        </>
+    );
+}
+
 const root = createRoot(document.getElementById("app")!);
 root.render(
     <React.StrictMode>
-        <ConvexProvider client={convex}>
-            <App />
-        </ConvexProvider>
+        <ClerkProvider publishableKey={config.clerkPublishableKey}>
+            <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+                <App />
+            </ConvexProviderWithClerk>
+        </ClerkProvider>
     </React.StrictMode>
 );

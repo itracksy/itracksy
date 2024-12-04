@@ -101,3 +101,7 @@ out/
 /playwright/.cache/
 src/convex/_generated/
 .env.*
+
+# Editor directories and files
+.vscode/*
+convex/_generated/*
