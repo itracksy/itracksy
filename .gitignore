@@ -99,4 +99,4 @@ out/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
-convex/_generated/
+src/convex/_generated/

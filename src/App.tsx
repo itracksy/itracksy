@@ -7,8 +7,9 @@ import { updateAppLanguage } from "./helpers/language_helpers";
 import { router } from "./routes/router";
 import { RouterProvider } from "@tanstack/react-router";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { config } from "./config/env";
 
-const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
+const convex = new ConvexReactClient(config.convexUrl);
 
 export default function App() {
     const { i18n } = useTranslation();
