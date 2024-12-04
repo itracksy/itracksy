@@ -100,3 +100,4 @@ out/
 /blob-report/
 /playwright/.cache/
 src/convex/_generated/
+.env.*
