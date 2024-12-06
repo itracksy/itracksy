@@ -66,9 +66,15 @@ export const getBoards = query(async (ctx) => {
   return await Promise.all(boards.map((b) => getFullBoard(ctx, b.id)));
 });
 
+// Add this type definition before the query
+export type GetBoard = Omit<Doc<"boards">, "_id" | "_creationTime"> & {
+  columns: Array<Omit<Doc<"columns">, "_id" | "_creationTime">>;
+  items: Array<Omit<Doc<"items">, "_id" | "_creationTime">>;
+};
+
 export const getBoard = query({
   args: { id: v.string() },
-  handler: async (ctx, { id }) => {
+  handler: async (ctx, { id }): Promise<GetBoard> => {
     return await getFullBoard(ctx, id);
   },
 });

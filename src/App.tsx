@@ -11,7 +11,8 @@ import { config } from "./config/env";
 import { ConvexAuthProvider, useAuthActions } from "@convex-dev/auth/react";
 import { Authenticated, Unauthenticated, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
-
+import { ConvexQueryClient } from "@convex-dev/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 const convex = new ConvexReactClient(config.convexUrl);
 
 function AuthenticatedApp() {
@@ -51,11 +52,24 @@ export default function App() {
   );
 }
 
+const convexQueryClient = new ConvexQueryClient(convex);
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      queryKeyHashFn: convexQueryClient.hashFn(),
+      queryFn: convexQueryClient.queryFn(),
+    },
+  },
+});
+convexQueryClient.connect(queryClient);
+
 const root = createRoot(document.getElementById("app")!);
 root.render(
   <React.StrictMode>
     <ConvexAuthProvider client={convex}>
-      <App />
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
     </ConvexAuthProvider>
   </React.StrictMode>
 );
