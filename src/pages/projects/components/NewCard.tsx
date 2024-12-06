@@ -20,7 +20,7 @@ export function NewCard({
 }) {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const { mutate } = useCreateItemMutation();
+  const createItemMutation = useCreateItemMutation();
 
   return (
     <form
@@ -36,7 +36,7 @@ export function NewCard({
         invariant(textAreaRef.current);
         textAreaRef.current.value = "";
 
-        mutate(itemSchema.parse(Object.fromEntries(formData.entries())));
+        createItemMutation(itemSchema.parse(Object.fromEntries(formData.entries())));
       }}
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) {

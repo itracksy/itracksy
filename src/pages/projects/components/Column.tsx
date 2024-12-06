@@ -70,7 +70,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
         invariant(transfer.id, "missing transfer.id");
         invariant(transfer.title, "missing transfer.title");
 
-        updateCardMutation.mutate({
+        updateCardMutation({
           order: (sortedItems[sortedItems.length - 1]?.order ?? 0) + 1,
           columnId: columnId,
           boardId,
@@ -109,7 +109,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
           const droppedOrder = acceptColumnDrop === "left" ? previousOrder : nextOrder;
           const moveOrder = (droppedOrder + order) / 2;
 
-          updateColumnMutation.mutate({
+          updateColumnMutation({
             boardId,
             id: transfer.id,
             order: moveOrder,
@@ -145,18 +145,13 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
             <EditableText
               fieldName="name"
               editState={editState}
-              value={
-                // optimistic update
-                updateColumnMutation.isPending && updateColumnMutation.variables.name
-                  ? updateColumnMutation.variables.name
-                  : name
-              }
+              value={updateColumnMutation?.name ?? name}
               inputLabel="Edit column name"
               buttonLabel={`Edit column "${name}" name`}
               inputClassName="border border-slate-400 w-full rounded-lg py-1 px-2 font-medium text-black"
               buttonClassName="block rounded-lg text-left w-full border border-transparent py-1 px-2 font-medium text-slate-600"
               onChange={(value) => {
-                updateColumnMutation.mutate({
+                updateColumnMutation({
                   boardId,
                   id: columnId,
                   name: value,
@@ -208,7 +203,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
             onSubmit={(event) => {
               event.preventDefault();
 
-              deleteColumnMutation.mutate({
+              deleteColumnMutation({
                 id: columnId,
                 boardId,
               });

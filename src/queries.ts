@@ -1,4 +1,3 @@
-import { useMutation } from "@tanstack/react-query";
 import { convexQuery, useConvexMutation } from "@convex-dev/react-query";
 import { api } from "../convex/_generated/api";
 
@@ -32,7 +31,7 @@ export function useCreateColumnMutation() {
     }
   );
 
-  return useMutation({ mutationFn });
+  return mutationFn;
 }
 
 export function useCreateItemMutation() {
@@ -46,7 +45,7 @@ export function useCreateItemMutation() {
     }
   );
 
-  return useMutation({ mutationFn });
+  return mutationFn;
 }
 
 export function useUpdateCardMutation() {
@@ -59,7 +58,7 @@ export function useUpdateCardMutation() {
     }
   );
 
-  return useMutation({ mutationFn });
+  return mutationFn;
 }
 
 export function useDeleteCardMutation() {
@@ -72,7 +71,7 @@ export function useDeleteCardMutation() {
     }
   );
 
-  return useMutation({ mutationFn });
+  return mutationFn;
 }
 
 export function useDeleteColumnMutation() {
@@ -86,12 +85,12 @@ export function useDeleteColumnMutation() {
     }
   );
 
-  return useMutation({ mutationFn });
+  return mutationFn;
 }
 
 export function useUpdateBoardMutation() {
   const mutationFn = useConvexMutation(api.board.updateBoard);
-  return useMutation({ mutationFn });
+  return mutationFn;
 }
 
 export function useUpdateColumnMutation() {
@@ -104,5 +103,5 @@ export function useUpdateColumnMutation() {
     }
   );
 
-  return useMutation({ mutationFn });
+  return mutationFn;
 }

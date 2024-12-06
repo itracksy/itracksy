@@ -1,7 +1,7 @@
 import { createRoute } from "@tanstack/react-router";
 import { RootRoute } from "./__root";
 import DashboardPage from "@/pages/DashboardPage";
-import ProjectsPage from "@/pages/ProjectsPage";
+import { Board } from "@/pages/projects/page";
 import SettingsPage from "@/pages/SettingsPage";
 
 export const DashboardRoute = createRoute({
@@ -13,7 +13,7 @@ export const DashboardRoute = createRoute({
 export const ProjectsRoute = createRoute({
   getParentRoute: () => RootRoute,
   path: "/projects",
-  component: ProjectsPage,
+  component: Board,
 });
 
 export const SettingsRoute = createRoute({
