@@ -54,7 +54,7 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
           const droppedOrder = acceptDrop === "top" ? previousOrder : nextOrder;
           const moveOrder = (droppedOrder + order) / 2;
 
-          moveCard({
+          moveCard.mutate({
             order: moveOrder,
             columnId,
             boardId,
@@ -88,10 +88,12 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
             onSubmit={(event) => {
               event.preventDefault();
 
-              deleteCard({
-                id,
-                boardId,
-              });
+              deleteCard.mutate(
+                deleteItemSchema.parse({
+                  id,
+                  boardId,
+                })
+              );
             }}
           >
             <button

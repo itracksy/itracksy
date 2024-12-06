@@ -26,7 +26,7 @@ export function NewColumn({
         event.preventDefault();
         invariant(inputRef.current, "missing input ref");
 
-        newColumnMutation({
+        newColumnMutation.mutate({
           boardId,
           name: inputRef.current.value,
         });
