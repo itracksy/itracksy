@@ -5,38 +5,72 @@ import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { GitHubLogoIcon } from "@radix-ui/react-icons";
-import { useState } from "react";
+import { GoogleLogo } from "@/components/GoogleLogo";
+import { useState, useEffect } from "react";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 
 export function SignInForm() {
     const [step, setStep] = useState<"signIn" | "linkSent">("signIn");
+    const { signIn } = useAuthActions();
+    const [open, setOpen] = useState(false);
+
+    useEffect(() => {
+        void signIn("anonymous");
+    }, [signIn]);
 
     return (
-        <div className="container my-auto">
-            <div className="mx-auto my-auto flex max-w-[384px] flex-col gap-4 pb-8">
-                {step === "signIn" ? (
-                    <>
-                        <h2 className="text-2xl font-semibold tracking-tight">
-                            Sign in or create an account
-                        </h2>
-                        <SignInWithGitHub />
-                        <SignInMethodDivider />
-                        <SignInWithMagicLink handleLinkSent={() => setStep("linkSent")} />
-                    </>
-                ) : (
-                    <>
-                        <h2 className="text-2xl font-semibold tracking-tight">Check your email</h2>
-                        <p>A sign-in link has been sent to your email address.</p>
-                        <Button
-                            className="self-start p-0"
-                            variant="link"
-                            onClick={() => setStep("signIn")}
-                        >
-                            Cancel
-                        </Button>
-                    </>
-                )}
-            </div>
-        </div>
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button variant="outline">Sign In</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    {step === "signIn" ? (
+                        <DialogTitle>Sign in or create an account</DialogTitle>
+                    ) : (
+                        <DialogTitle>Check your email</DialogTitle>
+                    )}
+                </DialogHeader>
+                <div className="flex flex-col gap-4">
+                    {step === "signIn" ? (
+                        <>
+                            <SignInWithGitHub />
+                            <Button
+                                className="flex-1"
+                                variant="outline"
+                                type="button"
+                                onClick={() => void signIn("google")}
+                            >
+                                <GoogleLogo className="mr-2 h-4 w-4" /> Google
+                            </Button>
+                            <SignInMethodDivider />
+                            <SignInWithMagicLink
+                                handleLinkSent={() => {
+                                    setStep("linkSent");
+                                }}
+                            />
+                        </>
+                    ) : (
+                        <>
+                            <p>A sign-in link has been sent to your email address.</p>
+                            <Button
+                                className="self-start p-0"
+                                variant="link"
+                                onClick={() => setStep("signIn")}
+                            >
+                                Cancel
+                            </Button>
+                        </>
+                    )}
+                </div>
+            </DialogContent>
+        </Dialog>
     );
 }
 

@@ -27,6 +27,7 @@ function AuthenticatedApp() {
 
 export default function App() {
     const user = useQuery(api.users.viewer);
+    console.log("user", user);
     return (
         <>
             <Unauthenticated>
