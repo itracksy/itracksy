@@ -8,43 +8,54 @@ import { router } from "./routes/router";
 import { RouterProvider } from "@tanstack/react-router";
 import { ConvexReactClient } from "convex/react";
 import { config } from "./config/env";
-import { ConvexAuthProvider } from "@convex-dev/auth/react";
+import { ConvexAuthProvider, useAuthActions } from "@convex-dev/auth/react";
 import { Authenticated, Unauthenticated, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
-import { SignInForm } from "./SignInForm";
+
 const convex = new ConvexReactClient(config.convexUrl);
 
 function AuthenticatedApp() {
-    const { i18n } = useTranslation();
+  const { i18n } = useTranslation();
 
-    useEffect(() => {
-        syncThemeWithLocal();
-        updateAppLanguage(i18n);
-    }, [i18n]);
+  useEffect(() => {
+    syncThemeWithLocal();
+    updateAppLanguage(i18n);
+  }, [i18n]);
 
-    return <RouterProvider router={router} />;
+  return <RouterProvider router={router} />;
 }
 
 export default function App() {
-    const user = useQuery(api.users.viewer);
-    console.log("user", user);
-    return (
-        <>
-            <Unauthenticated>
-                <SignInForm />
-            </Unauthenticated>
-            <Authenticated>
-                <AuthenticatedApp />
-            </Authenticated>
-        </>
-    );
+  const userQuery = useQuery(api.users.viewer);
+  const { signIn, signOut } = useAuthActions();
+
+  useEffect(() => {
+    // Skip if the query is still loading
+    if (userQuery === undefined) return;
+
+    if (!userQuery) {
+      console.log("signing in");
+
+      void signIn("anonymous");
+    } else {
+      console.log("user is authenticated:", userQuery);
+    }
+  }, [signIn, userQuery]);
+
+  return (
+    <>
+      <Authenticated>
+        <AuthenticatedApp />
+      </Authenticated>
+    </>
+  );
 }
 
 const root = createRoot(document.getElementById("app")!);
 root.render(
-    <React.StrictMode>
-        <ConvexAuthProvider client={convex}>
-            <App />
-        </ConvexAuthProvider>
-    </React.StrictMode>
+  <React.StrictMode>
+    <ConvexAuthProvider client={convex}>
+      <App />
+    </ConvexAuthProvider>
+  </React.StrictMode>
 );

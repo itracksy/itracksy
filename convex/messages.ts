@@ -12,7 +12,7 @@ export const list = query({
       messages.map(async (message) => {
         const { name, email } = (await ctx.db.get(message.userId))!;
         return { ...message, author: name ?? email! };
-      }),
+      })
     );
   },
 });

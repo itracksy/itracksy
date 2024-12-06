@@ -5,21 +5,21 @@ import ProjectsPage from "@/pages/ProjectsPage";
 import SettingsPage from "@/pages/SettingsPage";
 
 export const DashboardRoute = createRoute({
-    getParentRoute: () => RootRoute,
-    path: "/",
-    component: DashboardPage,
+  getParentRoute: () => RootRoute,
+  path: "/",
+  component: DashboardPage,
 });
 
 export const ProjectsRoute = createRoute({
-    getParentRoute: () => RootRoute,
-    path: "/projects",
-    component: ProjectsPage,
+  getParentRoute: () => RootRoute,
+  path: "/projects",
+  component: ProjectsPage,
 });
 
 export const SettingsRoute = createRoute({
-    getParentRoute: () => RootRoute,
-    path: "/settings",
-    component: SettingsPage,
+  getParentRoute: () => RootRoute,
+  path: "/settings",
+  component: SettingsPage,
 });
 
 export const rootTree = RootRoute.addChildren([DashboardRoute, ProjectsRoute, SettingsRoute]);

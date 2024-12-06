@@ -1,27 +1,27 @@
 import type { Config } from "jest";
 
 const config: Config = {
-    clearMocks: true,
+  clearMocks: true,
 
-    collectCoverage: true,
+  collectCoverage: true,
 
-    coverageDirectory: "coverage",
+  coverageDirectory: "coverage",
 
-    coverageProvider: "v8",
+  coverageProvider: "v8",
 
-    moduleNameMapper: {
-        "^@/(.*)$": "<rootDir>/src/$1",
-    },
+  moduleNameMapper: {
+    "^@/(.*)$": "<rootDir>/src/$1",
+  },
 
-    roots: ["<rootDir>/src/tests/unit"],
+  roots: ["<rootDir>/src/tests/unit"],
 
-    setupFilesAfterEnv: ["<rootDir>/src/tests/unit/setup.ts"],
+  setupFilesAfterEnv: ["<rootDir>/src/tests/unit/setup.ts"],
 
-    testEnvironment: "jsdom",
+  testEnvironment: "jsdom",
 
-    transform: {
-        "^.+\\.(t|j)sx?$": "@swc/jest",
-    },
+  transform: {
+    "^.+\\.(t|j)sx?$": "@swc/jest",
+  },
 };
 
 export default config;
