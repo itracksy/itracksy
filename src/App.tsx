@@ -8,10 +8,10 @@ import { router } from "./routes/router";
 import { RouterProvider } from "@tanstack/react-router";
 import { ConvexReactClient } from "convex/react";
 import { config } from "./config/env";
-import { ClerkProvider, useAuth, SignIn } from "@clerk/clerk-react";
-import { ConvexProviderWithClerk } from "convex/react-clerk";
-import { Authenticated, Unauthenticated } from "convex/react";
-
+import { ConvexAuthProvider } from "@convex-dev/auth/react";
+import { Authenticated, Unauthenticated, useQuery } from "convex/react";
+import { api } from "../convex/_generated/api";
+import { SignInForm } from "./SignInForm";
 const convex = new ConvexReactClient(config.convexUrl);
 
 function AuthenticatedApp() {
@@ -26,9 +26,15 @@ function AuthenticatedApp() {
 }
 
 export default function App() {
+    const user = useQuery(api.users.viewer);
     return (
         <>
-            <AuthenticatedApp />
+            <Unauthenticated>
+                <SignInForm />
+            </Unauthenticated>
+            <Authenticated>
+                <AuthenticatedApp />
+            </Authenticated>
         </>
     );
 }
@@ -36,10 +42,8 @@ export default function App() {
 const root = createRoot(document.getElementById("app")!);
 root.render(
     <React.StrictMode>
-        <ClerkProvider publishableKey={config.clerkPublishableKey}>
-            <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-                <App />
-            </ConvexProviderWithClerk>
-        </ClerkProvider>
+        <ConvexAuthProvider client={convex}>
+            <App />
+        </ConvexAuthProvider>
     </React.StrictMode>
 );

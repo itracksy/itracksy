@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "jsx": "react",
+        "jsx": "react-jsx",
         "target": "es2019",
         "module": "commonjs",
         "lib": [
@@ -27,6 +27,7 @@
         "resolveJsonModule": true
     },
     "include": [
-        "src/**/*"
+        "src/**/*",
+        "convex"
     ],
 }
