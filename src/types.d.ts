@@ -16,9 +16,15 @@ interface ElectronWindow {
   minimize: () => Promise<void>;
   maximize: () => Promise<void>;
   close: () => Promise<void>;
+  startTracking: () => Promise<boolean>;
+  stopTracking: () => Promise<boolean>;
 }
 
-declare interface Window {
-  themeMode: ThemeModeContext;
-  electronWindow: ElectronWindow;
+declare global {
+  interface Window {
+    themeMode: ThemeModeContext;
+    electronWindow: ElectronWindow;
+  }
 }
+
+export {};

@@ -1,5 +1,7 @@
 import { app, BrowserWindow } from "electron";
 import registerListeners from "./helpers/ipc/listeners-register";
+import { ActivityTracker } from "./services/ActivityTracker";
+
 // "electron-squirrel-startup" seems broken when packaging with vite
 //import started from "electron-squirrel-startup";
 import path from "path";
@@ -30,7 +32,13 @@ function createWindow() {
   }
 }
 
-app.whenReady().then(createWindow);
+// Initialize activity tracker when app is ready
+app.whenReady().then(() => {
+  console.log("Main: App is ready");
+  const activityTracker = new ActivityTracker();
+  activityTracker.setupIPC();
+  createWindow();
+});
 
 //osX only
 app.on("window-all-closed", () => {
