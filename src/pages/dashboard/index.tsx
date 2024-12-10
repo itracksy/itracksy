@@ -2,27 +2,21 @@ import { TrackingControls } from "@/components/tracking/TrackingControls";
 import {
   ActivityRecord,
   ApplicationDurationReport,
-  calculateApplicationDurations,
+  DomainDurationReport,
+  TitleDurationReport,
 } from "@/types/activity";
-import { useState, useEffect } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
-import { WorkblockTimeline } from "./components/WorkblockTimeline";
+import { useState, useEffect, useMemo } from "react";
+
+import { calculateDurationsReport } from "@/services/ReportBuilder";
+import TimeBreakdown from "./components/TimeBreakDown";
 
 export default function DashboardPage() {
   const [activeWindow, setActiveWindow] = useState<ActivityRecord[]>([]);
-  const [appUsageData, setAppUsageData] = useState<{ name: string; duration: number }[]>([]);
-  const [durationReports, setDurationReports] = useState<ApplicationDurationReport[]>([]);
+  const [durationReports, setDurationReports] = useState<{
+    applications: ApplicationDurationReport[];
+    domains: DomainDurationReport[];
+    titles: TitleDurationReport[];
+  }>({ applications: [], domains: [], titles: [] });
   useEffect(() => {
     const fetchActiveWindow = async () => {
       try {
@@ -50,20 +44,48 @@ export default function DashboardPage() {
         end: Date.now(),
       };
 
-      const durationReports = calculateApplicationDurations(activeWindow, timeWindow);
-
-      // Convert the duration reports to the format expected by charts
-      const appUsage = durationReports.map((report) => ({
-        name: report.applicationName,
-        duration: Math.round(report.totalDuration / 1000), // Convert to seconds
-      }));
+      const durationReports = calculateDurationsReport(activeWindow, timeWindow);
       setDurationReports(durationReports);
-      setAppUsageData(appUsage.sort((a, b) => b.duration - a.duration).slice(0, 5));
     };
 
     processActivityData();
   }, [activeWindow]);
-
+  const appUsageData = useMemo(
+    () =>
+      durationReports.applications.map((report) => ({
+        name: report.applicationName,
+        duration: Math.round(report.totalDuration / 1000), // Convert to seconds
+        percentage:
+          (report.totalDuration /
+            durationReports.applications.reduce((sum, report) => sum + report.totalDuration, 0)) *
+          100,
+      })),
+    [durationReports.applications]
+  );
+  const domainUsageData = useMemo(
+    () =>
+      durationReports.domains.map((report) => ({
+        name: report.domain,
+        duration: Math.round(report.totalDuration / 1000), // Convert to seconds
+        percentage:
+          (report.totalDuration /
+            durationReports.domains.reduce((sum, report) => sum + report.totalDuration, 0)) *
+          100,
+      })),
+    [durationReports.domains]
+  );
+  const titleUsageData = useMemo(
+    () =>
+      durationReports.titles.map((report) => ({
+        name: report.title,
+        duration: Math.round(report.totalDuration / 1000), // Convert to seconds
+        percentage:
+          (report.totalDuration /
+            durationReports.titles.reduce((sum, report) => sum + report.totalDuration, 0)) *
+          100,
+      })),
+    [durationReports.titles]
+  );
   return (
     <div className="container mx-auto p-4">
       <div className="mb-8 flex items-center justify-between">
@@ -72,29 +94,9 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        {/* Workblock Timeline */}
-        <div className="md:col-span-1">
-          <WorkblockTimeline reports={durationReports} />
-        </div>
-
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 gap-6 md:col-span-2">
-          {/* Bar Chart */}
-          <div className="rounded-lg bg-gray-900 p-4 shadow">
-            <h2 className="mb-4 text-xl font-semibold">Top Applications Usage</h2>
-            <div className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={appUsageData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="duration" fill="#8884d8" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
+        <TimeBreakdown reports={appUsageData} title="Application Usage" />
+        <TimeBreakdown reports={domainUsageData} title="Domain Usage" />
+        <TimeBreakdown reports={titleUsageData} title="Title Usage" />
       </div>
     </div>
   );
