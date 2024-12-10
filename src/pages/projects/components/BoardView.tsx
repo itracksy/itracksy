@@ -54,28 +54,7 @@ export function BoardView({ board }: { board: GetBoard }) {
         className="flex min-h-0 flex-grow flex-col overflow-x-scroll bg-background"
         ref={scrollContainerRef}
       >
-        <h1>
-          <EditableText
-            value={
-              updateBoardMutation.isPending && updateBoardMutation.variables.name
-                ? updateBoardMutation.variables.name
-                : board.name
-            }
-            fieldName="name"
-            inputClassName="mx-8 my-4 text-2xl font-medium border border-input rounded-lg py-1 px-2 bg-background text-foreground"
-            buttonClassName="mx-8 my-4 text-2xl font-medium block rounded-lg text-left border border-transparent py-1 px-2 text-foreground hover:bg-accent hover:text-accent-foreground"
-            buttonLabel={`Edit board "${board.name}" name`}
-            inputLabel="Edit board name"
-            onChange={(value) => {
-              updateBoardMutation.mutate({
-                id: board.id,
-                name: value,
-              });
-            }}
-          />
-        </h1>
-
-        <div className="flex h-full min-h-0 w-fit flex-grow items-start gap-2 px-8 pb-4">
+        <div className="flex h-full min-h-0 w-fit flex-grow items-start gap-2 overflow-x-scroll px-8 py-4">
           {columns.map((col, index) => (
             <ColumnComponent
               ref={columnRef}

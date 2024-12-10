@@ -1,14 +1,19 @@
 import React from "react";
 import DragWindowRegion from "@/components/DragWindowRegion";
 import Sidebar from "@/components/Sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 
 export default function BaseLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen flex-col">
-      <DragWindowRegion title="electron-shadcn" />
+      <DragWindowRegion />
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
-        <main className="flex-1 overflow-auto">{children}</main>
+        <SidebarProvider>
+          <AppSidebar />
+
+          <main className="flex-1 overflow-auto">{children}</main>
+        </SidebarProvider>
       </div>
     </div>
   );

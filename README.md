@@ -1,8 +1,8 @@
-# electron-shadcn
+# iTracksy
 
 Electron in all its glory. Everything you will need to develop your beautiful desktop application.
 
-![Demo GIF](https://github.com/LuanRoger/electron-shadcn/blob/main/images/demo.gif)
+![Demo GIF](https://github.com/LuanRoger/iTracksy/blob/main/images/demo.gif)
 
 ## Libs and tools
 
@@ -46,14 +46,14 @@ To develop a Electron app, you probably will need some UI, test, formatter, styl
 
 ### CI/CD 🚀
 
-- Pre-configured [GitHub Actions workflow](https://github.com/LuanRoger/electron-shadcn/blob/main/.github/workflows/playwright.yml), for test with Playwright
+- Pre-configured [GitHub Actions workflow](https://github.com/LuanRoger/iTracksy/blob/main/.github/workflows/playwright.yml), for test with Playwright
 
 ### Project preferences 🎯
 
 - Use Context isolation
 - `titleBarStyle`: hidden (Using custom title bar)
 - Geist as default font
-- Some default styles was applied, check the [`styles`](https://github.com/LuanRoger/electron-shadcn/tree/main/src/styles) directory
+- Some default styles was applied, check the [`styles`](https://github.com/LuanRoger/iTracksy/tree/main/src/styles) directory
 
 > If you don't know some of these libraries or tools, I recommend you to check their documentation to understand how they work and how to use them.
 
@@ -118,7 +118,7 @@ The test scripts involving Playwright require the app be builded before running 
 1. Clone this repository
 
 ```bash
-git clone https://github.com/LuanRoger/electron-shadcn.git
+git clone https://github.com/LuanRoger/iTracksy.git
 ```
 
 Or use it as a template on GitHub
@@ -144,4 +144,4 @@ npm run start
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/LuanRoger/electron-shadcn/blob/main/LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/LuanRoger/iTracksy/blob/main/LICENSE) file for details.
