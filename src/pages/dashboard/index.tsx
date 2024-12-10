@@ -17,7 +17,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { WorkblockTimeline } from "@/components/WorkblockTimeline";
+import { WorkblockTimeline } from "./components/WorkblockTimeline";
 
 export default function DashboardPage() {
   const [activeWindow, setActiveWindow] = useState<ActivityRecord[]>([]);
@@ -80,7 +80,7 @@ export default function DashboardPage() {
         {/* Charts Section */}
         <div className="grid grid-cols-1 gap-6 md:col-span-2">
           {/* Bar Chart */}
-          <div className="rounded-lg bg-white p-4 shadow">
+          <div className="rounded-lg bg-gray-900 p-4 shadow">
             <h2 className="mb-4 text-xl font-semibold">Top Applications Usage</h2>
             <div className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
