@@ -34,6 +34,8 @@ const items = [
 ];
 
 export function AppSidebar({ className, ...props }: React.ComponentProps<typeof Sidebar>) {
+  const [activeItem, setActiveItem] = React.useState<string | null>(null);
+
   return (
     <Sidebar collapsible="icon" className={cn("bg-white", className)} {...props}>
       <SidebarHeader className="text-sm font-semibold"></SidebarHeader>
@@ -46,11 +48,16 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
                 asChild
-                isActive={item.isActive}
+                isActive={activeItem === item.title}
                 tooltip={item.title}
                 className="gap-2"
               >
-                <Link to={item.url}>
+                <Link
+                  to={item.url}
+                  onClick={() => {
+                    setActiveItem(item.title);
+                  }}
+                >
                   <item.icon className="size-4" />
                   <span>{item.title}</span>
                 </Link>

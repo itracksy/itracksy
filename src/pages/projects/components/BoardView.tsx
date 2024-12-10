@@ -50,11 +50,8 @@ export function BoardView({ board }: { board: GetBoard }) {
 
   return (
     <div className="flex h-full flex-col">
-      <div
-        className="flex min-h-0 flex-grow flex-col overflow-x-scroll bg-background"
-        ref={scrollContainerRef}
-      >
-        <div className="flex h-full min-h-0 w-fit flex-grow items-start gap-2 overflow-x-scroll px-8 py-4">
+      <div className="flex min-h-0 flex-grow flex-col bg-background" ref={scrollContainerRef}>
+        <div className="flex h-full min-h-0 w-fit flex-grow items-start gap-2 overflow-x-auto px-8 py-4">
           {columns.map((col, index) => (
             <ColumnComponent
               ref={columnRef}
