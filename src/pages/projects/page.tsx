@@ -6,6 +6,14 @@ import { api } from "../../../convex/_generated/api.js";
 import { Loader } from "@/components/Loader";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { BoardView } from "./components/BoardView.js";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function ProjectsPage() {
   const [boardId, setBoardId] = useState<string | null>(null);
@@ -33,26 +41,25 @@ export function ProjectsPage() {
   console.log("boards", boards);
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-4 border-b bg-white p-4">
-        <select
+      <div className="flex items-center gap-4 border-b p-4">
+        <Select
           value={boardId ?? ""}
-          onChange={(e) => {
-            setBoardId(e.target.value);
+          onValueChange={(value) => {
+            setBoardId(value);
           }}
-          className="rounded-lg border px-3 py-2 text-black"
         >
-          {boards.map((board) => (
-            <option key={board.id} value={board.id}>
-              {board.name}
-            </option>
-          ))}
-        </select>
-        <button
-          onClick={handleCreateBoard}
-          className="rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-        >
-          New Board
-        </button>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Theme" />
+          </SelectTrigger>
+          <SelectContent>
+            {boards.map((board) => (
+              <SelectItem key={board.id} value={board.id}>
+                {board.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button onClick={handleCreateBoard}>New Board</Button>
       </div>
 
       {board && <BoardView board={board} />}

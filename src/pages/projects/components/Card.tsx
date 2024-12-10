@@ -67,23 +67,23 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
         className={
           "-mb-[2px] cursor-grab border-b-2 border-t-2 px-2 py-1 last:mb-0 active:cursor-grabbing " +
           (acceptDrop === "top"
-            ? "border-b-transparent border-t-red-500"
+            ? "border-b-transparent border-t-primary dark:border-t-red-300"
             : acceptDrop === "bottom"
-              ? "border-b-red-500 border-t-transparent"
+              ? "border-b-primary border-t-transparent dark:border-b-red-300"
               : "border-b-transparent border-t-transparent")
         }
       >
         <div
           draggable
-          className="relative w-full rounded-lg border-slate-300 bg-white px-2 py-1 text-sm text-black shadow shadow-slate-300"
+          className="relative w-full rounded-lg border border-border bg-card px-2 py-1 text-sm text-card-foreground shadow-sm transition-colors hover:bg-accent/50"
           onDragStart={(event) => {
             event.dataTransfer.effectAllowed = "move";
             event.dataTransfer.setData(CONTENT_TYPES.card, JSON.stringify({ id, title }));
             event.stopPropagation();
           }}
         >
-          <h3>{title}</h3>
-          <div className="mt-2">{content || <>&nbsp;</>}</div>
+          <h3 className="font-medium">{title}</h3>
+          <div className="mt-2 text-muted-foreground">{content || <>&nbsp;</>}</div>
           <form
             onSubmit={(event) => {
               event.preventDefault();
@@ -98,7 +98,7 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
           >
             <button
               aria-label="Delete card"
-              className="absolute right-4 top-4 flex items-center gap-2 hover:text-red-500"
+              className="absolute right-4 top-4 flex items-center gap-2 text-muted-foreground hover:text-destructive"
               type="submit"
             >
               <div className="text-xs opacity-50">{order}</div>

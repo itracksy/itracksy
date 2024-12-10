@@ -51,21 +51,19 @@ export function BoardView({ board }: { board: GetBoard }) {
   return (
     <div className="flex h-full flex-col">
       <div
-        className="flex min-h-0 flex-grow flex-col overflow-x-scroll"
+        className="flex min-h-0 flex-grow flex-col overflow-x-scroll bg-background"
         ref={scrollContainerRef}
-        style={{ backgroundColor: board.color }}
       >
         <h1>
           <EditableText
             value={
-              // optimistic update
               updateBoardMutation.isPending && updateBoardMutation.variables.name
                 ? updateBoardMutation.variables.name
                 : board.name
             }
             fieldName="name"
-            inputClassName="mx-8 my-4 text-2xl font-medium border border-slate-400 rounded-lg py-1 px-2 text-black"
-            buttonClassName="mx-8 my-4 text-2xl font-medium block rounded-lg text-left border border-transparent py-1 px-2 text-slate-800"
+            inputClassName="mx-8 my-4 text-2xl font-medium border border-input rounded-lg py-1 px-2 bg-background text-foreground"
+            buttonClassName="mx-8 my-4 text-2xl font-medium block rounded-lg text-left border border-transparent py-1 px-2 text-foreground hover:bg-accent hover:text-accent-foreground"
             buttonLabel={`Edit board "${board.name}" name`}
             inputLabel="Edit board name"
             onChange={(value) => {
@@ -77,22 +75,20 @@ export function BoardView({ board }: { board: GetBoard }) {
           />
         </h1>
 
-        <div className="flex h-full min-h-0 w-fit flex-grow items-start px-8 pb-4">
-          {columns.map((col, index) => {
-            return (
-              <ColumnComponent
-                ref={columnRef}
-                key={col.id}
-                name={col.name}
-                columnId={col.id}
-                boardId={board.id}
-                items={col.items}
-                order={col.order}
-                previousOrder={columns[index - 1] ? columns[index - 1].order : 0}
-                nextOrder={columns[index + 1] ? columns[index + 1].order : col.order + 1}
-              />
-            );
-          })}
+        <div className="flex h-full min-h-0 w-fit flex-grow items-start gap-2 px-8 pb-4">
+          {columns.map((col, index) => (
+            <ColumnComponent
+              ref={columnRef}
+              key={col.id}
+              name={col.name}
+              columnId={col.id}
+              boardId={board.id}
+              items={col.items}
+              order={col.order}
+              previousOrder={columns[index - 1] ? columns[index - 1].order : 0}
+              nextOrder={columns[index + 1] ? columns[index + 1].order : col.order + 1}
+            />
+          ))}
           <NewColumn
             boardId={board.id}
             editInitially={board.columns.length === 0}
@@ -102,7 +98,6 @@ export function BoardView({ board }: { board: GetBoard }) {
           />
         </div>
 
-        {/* trolling you to add some extra margin to the right of the container with a whole dang div */}
         <div data-lol className="h-1 w-8 flex-shrink-0" />
       </div>
     </div>
