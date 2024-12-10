@@ -8,26 +8,6 @@ import {
   WIN_CLEAR_ACTIVITY_DATA_CHANNEL,
 } from "../helpers/ipc/window/window-channels";
 
-interface ActivityRecord {
-  platform: string;
-  id: number;
-  bounds: {
-    width: number;
-    y: number;
-    height: number;
-    x: number;
-  };
-  title: string;
-  owner: {
-    path: string;
-    processId: number;
-    bundleId?: string;
-    name: string;
-  };
-  memoryUsage: number;
-  timestamp: number;
-}
-
 export class ActivityTracker {
   private interval: NodeJS.Timeout | null = null;
 
@@ -46,7 +26,7 @@ export class ActivityTracker {
     ipcMain.handle(WIN_GET_ACTIVE_CHANNEL, async () => {
       console.log("ActivityTracker: Handling get-active-window");
       try {
-        const result = await activeWin();
+        const result = this.getAllActivityData();
         console.log("ActivityTracker: Active window result:", result);
         return result;
       } catch (error) {
@@ -103,7 +83,7 @@ export class ActivityTracker {
       } catch (error) {
         console.error("ActivityTracker: Error tracking window:", error);
       }
-    }, 1000) as unknown as NodeJS.Timeout;
+    }, 3000);
 
     return true;
   }
@@ -125,6 +105,15 @@ export class ActivityTracker {
     } catch (error) {
       console.error("ActivityTracker: Error clearing activity data:", error);
       return false;
+    }
+  }
+
+  private getAllActivityData(): ActivityRecord[] {
+    try {
+      return this.store.get(this.STORAGE_KEY, []) as ActivityRecord[];
+    } catch (error) {
+      console.error("ActivityTracker: Error retrieving activity data:", error);
+      return [];
     }
   }
 

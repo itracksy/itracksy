@@ -75,7 +75,7 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
       >
         <div
           draggable
-          className="relative w-full rounded-lg border-slate-300 bg-white px-2 py-1 text-sm shadow shadow-slate-300"
+          className="relative w-full rounded-lg border-slate-300 bg-white px-2 py-1 text-sm text-black shadow shadow-slate-300"
           onDragStart={(event) => {
             event.dataTransfer.effectAllowed = "move";
             event.dataTransfer.setData(CONTENT_TYPES.card, JSON.stringify({ id, title }));

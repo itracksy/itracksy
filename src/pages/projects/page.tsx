@@ -39,7 +39,7 @@ export function ProjectsPage() {
           onChange={(e) => {
             setBoardId(e.target.value);
           }}
-          className="rounded-lg border px-3 py-2"
+          className="rounded-lg border px-3 py-2 text-black"
         >
           {boards.map((board) => (
             <option key={board.id} value={board.id}>
