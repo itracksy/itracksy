@@ -7,6 +7,7 @@ import {
   WIN_STOP_TRACKING_CHANNEL,
   WIN_CLEAR_ACTIVITY_DATA_CHANNEL,
 } from "../helpers/ipc/window/window-channels";
+import { ActivityRecord } from "@/types/activity";
 
 export class ActivityTracker {
   private interval: NodeJS.Timeout | null = null;
