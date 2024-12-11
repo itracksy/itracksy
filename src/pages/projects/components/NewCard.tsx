@@ -4,8 +4,8 @@ import invariant from "tiny-invariant";
 import { ItemMutationFields } from "@/types";
 import { useCreateItemMutation } from "@/queries";
 import { itemSchema } from "@/db/schema";
-import { SaveButton } from "./SaveButton";
-import { CancelButton } from "./CancelButton";
+
+import { Button } from "@/components/ui/button";
 
 export function NewCard({
   columnId,
@@ -54,7 +54,7 @@ export function NewCard({
         ref={textAreaRef}
         name={ItemMutationFields.title.name}
         placeholder="Enter a title for this card"
-        className="h-14 w-full resize-none rounded-lg px-2 py-1 text-sm shadow outline-none placeholder:text-sm placeholder:text-slate-500"
+        className="h-14 w-full resize-none rounded-lg px-2 py-1 text-sm text-black shadow outline-none placeholder:text-sm placeholder:text-slate-500"
         onKeyDown={(event) => {
           if (event.key === "Enter") {
             event.preventDefault();
@@ -71,8 +71,10 @@ export function NewCard({
         }}
       />
       <div className="flex justify-between">
-        <SaveButton ref={buttonRef}>Save Card</SaveButton>
-        <CancelButton onClick={onComplete}>Cancel</CancelButton>
+        <Button ref={buttonRef}>Save Card</Button>
+        <Button variant="ghost" onClick={onComplete}>
+          Cancel
+        </Button>
       </div>
     </form>
   );

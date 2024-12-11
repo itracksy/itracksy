@@ -2,8 +2,8 @@ import { useRef, useState } from "react";
 import invariant from "tiny-invariant";
 import { PlusIcon } from "@radix-ui/react-icons";
 import { useCreateColumnMutation } from "@/queries";
-import { CancelButton } from "./CancelButton";
-import { SaveButton } from "./SaveButton";
+
+import { Button } from "@/components/ui/button";
 
 export function NewColumn({
   boardId,
@@ -51,8 +51,10 @@ export function NewColumn({
         className="w-full rounded-lg border border-slate-400 px-2 py-1 font-medium text-black"
       />
       <div className="flex justify-between">
-        <SaveButton>Save Column</SaveButton>
-        <CancelButton onClick={() => setEditing(false)}>Cancel</CancelButton>
+        <Button>Save Column</Button>
+        <Button variant="ghost" onClick={() => setEditing(false)}>
+          Cancel
+        </Button>
       </div>
     </form>
   ) : (

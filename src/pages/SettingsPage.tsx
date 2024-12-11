@@ -3,6 +3,7 @@ import { SunIcon, MoonIcon } from "@radix-ui/react-icons";
 
 import { setTheme, getCurrentTheme } from "../helpers/theme_helpers";
 import { ThemeMode } from "@/lib/types/theme-mode";
+import { Button } from "@/components/ui/button";
 
 export default function SettingsPage() {
   const [currentTheme, setCurrentTheme] = useState<ThemeMode>("light");
@@ -26,7 +27,8 @@ export default function SettingsPage() {
       <div className="mt-6">
         <h2 className="text-xl font-semibold text-foreground">Theme</h2>
         <div className="mt-2 flex gap-2">
-          <button
+          <Button
+            variant="outline"
             className={`rounded-md px-4 py-2 transition-colors ${
               currentTheme === "light"
                 ? "bg-primary text-primary-foreground"
@@ -38,8 +40,9 @@ export default function SettingsPage() {
               <SunIcon className="h-4 w-4" />
               Light
             </div>
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
             className={`rounded-md px-4 py-2 transition-colors ${
               currentTheme === "dark"
                 ? "bg-primary text-primary-foreground"
@@ -51,7 +54,7 @@ export default function SettingsPage() {
               <MoonIcon className="h-4 w-4" />
               Dark
             </div>
-          </button>
+          </Button>
         </div>
       </div>
     </div>

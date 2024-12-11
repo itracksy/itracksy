@@ -4,8 +4,8 @@ import invariant from "tiny-invariant";
 import { useUpdateBoardMutation } from "@/queries";
 import { NewColumn } from "./NewColumn";
 import { Column as ColumnComponent } from "./Column";
-import type { Board, Column } from "convex/schema";
-import { EditableText } from "./EditableText";
+import type { Column } from "convex/schema";
+
 import { Loader } from "@/components/Loader";
 import { GetBoard } from "convex/board";
 

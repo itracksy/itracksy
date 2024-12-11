@@ -51,3 +51,30 @@ export interface TitleDurationReport {
     duration: number;
   }[];
 }
+
+export interface CategoryTree {
+  name: string;
+  duration: number; // in milliseconds
+  children?: CategoryTree[];
+}
+
+export interface CategoryRule {
+  category: string[]; // e.g. ['Work', 'Programming', 'ActivityWatch']
+  matches: {
+    application?: string;
+    title?: RegExp;
+    domain?: string;
+  };
+}
+
+export interface CategoryDurationReport {
+  category: string[];
+  totalDuration: number;
+  percentage: number;
+  children: CategoryDurationReport[];
+  instances: {
+    startTime: number;
+    endTime: number;
+    duration: number;
+  }[];
+}

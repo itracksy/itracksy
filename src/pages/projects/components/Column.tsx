@@ -11,6 +11,7 @@ import { NewCard } from "./NewCard";
 import { Card } from "./Card";
 import type { RenderedItem } from "@/types";
 import { PlusIcon, TrashIcon } from "@radix-ui/react-icons";
+import { Button } from "@/components/ui/button";
 
 interface ColumnProps {
   name: string;
@@ -137,7 +138,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
           }}
           {...(!items.length ? cardDndProps : {})}
           className={twMerge(
-            "relative flex max-h-full w-80 flex-shrink-0 flex-col rounded-xl border-slate-400 bg-slate-100 shadow-sm shadow-slate-400",
+            "relative flex max-h-full w-80 flex-shrink-0 flex-col rounded-xl border-slate-400 bg-slate-100 shadow-sm shadow-slate-400 dark:bg-gray-700",
             acceptCardDrop && `outline outline-2 outline-red-500`
           )}
         >
@@ -154,7 +155,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
               inputLabel="Edit column name"
               buttonLabel={`Edit column "${name}" name`}
               inputClassName="border border-slate-400 w-full rounded-lg py-1 px-2 font-medium text-black"
-              buttonClassName="block rounded-lg text-left w-full border border-transparent py-1 px-2 font-medium text-slate-600"
+              buttonClassName="block rounded-lg text-left w-full border border-transparent py-1 px-2 font-medium text-slate-600 dark:text-slate-300"
               onChange={(value) => {
                 updateColumnMutation.mutate({
                   boardId,
@@ -190,18 +191,18 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
             />
           ) : (
             <div className="p-2" {...(items.length ? cardDndProps : {})}>
-              <button
-                type="button"
+              <Button
+                variant="ghost"
                 onClick={() => {
                   flushSync(() => {
                     setEdit(true);
                   });
                   scrollList();
                 }}
-                className="flex w-full items-center gap-2 rounded-lg p-2 text-left font-medium text-slate-500 hover:bg-slate-200 focus:bg-slate-200"
+                className="w-full"
               >
                 <PlusIcon /> Add a card
-              </button>
+              </Button>
             </div>
           )}
           <form

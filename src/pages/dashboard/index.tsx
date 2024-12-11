@@ -4,11 +4,14 @@ import {
   ApplicationDurationReport,
   DomainDurationReport,
   TitleDurationReport,
+  CategoryDurationReport,
 } from "@/types/activity";
 import { useState, useEffect, useMemo } from "react";
 
 import { calculateDurationsReport } from "@/services/ReportBuilder";
 import TimeBreakdown from "./components/TimeBreakDown";
+import { CategoryMapper } from "@/services/CategoryMapper";
+import { CategoryTreeView } from "./components/CategoryTreeView";
 
 export default function DashboardPage() {
   const [activeWindow, setActiveWindow] = useState<ActivityRecord[]>([]);
@@ -17,6 +20,8 @@ export default function DashboardPage() {
     domains: DomainDurationReport[];
     titles: TitleDurationReport[];
   }>({ applications: [], domains: [], titles: [] });
+  const [categoryReport, setCategoryReport] = useState<CategoryDurationReport[]>([]);
+
   useEffect(() => {
     const fetchActiveWindow = async () => {
       try {
@@ -50,6 +55,13 @@ export default function DashboardPage() {
 
     processActivityData();
   }, [activeWindow]);
+
+  useEffect(() => {
+    const categoryMapper = new CategoryMapper();
+    const categories = categoryMapper.buildCategoryTree(activeWindow);
+    setCategoryReport(categories);
+  }, [activeWindow]);
+
   const appUsageData = useMemo(
     () =>
       durationReports.applications.map((report) => ({
@@ -97,6 +109,13 @@ export default function DashboardPage() {
         <TimeBreakdown reports={appUsageData} title="Application Usage" />
         <TimeBreakdown reports={domainUsageData} title="Domain Usage" />
         <TimeBreakdown reports={titleUsageData} title="Title Usage" />
+      </div>
+
+      <div className="mt-6">
+        <h2 className="mb-4 text-xl font-semibold">Category Breakdown</h2>
+        <div className="rounded-lg bg-white p-4 shadow">
+          <CategoryTreeView categories={categoryReport} />
+        </div>
       </div>
     </div>
   );
