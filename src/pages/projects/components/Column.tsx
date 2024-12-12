@@ -5,7 +5,11 @@ import { twMerge } from "tailwind-merge";
 import { flushSync } from "react-dom";
 import { CONTENT_TYPES } from "@/types";
 
-import { useDeleteColumnMutation, useUpdateCardMutation, useUpdateColumnMutation } from "@/queries";
+import {
+  useDeleteColumnMutation,
+  useUpdateCardMutation,
+  useUpdateColumnMutation,
+} from "@/services/hooks/useBoardQueries";
 import { EditableText } from "./EditableText";
 import { NewCard } from "./NewCard";
 import { Card } from "./Card";

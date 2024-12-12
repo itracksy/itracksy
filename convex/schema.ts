@@ -12,6 +12,9 @@ const schema = defineSchema({
     id: v.string(),
     name: v.string(),
     color: v.string(),
+    clientId: v.optional(v.string()),
+    hourlyRate: v.optional(v.number()),
+    currency: v.optional(v.string()),
   }).index("id", ["id"]),
 
   columns: defineTable({
@@ -34,6 +37,50 @@ const schema = defineSchema({
     .index("id", ["id"])
     .index("column", ["columnId"])
     .index("board", ["boardId"]),
+
+  clients: defineTable({
+    id: v.string(),
+    name: v.string(),
+    email: v.optional(v.string()),
+    address: v.optional(v.string()),
+    taxId: v.optional(v.string()),
+    defaultHourlyRate: v.optional(v.number()),
+    defaultCurrency: v.optional(v.string()),
+  }).index("id", ["id"]),
+
+  invoices: defineTable({
+    id: v.string(),
+    clientId: v.string(),
+    boardId: v.string(),
+    number: v.string(),
+    status: v.string(), // draft, sent, paid
+    issueDate: v.number(),
+    dueDate: v.number(),
+    subtotal: v.number(),
+    tax: v.optional(v.number()),
+    total: v.number(),
+    notes: v.optional(v.string()),
+  })
+    .index("id", ["id"])
+    .index("client", ["clientId"])
+    .index("board", ["boardId"])
+    .index("status", ["status"]),
+
+  timeEntries: defineTable({
+    id: v.string(),
+    itemId: v.string(),
+    boardId: v.string(),
+    duration: v.optional(v.number()),
+    start: v.number(), // timestamp
+    end: v.optional(v.number()), // timestamp
+    description: v.optional(v.string()),
+    invoiceId: v.optional(v.string()),
+    userId: v.string(),
+  })
+    .index("id", ["id"])
+    .index("item", ["itemId"])
+    .index("board", ["boardId"])
+    .index("invoice", ["invoiceId"]),
 });
 export default schema;
 
@@ -64,7 +111,10 @@ export const deleteColumnSchema = v.object({
   boardId: column.fields.boardId,
   id: column.fields.id,
 });
-
 export type Board = Infer<typeof board>;
 export type Column = Infer<typeof column>;
 export type Item = Infer<typeof item>;
+
+export type Client = Infer<typeof schema.tables.clients.validator>;
+export type Invoice = Infer<typeof schema.tables.invoices.validator>;
+export type TimeEntry = Infer<typeof schema.tables.timeEntries.validator>;

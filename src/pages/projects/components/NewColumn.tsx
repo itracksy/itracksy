@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import invariant from "tiny-invariant";
 import { PlusIcon } from "@radix-ui/react-icons";
-import { useCreateColumnMutation } from "@/queries";
+import { useCreateColumnMutation } from "@/services/hooks/useBoardQueries";
 
 import { Button } from "@/components/ui/button";
 

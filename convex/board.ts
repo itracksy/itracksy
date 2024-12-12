@@ -134,6 +134,18 @@ export const createItem = mutation({
   },
 });
 
+export const getItem = query({
+  args: { id: v.string() },
+  handler: async (ctx, { id }) => {
+    const item = await ensureItemExists(ctx, id);
+    const timeEntries = await ctx.db
+      .query("timeEntries")
+      .withIndex("item", (q) => q.eq("itemId", id))
+      .collect();
+    return { ...item, timeEntries: timeEntries.map(withoutSystemFields) };
+  },
+});
+
 export const deleteItem = mutation({
   args: deleteItemSchema,
   handler: async (ctx, { id, boardId }) => {

@@ -9,6 +9,7 @@ export const itemSchema = z.object({
   order: z.coerce.number(),
   columnId: z.string().uuid(),
   boardId: z.coerce.string(),
+  duration: z.number().default(0),
 });
 
 export const deleteItemSchema = itemSchema.pick({ id: true, boardId: true });

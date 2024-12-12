@@ -1,13 +1,12 @@
 export function formatDuration(ms: number): string {
-  const seconds = Math.floor(ms / 1000);
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
+  const seconds = Math.floor((ms / 1000) % 60);
+  const minutes = Math.floor((ms / (1000 * 60)) % 60);
+  const hours = Math.floor(ms / (1000 * 60 * 60));
 
   const parts = [];
-  if (h > 0) parts.push(`${h}h`);
-  if (m > 0) parts.push(`${m}m`);
-  if (s > 0 || parts.length === 0) parts.push(`${s}s`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+  if (seconds > 0) parts.push(`${seconds}s`);
 
-  return parts.join(" ");
+  return parts.length > 0 ? parts.join(" ") : "0s";
 }

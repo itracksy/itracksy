@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import invariant from "tiny-invariant";
 
-import { useUpdateBoardMutation } from "@/queries";
+import { useUpdateBoardMutation } from "@/services/hooks/useBoardQueries";
 import { NewColumn } from "./NewColumn";
 import { Column as ColumnComponent } from "./Column";
 import type { Column } from "convex/schema";

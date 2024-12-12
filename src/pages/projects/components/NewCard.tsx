@@ -2,7 +2,7 @@ import { useRef } from "react";
 import invariant from "tiny-invariant";
 
 import { ItemMutationFields } from "@/types";
-import { useCreateItemMutation } from "@/queries";
+import { useCreateItemMutation } from "@/services/hooks/useBoardQueries";
 import { itemSchema } from "@/db/schema";
 
 import { Button } from "@/components/ui/button";

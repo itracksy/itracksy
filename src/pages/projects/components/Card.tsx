@@ -2,9 +2,16 @@ import invariant from "tiny-invariant";
 import { forwardRef, useState } from "react";
 
 import { CONTENT_TYPES } from "@/types";
-import { TrashIcon } from "@radix-ui/react-icons";
-import { useDeleteCardMutation, useUpdateCardMutation } from "@/queries";
+import { TrashIcon, PlayIcon, StopIcon, TimerIcon } from "@radix-ui/react-icons";
+import { useDeleteCardMutation, useUpdateCardMutation } from "@/services/hooks/useBoardQueries";
 import { deleteItemSchema } from "@/db/schema";
+import { formatDuration } from "@/utils/timeUtils";
+import {
+  useCreateTimeEntryMutation,
+  useUpdateTimeEntryMutation,
+  useActiveTimeEntry,
+} from "@/services/hooks/useTimeEntryQueries";
+import { Button } from "@/components/ui/button";
 
 interface CardProps {
   title: string;
@@ -20,9 +27,42 @@ interface CardProps {
 export const Card = forwardRef<HTMLLIElement, CardProps>(
   ({ title, content, id, columnId, boardId, order, nextOrder, previousOrder }, ref) => {
     const [acceptDrop, setAcceptDrop] = useState<"none" | "top" | "bottom">("none");
+    const [isTracking, setIsTracking] = useState(false);
+    const [startTime, setStartTime] = useState<number | null>(null);
 
     const deleteCard = useDeleteCardMutation();
     const moveCard = useUpdateCardMutation();
+    const createTimeEntry = useCreateTimeEntryMutation();
+    const updateTimeEntry = useUpdateTimeEntryMutation();
+    const { data: activeTimeEntry } = useActiveTimeEntry();
+
+    const handleStartTracking = () => {
+      console.log("activeTimeEntry", activeTimeEntry);
+      if (activeTimeEntry) {
+        alert("Please stop the current active timer before starting a new one");
+        return;
+      }
+
+      const timeEntry = createTimeEntry.mutate({
+        id: crypto.randomUUID(),
+        itemId: id,
+        boardId,
+        start: Date.now(),
+      });
+
+      console.log("timeEntry", timeEntry);
+    };
+
+    const handleStopTracking = () => {
+      if (!activeTimeEntry || activeTimeEntry.itemId !== id) {
+        return;
+      }
+
+      updateTimeEntry.mutate({
+        id: activeTimeEntry.id,
+        end: Date.now(),
+      });
+    };
 
     return (
       <li
@@ -84,6 +124,27 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
         >
           <h3 className="font-medium">{title}</h3>
           <div className="mt-2 text-muted-foreground">{content || <>&nbsp;</>}</div>
+          <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+            <TimerIcon className="h-4 w-4" />
+            <span>{formatDuration(activeTimeEntry?.duration || 0)}</span>
+            <Button
+              onClick={activeTimeEntry?.itemId === id ? handleStopTracking : handleStartTracking}
+              disabled={activeTimeEntry ? activeTimeEntry.itemId !== id : false}
+              variant="ghost"
+            >
+              {activeTimeEntry?.itemId === id ? (
+                <>
+                  <StopIcon className="h-4 w-4" />
+                  Stop Tracking
+                </>
+              ) : (
+                <>
+                  <PlayIcon className="h-4 w-4" />
+                  {activeTimeEntry ? "" : "Start Tracking"}
+                </>
+              )}
+            </Button>
+          </div>
           <form
             onSubmit={(event) => {
               event.preventDefault();
