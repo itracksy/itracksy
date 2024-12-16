@@ -13,6 +13,8 @@ import { Authenticated, Unauthenticated, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { ConvexQueryClient } from "@convex-dev/react-query";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { TooltipProvider } from "@/components/ui/tooltip";
+
 const convex = new ConvexReactClient(config.convexUrl);
 
 function AuthenticatedApp() {
@@ -68,7 +70,9 @@ root.render(
   <React.StrictMode>
     <ConvexAuthProvider client={convex}>
       <QueryClientProvider client={queryClient}>
-        <App />
+        <TooltipProvider>
+          <App />
+        </TooltipProvider>
       </QueryClientProvider>
     </ConvexAuthProvider>
   </React.StrictMode>

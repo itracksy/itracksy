@@ -8,6 +8,7 @@ const schema = defineSchema({
     userId: v.id("users"),
     body: v.string(),
   }),
+
   boards: defineTable({
     id: v.string(),
     name: v.string(),
@@ -15,7 +16,10 @@ const schema = defineSchema({
     clientId: v.optional(v.string()),
     hourlyRate: v.optional(v.number()),
     currency: v.optional(v.string()),
-  }).index("id", ["id"]),
+    userId: v.string(),
+  })
+    .index("id", ["id"])
+    .index("user", ["userId"]),
 
   columns: defineTable({
     id: v.string(),
@@ -82,6 +86,7 @@ const schema = defineSchema({
     .index("board", ["boardId"])
     .index("invoice", ["invoiceId"]),
 });
+
 export default schema;
 
 const board = schema.tables.boards.validator;

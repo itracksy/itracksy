@@ -10,31 +10,6 @@ import schema, {
 } from "./schema";
 import type { Doc, Id } from "./_generated/dataModel";
 
-export const seed = internalMutation(async (ctx) => {
-  const allBoards = await ctx.db.query("boards").collect();
-  if (allBoards.length > 0) {
-    return;
-  }
-  await ctx.db.insert("boards", {
-    id: "1",
-    name: "First board",
-    color: "#e0e0e0",
-  });
-});
-
-// Clear all boards (do this on a regular cadence for public examples)
-export const clear = internalMutation(async (ctx) => {
-  const allBoards = await ctx.db.query("boards").collect();
-  for (const board of allBoards) {
-    await ctx.db.delete(board._id);
-  }
-  await ctx.db.insert("boards", {
-    id: "1",
-    name: "First board",
-    color: "#e0e0e0",
-  });
-});
-
 function withoutSystemFields<T extends { _creationTime: number; _id: Id<any> }>(doc: T) {
   const { _id, _creationTime, ...rest } = doc;
   return rest;
@@ -194,5 +169,12 @@ export const deleteColumn = mutation({
       .collect();
     await Promise.all(items.map((item) => ctx.db.delete(item._id)));
     await ctx.db.delete(column._id);
+  },
+});
+
+export const createBoard = mutation({
+  args: schema.tables.boards.validator,
+  handler: async (ctx, board) => {
+    await ctx.db.insert("boards", board);
   },
 });
