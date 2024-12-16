@@ -1,4 +1,3 @@
-import { TrackingControls } from "@/components/tracking/TrackingControls";
 import {
   ActivityRecord,
   ApplicationDurationReport,
@@ -100,9 +99,8 @@ export default function DashboardPage() {
   );
   return (
     <div className="container mx-auto p-4">
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8">
         <h1 className="text-2xl font-bold">Activity Dashboard</h1>
-        <TrackingControls />
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">

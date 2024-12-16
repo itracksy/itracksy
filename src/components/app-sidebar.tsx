@@ -2,9 +2,11 @@ import * as React from "react";
 import { LayoutGrid, FolderClosed, Settings } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
+
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -12,6 +14,7 @@ import {
   SidebarRail,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { BottomSideBar } from "./BottomBar";
 
 // This is sample data.
 const items = [
@@ -37,7 +40,7 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
   const [activeItem, setActiveItem] = React.useState<string | null>(null);
 
   return (
-    <Sidebar collapsible="icon" className={cn("bg-white", className)} {...props}>
+    <Sidebar collapsible="icon" className={cn("bg-white dark:bg-background", className)} {...props}>
       <SidebarHeader className="text-sm font-semibold"></SidebarHeader>
       <div className="flex items-center justify-end">
         <SidebarTrigger />
@@ -66,6 +69,9 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
           ))}
         </SidebarMenu>
       </SidebarContent>
+      <SidebarFooter>
+        <BottomSideBar />
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );

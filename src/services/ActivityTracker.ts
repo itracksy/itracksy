@@ -6,6 +6,7 @@ import {
   WIN_START_TRACKING_CHANNEL,
   WIN_STOP_TRACKING_CHANNEL,
   WIN_CLEAR_ACTIVITY_DATA_CHANNEL,
+  WIN_GET_TRACKING_STATE_CHANNEL,
 } from "../helpers/ipc/window/window-channels";
 import { ActivityRecord } from "@/types/activity";
 
@@ -13,6 +14,7 @@ export class ActivityTracker {
   private interval: NodeJS.Timeout | null = null;
 
   private readonly STORAGE_KEY = "window-activity-data";
+  private readonly TRACKING_STATE_KEY = "tracking-enabled";
   private store: Store;
 
   constructor() {
@@ -22,6 +24,13 @@ export class ActivityTracker {
 
   public setupIPC() {
     console.log("ActivityTracker: Setting up IPC handlers");
+
+    // Check if tracking was enabled in previous session
+    const wasTracking = this.store.get(this.TRACKING_STATE_KEY, false) as boolean;
+    if (wasTracking) {
+      console.log("ActivityTracker: Auto-starting tracking from previous session");
+      this.startTracking();
+    }
 
     // Handle requests for current active window
     ipcMain.handle(WIN_GET_ACTIVE_CHANNEL, async () => {
@@ -34,6 +43,12 @@ export class ActivityTracker {
         console.error("ActivityTracker: Error getting active window:", error);
         return null;
       }
+    });
+
+    // Get tracking state
+    ipcMain.handle(WIN_GET_TRACKING_STATE_CHANNEL, () => {
+      console.log("ActivityTracker: Handling get-tracking-state");
+      return this.getTrackingState();
     });
 
     // Start tracking
@@ -54,6 +69,10 @@ export class ActivityTracker {
     });
   }
 
+  private getTrackingState(): boolean {
+    return this.store.get(this.TRACKING_STATE_KEY, false) as boolean;
+  }
+
   private startTracking(): boolean {
     console.log("ActivityTracker: Starting tracking");
     if (this.interval) {
@@ -61,6 +80,7 @@ export class ActivityTracker {
       return false;
     }
 
+    this.store.set(this.TRACKING_STATE_KEY, true);
     this.interval = setInterval(async () => {
       try {
         const result = await activeWin();
@@ -89,6 +109,19 @@ export class ActivityTracker {
     return true;
   }
 
+  private stopTracking(): boolean {
+    console.log("ActivityTracker: Stopping tracking");
+    if (!this.interval) {
+      console.log("ActivityTracker: Not tracking");
+      return false;
+    }
+
+    clearInterval(this.interval);
+    this.interval = null;
+    this.store.set(this.TRACKING_STATE_KEY, false);
+    return true;
+  }
+
   private saveActivityRecord(record: ActivityRecord): void {
     try {
       const activities = this.store.get(this.STORAGE_KEY, []) as ActivityRecord[];
@@ -101,7 +134,7 @@ export class ActivityTracker {
 
   private clearActivityData(): boolean {
     try {
-      this.store.delete(this.STORAGE_KEY);
+      this.store.set(this.STORAGE_KEY, []);
       return true;
     } catch (error) {
       console.error("ActivityTracker: Error clearing activity data:", error);
@@ -110,21 +143,6 @@ export class ActivityTracker {
   }
 
   private getAllActivityData(): ActivityRecord[] {
-    try {
-      return this.store.get(this.STORAGE_KEY, []) as ActivityRecord[];
-    } catch (error) {
-      console.error("ActivityTracker: Error retrieving activity data:", error);
-      return [];
-    }
-  }
-
-  private stopTracking(): boolean {
-    console.log("ActivityTracker: Stopping tracking");
-    if (this.interval) {
-      clearInterval(this.interval);
-      this.interval = null;
-      return true;
-    }
-    return false;
+    return this.store.get(this.STORAGE_KEY, []) as ActivityRecord[];
   }
 }

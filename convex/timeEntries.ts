@@ -76,19 +76,38 @@ export const deleteTimeEntry = mutation({
   },
 });
 
+// Type for the active time entry response
+type ActiveTimeEntry = Doc<"timeEntries"> & {
+  item: Doc<"items"> | null;
+};
+
 export const getActiveTimeEntry = query({
   args: {},
-  handler: async (ctx) => {
+  handler: async (ctx): Promise<ActiveTimeEntry | null> => {
+    console.log("getActiveTimeEntry");
+
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
 
     const userId = identity.subject;
 
-    const timeEntries = await ctx.db
+    const timeEntry = await ctx.db
       .query("timeEntries")
       .filter((q) => q.and(q.eq(q.field("userId"), userId), q.eq(q.field("end"), undefined)))
       .first();
 
-    return timeEntries;
+    if (!timeEntry) return null;
+
+    // Get the associated item details
+    const item = await ctx.db
+      .query("items")
+      .filter((q) => q.eq(q.field("id"), timeEntry.itemId))
+      .first();
+    console.log("timeEntry", timeEntry);
+    console.log("item", item);
+    return {
+      ...timeEntry,
+      item: item,
+    };
   },
 });

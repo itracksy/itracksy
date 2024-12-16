@@ -1,3 +1,4 @@
+import { contextBridge, ipcRenderer } from "electron";
 import {
   WIN_MINIMIZE_CHANNEL,
   WIN_MAXIMIZE_CHANNEL,
@@ -6,10 +7,10 @@ import {
   WIN_START_TRACKING_CHANNEL,
   WIN_STOP_TRACKING_CHANNEL,
   WIN_CLEAR_ACTIVITY_DATA_CHANNEL,
+  WIN_GET_TRACKING_STATE_CHANNEL,
 } from "./window-channels";
 
 export function exposeWindowContext() {
-  const { contextBridge, ipcRenderer } = window.require("electron");
   contextBridge.exposeInMainWorld("electronWindow", {
     minimize: () => ipcRenderer.invoke(WIN_MINIMIZE_CHANNEL),
     maximize: () => ipcRenderer.invoke(WIN_MAXIMIZE_CHANNEL),
@@ -38,5 +39,6 @@ export function exposeWindowContext() {
       console.log("Window: clearActivityData result:", result);
       return result;
     },
+    getTrackingState: () => ipcRenderer.invoke(WIN_GET_TRACKING_STATE_CHANNEL),
   });
 }

@@ -1,6 +1,6 @@
 import React from "react";
 import DragWindowRegion from "@/components/DragWindowRegion";
-import Sidebar from "@/components/Sidebar";
+
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 

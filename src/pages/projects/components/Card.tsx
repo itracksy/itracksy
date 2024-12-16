@@ -27,8 +27,6 @@ interface CardProps {
 export const Card = forwardRef<HTMLLIElement, CardProps>(
   ({ title, content, id, columnId, boardId, order, nextOrder, previousOrder }, ref) => {
     const [acceptDrop, setAcceptDrop] = useState<"none" | "top" | "bottom">("none");
-    const [isTracking, setIsTracking] = useState(false);
-    const [startTime, setStartTime] = useState<number | null>(null);
 
     const deleteCard = useDeleteCardMutation();
     const moveCard = useUpdateCardMutation();
@@ -43,14 +41,12 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
         return;
       }
 
-      const timeEntry = createTimeEntry.mutate({
+      createTimeEntry.mutate({
         id: crypto.randomUUID(),
         itemId: id,
         boardId,
         start: Date.now(),
       });
-
-      console.log("timeEntry", timeEntry);
     };
 
     const handleStopTracking = () => {
