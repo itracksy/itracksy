@@ -113,7 +113,7 @@ export default function DashboardPage() {
 
       <div className="mt-6">
         <h2 className="mb-4 text-xl font-semibold">Category Breakdown</h2>
-        <div className="rounded-lg bg-white p-4 shadow">
+        <div className="rounded-lg p-4 shadow">
           <CategoryTreeView categories={categoryReport} />
         </div>
       </div>

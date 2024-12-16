@@ -19,7 +19,7 @@ export const CategoryTreeView: React.FC<CategoryTreeViewProps> = ({ categories, 
                 {category.category[category.category.length - 1]}
               </span>
             </div>
-            <div className="text-gray-600">{formatDuration(category.totalDuration)}</div>
+            <div className="text-muted-foreground dark:text-muted-foreground-dark">{formatDuration(category.totalDuration)}</div>
           </div>
           {category.children.length > 0 && (
             <CategoryTreeView categories={category.children} level={level + 1} />

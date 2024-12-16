@@ -8,46 +8,13 @@ export function useActiveTimeEntry() {
 
 // Hook to create a time entry
 export function useCreateTimeEntryMutation() {
-  const mutationFn = useConvexMutation(api.timeEntries.createTimeEntry).withOptimisticUpdate(
-    (localStore, args) => {
-      // Check if there's an active time entry and stop it
-      const activeEntry = localStore.getQuery(api.timeEntries.getActiveTimeEntry, {});
-
-      if (activeEntry) {
-        // Update the active entry to be stopped
-        localStore.setQuery(
-          api.timeEntries.getActiveTimeEntry,
-          {},
-          { ...activeEntry, end: Date.now() }
-        );
-      }
-
-      // Update the item's time entries
-      const item = localStore.getQuery(api.board.getItem, { id: args.itemId });
-      if (!item) return;
-
-      const timeEntries = [...item.timeEntries, args];
-      localStore.setQuery(api.board.getItem, { id: item.id }, { ...item, timeEntries });
-    }
-  );
-
+  const mutationFn = useConvexMutation(api.timeEntries.createTimeEntry);
   return useMutation({ mutationFn });
 }
 
 // Hook to update a time entry
 export function useUpdateTimeEntryMutation() {
-  const mutationFn = useConvexMutation(api.timeEntries.updateTimeEntry).withOptimisticUpdate(
-    (localStore, args) => {
-      const item = localStore.getQuery(api.board.getItem, { id: args.itemId });
-      if (!item) return;
-
-      const timeEntries = item.timeEntries.map((entry) =>
-        entry.id === args.id ? { ...entry, ...args } : entry
-      );
-      localStore.setQuery(api.board.getItem, { id: item.id }, { ...item, timeEntries });
-    }
-  );
-
+  const mutationFn = useConvexMutation(api.timeEntries.updateTimeEntry);
   return useMutation({ mutationFn });
 }
 
