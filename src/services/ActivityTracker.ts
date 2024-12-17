@@ -109,7 +109,7 @@ export class ActivityTracker {
     return true;
   }
 
-  private stopTracking(): boolean {
+  public stopTracking(): boolean {
     console.log("ActivityTracker: Stopping tracking");
     if (!this.interval) {
       console.log("ActivityTracker: Not tracking");

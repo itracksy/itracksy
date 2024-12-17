@@ -8,6 +8,9 @@ import path from "path";
 
 const inDevelopment = process.env.NODE_ENV === "development";
 
+// Initialize activity tracker instance
+let activityTracker: ActivityTracker;
+
 function createWindow() {
   const preload = path.join(__dirname, "preload.js");
   const mainWindow = new BrowserWindow({
@@ -35,7 +38,7 @@ function createWindow() {
 // Initialize activity tracker when app is ready
 app.whenReady().then(() => {
   console.log("Main: App is ready");
-  const activityTracker = new ActivityTracker();
+  activityTracker = new ActivityTracker();
   activityTracker.setupIPC();
   createWindow();
 });
@@ -48,7 +51,9 @@ app.on("window-all-closed", () => {
 });
 
 app.on("before-quit", () => {
-  window.electronWindow.stopTracking();
+  if (activityTracker) {
+    activityTracker.stopTracking();
+  }
 });
 
 app.on("activate", () => {
