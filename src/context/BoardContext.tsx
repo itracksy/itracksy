@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
-const BOARD_STORAGE_KEY = "itracksy:selectedBoard";
+const BOARD_STORAGE_KEY = "selectedBoard";
 
 interface BoardContextType {
   selectedBoardId: string;
@@ -22,18 +22,24 @@ interface BoardProviderProps {
 }
 
 export function BoardProvider({ children }: BoardProviderProps) {
-  // Initialize state from localStorage, fallback to empty string if not found
-  const [selectedBoardId, setSelectedBoardId] = useState<string>(() => {
-    const storedId = localStorage.getItem(BOARD_STORAGE_KEY);
-    return storedId || "";
-  });
+  const [selectedBoardId, setSelectedBoardId] = useState<string>("");
 
-  // Update localStorage when selectedBoardId changes
+  // Load initial value
+  useEffect(() => {
+    async function loadStoredBoard() {
+      const storedId = await window.electronWindow.store.get(BOARD_STORAGE_KEY);
+      console.log("storedId from electron store:", storedId);
+      if (storedId) {
+        setSelectedBoardId(storedId as string);
+      }
+    }
+    loadStoredBoard();
+  }, []);
+
+  // Persist changes
   useEffect(() => {
     if (selectedBoardId) {
-      localStorage.setItem(BOARD_STORAGE_KEY, selectedBoardId);
-    } else {
-      localStorage.removeItem(BOARD_STORAGE_KEY);
+      window.electronWindow.store.set(BOARD_STORAGE_KEY, selectedBoardId);
     }
   }, [selectedBoardId]);
 

@@ -8,6 +8,7 @@ import {
   WIN_STOP_TRACKING_CHANNEL,
   WIN_CLEAR_ACTIVITY_DATA_CHANNEL,
   WIN_GET_TRACKING_STATE_CHANNEL,
+  STORE_CHANNELS,
 } from "./window-channels";
 
 export function exposeWindowContext() {
@@ -15,6 +16,10 @@ export function exposeWindowContext() {
     minimize: () => ipcRenderer.invoke(WIN_MINIMIZE_CHANNEL),
     maximize: () => ipcRenderer.invoke(WIN_MAXIMIZE_CHANNEL),
     close: () => ipcRenderer.invoke(WIN_CLOSE_CHANNEL),
+    store: {
+      get: async (key: string) => await ipcRenderer.invoke(STORE_CHANNELS.GET, key),
+      set: async (key: string, value: any) => await ipcRenderer.invoke(STORE_CHANNELS.SET, key, value),
+    },
     getActiveWindow: async () => {
       console.log("Window: Calling getActiveWindow");
       const result = await ipcRenderer.invoke(WIN_GET_ACTIVE_CHANNEL);
@@ -39,6 +44,11 @@ export function exposeWindowContext() {
       console.log("Window: clearActivityData result:", result);
       return result;
     },
-    getTrackingState: () => ipcRenderer.invoke(WIN_GET_TRACKING_STATE_CHANNEL),
+    getTrackingState: async () => {
+      console.log("Window: Calling getTrackingState");
+      const result = await ipcRenderer.invoke(WIN_GET_TRACKING_STATE_CHANNEL);
+      console.log("Window: getTrackingState result:", result);
+      return result;
+    },
   });
 }
