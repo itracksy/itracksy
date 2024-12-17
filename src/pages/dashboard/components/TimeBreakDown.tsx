@@ -1,3 +1,5 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 type Props = {
   title: string;
   reports: {
@@ -9,9 +11,11 @@ type Props = {
 
 export default function TimeBreakdown({ reports, title }: Props) {
   return (
-    <div className="w-full max-w-2xl space-y-6 rounded-lg bg-card p-6 text-card-foreground">
-      <h2 className="text-lg font-semibold">{title}</h2>
-      <div className="space-y-4">
+    <Card className="col-span-1">
+      <CardHeader>
+        <CardTitle className="text-lg font-semibold">{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
         {reports.map((entry) => (
           <div key={entry.name} className="space-y-1">
             <div className="flex items-center justify-between">
@@ -31,7 +35,7 @@ export default function TimeBreakdown({ reports, title }: Props) {
             </div>
           </div>
         ))}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

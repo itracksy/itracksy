@@ -42,10 +42,8 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
   return (
     <Sidebar collapsible="icon" className={cn("bg-white dark:bg-background", className)} {...props}>
       <SidebarHeader className="text-sm font-semibold"></SidebarHeader>
-      <div className="flex items-center justify-end">
-        <SidebarTrigger />
-      </div>
-      <SidebarContent>
+
+      <SidebarContent className="pt-7">
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>

@@ -11,6 +11,7 @@ import { calculateDurationsReport } from "@/services/ReportBuilder";
 import TimeBreakdown from "./components/TimeBreakDown";
 import { CategoryMapper } from "@/services/CategoryMapper";
 import { CategoryTreeView } from "./components/CategoryTreeView";
+import { BoardReport } from "./components/BoardReport";
 
 export default function DashboardPage() {
   const [activeWindow, setActiveWindow] = useState<ActivityRecord[]>([]);
@@ -99,19 +100,16 @@ export default function DashboardPage() {
   );
   return (
     <div className="container mx-auto p-4">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold">Activity Dashboard</h1>
-      </div>
+      <h1 className="text-2xl font-bold">Activity Dashboard</h1>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+        <BoardReport />
+      </div>
+      <div className="grid grid-cols-1 gap-6 pt-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
         <TimeBreakdown reports={appUsageData} title="Application Usage" />
         <TimeBreakdown reports={domainUsageData} title="Domain Usage" />
         <TimeBreakdown reports={titleUsageData} title="Title Usage" />
-      </div>
-
-      <div className="mt-6">
-        <h2 className="mb-4 text-xl font-semibold">Category Breakdown</h2>
-        <div className="rounded-lg p-4 shadow">
+        <div className="">
           <CategoryTreeView categories={categoryReport} />
         </div>
       </div>

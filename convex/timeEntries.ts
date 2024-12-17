@@ -111,3 +111,35 @@ export const getActiveTimeEntry = query({
     };
   },
 });
+
+// Get time entries for a specific board
+export const getBoardTimeEntries = query({
+  args: v.object({
+    boardId: v.string(),
+  }),
+  handler: async (ctx, { boardId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+
+    const userId = identity.subject;
+
+    const timeEntries = await ctx.db
+      .query("timeEntries")
+      .withIndex("board", (q) => q.eq("boardId", boardId))
+      .filter((q) => q.eq(q.field("userId"), userId))
+      .collect();
+
+    // Get the associated items for each time entry
+    const entriesWithItems = await Promise.all(
+      timeEntries.map(async (entry) => {
+        const item = await ctx.db
+          .query("items")
+          .withIndex("id", (q) => q.eq("id", entry.itemId))
+          .unique();
+        return { ...entry, item };
+      })
+    );
+
+    return entriesWithItems;
+  },
+});

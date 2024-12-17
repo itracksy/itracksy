@@ -1,8 +1,5 @@
-import {
-  ActivityRecord,
-  ApplicationDurationReport,
-
-} from "@/types/activity";
+import { ApplicationDurationReport } from "@/types/activity";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface WorkBlock {
   startTime: string;
@@ -55,25 +52,33 @@ export function WorkblockTimeline({ reports }: WorkblockTimelineProps) {
   const workblocks = getWorkblocks();
 
   return (
-    <div className="max-h-[400px] overflow-y-auto rounded-lg bg-gray-900 p-6">
-      <h2 className="mb-4 text-xl font-semibold text-white">WORKBLOCKS</h2>
-      <div className="space-y-3">
-        {workblocks.map((block, index) => (
-          <div key={index} className="flex items-center text-white">
-            <div className="w-16 text-sm">{block.startTime}</div>
-            <div className="mr-3 w-4">
-              <div className="h-full w-0.5 bg-cyan-400"></div>
-            </div>
-            <div className="flex-1">
-              <div className="text-sm">{block.activity}</div>
-              <div className="flex justify-between text-sm text-gray-400">
-                <span>{block.duration}</span>
-                {block.score && <span>{block.score.toFixed(1)}</span>}
+    <Card className="col-span-1">
+      <CardHeader>
+        <CardTitle className="text-lg font-semibold">Activity Timeline</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {workblocks.map((block, index) => (
+            <div key={index} className="flex items-center gap-4">
+              <div className="w-16 text-sm text-muted-foreground">{block.startTime}</div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">{block.activity}</span>
+                  <span className="text-sm text-muted-foreground">{block.duration}</span>
+                </div>
+                {block.score && (
+                  <div className="mt-1 h-1.5 w-full rounded-full bg-secondary">
+                    <div
+                      className="h-full rounded-full bg-primary"
+                      style={{ width: `${block.score}%` }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        ))}
-      </div>
-    </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

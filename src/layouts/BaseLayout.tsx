@@ -12,7 +12,10 @@ export default function BaseLayout({ children }: { children: React.ReactNode }) 
         <SidebarProvider>
           <AppSidebar />
 
-          <main className="flex-1 overflow-auto">{children}</main>
+          <main className="flex-1 overflow-auto">
+            <SidebarTrigger className="absolute top-4 z-10" />
+            {children}
+          </main>
         </SidebarProvider>
       </div>
     </div>

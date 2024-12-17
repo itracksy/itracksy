@@ -1,13 +1,14 @@
 import React from "react";
 import { CategoryDurationReport } from "@/types/activity";
 import { formatDuration } from "@/utils/timeUtils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface CategoryTreeViewProps {
   categories: CategoryDurationReport[];
   level?: number;
 }
 
-export const CategoryTreeView: React.FC<CategoryTreeViewProps> = ({ categories, level = 0 }) => {
+const CategoryTree: React.FC<CategoryTreeViewProps> = ({ categories, level = 0 }) => {
   return (
     <div className="space-y-2">
       {categories.map((category, index) => (
@@ -19,13 +20,28 @@ export const CategoryTreeView: React.FC<CategoryTreeViewProps> = ({ categories, 
                 {category.category[category.category.length - 1]}
               </span>
             </div>
-            <div className="text-muted-foreground dark:text-muted-foreground-dark">{formatDuration(category.totalDuration)}</div>
+            <div className="text-muted-foreground dark:text-muted-foreground-dark">
+              {formatDuration(category.totalDuration)}
+            </div>
           </div>
           {category.children.length > 0 && (
-            <CategoryTreeView categories={category.children} level={level + 1} />
+            <CategoryTree categories={category.children} level={level + 1} />
           )}
         </div>
       ))}
     </div>
+  );
+};
+
+export const CategoryTreeView: React.FC<Omit<CategoryTreeViewProps, "level">> = ({ categories }) => {
+  return (
+    <Card className="col-span-1">
+      <CardHeader>
+        <CardTitle className="text-lg font-semibold">Category Breakdown</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <CategoryTree categories={categories} />
+      </CardContent>
+    </Card>
   );
 };
