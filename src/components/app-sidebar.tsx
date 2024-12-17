@@ -14,7 +14,7 @@ import {
   SidebarRail,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { BottomSideBar } from "./BottomBar";
+import { BottomSideBar } from "./BottomSideBar";
 
 // This is sample data.
 const items = [
