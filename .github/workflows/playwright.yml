@@ -8,6 +8,9 @@ jobs:
   test:
     timeout-minutes: 60
     runs-on: windows-latest
+    env:
+      CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }}
+      CONVEX_URL: ${{ secrets.CONVEX_URL }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -17,6 +20,10 @@ jobs:
         run: npm ci
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
+      - name: Install Convex CLI
+        run: npm install -g convex
+      - name: Start Convex Dev Server
+        run: npm run dev:backend & npx wait-on tcp:3000
       - name: Create Executable
         run: npm run make
       - name: Run Playwright tests
