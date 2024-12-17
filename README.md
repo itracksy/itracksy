@@ -1,24 +1,30 @@
 # iTracksy
 
-Electron in all its glory. Everything you will need to develop your beautiful desktop application.
+iTracksy is a powerful desktop application for tracking your activities and managing projects efficiently. It provides real-time window activity tracking, project management with boards, and detailed time analytics to help you understand how you spend your time.
 
-![Demo GIF](https://github.com/LuanRoger/iTracksy/blob/main/images/demo.gif)
+![Demo GIF](https://github.com/hunght/iTracksy/blob/main/images/demo.gif)
+
+## Features
+
+- **Activity Tracking**: Automatically tracks window activities and provides detailed insights about your application usage
+- **Project Management**: Organize your work with kanban boards, lists, and cards
+- **Time Analytics**: View detailed breakdowns of time spent on different applications, domains, and tasks
+- **Dark/Light Mode**: Supports system theme as well as manual light/dark mode switching
+- **Cross-Platform**: Built with Electron for seamless experience across operating systems
 
 ## Libs and tools
 
-To develop a Electron app, you probably will need some UI, test, formatter, style or other kind of library or framework, so let me install and configure some of them to you.
-
 ### Core 🏍️
 
-- [Electron 32](https://www.electronjs.org)
-- [Vite 5](https://vitejs.dev)
-- [SWC](https://swc.rs)
+- [Electron 32](https://www.electronjs.org) - Framework for building cross-platform desktop applications
+- [Vite 5](https://vitejs.dev) - Next generation frontend tooling
+- [SWC](https://swc.rs) - Super-fast TypeScript/JavaScript compiler
 
 ### DX 🛠️
 
-- [TypeScript 5](https://www.typescriptlang.org)
-- [Prettier](https://prettier.io)
-- [Zod](https://zod.dev)
+- [TypeScript 5](https://www.typescriptlang.org) - JavaScript with syntax for types
+- [Prettier](https://prettier.io) - Code formatter
+- [Zod](https://zod.dev) - TypeScript-first schema validation
 - [React Query (Tan Stack)](https://react-query.tanstack.com)
 
 ### UI 🎨
@@ -46,14 +52,14 @@ To develop a Electron app, you probably will need some UI, test, formatter, styl
 
 ### CI/CD 🚀
 
-- Pre-configured [GitHub Actions workflow](https://github.com/LuanRoger/iTracksy/blob/main/.github/workflows/playwright.yml), for test with Playwright
+- Pre-configured [GitHub Actions workflow](https://github.com/hunght/iTracksy/blob/main/.github/workflows/playwright.yml), for test with Playwright
 
 ### Project preferences 🎯
 
 - Use Context isolation
 - `titleBarStyle`: hidden (Using custom title bar)
 - Geist as default font
-- Some default styles was applied, check the [`styles`](https://github.com/LuanRoger/iTracksy/tree/main/src/styles) directory
+- Some default styles was applied, check the [`styles`](https://github.com/hunght/iTracksy/tree/main/src/styles) directory
 
 > If you don't know some of these libraries or tools, I recommend you to check their documentation to understand how they work and how to use them.
 
@@ -118,10 +124,9 @@ The test scripts involving Playwright require the app be builded before running 
 1. Clone this repository
 
 ```bash
-git clone https://github.com/LuanRoger/iTracksy.git
+git clone https://github.com/hunght/iTracksy.git
 ```
 
-Or use it as a template on GitHub
 
 2. Install dependencies
 
@@ -135,13 +140,7 @@ npm install
 npm run start
 ```
 
-## Used by
-
-- [yaste](https://github.com/LuanRoger/yaste) - yaste (Yet another super ₛᵢₘₚₗₑ text editor) is a text editor, that can be used as an alternative to the native text editor of your SO, maybe.
-- [eletric-drizzle](https://github.com/LuanRoger/electric-drizzle) - shadcn-ui and Drizzle ORM with Electron.
-
-> Does you've used this template in your project? Add it here and open a PR.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/LuanRoger/iTracksy/blob/main/LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/hunght/iTracksy/blob/main/LICENSE) file for details.

@@ -16,8 +16,19 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 20
+          cache: 'npm'
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm config set script-shell "cmd.exe"
+          npm ci --force
+        continue-on-error: true
+      - name: Cleanup node_modules (Windows)
+        if: ${{ failure() }}
+        run: |
+          taskkill /F /IM node.exe /T
+          rd /s /q node_modules
+          npm cache clean --force
+          npm ci
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
       - name: Install Convex CLI
