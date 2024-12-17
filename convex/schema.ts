@@ -12,7 +12,7 @@ const schema = defineSchema({
   boards: defineTable({
     id: v.string(),
     name: v.string(),
-    color: v.string(),
+    color: v.optional(v.string()),
     clientId: v.optional(v.string()),
     hourlyRate: v.optional(v.number()),
     currency: v.optional(v.string()),

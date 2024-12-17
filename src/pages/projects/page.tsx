@@ -29,7 +29,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Form,
   FormControl,
@@ -38,7 +37,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { use } from "i18next";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -61,19 +59,6 @@ export function ProjectsPage() {
       currency: "USD",
     },
   });
-
-  const colorPalette = [
-    "#f87171", // red
-    "#fb923c", // orange
-    "#fbbf24", // amber
-    "#a3e635", // lime
-    "#34d399", // emerald
-    "#2dd4bf", // teal
-    "#38bdf8", // sky
-    "#818cf8", // indigo
-    "#a78bfa", // violet
-    "#f472b6", // pink
-  ];
 
   const { data: board, isLoading: boardLoading } = useQuery({
     ...convexQuery(api.board.getBoard, { id: boardId ?? "" }),
@@ -194,33 +179,6 @@ export function ProjectsPage() {
                       <Input placeholder="Enter board name" {...field} />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="color"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-right">Color</FormLabel>
-                    <FormControl>
-                      <div className="flex flex-wrap gap-2">
-                        {colorPalette.map((color) => (
-                          <button
-                            key={color}
-                            type="button"
-                            className={`h-8 w-8 rounded-full border-2 transition-all ${
-                              field.value === color
-                                ? "scale-110 border-black"
-                                : "border-transparent hover:scale-105"
-                            }`}
-                            style={{ backgroundColor: color }}
-                            onClick={() => field.onChange(color)}
-                          />
-                        ))}
-                      </div>
-                    </FormControl>
                   </FormItem>
                 )}
               />

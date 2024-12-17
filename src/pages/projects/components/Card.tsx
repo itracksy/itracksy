@@ -4,7 +4,6 @@ import { forwardRef, useState } from "react";
 import { CONTENT_TYPES } from "@/types";
 import { TrashIcon, PlayIcon, StopIcon, TimerIcon } from "@radix-ui/react-icons";
 import { useDeleteCardMutation, useUpdateCardMutation } from "@/services/hooks/useBoardQueries";
-import { deleteItemSchema } from "@/db/schema";
 import { formatDuration } from "@/utils/timeUtils";
 import {
   useCreateTimeEntryMutation,
@@ -145,12 +144,10 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
             onSubmit={(event) => {
               event.preventDefault();
 
-              deleteCard.mutate(
-                deleteItemSchema.parse({
-                  id,
-                  boardId,
-                })
-              );
+              deleteCard.mutate({
+                id,
+                boardId,
+              });
             }}
           >
             <button
