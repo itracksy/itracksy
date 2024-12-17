@@ -8,13 +8,7 @@ import { ItemMutationFields } from "@/types";
 import { useCreateItemMutation } from "@/services/hooks/useBoardQueries";
 
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 
 const formSchema = z.object({
@@ -76,7 +70,9 @@ export function NewCard({
                   {...field}
                   autoFocus
                   placeholder="Enter a title for this card"
-                  className="h-14 w-full resize-none rounded-lg px-2 py-1 text-sm text-black shadow outline-none placeholder:text-sm placeholder:text-slate-500"
+                  className="h-14 w-full resize-none rounded-lg px-2 py-1 text-sm text-black shadow outline-none placeholder:text-sm placeholder:text-slate-500 dark:bg-gray-700 dark:text-white dark:placeholder:text-slate-400"
+                  rows={1}
+                  ref={field.ref}
                   onKeyDown={(event) => {
                     if (event.key === "Enter") {
                       event.preventDefault();
@@ -97,7 +93,7 @@ export function NewCard({
             </FormItem>
           )}
         />
-        <div className="flex justify-between">
+        <div className="flex justify-between gap-2 mt-2">
           <Button type="submit">Save Card</Button>
           <Button type="button" variant="ghost" onClick={onComplete}>
             Cancel

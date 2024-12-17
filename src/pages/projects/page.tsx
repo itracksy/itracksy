@@ -120,7 +120,7 @@ export function ProjectsPage() {
               ))}
               <SelectSeparator />
               <SelectItem value="new" onSelect={() => setOpen(true)}>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
                   <PlusCircle className="h-4 w-4" /> Create Board
                 </div>
               </SelectItem>
