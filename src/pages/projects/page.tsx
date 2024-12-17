@@ -37,6 +37,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useBoardContext } from "@/context/BoardContext.js";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -46,7 +47,7 @@ const formSchema = z.object({
 });
 
 export function ProjectsPage() {
-  const [boardId, setBoardId] = useState<string | null>(null);
+  const { selectedBoardId, setSelectedBoardId } = useBoardContext();
   const [viewMode, setViewMode] = useState<"board" | "list">("board");
   const [open, setOpen] = useState(false);
   const currentUser = useConvexQuery(api.users.viewer);
@@ -61,8 +62,8 @@ export function ProjectsPage() {
   });
 
   const { data: board, isLoading: boardLoading } = useQuery({
-    ...convexQuery(api.board.getBoard, { id: boardId ?? "" }),
-    enabled: !!boardId,
+    ...convexQuery(api.board.getBoard, { id: selectedBoardId ?? "" }),
+    enabled: !!selectedBoardId,
   });
   const { data: boards, isLoading: boardsLoading } = useSuspenseQuery(
     convexQuery(api.board.getBoards, {})
@@ -88,10 +89,10 @@ export function ProjectsPage() {
   };
 
   useEffect(() => {
-    if (boards.length > 0 && !boardId) {
-      setBoardId(boards[0].id);
+    if (boards.length > 0 && !selectedBoardId) {
+      setSelectedBoardId(boards[0].id);
     }
-  }, [boards, boardId]);
+  }, [boards, selectedBoardId]);
 
   if (boardLoading || boardsLoading) return <Loader />;
   console.log("viewMode", viewMode);
@@ -100,13 +101,13 @@ export function ProjectsPage() {
       <div className="flex items-center justify-between border-b p-4">
         <div className="flex items-center gap-4">
           <Select
-            value={boardId ?? ""}
+            value={selectedBoardId ?? ""}
             onValueChange={(value) => {
               if (value === "new") {
                 setOpen(true);
                 return;
               }
-              setBoardId(value);
+              setSelectedBoardId(value);
             }}
           >
             <SelectTrigger className="w-[180px]">

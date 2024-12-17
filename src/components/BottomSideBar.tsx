@@ -10,6 +10,7 @@ import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { convexQuery } from "@convex-dev/react-query";
+import { api } from "../../convex/_generated/api";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -19,12 +20,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { api } from "../../convex/_generated/api";
+import { useBoardContext } from "@/context/BoardContext";
 
 export function BottomSideBar() {
   const [open, setOpen] = useState(false);
-  const [selectedBoardId, setSelectedBoardId] = useState<string>("");
   const [selectedItemId, setSelectedItemId] = useState<string>("");
+  const { selectedBoardId, setSelectedBoardId } = useBoardContext();
 
   const { data: activeTimeEntry, isLoading } = useActiveTimeEntry();
   const updateTimeEntry = useUpdateTimeEntryMutation();
@@ -83,7 +84,6 @@ export function BottomSideBar() {
         description: "New time entry has been started.",
       });
       setOpen(false);
-      setSelectedBoardId("");
       setSelectedItemId("");
     } catch (error) {
       toast({

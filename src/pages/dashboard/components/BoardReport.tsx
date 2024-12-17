@@ -9,10 +9,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState } from "react";
+import { useBoardContext } from "@/context/BoardContext";
 
 export function BoardReport() {
-  const [selectedBoardId, setSelectedBoardId] = useState<string>("");
+  const { selectedBoardId, setSelectedBoardId } = useBoardContext();
 
   // Get all boards for the user
   const { data: boards } = useQuery({
