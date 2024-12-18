@@ -22,10 +22,9 @@ jobs:
         run: npm ci
 
       - name: Deploy Convex
-        run: npx convex deploy --cmd
+        run: npx convex deploy --cmd "npm run build" --cmd-url-env-var-name VITE_CONVEX_URL
         env:
           CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }}
-          VITE_CONVEX_URL: ${{ secrets.CONVEX_DEPLOYMENT }}
 
       - name: Build and publish
         run: npm run publish
