@@ -16,10 +16,16 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "20"
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Deploy Convex
+        run: npx convex deploy --cmd
+        env:
+          CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }}
+          VITE_CONVEX_URL: ${{ secrets.CONVEX_DEPLOYMENT }}
 
       - name: Build and publish
         run: npm run publish
