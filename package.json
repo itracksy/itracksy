@@ -1,7 +1,7 @@
 {
   "name": "itracksy",
   "productName": "iTracksy",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Electron Forge with shadcn-ui (Vite + Typescript)",
   "main": ".vite/build/main.js",
   "scripts": {
@@ -20,7 +20,8 @@
     "test:watch": "jest --watch",
     "test:unit": "jest",
     "test:e2e": "playwright test",
-    "test:all": "jest && playwright test"
+    "test:all": "jest && playwright test",
+    "release": "./scripts/release.sh"
   },
   "author": "ROG <luan.roger.2003@gmail.com>",
   "license": "MIT",
