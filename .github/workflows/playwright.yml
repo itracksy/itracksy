@@ -34,7 +34,9 @@ jobs:
       - name: Install Convex CLI
         run: npm install -g convex
       - name: Start Convex Dev Server
-        run: npm run dev:backend & npx wait-on tcp:3000
+        run: |
+          npm run dev:backend &
+          ./node_modules/.bin/wait-on tcp:3000 --timeout 30000
       - name: Create Executable
         run: npm run make
       - name: Run Playwright tests
