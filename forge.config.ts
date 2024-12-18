@@ -10,7 +10,8 @@ import { PublisherGithub } from "@electron-forge/publisher-github";
 
 const config: ForgeConfig = {
   packagerConfig: {
-    executableName: "iTracksy",
+    executableName: "itracksy",
+    name: "itracksy",
     asar: true,
   },
   rebuildConfig: {},
