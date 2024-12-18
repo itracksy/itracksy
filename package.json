@@ -1,7 +1,7 @@
 {
   "name": "itracksy",
   "productName": "itracksy",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "Electron Forge with shadcn-ui (Vite + Typescript)",
   "main": ".vite/build/main.js",
   "scripts": {
