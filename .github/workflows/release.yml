@@ -24,10 +24,10 @@ jobs:
       - name: Deploy Convex
         run: npx convex deploy --cmd "npm run build"
         env:
-          CONVEX_DEPLOY_KEY: ${{ env.CONVEX_DEPLOY_KEY }}
-          VITE_CONVEX_URL: ${{ env.CONVEX_DEPLOYMENT }}
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+          VITE_CONVEX_URL: ${{ secrets.VITE_CONVEX_URL }}
       - name: Build and publish
         run: npm run publish
         env:
-          GH_TOKEN: ${{ env.GH_TOKEN }}
-          VITE_CONVEX_URL: ${{ env.CONVEX_DEPLOYMENT }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          VITE_CONVEX_URL: ${{ secrets.VITE_CONVEX_URL }}
