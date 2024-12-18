@@ -119,7 +119,7 @@ npm run <script>
 
 The test scripts involving Playwright require the app be builded before running the tests. So, before run the tests, run the `package`, `make` or `publish` script.
 
-## How to use
+## Development
 
 1. Clone this repository
 
@@ -134,12 +134,34 @@ git clone https://github.com/hunght/iTracksy.git
 npm install
 ```
 
-3. Run the app
+3. Start the app
 
 ```bash
 npm run start
 ```
 
+## Releasing New Versions
+
+iTracksy uses GitHub Actions for automated releases. To publish a new version:
+
+1. Run one of the following commands:
+   ```bash
+   npm run release         # Increment patch version (1.0.0 -> 1.0.1)
+   npm run release minor   # Increment minor version (1.0.0 -> 1.1.0)
+   npm run release major   # Increment major version (1.0.0 -> 2.0.0)
+   npm run release 1.2.3   # Set specific version
+   ```
+
+2. The release script will:
+   - Update version in package.json
+   - Create a git commit with the version change
+   - Create and push a git tag
+   - Push changes to main branch
+
+3. GitHub Actions will automatically:
+   - Build the application
+   - Create a GitHub release
+   - Upload the built artifacts
 
 ## License
 

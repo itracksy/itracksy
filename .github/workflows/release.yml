@@ -21,6 +21,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Initialize Convex
+        run: |
+          npx convex dev --once
+        env:
+          CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }}
+
       - name: Build and publish
         run: npm run publish
         env:
