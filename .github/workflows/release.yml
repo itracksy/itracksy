@@ -5,6 +5,10 @@ on:
     tags:
       - "v*.*.*" # Trigger on version tags
 
+permissions:
+  contents: write # This is required for creating releases
+  packages: write
+
 jobs:
   release:
     runs-on: ubuntu-latest
