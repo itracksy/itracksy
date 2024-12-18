@@ -6,10 +6,9 @@
   "main": ".vite/build/main.js",
   "scripts": {
     "dev": "npm-run-all --parallel dev:frontend dev:backend",
-    "dev:frontend": "killall Electron 2>/dev/null || true && kill-port 5173 && electron-forge start",
+    "dev:frontend": "killall Electron 2>/dev/null || true && electron-forge start",
     "dev:backend": "convex dev",
-    "kill": "pkill -f Electron || true && kill-port 5173",
-    "start": "killall Electron 2>/dev/null || true && kill-port 5173 && electron-forge start",
+    "start": "killall Electron 2>/dev/null || true && electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
