@@ -1,5 +1,5 @@
 import { BrowserWindow, ipcMain } from "electron";
-import Store from "electron-store";
+import Store from "../../../services/ElectronStore";
 import {
   STORE_CHANNELS,
   WIN_CLOSE_CHANNEL,

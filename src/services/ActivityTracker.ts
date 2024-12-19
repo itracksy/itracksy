@@ -1,5 +1,5 @@
 import { ipcMain } from "electron";
-import Store from "electron-store";
+import Store from "./ElectronStore";
 import activeWin from "active-win";
 import {
   WIN_GET_ACTIVE_CHANNEL,
