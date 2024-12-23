@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   useActiveTimeEntry,
   useUpdateTimeEntryMutation,
@@ -6,40 +6,54 @@ import {
 } from "@/services/hooks/useTimeEntryQueries";
 import { Clock, PlayCircle, StopCircle } from "lucide-react";
 import { TrackingControls } from "@/components/tracking/TrackingControls";
+import { TimeEntryDialog } from "@/components/tracking/TimeEntryDialog";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery } from "@tanstack/react-query";
-import { convexQuery } from "@convex-dev/react-query";
-import { api } from "../../convex/_generated/api";
-
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useBoardContext } from "@/context/BoardContext";
 
 export function BottomSideBar() {
   const [open, setOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string>("");
-  const { selectedBoardId, setSelectedBoardId } = useBoardContext();
+  const [duration, setDuration] = useState<string>("00:00:00");
+  const { selectedBoardId } = useBoardContext();
 
   const { data: activeTimeEntry, isLoading } = useActiveTimeEntry();
   const updateTimeEntry = useUpdateTimeEntryMutation();
   const createTimeEntry = useCreateTimeEntryMutation();
   const { toast } = useToast();
 
-  const { data: boards } = useQuery({
-    ...convexQuery(api.board.getBoards, {}),
-  });
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
 
-  const { data: selectedBoard } = useQuery({
-    ...convexQuery(api.board.getBoard, { id: selectedBoardId }),
-    enabled: !!selectedBoardId,
-  });
+    if (activeTimeEntry?.start) {
+      const updateDuration = () => {
+        const start = new Date(activeTimeEntry.start).getTime();
+        const now = new Date().getTime();
+        const diff = now - start;
+
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        setDuration(
+          `${hours.toString().padStart(2, "0")}:${minutes
+            .toString()
+            .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`
+        );
+      };
+
+      // Update immediately
+      updateDuration();
+      // Then update every second
+      intervalId = setInterval(updateDuration, 1000);
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [activeTimeEntry?.start]);
 
   const handleStopTimeEntry = async () => {
     if (!activeTimeEntry) return;
@@ -110,7 +124,10 @@ export function BottomSideBar() {
             tooltip={`Stop: ${activeTimeEntry?.item?.title}`}
           >
             <StopCircle className="h-5 w-5 text-red-600" />
-            <span className="text-sm font-medium">Stop: {activeTimeEntry?.item?.title}</span>
+            <span className="flex items-center gap-2 text-sm font-medium">
+              <span>Stop: {activeTimeEntry?.item?.title}</span>
+              <span className="text-xs text-muted-foreground">({duration})</span>
+            </span>
           </SidebarMenuButton>
         ) : (
           <SidebarMenuButton
@@ -124,70 +141,13 @@ export function BottomSideBar() {
         )}
       </>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Start Time Entry</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Select Board</label>
-              <Select value={selectedBoardId} onValueChange={setSelectedBoardId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a board" />
-                </SelectTrigger>
-                <SelectContent>
-                  {boards?.map((board) => (
-                    <SelectItem key={board.id} value={board.id}>
-                      {board.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {selectedBoard && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Select Task</label>
-                {selectedBoard.items && selectedBoard.items.length > 0 ? (
-                  <Select value={selectedItemId} onValueChange={setSelectedItemId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a task" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {selectedBoard.items.map((item) => (
-                        <SelectItem key={item.id} value={item.id}>
-                          {item.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <div className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
-                    No tasks found in this board. Please select another board or create a new task.
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="flex justify-end gap-2">
-              <button
-                className="text-sm text-gray-500 hover:text-gray-700"
-                onClick={() => setOpen(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="text-sm font-medium text-green-600 hover:text-green-700"
-                onClick={handleCreateTimeEntry}
-                disabled={!selectedItemId || !selectedBoardId}
-              >
-                Start
-              </button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <TimeEntryDialog
+        open={open}
+        onOpenChange={setOpen}
+        selectedItemId={selectedItemId}
+        setSelectedItemId={setSelectedItemId}
+        onCreateTimeEntry={handleCreateTimeEntry}
+      />
     </>
   );
 }

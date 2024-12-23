@@ -16,6 +16,20 @@ import { Card } from "./Card";
 import type { RenderedItem } from "@/types";
 import { PlusIcon, TrashIcon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ColumnProps {
   name: string;
@@ -31,6 +45,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
   ({ name, columnId, boardId, items, nextOrder, previousOrder, order }, ref) => {
     const [acceptCardDrop, setAcceptCardDrop] = useState(false);
     const editState = useState(false);
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
     const [acceptColumnDrop, setAcceptColumnDrop] = useState<"none" | "left" | "right">("none");
 
@@ -54,6 +69,17 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
     const updateCardMutation = useUpdateCardMutation();
 
     const sortedItems = useMemo(() => [...items].sort((a, b) => a.order - b.order), [items]);
+    const hasItems = items.length > 0;
+
+    const handleDelete = () => {
+      if (hasItems) return;
+
+      deleteColumnMutation.mutate({
+        id: columnId,
+        boardId,
+      });
+      setShowDeleteDialog(false);
+    };
 
     const cardDndProps = {
       onDragOver: (event: React.DragEvent) => {
@@ -88,147 +114,173 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
     };
 
     return (
-      <div
-        ref={ref}
-        onDragOver={(event: React.DragEvent) => {
-          if (event.dataTransfer.types.includes(CONTENT_TYPES.column)) {
-            event.preventDefault();
-            event.stopPropagation();
-            const rect = event.currentTarget.getBoundingClientRect();
-            const midpoint = (rect.left + rect.right) / 2;
-            setAcceptColumnDrop(event.clientX <= midpoint ? "left" : "right");
-          }
-        }}
-        onDragLeave={() => {
-          setAcceptColumnDrop("none");
-        }}
-        onDrop={(event: React.DragEvent) => {
-          const transfer = JSON.parse(event.dataTransfer.getData(CONTENT_TYPES.column) || "null");
-
-          if (!transfer) {
-            return;
-          }
-
-          invariant(transfer.id, "missing transfer.id");
-
-          const droppedOrder = acceptColumnDrop === "left" ? previousOrder : nextOrder;
-          const moveOrder = (droppedOrder + order) / 2;
-
-          updateColumnMutation.mutate({
-            boardId,
-            id: transfer.id,
-            order: moveOrder,
-          });
-
-          setAcceptColumnDrop("none");
-        }}
-        className={twMerge(
-          "-mr-[2px] flex max-h-full flex-shrink-0 cursor-grab flex-col border-l-2 border-r-2 border-l-transparent border-r-transparent px-2 last:mr-0 active:cursor-grabbing",
-          acceptColumnDrop === "left"
-            ? "border-l-red-500 border-r-transparent"
-            : acceptColumnDrop === "right"
-              ? "border-l-transparent border-r-red-500"
-              : ""
-        )}
-      >
+      <>
         <div
-          draggable={!editState[0]}
-          onDragStart={(event: React.DragEvent) => {
-            event.dataTransfer.effectAllowed = "move";
-            event.dataTransfer.setData(
-              CONTENT_TYPES.column,
-              JSON.stringify({ id: columnId, name })
-            );
+          ref={ref}
+          onDragOver={(event: React.DragEvent) => {
+            if (event.dataTransfer.types.includes(CONTENT_TYPES.column)) {
+              event.preventDefault();
+              event.stopPropagation();
+              const rect = event.currentTarget.getBoundingClientRect();
+              const midpoint = (rect.left + rect.right) / 2;
+              setAcceptColumnDrop(event.clientX <= midpoint ? "left" : "right");
+            }
           }}
-          {...(!items.length ? cardDndProps : {})}
+          onDragLeave={() => {
+            setAcceptColumnDrop("none");
+          }}
+          onDrop={(event: React.DragEvent) => {
+            const transfer = JSON.parse(event.dataTransfer.getData(CONTENT_TYPES.column) || "null");
+
+            if (!transfer) {
+              return;
+            }
+
+            invariant(transfer.id, "missing transfer.id");
+
+            const droppedOrder = acceptColumnDrop === "left" ? previousOrder : nextOrder;
+            const moveOrder = (droppedOrder + order) / 2;
+
+            updateColumnMutation.mutate({
+              boardId,
+              id: transfer.id,
+              order: moveOrder,
+            });
+
+            setAcceptColumnDrop("none");
+          }}
           className={twMerge(
-            "relative flex max-h-full w-80 flex-shrink-0 flex-col rounded-xl border-slate-400 bg-slate-100 shadow-sm shadow-slate-400 dark:bg-gray-700",
-            acceptCardDrop && `outline outline-2 outline-red-500`
+            "-mr-[2px] flex max-h-full flex-shrink-0 cursor-grab flex-col border-l-2 border-r-2 border-l-transparent border-r-transparent px-2 last:mr-0 active:cursor-grabbing",
+            acceptColumnDrop === "left"
+              ? "border-l-red-500 border-r-transparent"
+              : acceptColumnDrop === "right"
+                ? "border-l-transparent border-r-red-500"
+                : ""
           )}
         >
-          <div className="p-2" {...(items.length ? cardDndProps : {})}>
-            <EditableText
-              fieldName="name"
-              editState={editState}
-              value={
-                // optimistic update
-                updateColumnMutation.isPending && updateColumnMutation.variables.name
-                  ? updateColumnMutation.variables.name
-                  : name
-              }
-              inputLabel="Edit column name"
-              buttonLabel={`Edit column "${name}" name`}
-              inputClassName="border border-slate-400 w-full rounded-lg py-1 px-2 font-medium text-black"
-              buttonClassName="block rounded-lg text-left w-full border border-transparent py-1 px-2 font-medium text-slate-600 dark:text-slate-300"
-              onChange={(value) => {
-                updateColumnMutation.mutate({
-                  boardId,
-                  id: columnId,
-                  name: value,
-                });
-              }}
-            />
-          </div>
-
-          <ul ref={listRef} className="flex-grow overflow-auto">
-            {sortedItems.map((item, index, items) => (
-              <Card
-                ref={itemRef}
-                key={item.id}
-                title={item.title}
-                content={item.content ?? ""}
-                id={item.id}
-                boardId={boardId}
-                order={item.order}
-                columnId={columnId}
-                previousOrder={items[index - 1] ? items[index - 1].order : 0}
-                nextOrder={items[index + 1] ? items[index + 1].order : item.order + 1}
-              />
-            ))}
-          </ul>
-          {edit ? (
-            <NewCard
-              columnId={columnId}
-              boardId={boardId}
-              nextOrder={items.length === 0 ? 1 : items[items.length - 1].order + 1}
-              onComplete={() => setEdit(false)}
-            />
-          ) : (
-            <div className="p-2" {...(items.length ? cardDndProps : {})}>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  flushSync(() => {
-                    setEdit(true);
-                  });
-                  scrollList();
-                }}
-                className="w-full"
-              >
-                <PlusIcon /> Add a card
-              </Button>
-            </div>
-          )}
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-
-              deleteColumnMutation.mutate({
-                id: columnId,
-                boardId,
-              });
+          <div
+            draggable={!editState[0]}
+            onDragStart={(event: React.DragEvent) => {
+              event.dataTransfer.effectAllowed = "move";
+              event.dataTransfer.setData(
+                CONTENT_TYPES.column,
+                JSON.stringify({ id: columnId, name })
+              );
             }}
+            {...(!items.length ? cardDndProps : {})}
+            className={twMerge(
+              "relative flex max-h-full w-80 flex-shrink-0 flex-col rounded-xl border-slate-400 bg-slate-100 shadow-sm shadow-slate-400 dark:bg-gray-700",
+              acceptCardDrop && `outline outline-2 outline-red-500`
+            )}
           >
-            <button
-              aria-label="Delete column"
-              className="absolute right-4 top-4 flex items-center gap-2 hover:text-red-500"
-              type="submit"
-            >
-              <TrashIcon />
-            </button>
-          </form>
+            <div className="p-2" {...(items.length ? cardDndProps : {})}>
+              <EditableText
+                fieldName="name"
+                editState={editState}
+                value={
+                  // optimistic update
+                  updateColumnMutation.isPending && updateColumnMutation.variables.name
+                    ? updateColumnMutation.variables.name
+                    : name
+                }
+                inputLabel="Edit column name"
+                buttonLabel={`Edit column "${name}" name`}
+                inputClassName="border border-slate-400 w-full rounded-lg py-1 px-2 font-medium text-black"
+                buttonClassName="block rounded-lg text-left w-full border border-transparent py-1 px-2 font-medium text-slate-600 dark:text-slate-300"
+                onChange={(value) => {
+                  updateColumnMutation.mutate({
+                    boardId,
+                    id: columnId,
+                    name: value,
+                  });
+                }}
+              />
+            </div>
+
+            <ul ref={listRef} className="flex-grow overflow-auto">
+              {sortedItems.map((item, index, items) => (
+                <Card
+                  ref={itemRef}
+                  key={item.id}
+                  title={item.title}
+                  content={item.content ?? ""}
+                  id={item.id}
+                  boardId={boardId}
+                  order={item.order}
+                  columnId={columnId}
+                  previousOrder={items[index - 1] ? items[index - 1].order : 0}
+                  nextOrder={items[index + 1] ? items[index + 1].order : item.order + 1}
+                />
+              ))}
+            </ul>
+            {edit ? (
+              <NewCard
+                columnId={columnId}
+                boardId={boardId}
+                nextOrder={items.length === 0 ? 1 : items[items.length - 1].order + 1}
+                onComplete={() => setEdit(false)}
+              />
+            ) : (
+              <div className="p-2" {...(items.length ? cardDndProps : {})}>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    flushSync(() => {
+                      setEdit(true);
+                    });
+                    scrollList();
+                  }}
+                  className="w-full"
+                >
+                  <PlusIcon /> Add a card
+                </Button>
+              </div>
+            )}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => !hasItems && setShowDeleteDialog(true)}
+                    aria-label="Delete column"
+                    className={twMerge(
+                      "absolute right-4 top-4 flex items-center gap-2",
+                      hasItems ? "cursor-not-allowed text-muted-foreground" : "hover:text-red-500"
+                    )}
+                    type="button"
+                    disabled={hasItems}
+                  >
+                    <TrashIcon />
+                  </button>
+                </TooltipTrigger>
+                {hasItems && (
+                  <TooltipContent>
+                    <p>Cannot delete column with cards. Move or delete all cards first.</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
-      </div>
+
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Column</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete the column "{name}"? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="ghost" onClick={() => setShowDeleteDialog(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleDelete}>
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
     );
   }
 );

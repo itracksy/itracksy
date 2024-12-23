@@ -52,7 +52,6 @@ export const updateTimeEntry = mutation({
       .withIndex("id", (q) => q.eq("id", id))
       .unique();
     invariant(timeEntry, `missing time entry: ${id}`);
-    await ensureItemExists(ctx, timeEntry.itemId);
     await ctx.db.patch(timeEntry._id, newTimeEntry);
   },
 });
