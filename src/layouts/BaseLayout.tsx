@@ -1,4 +1,6 @@
 import React from "react";
+import { Toaster } from "@/components/ui/toaster";
+
 import DragWindowRegion from "@/components/DragWindowRegion";
 
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -16,6 +18,7 @@ export default function BaseLayout({ children }: { children: React.ReactNode }) 
             <SidebarTrigger className="absolute top-4 z-10" />
             {children}
           </main>
+          <Toaster />
         </SidebarProvider>
       </div>
     </div>

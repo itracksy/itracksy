@@ -137,6 +137,17 @@ export const deleteItem = mutation({
   handler: async (ctx, { id, boardId }) => {
     await ensureBoardExists(ctx, boardId);
     const item = await ensureItemExists(ctx, id);
+
+    // Check if item has any time entries
+    const timeEntries = await ctx.db
+      .query("timeEntries")
+      .withIndex("item", (q) => q.eq("itemId", item.id))
+      .collect();
+
+    if (timeEntries.length > 0) {
+      throw new Error("Cannot delete item that has time entries");
+    }
+
     await ctx.db.delete(item._id);
   },
 });

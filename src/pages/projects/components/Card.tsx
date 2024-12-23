@@ -22,6 +22,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface CardProps {
   title: string;
@@ -45,6 +46,7 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
     const createTimeEntry = useCreateTimeEntryMutation();
     const updateTimeEntry = useUpdateTimeEntryMutation();
     const { data: activeTimeEntry } = useActiveTimeEntry();
+    const { toast } = useToast();
 
     const { data: item } = useQuery({
       ...convexQuery(api.board.getItem, { id }),
@@ -99,12 +101,20 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
       });
     };
 
-    const handleDelete = () => {
-      deleteCard.mutate({
-        id,
-        boardId,
-      });
-      setShowDeleteDialog(false);
+    const handleDelete = async () => {
+      try {
+        await deleteCard.mutateAsync({
+          id,
+          boardId,
+        });
+        setShowDeleteDialog(false);
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error instanceof Error ? error.message : "Failed to delete item",
+        });
+      }
     };
 
     return (
@@ -196,7 +206,18 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
               </Button>
             </div>
             <button
-              onClick={() => setShowDeleteDialog(true)}
+              onClick={() => {
+                if (item?.timeEntries && item.timeEntries.length > 0) {
+                  toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description: "Please remove all timers before deleting the card",
+                  });
+                  return;
+                }
+
+                setShowDeleteDialog(true);
+              }}
               aria-label="Delete card"
               className="absolute right-4 top-4 flex items-center gap-2 text-muted-foreground hover:text-destructive"
               type="button"
