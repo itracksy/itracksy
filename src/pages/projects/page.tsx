@@ -38,6 +38,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useBoardContext } from "@/context/BoardContext";
+import {
+  Table,
+  TableBody,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -153,14 +161,32 @@ export function ProjectsPage() {
       {board && viewMode === "board" && <BoardView board={board} />}
       {board && viewMode === "list" && (
         <div className="p-4">
-          <div className="grid grid-cols-1 gap-4">
-            {board.items.map((item) => (
-              <div key={item.id} className="rounded-lg border p-4 shadow-sm">
-                <h3 className="text-lg font-semibold">{item.title}</h3>
-                <p className="text-sm text-gray-500">{item.content}</p>
-              </div>
-            ))}
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Title</TableHead>
+                <TableHead>Status</TableHead>
+
+                <TableHead>Description</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {board.items.map((item) => {
+                const column = board.columns.find((col) => col.id === item.columnId);
+
+                return (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-medium">{item.title}</TableCell>
+                    <TableCell>{column?.name || "No Status"}</TableCell>
+
+                    <TableCell className="max-w-md truncate">
+                      {item.content || "No description"}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         </div>
       )}
       <Dialog open={open} onOpenChange={setOpen}>
@@ -244,4 +270,12 @@ export function ProjectsPage() {
       </Dialog>
     </div>
   );
+}
+
+function formatDuration(duration: number) {
+  const hours = Math.floor(duration / 3600000);
+  const minutes = Math.floor((duration % 3600000) / 60000);
+  const seconds = Math.floor((duration % 60000) / 1000);
+
+  return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 }
