@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useConfirmationDialog } from "@/components/providers/ConfirmationDialog";
+import { ItemDetailDialog } from "./ItemDetailDialog";
 
 interface CardProps {
   title: string;
@@ -32,6 +33,7 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
   ({ title, content, id, columnId, boardId, order, nextOrder, previousOrder }, ref) => {
     const [acceptDrop, setAcceptDrop] = useState<"none" | "top" | "bottom">("none");
     const [totalDuration, setTotalDuration] = useState<string>("00:00:00");
+    const [showDetailDialog, setShowDetailDialog] = useState(false);
 
     const deleteCard = useDeleteCardMutation();
     const moveCard = useUpdateCardMutation();
@@ -99,7 +101,7 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
         title: "Delete Card",
         description: "Are you sure you want to delete this card? This action cannot be undone.",
         confirmText: "Delete",
-        variant: "destructive"
+        variant: "destructive",
       });
 
       if (!confirmed) return;
@@ -169,6 +171,7 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
       >
         <div
           draggable
+          onClick={() => setShowDetailDialog(true)}
           className="relative w-full rounded-lg border border-border bg-card px-2 py-1 text-sm text-card-foreground shadow-sm transition-colors hover:bg-accent/50"
           onDragStart={(event) => {
             event.dataTransfer.effectAllowed = "move";
@@ -186,7 +189,10 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
               <span>{totalDuration}</span>
             )}
             <Button
-              onClick={activeTimeEntry?.itemId === id ? handleStopTracking : handleStartTracking}
+              onClick={(e) => {
+                e.stopPropagation();
+                activeTimeEntry?.itemId === id ? handleStopTracking() : handleStartTracking();
+              }}
               disabled={activeTimeEntry ? activeTimeEntry.itemId !== id : false}
               variant="ghost"
               size="sm"
@@ -205,7 +211,10 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
               )}
             </Button>
             <button
-              onClick={handleDelete}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete();
+              }}
               aria-label="Delete card"
               className="absolute right-4 top-4 flex items-center gap-2 text-muted-foreground hover:text-destructive"
               type="button"
@@ -214,6 +223,14 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
             </button>
           </div>
         </div>
+
+        {item && (
+          <ItemDetailDialog
+            open={showDetailDialog}
+            onOpenChange={setShowDetailDialog}
+            item={item}
+          />
+        )}
       </li>
     );
   }
