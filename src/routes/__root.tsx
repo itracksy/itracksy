@@ -1,6 +1,7 @@
 import { useToast } from "@/hooks/use-toast";
 import BaseLayout from "@/layouts/BaseLayout";
 import { Outlet, createRootRoute } from "@tanstack/react-router";
+import { ConfirmationDialogProvider } from "@/components/providers/ConfirmationDialog";
 
 export const RootRoute = createRootRoute({
   component: Root,
@@ -19,8 +20,10 @@ export const RootRoute = createRootRoute({
 
 function Root() {
   return (
-    <BaseLayout>
-      <Outlet />
-    </BaseLayout>
+    <ConfirmationDialogProvider>
+      <BaseLayout>
+        <Outlet />
+      </BaseLayout>
+    </ConfirmationDialogProvider>
   );
 }
