@@ -1,6 +1,5 @@
 import { ipcMain } from "electron";
 import Store from "./ElectronStore";
-import activeWin from "active-win";
 import {
   WIN_GET_ACTIVE_CHANNEL,
   WIN_START_TRACKING_CHANNEL,
@@ -83,6 +82,7 @@ export class ActivityTracker {
     this.store.set(this.TRACKING_STATE_KEY, true);
     this.interval = setInterval(async () => {
       try {
+        const activeWin = (await import('active-win')).default;
         const result = await activeWin();
         if (result) {
           if (result.platform === "macos") {

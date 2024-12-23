@@ -10,11 +10,11 @@ export const external = [
   ...Object.keys("dependencies" in pkg ? (pkg.dependencies as Record<string, unknown>) : {}).filter(
     (dep) =>
       dep !== "conf" &&
-      dep !== "active-win" &&
       dep !== "mock-aws-s3" &&
       dep !== "aws-sdk" &&
       dep !== "nock"
   ),
+  'active-win',
 ];
 
 export function getBuildConfig(env: ConfigEnv<"build">): UserConfig {
@@ -30,6 +30,12 @@ export function getBuildConfig(env: ConfigEnv<"build">): UserConfig {
       outDir: ".vite/build",
       watch: command === "serve" ? {} : null,
       minify: command === "build",
+      rollupOptions: {
+        external,
+        output: {
+          format: "cjs",
+        },
+      },
     },
     clearScreen: false,
   };
