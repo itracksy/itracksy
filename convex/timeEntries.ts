@@ -1,8 +1,8 @@
-import { type QueryCtx, internalMutation, mutation, query } from "./_generated/server";
-import schema, { type TimeEntry } from "./schema";
+import { type QueryCtx, mutation, query } from "./_generated/server";
 import invariant from "tiny-invariant";
 import { v } from "convex/values";
 import { Doc } from "./_generated/dataModel";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 // Ensure the item exists before creating a time entry
 async function ensureItemExists(ctx: QueryCtx, itemId: string): Promise<Doc<"items">> {
@@ -24,11 +24,10 @@ export const createTimeEntry = mutation({
     id: v.string(),
   }),
   handler: async (ctx, timeEntry) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
-
-    const userId = identity.subject;
-
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("not authenticated");
+    }
     await ensureItemExists(ctx, timeEntry.itemId);
     await ctx.db.insert("timeEntries", {
       ...timeEntry,
@@ -84,12 +83,10 @@ type ActiveTimeEntry = Doc<"timeEntries"> & {
 export const getActiveTimeEntry = query({
   args: {},
   handler: async (ctx): Promise<ActiveTimeEntry | null> => {
-    console.log("getActiveTimeEntry");
-
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return null;
-
-    const userId = identity.subject;
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("not authenticated");
+    }
 
     const timeEntry = await ctx.db
       .query("timeEntries")
@@ -117,12 +114,11 @@ export const getBoardTimeEntries = query({
   args: v.object({
     boardId: v.string(),
   }),
-  handler: async (ctx, { boardId }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
-
-    const userId = identity.subject;
-
+  handler: async (ctx, { boardId }): Promise<ActiveTimeEntry[]> => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("not authenticated");
+    }
     const timeEntries = await ctx.db
       .query("timeEntries")
       .withIndex("board", (q) => q.eq("boardId", boardId))

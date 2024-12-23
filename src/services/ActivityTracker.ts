@@ -37,7 +37,7 @@ export class ActivityTracker {
       console.log("ActivityTracker: Handling get-active-window");
       try {
         const result = this.getAllActivityData();
-        console.log("ActivityTracker: Active window result:", result);
+        // console.log("ActivityTracker: Active window result:", result);
         return result;
       } catch (error) {
         console.error("ActivityTracker: Error getting active window:", error);

@@ -6,9 +6,10 @@
   "main": ".vite/build/main.js",
   "scripts": {
     "clear": "rm -rf .vite dist out node_modules",
-    "dev": "npm-run-all --parallel dev:frontend dev:backend",
+    "dev": "npm-run-all --parallel dev:backend dev:log",
     "dev:frontend": "electron-forge start",
     "dev:backend": "convex dev",
+    "dev:log": "convex logs",
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "rm -rf dist out && electron-forge make",

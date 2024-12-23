@@ -9,6 +9,8 @@ import schema, {
   updateColumnSchema,
 } from "./schema";
 import type { Doc, Id } from "./_generated/dataModel";
+import { WithoutSystemFields } from "convex/server";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 function withoutSystemFields<T extends { _creationTime: number; _id: Id<any> }>(doc: T) {
   const { _id, _creationTime, ...rest } = doc;
@@ -36,20 +38,29 @@ async function getFullBoard(ctx: QueryCtx, id: string) {
   };
 }
 
-export const getBoards = query(async (ctx) => {
-  const boards = await ctx.db.query("boards").collect();
-  return await Promise.all(boards.map((b) => getFullBoard(ctx, b.id)));
+export const getBoards = query({
+  handler: async (ctx): Promise<CompletedBoard[]> => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("not authenticated");
+    }
+    const boards = await ctx.db
+      .query("boards")
+      .filter((q) => q.eq(q.field("userId"), userId))
+      .collect();
+
+    return await Promise.all(boards.map((b) => getFullBoard(ctx, b.id)));
+  },
 });
 
-// Add this type definition before the query
-export type GetBoard = Omit<Doc<"boards">, "_id" | "_creationTime"> & {
-  columns: Array<Omit<Doc<"columns">, "_id" | "_creationTime">>;
-  items: Array<Omit<Doc<"items">, "_id" | "_creationTime">>;
+export type CompletedBoard = WithoutSystemFields<Doc<"boards">> & {
+  columns: Array<WithoutSystemFields<Doc<"columns">>>;
+  items: Array<WithoutSystemFields<Doc<"items">>>;
 };
 
 export const getBoard = query({
   args: { id: v.string() },
-  handler: async (ctx, { id }): Promise<GetBoard> => {
+  handler: async (ctx, { id }): Promise<CompletedBoard> => {
     return await getFullBoard(ctx, id);
   },
 });

@@ -18,12 +18,12 @@ export function exposeWindowContext() {
     close: () => ipcRenderer.invoke(WIN_CLOSE_CHANNEL),
     store: {
       get: async (key: string) => await ipcRenderer.invoke(STORE_CHANNELS.GET, key),
-      set: async (key: string, value: any) => await ipcRenderer.invoke(STORE_CHANNELS.SET, key, value),
+      set: async (key: string, value: any) =>
+        await ipcRenderer.invoke(STORE_CHANNELS.SET, key, value),
     },
     getActiveWindow: async () => {
-      console.log("Window: Calling getActiveWindow");
       const result = await ipcRenderer.invoke(WIN_GET_ACTIVE_CHANNEL);
-      console.log("Window: getActiveWindow result:", result);
+
       return result;
     },
     startTracking: async () => {

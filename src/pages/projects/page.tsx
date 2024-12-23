@@ -37,7 +37,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useBoardContext } from "@/context/BoardContext.js";
+import { useBoardContext } from "@/context/BoardContext";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -68,7 +68,8 @@ export function ProjectsPage() {
   const { data: boards, isLoading: boardsLoading } = useSuspenseQuery(
     convexQuery(api.board.getBoards, {})
   );
-
+  console.log("Boards query state:", { boards, boardsLoading });
+  console.log("currentUser", currentUser);
   const createBoard = useConvexMutation(api.board.createBoard);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
