@@ -16,7 +16,7 @@ const config: ForgeConfig = {
     asar: true,
   },
   rebuildConfig: {
-    onlyModules: ['active-win']
+    onlyModules: ["active-win"],
   },
   makers: [
     new MakerSquirrel({
@@ -38,7 +38,7 @@ const config: ForgeConfig = {
         name: "itracksy",
       },
       prerelease: false,
-      draft: true,
+      draft: false,
     }),
   ],
   plugins: [
