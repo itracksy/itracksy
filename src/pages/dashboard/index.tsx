@@ -12,6 +12,7 @@ import TimeBreakdown from "./components/TimeBreakDown";
 import { CategoryMapper } from "@/services/CategoryMapper";
 import { CategoryTreeView } from "./components/CategoryTreeView";
 import { BoardReport } from "./components/BoardReport";
+import { TrackingProvider } from "@/context/tracking-context";
 
 export default function DashboardPage() {
   const [activeWindow, setActiveWindow] = useState<ActivityRecord[]>([]);
@@ -113,36 +114,38 @@ export default function DashboardPage() {
     [durationReports.titles]
   );
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold">Activity Dashboard</h1>
+    <TrackingProvider>
+      <div className="container mx-auto p-4">
+        <h1 className="text-2xl font-bold">Activity Dashboard</h1>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-        <BoardReport />
-      </div>
-      <div className="grid grid-cols-1 gap-6 pt-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-        <TimeBreakdown reports={appUsageData} title="Application Usage" />
-        <TimeBreakdown 
-          reports={domainUsageData} 
-          title="Domain Usage" 
-          permissionDisabled={!accessibilityPermission}
-          onEnablePermission={async () => {
-            await window.electronWindow.setAccessibilityPermission(true);
-            setAccessibilityPermission(true);
-          }}
-        />
-        <TimeBreakdown 
-          reports={titleUsageData} 
-          title="Title Usage" 
-          permissionDisabled={!screenRecordingPermission}
-          onEnablePermission={async () => {
-            await window.electronWindow.setScreenRecordingPermission(true);
-            setScreenRecordingPermission(true);
-          }}
-        />
-        <div className="">
-          <CategoryTreeView categories={categoryReport} />
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+          <BoardReport />
+        </div>
+        <div className="grid grid-cols-1 gap-6 pt-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+          <TimeBreakdown reports={appUsageData} title="Application Usage" />
+          <TimeBreakdown
+            reports={domainUsageData}
+            title="Domain Usage"
+            permissionDisabled={!accessibilityPermission}
+            onEnablePermission={async () => {
+              await window.electronWindow.setAccessibilityPermission(true);
+              setAccessibilityPermission(true);
+            }}
+          />
+          <TimeBreakdown
+            reports={titleUsageData}
+            title="Title Usage"
+            permissionDisabled={!screenRecordingPermission}
+            onEnablePermission={async () => {
+              await window.electronWindow.setScreenRecordingPermission(true);
+              setScreenRecordingPermission(true);
+            }}
+          />
+          <div className="">
+            <CategoryTreeView categories={categoryReport} />
+          </div>
         </div>
       </div>
-    </div>
+    </TrackingProvider>
   );
 }

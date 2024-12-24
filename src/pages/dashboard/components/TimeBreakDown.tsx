@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Lock, Loader2, PlayCircle, StopCircle } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useState } from "react";
+import { useTracking } from "@/context/tracking-context";
 
 type Props = {
   title: string;
@@ -22,60 +23,7 @@ export default function TimeBreakdown({
   onEnablePermission,
 }: Props) {
   const [isLoading, setIsLoading] = useState(false);
-  const [isTracking, setIsTracking] = useState(false);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    const getTrackingState = async () => {
-      try {
-        const state = await window.electronWindow.getTrackingState();
-        setIsTracking(state);
-      } catch (error) {
-        console.error("TimeBreakdown: Error getting tracking state:", error);
-      }
-    };
-    getTrackingState();
-  }, []);
-
-  const handleStartTracking = async () => {
-    try {
-      const started = await window.electronWindow.startTracking();
-      if (started) {
-        setIsTracking(true);
-        toast({
-          title: "Tracking Started",
-          description: "Window activity tracking has been started.",
-        });
-      }
-    } catch (error) {
-      console.error("TimeBreakdown: Error starting tracking", error);
-      toast({
-        title: "Error",
-        description: "Failed to start tracking.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleStopTracking = async () => {
-    try {
-      const stopped = await window.electronWindow.stopTracking();
-      if (stopped) {
-        setIsTracking(false);
-        toast({
-          title: "Tracking Stopped",
-          description: "Window activity tracking has been stopped.",
-        });
-      }
-    } catch (error) {
-      console.error("TimeBreakdown: Error stopping tracking", error);
-      toast({
-        title: "Error",
-        description: "Failed to stop tracking.",
-        variant: "destructive",
-      });
-    }
-  };
+  const { isTracking, startTracking, stopTracking } = useTracking();
 
   const handleEnablePermission = async () => {
     if (!onEnablePermission) return;
@@ -88,21 +36,34 @@ export default function TimeBreakdown({
   };
 
   return (
-    <Card className="col-span-1">
+    <Card className={`col-span-1 ${!isTracking ? "opacity-90" : ""}`}>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg font-semibold">{title}</CardTitle>
         {!permissionDisabled && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={isTracking ? handleStopTracking : handleStartTracking}
-            className="h-8 w-8"
-          >
-            {isTracking ? <StopCircle className="h-5 w-5" /> : <PlayCircle className="h-5 w-5" />}
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={isTracking ? "destructive" : "default"}
+                  size="icon"
+                  onClick={isTracking ? stopTracking : startTracking}
+                  className="h-6 w-6"
+                >
+                  {isTracking ? (
+                    <StopCircle className="h-5 w-5" />
+                  ) : (
+                    <PlayCircle className="h-5 w-5" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{isTracking ? "Stop Tracking" : "Start Tracking"}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className={`space-y-4 ${!isTracking ? "opacity-50" : ""}`}>
         {permissionDisabled ? (
           <div className="flex flex-col items-center justify-center space-y-4 py-8">
             <Lock className="h-12 w-12 text-muted-foreground" />
