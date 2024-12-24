@@ -7,14 +7,7 @@ export const builtins = ["electron", ...builtinModules.map((m) => [m, `node:${m}
 
 export const external = [
   ...builtins,
-  ...Object.keys("dependencies" in pkg ? (pkg.dependencies as Record<string, unknown>) : {}).filter(
-    (dep) =>
-      dep !== "conf" &&
-      dep !== "mock-aws-s3" &&
-      dep !== "aws-sdk" &&
-      dep !== "nock"
-  ),
-  'active-win',
+  ...Object.keys("dependencies" in pkg ? (pkg.dependencies as Record<string, unknown>) : {}),
 ];
 
 export function getBuildConfig(env: ConfigEnv<"build">): UserConfig {

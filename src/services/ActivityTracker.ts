@@ -1,5 +1,6 @@
 import { ipcMain } from "electron";
-import Store from "./ElectronStore";
+import type Store from "electron-store";
+
 import {
   WIN_GET_ACTIVE_CHANNEL,
   WIN_START_TRACKING_CHANNEL,
@@ -14,16 +15,16 @@ export class ActivityTracker {
 
   private readonly STORAGE_KEY = "window-activity-data";
   private readonly TRACKING_STATE_KEY = "tracking-enabled";
-  private store: Store;
+  private store!: Store;
 
   constructor() {
     console.log("ActivityTracker: Initializing");
-    this.store = new Store();
   }
 
-  public setupIPC() {
+  public async setupIPC(): Promise<void> {
     console.log("ActivityTracker: Setting up IPC handlers");
-
+    const electronStore = await import("electron-store");
+    this.store = new electronStore.default();
     // Check if tracking was enabled in previous session
     const wasTracking = this.store.get(this.TRACKING_STATE_KEY, false) as boolean;
     this.clearActivityData();
@@ -35,7 +36,7 @@ export class ActivityTracker {
 
     // Handle requests for current active window
     ipcMain.handle(WIN_GET_ACTIVE_CHANNEL, async () => {
-      console.log("ActivityTracker: Handling get-active-window");
+      console.log("ActivityTracker: Handling get-get-windowsdow");
       try {
         const result = this.getAllActivityData();
         // console.log("ActivityTracker: Active window result:", result);
@@ -84,8 +85,11 @@ export class ActivityTracker {
     this.store.set(this.TRACKING_STATE_KEY, true);
     this.interval = setInterval(async () => {
       try {
-        const activeWin = (await import("active-win")).default;
-        const result = await activeWin();
+        const getWindows = await import("get-windows");
+        const result = await getWindows.activeWindow({
+          accessibilityPermission: false,
+          screenRecordingPermission: false,
+        });
         if (result) {
           if (result.platform === "macos") {
             console.log(

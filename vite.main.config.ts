@@ -15,7 +15,7 @@ export default defineConfig((env) => {
         formats: ["cjs"],
       },
       rollupOptions: {
-        external: [...external, 'active-win'],
+        external: external,
       },
     },
     plugins: [pluginHotRestart("restart")],
@@ -23,7 +23,7 @@ export default defineConfig((env) => {
     resolve: {
       // Load the Node.js entry.
       mainFields: ["module", "jsnext:main", "jsnext"],
-      preserveSymlinks: true
+      preserveSymlinks: true,
     },
   };
 

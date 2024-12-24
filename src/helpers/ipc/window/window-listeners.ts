@@ -1,5 +1,6 @@
 import { BrowserWindow, ipcMain } from "electron";
-import Store from "../../../services/ElectronStore";
+import type Store from "electron-store";
+
 import {
   STORE_CHANNELS,
   WIN_CLOSE_CHANNEL,
@@ -7,9 +8,17 @@ import {
   WIN_MINIMIZE_CHANNEL,
 } from "./window-channels";
 
-const store = new Store();
+let store: Store;
 
-export function addWindowEventListeners(mainWindow: BrowserWindow) {
+const initStore = async () => {
+  const electronStore = await import("electron-store");
+  store = new electronStore.default();
+  console.log("Store initialized", store);
+};
+
+export const addWindowEventListeners = async (mainWindow: BrowserWindow) => {
+  await initStore();
+
   ipcMain.handle(WIN_MINIMIZE_CHANNEL, () => {
     mainWindow.minimize();
   });
@@ -32,4 +41,4 @@ export function addWindowEventListeners(mainWindow: BrowserWindow) {
   ipcMain.handle(STORE_CHANNELS.SET, async (_event, key: string, value: any) => {
     store.set(key, value);
   });
-}
+};
