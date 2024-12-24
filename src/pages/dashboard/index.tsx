@@ -21,6 +21,8 @@ export default function DashboardPage() {
     titles: TitleDurationReport[];
   }>({ applications: [], domains: [], titles: [] });
   const [categoryReport, setCategoryReport] = useState<CategoryDurationReport[]>([]);
+  const [accessibilityPermission, setAccessibilityPermission] = useState(false);
+  const [screenRecordingPermission, setScreenRecordingPermission] = useState(false);
 
   useEffect(() => {
     const fetchActiveWindow = async () => {
@@ -32,8 +34,20 @@ export default function DashboardPage() {
       }
     };
 
+    const loadPermissions = async () => {
+      try {
+        const accessibility = await window.electronWindow.getAccessibilityPermission();
+        const screenRecording = await window.electronWindow.getScreenRecordingPermission();
+        setAccessibilityPermission(accessibility);
+        setScreenRecordingPermission(screenRecording);
+      } catch (error) {
+        console.error("Failed to load permissions:", error);
+      }
+    };
+
     // Fetch initially
     fetchActiveWindow();
+    loadPermissions();
 
     // Set up polling every few seconds (adjust interval as needed)
     const interval = setInterval(fetchActiveWindow, 5000);
@@ -107,8 +121,24 @@ export default function DashboardPage() {
       </div>
       <div className="grid grid-cols-1 gap-6 pt-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
         <TimeBreakdown reports={appUsageData} title="Application Usage" />
-        <TimeBreakdown reports={domainUsageData} title="Domain Usage" />
-        <TimeBreakdown reports={titleUsageData} title="Title Usage" />
+        <TimeBreakdown 
+          reports={domainUsageData} 
+          title="Domain Usage" 
+          permissionDisabled={!accessibilityPermission}
+          onEnablePermission={async () => {
+            await window.electronWindow.setAccessibilityPermission(true);
+            setAccessibilityPermission(true);
+          }}
+        />
+        <TimeBreakdown 
+          reports={titleUsageData} 
+          title="Title Usage" 
+          permissionDisabled={!screenRecordingPermission}
+          onEnablePermission={async () => {
+            await window.electronWindow.setScreenRecordingPermission(true);
+            setScreenRecordingPermission(true);
+          }}
+        />
         <div className="">
           <CategoryTreeView categories={categoryReport} />
         </div>

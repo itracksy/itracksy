@@ -7,6 +7,10 @@ import {
   WIN_STOP_TRACKING_CHANNEL,
   WIN_CLEAR_ACTIVITY_DATA_CHANNEL,
   WIN_GET_TRACKING_STATE_CHANNEL,
+  WIN_GET_ACCESSIBILITY_PERMISSION_CHANNEL,
+  WIN_GET_SCREEN_RECORDING_PERMISSION_CHANNEL,
+  WIN_SET_ACCESSIBILITY_PERMISSION_CHANNEL,
+  WIN_SET_SCREEN_RECORDING_PERMISSION_CHANNEL,
 } from "../helpers/ipc/window/window-channels";
 import { ActivityRecord } from "@/types/activity";
 
@@ -15,6 +19,8 @@ export class ActivityTracker {
 
   private readonly STORAGE_KEY = "window-activity-data";
   private readonly TRACKING_STATE_KEY = "tracking-enabled";
+  private readonly ACCESSIBILITY_PERMISSION_KEY = "accessibility-permission";
+  private readonly SCREEN_RECORDING_PERMISSION_KEY = "screen-recording-permission";
   private store!: Store;
 
   constructor() {
@@ -53,6 +59,32 @@ export class ActivityTracker {
       return this.getTrackingState();
     });
 
+    // Get accessibility permission
+    ipcMain.handle(WIN_GET_ACCESSIBILITY_PERMISSION_CHANNEL, () => {
+      console.log("ActivityTracker: Handling get-accessibility-permission");
+      return this.getAccessibilityPermission();
+    });
+
+    // Get screen recording permission
+    ipcMain.handle(WIN_GET_SCREEN_RECORDING_PERMISSION_CHANNEL, () => {
+      console.log("ActivityTracker: Handling get-screen-recording-permission");
+      return this.getScreenRecordingPermission();
+    });
+
+    // Set accessibility permission
+    ipcMain.handle(WIN_SET_ACCESSIBILITY_PERMISSION_CHANNEL, (_, enabled: boolean) => {
+      console.log("ActivityTracker: Handling set-accessibility-permission", enabled);
+      this.setAccessibilityPermission(enabled);
+      return enabled;
+    });
+
+    // Set screen recording permission
+    ipcMain.handle(WIN_SET_SCREEN_RECORDING_PERMISSION_CHANNEL, (_, enabled: boolean) => {
+      console.log("ActivityTracker: Handling set-screen-recording-permission", enabled);
+      this.setScreenRecordingPermission(enabled);
+      return enabled;
+    });
+
     // Start tracking
     ipcMain.handle(WIN_START_TRACKING_CHANNEL, () => {
       console.log("ActivityTracker: Handling start-tracking");
@@ -75,10 +107,34 @@ export class ActivityTracker {
     return this.store.get(this.TRACKING_STATE_KEY, false) as boolean;
   }
 
+  private getAccessibilityPermission(): boolean {
+    return this.store.get(this.ACCESSIBILITY_PERMISSION_KEY, true) as boolean;
+  }
+
+  private getScreenRecordingPermission(): boolean {
+    return this.store.get(this.SCREEN_RECORDING_PERMISSION_KEY, true) as boolean;
+  }
+
+  private setAccessibilityPermission(enabled: boolean): void {
+    this.store.set(this.ACCESSIBILITY_PERMISSION_KEY, enabled);
+    if (enabled) {
+      // Restart tracking if it's turned on
+      this.stopTracking();
+      this.startTracking();
+    }
+  }
+
+  private setScreenRecordingPermission(enabled: boolean): void {
+    this.store.set(this.SCREEN_RECORDING_PERMISSION_KEY, enabled);
+    if (enabled) {
+      // Restart tracking if it's turned on
+      this.stopTracking();
+      this.startTracking();
+    }
+  }
+
   private startTracking(): boolean {
-    console.log("ActivityTracker: Starting tracking");
     if (this.interval) {
-      console.log("ActivityTracker: Already tracking");
       return false;
     }
 
@@ -87,8 +143,12 @@ export class ActivityTracker {
       try {
         const getWindows = await import("get-windows");
         const result = await getWindows.activeWindow({
-          accessibilityPermission: false,
-          screenRecordingPermission: false,
+          accessibilityPermission: this.getAccessibilityPermission(),
+          screenRecordingPermission: this.getScreenRecordingPermission(),
+        });
+        console.log("ActivityTracker: permissions", {
+          accessibilityPermission: this.getAccessibilityPermission(),
+          screenRecordingPermission: this.getScreenRecordingPermission(),
         });
         if (result) {
           if (result.platform === "macos") {

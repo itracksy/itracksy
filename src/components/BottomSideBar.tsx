@@ -110,7 +110,6 @@ export function BottomSideBar() {
 
   return (
     <>
-      <TrackingControls />
       <>
         {isLoading ? (
           <SidebarMenuButton disabled className="w-full justify-start">

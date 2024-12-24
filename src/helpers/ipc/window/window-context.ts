@@ -8,6 +8,10 @@ import {
   WIN_STOP_TRACKING_CHANNEL,
   WIN_CLEAR_ACTIVITY_DATA_CHANNEL,
   WIN_GET_TRACKING_STATE_CHANNEL,
+  WIN_GET_ACCESSIBILITY_PERMISSION_CHANNEL,
+  WIN_GET_SCREEN_RECORDING_PERMISSION_CHANNEL,
+  WIN_SET_ACCESSIBILITY_PERMISSION_CHANNEL,
+  WIN_SET_SCREEN_RECORDING_PERMISSION_CHANNEL,
   STORE_CHANNELS,
 } from "./window-channels";
 
@@ -25,6 +29,18 @@ export function exposeWindowContext() {
       const result = await ipcRenderer.invoke(WIN_GET_ACTIVE_CHANNEL);
 
       return result;
+    },
+    getAccessibilityPermission: async () => {
+      return await ipcRenderer.invoke(WIN_GET_ACCESSIBILITY_PERMISSION_CHANNEL);
+    },
+    getScreenRecordingPermission: async () => {
+      return await ipcRenderer.invoke(WIN_GET_SCREEN_RECORDING_PERMISSION_CHANNEL);
+    },
+    setAccessibilityPermission: async (enabled: boolean) => {
+      return await ipcRenderer.invoke(WIN_SET_ACCESSIBILITY_PERMISSION_CHANNEL, enabled);
+    },
+    setScreenRecordingPermission: async (enabled: boolean) => {
+      return await ipcRenderer.invoke(WIN_SET_SCREEN_RECORDING_PERMISSION_CHANNEL, enabled);
     },
     startTracking: async () => {
       console.log("Window: Calling startTracking");
