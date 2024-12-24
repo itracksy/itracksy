@@ -26,6 +26,8 @@ export class ActivityTracker {
 
     // Check if tracking was enabled in previous session
     const wasTracking = this.store.get(this.TRACKING_STATE_KEY, false) as boolean;
+    this.clearActivityData();
+
     if (wasTracking) {
       console.log("ActivityTracker: Auto-starting tracking from previous session");
       this.startTracking();
@@ -82,7 +84,7 @@ export class ActivityTracker {
     this.store.set(this.TRACKING_STATE_KEY, true);
     this.interval = setInterval(async () => {
       try {
-        const activeWin = (await import('active-win')).default;
+        const activeWin = (await import("active-win")).default;
         const result = await activeWin();
         if (result) {
           if (result.platform === "macos") {
