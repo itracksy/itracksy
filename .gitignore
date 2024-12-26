@@ -105,3 +105,5 @@ src/convex/_generated/
 # Editor directories and files
 .vscode/*
 convex/_generated/*
+
+.env.local

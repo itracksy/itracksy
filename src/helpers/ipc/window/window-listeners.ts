@@ -10,14 +10,11 @@ import {
 
 let store: Store;
 
-const initStore = async () => {
-  const electronStore = await import("electron-store");
-  store = new electronStore.default();
-  console.log("Store initialized", store);
-};
+ 
 
-export const addWindowEventListeners = async (mainWindow: BrowserWindow) => {
-  await initStore();
+export const addWindowEventListeners =   (mainWindow: BrowserWindow) => {
+  console.log("[Window Listeners] Initializing window event listeners...", ipcMain);
+ 
 
   ipcMain.handle(WIN_MINIMIZE_CHANNEL, () => {
     mainWindow.minimize();
@@ -34,11 +31,16 @@ export const addWindowEventListeners = async (mainWindow: BrowserWindow) => {
   ipcMain.handle(WIN_CLOSE_CHANNEL, () => {
     mainWindow.close();
   });
-  ipcMain.handle(STORE_CHANNELS.GET, async (_event, key: string) => {
-    return store.get(key);
-  });
 
-  ipcMain.handle(STORE_CHANNELS.SET, async (_event, key: string, value: any) => {
-    store.set(key, value);
-  });
+ 
+    ipcMain.handle(STORE_CHANNELS.GET, async (_event, key: string) => {
+      return false;
+    });
+
+    ipcMain.handle(STORE_CHANNELS.SET, async (_event, key: string, value: any) => {
+      return false;
+    });
+ 
+
+  console.log("[Window Listeners] Registered events:", ipcMain);
 };

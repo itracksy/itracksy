@@ -1,5 +1,5 @@
 import { ipcMain } from "electron";
-import type Store from "electron-store";
+ 
 
 import {
   WIN_GET_ACTIVE_CHANNEL,
@@ -21,24 +21,16 @@ export class ActivityTracker {
   private readonly TRACKING_STATE_KEY = "tracking-enabled";
   private readonly ACCESSIBILITY_PERMISSION_KEY = "accessibility-permission";
   private readonly SCREEN_RECORDING_PERMISSION_KEY = "screen-recording-permission";
-  private store!: Store;
-
+ 
   constructor() {
     console.log("ActivityTracker: Initializing");
   }
 
   public async setupIPC(): Promise<void> {
-    console.log("ActivityTracker: Setting up IPC handlers");
-    const electronStore = await import("electron-store");
-    this.store = new electronStore.default();
-    // Check if tracking was enabled in previous session
-    const wasTracking = this.store.get(this.TRACKING_STATE_KEY, false) as boolean;
+ 
     this.clearActivityData();
 
-    if (wasTracking) {
-      console.log("ActivityTracker: Auto-starting tracking from previous session");
-      this.startTracking();
-    }
+  
 
     // Handle requests for current active window
     ipcMain.handle(WIN_GET_ACTIVE_CHANNEL, async () => {
@@ -104,19 +96,18 @@ export class ActivityTracker {
   }
 
   private getTrackingState(): boolean {
-    return this.store.get(this.TRACKING_STATE_KEY, false) as boolean;
+    return false;
   }
 
   private getAccessibilityPermission(): boolean {
-    return this.store.get(this.ACCESSIBILITY_PERMISSION_KEY, true) as boolean;
+    return false;
   }
 
   private getScreenRecordingPermission(): boolean {
-    return this.store.get(this.SCREEN_RECORDING_PERMISSION_KEY, true) as boolean;
+    return false;
   }
 
   private setAccessibilityPermission(enabled: boolean): void {
-    this.store.set(this.ACCESSIBILITY_PERMISSION_KEY, enabled);
     if (enabled) {
       // Restart tracking if it's turned on
       this.stopTracking();
@@ -125,7 +116,6 @@ export class ActivityTracker {
   }
 
   private setScreenRecordingPermission(enabled: boolean): void {
-    this.store.set(this.SCREEN_RECORDING_PERMISSION_KEY, enabled);
     if (enabled) {
       // Restart tracking if it's turned on
       this.stopTracking();
@@ -138,7 +128,7 @@ export class ActivityTracker {
       return false;
     }
 
-    this.store.set(this.TRACKING_STATE_KEY, true);
+ 
     this.interval = setInterval(async () => {
       try {
         const getWindows = await import("get-windows");
@@ -184,15 +174,15 @@ export class ActivityTracker {
 
     clearInterval(this.interval);
     this.interval = null;
-    this.store.set(this.TRACKING_STATE_KEY, false);
+ 
     return true;
   }
 
   private saveActivityRecord(record: ActivityRecord): void {
     try {
-      const activities = this.store.get(this.STORAGE_KEY, []) as ActivityRecord[];
+      const activities = [] as ActivityRecord[];
       activities.push(record);
-      this.store.set(this.STORAGE_KEY, activities);
+ 
     } catch (error) {
       console.error("ActivityTracker: Error saving activity record:", error);
     }
@@ -200,7 +190,7 @@ export class ActivityTracker {
 
   private clearActivityData(): boolean {
     try {
-      this.store.set(this.STORAGE_KEY, []);
+   
       return true;
     } catch (error) {
       console.error("ActivityTracker: Error clearing activity data:", error);
@@ -209,6 +199,6 @@ export class ActivityTracker {
   }
 
   private getAllActivityData(): ActivityRecord[] {
-    return this.store.get(this.STORAGE_KEY, []) as ActivityRecord[];
+    return [] as ActivityRecord[];
   }
 }

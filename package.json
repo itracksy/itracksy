@@ -12,7 +12,7 @@
     "dev:log": "convex logs",
     "start": "electron-forge start",
     "package": "electron-forge package",
-    "make": "rm -rf dist out && electron-forge make",
+    "make": "electron-forge make",
     "publish": "electron-forge publish",
     "prett": "prettier . --write",
     "storybook": "storybook dev -p 6006",

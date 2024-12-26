@@ -39,7 +39,7 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
       console.error("TrackingProvider: Error starting tracking", error);
       toast({
         title: "Error",
-        description: "Failed to start tracking.",
+        description: String(error),
         variant: "destructive",
       });
     }
