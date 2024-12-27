@@ -9,10 +9,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useBoardContext } from "@/context/BoardContext";
+import { useAtom } from "jotai";
+import { selectedBoardIdAtom } from "@/context/board";
 
 export function BoardReport() {
-  const { selectedBoardId, setSelectedBoardId } = useBoardContext();
+  const [selectedBoardId, setSelectedBoardId] = useAtom(selectedBoardIdAtom);
 
   // Get all boards for the user
   const { data: boards } = useQuery({
@@ -21,7 +22,7 @@ export function BoardReport() {
 
   // Get time entries for the selected board
   const { data: timeEntries } = useQuery({
-    ...convexQuery(api.timeEntries.getBoardTimeEntries, { boardId: selectedBoardId }),
+    ...convexQuery(api.timeEntries.getBoardTimeEntries, { boardId: selectedBoardId ?? "" }),
     enabled: !!selectedBoardId,
   });
 
@@ -54,7 +55,7 @@ export function BoardReport() {
     <Card className="col-span-1">
       <CardHeader>
         <CardTitle className="text-lg font-semibold">Board Time Report</CardTitle>
-        <Select value={selectedBoardId} onValueChange={setSelectedBoardId}>
+        <Select value={selectedBoardId ?? ""} onValueChange={setSelectedBoardId}>
           <SelectTrigger>
             <SelectValue placeholder="Select a board" />
           </SelectTrigger>

@@ -7,10 +7,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { useBoardContext } from "@/context/BoardContext";
+
 import { useQuery } from "@tanstack/react-query";
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "../../../convex/_generated/api";
+import { useAtom } from "jotai";
+import { selectedBoardIdAtom } from "@/context/board";
 
 interface TimeEntryDialogProps {
   open: boolean;
@@ -27,14 +29,14 @@ export function TimeEntryDialog({
   setSelectedItemId,
   onCreateTimeEntry,
 }: TimeEntryDialogProps) {
-  const { selectedBoardId, setSelectedBoardId } = useBoardContext();
+  const [selectedBoardId, setSelectedBoardId] = useAtom(selectedBoardIdAtom);
 
   const { data: boards } = useQuery({
     ...convexQuery(api.board.getBoards, {}),
   });
 
   const { data: selectedBoard } = useQuery({
-    ...convexQuery(api.board.getBoard, { id: selectedBoardId }),
+    ...convexQuery(api.board.getBoard, { id: selectedBoardId ?? "" }),
     enabled: !!selectedBoardId,
   });
 
@@ -47,7 +49,7 @@ export function TimeEntryDialog({
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Select Board</label>
-            <Select value={selectedBoardId} onValueChange={setSelectedBoardId}>
+            <Select value={selectedBoardId ?? ""} onValueChange={setSelectedBoardId}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a board" />
               </SelectTrigger>

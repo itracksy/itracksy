@@ -8,11 +8,6 @@ import {
   WIN_STOP_TRACKING_CHANNEL,
   WIN_CLEAR_ACTIVITY_DATA_CHANNEL,
   WIN_GET_TRACKING_STATE_CHANNEL,
-  WIN_GET_ACCESSIBILITY_PERMISSION_CHANNEL,
-  WIN_GET_SCREEN_RECORDING_PERMISSION_CHANNEL,
-  WIN_SET_ACCESSIBILITY_PERMISSION_CHANNEL,
-  WIN_SET_SCREEN_RECORDING_PERMISSION_CHANNEL,
-  STORE_CHANNELS,
 } from "./window-channels";
 
 export function exposeWindowContext() {
@@ -20,32 +15,18 @@ export function exposeWindowContext() {
     minimize: () => ipcRenderer.invoke(WIN_MINIMIZE_CHANNEL),
     maximize: () => ipcRenderer.invoke(WIN_MAXIMIZE_CHANNEL),
     close: () => ipcRenderer.invoke(WIN_CLOSE_CHANNEL),
-    store: {
-      get: async (key: string) => await ipcRenderer.invoke(STORE_CHANNELS.GET, key),
-      set: async (key: string, value: any) =>
-        await ipcRenderer.invoke(STORE_CHANNELS.SET, key, value),
-    },
+
     getActiveWindow: async () => {
       const result = await ipcRenderer.invoke(WIN_GET_ACTIVE_CHANNEL);
 
       return result;
     },
-    getAccessibilityPermission: async () => {
-      return await ipcRenderer.invoke(WIN_GET_ACCESSIBILITY_PERMISSION_CHANNEL);
-    },
-    getScreenRecordingPermission: async () => {
-      return await ipcRenderer.invoke(WIN_GET_SCREEN_RECORDING_PERMISSION_CHANNEL);
-    },
-    setAccessibilityPermission: async (enabled: boolean) => {
-      return await ipcRenderer.invoke(WIN_SET_ACCESSIBILITY_PERMISSION_CHANNEL, enabled);
-    },
-    setScreenRecordingPermission: async (enabled: boolean) => {
-      return await ipcRenderer.invoke(WIN_SET_SCREEN_RECORDING_PERMISSION_CHANNEL, enabled);
-    },
-    startTracking: async () => {
-      console.log("Window: Calling startTracking");
-      const result = await ipcRenderer.invoke(WIN_START_TRACKING_CHANNEL);
-      console.log("Window: startTracking result:", result);
+
+    startTracking: async (params: {
+      accessibilityPermission: true;
+      screenRecordingPermission: true;
+    }) => {
+      const result = await ipcRenderer.invoke(WIN_START_TRACKING_CHANNEL, params);
       return result;
     },
     stopTracking: async () => {

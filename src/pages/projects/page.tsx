@@ -37,7 +37,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useBoardContext } from "@/context/BoardContext";
+
 import {
   Table,
   TableBody,
@@ -46,6 +46,8 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
+import { useAtom } from "jotai";
+import { selectedBoardIdAtom } from "@/context/board";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -55,7 +57,7 @@ const formSchema = z.object({
 });
 
 export function ProjectsPage() {
-  const { selectedBoardId, setSelectedBoardId } = useBoardContext();
+  const [selectedBoardId, setSelectedBoardId] = useAtom(selectedBoardIdAtom);
   const [viewMode, setViewMode] = useState<"board" | "list">("board");
   const [open, setOpen] = useState(false);
   const currentUser = useConvexQuery(api.users.viewer);

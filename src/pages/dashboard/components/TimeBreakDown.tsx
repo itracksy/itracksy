@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Lock, Loader2, PlayCircle, StopCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useState } from "react";
-import { useTracking } from "@/context/tracking-context";
+import { useTracking } from "@/hooks/useTracking";
 
 type Props = {
   title: string;

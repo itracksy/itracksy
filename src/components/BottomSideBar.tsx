@@ -5,17 +5,18 @@ import {
   useCreateTimeEntryMutation,
 } from "@/services/hooks/useTimeEntryQueries";
 import { Clock, PlayCircle, StopCircle } from "lucide-react";
-import { TrackingControls } from "@/components/tracking/TrackingControls";
+
 import { TimeEntryDialog } from "@/components/tracking/TimeEntryDialog";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
-import { useBoardContext } from "@/context/BoardContext";
+import { useAtomValue } from "jotai";
+import { selectedBoardIdAtom } from "@/context/board";
 
 export function BottomSideBar() {
   const [open, setOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string>("");
   const [duration, setDuration] = useState<string>("00:00:00");
-  const { selectedBoardId } = useBoardContext();
+  const selectedBoardId = useAtomValue(selectedBoardIdAtom);
 
   const { data: activeTimeEntry, isLoading } = useActiveTimeEntry();
   const updateTimeEntry = useUpdateTimeEntryMutation();

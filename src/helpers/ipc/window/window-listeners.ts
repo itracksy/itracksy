@@ -1,20 +1,15 @@
 import { BrowserWindow, ipcMain } from "electron";
-import type Store from "electron-store";
-
 import {
-  STORE_CHANNELS,
   WIN_CLOSE_CHANNEL,
   WIN_MAXIMIZE_CHANNEL,
   WIN_MINIMIZE_CHANNEL,
+  WIN_START_TRACKING_CHANNEL,
 } from "./window-channels";
 
-let store: Store;
+import { ActivityRecord } from "@/types/activity";
 
- 
-
-export const addWindowEventListeners =   (mainWindow: BrowserWindow) => {
+export const addWindowEventListeners = (mainWindow: BrowserWindow) => {
   console.log("[Window Listeners] Initializing window event listeners...", ipcMain);
- 
 
   ipcMain.handle(WIN_MINIMIZE_CHANNEL, () => {
     mainWindow.minimize();
@@ -31,16 +26,40 @@ export const addWindowEventListeners =   (mainWindow: BrowserWindow) => {
   ipcMain.handle(WIN_CLOSE_CHANNEL, () => {
     mainWindow.close();
   });
+  ipcMain.handle(
+    WIN_START_TRACKING_CHANNEL,
+    async (_, params: { accessibilityPermission: true; screenRecordingPermission: true }) => {
+      return await startTracking(params);
+    }
+  );
+};
 
- 
-    ipcMain.handle(STORE_CHANNELS.GET, async (_event, key: string) => {
-      return false;
-    });
+const startTracking = async ({
+  accessibilityPermission,
+  screenRecordingPermission,
+}: {
+  accessibilityPermission: true;
+  screenRecordingPermission: true;
+}): Promise<ActivityRecord | undefined> => {
+  const getWindows = await import("get-windows");
+  const result = await getWindows.activeWindow({
+    accessibilityPermission: accessibilityPermission,
+    screenRecordingPermission: screenRecordingPermission,
+  });
 
-    ipcMain.handle(STORE_CHANNELS.SET, async (_event, key: string, value: any) => {
-      return false;
-    });
- 
+  if (result) {
+    if (result.platform === "macos") {
+      console.log(
+        `ActivityTracker: Active window - ${result.title} (Bundle ID: ${result.owner.bundleId})`
+      );
+    } else {
+      console.log(`ActivityTracker: Active window - ${result.title} (Path: ${result.owner.path})`);
+    }
 
-  console.log("[Window Listeners] Registered events:", ipcMain);
+    const activityRecord: ActivityRecord = {
+      ...result,
+      timestamp: Date.now(),
+    };
+    return activityRecord;
+  }
 };

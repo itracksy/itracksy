@@ -6,55 +6,32 @@ import {
   CategoryDurationReport,
 } from "@/types/activity";
 import { useState, useEffect, useMemo } from "react";
-
 import { calculateDurationsReport } from "@/services/ReportBuilder";
 import TimeBreakdown from "./components/TimeBreakDown";
 import { CategoryMapper } from "@/services/CategoryMapper";
 import { CategoryTreeView } from "./components/CategoryTreeView";
 import { BoardReport } from "./components/BoardReport";
-import { TrackingProvider } from "@/context/tracking-context";
+import { useAtom, useAtomValue } from "jotai";
+import {
+  accessibilityPermissionAtom,
+  activeWindowAtom,
+  screenRecordingPermissionAtom,
+} from "@/context/activity";
 
 export default function DashboardPage() {
-  const [activeWindow, setActiveWindow] = useState<ActivityRecord[]>([]);
   const [durationReports, setDurationReports] = useState<{
     applications: ApplicationDurationReport[];
     domains: DomainDurationReport[];
     titles: TitleDurationReport[];
   }>({ applications: [], domains: [], titles: [] });
   const [categoryReport, setCategoryReport] = useState<CategoryDurationReport[]>([]);
-  const [accessibilityPermission, setAccessibilityPermission] = useState(false);
-  const [screenRecordingPermission, setScreenRecordingPermission] = useState(false);
-
-  useEffect(() => {
-    const fetchActiveWindow = async () => {
-      try {
-        const result = await window.electronWindow.getActiveWindow();
-        setActiveWindow(result);
-      } catch (error) {
-        console.error("Failed to fetch active window:", error);
-      }
-    };
-
-    const loadPermissions = async () => {
-      try {
-        const accessibility = await window.electronWindow.getAccessibilityPermission();
-        const screenRecording = await window.electronWindow.getScreenRecordingPermission();
-        setAccessibilityPermission(accessibility);
-        setScreenRecordingPermission(screenRecording);
-      } catch (error) {
-        console.error("Failed to load permissions:", error);
-      }
-    };
-
-    // Fetch initially
-    fetchActiveWindow();
-    loadPermissions();
-
-    // Set up polling every few seconds (adjust interval as needed)
-    const interval = setInterval(fetchActiveWindow, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
+  const [accessibilityPermission, setAccessibilityPermission] = useAtom(
+    accessibilityPermissionAtom
+  );
+  const [screenRecordingPermission, setScreenRecordingPermission] = useAtom(
+    screenRecordingPermissionAtom
+  );
+  const activityWindow = useAtomValue(activeWindowAtom);
 
   useEffect(() => {
     const processActivityData = () => {
@@ -64,18 +41,18 @@ export default function DashboardPage() {
         end: Date.now(),
       };
 
-      const durationReports = calculateDurationsReport(activeWindow, timeWindow);
+      const durationReports = calculateDurationsReport(activityWindow, timeWindow);
       setDurationReports(durationReports);
     };
 
     processActivityData();
-  }, [activeWindow]);
+  }, [activityWindow]);
 
   useEffect(() => {
     const categoryMapper = new CategoryMapper();
-    const categories = categoryMapper.buildCategoryTree(activeWindow);
+    const categories = categoryMapper.buildCategoryTree(activityWindow);
     setCategoryReport(categories);
-  }, [activeWindow]);
+  }, [activityWindow]);
 
   const appUsageData = useMemo(
     () =>
@@ -114,38 +91,34 @@ export default function DashboardPage() {
     [durationReports.titles]
   );
   return (
-    <TrackingProvider>
-      <div className="container mx-auto p-4">
-        <h1 className="text-2xl font-bold">Activity Dashboard</h1>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold">Activity Dashboard</h1>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-          <BoardReport />
-        </div>
-        <div className="grid grid-cols-1 gap-6 pt-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-          <TimeBreakdown reports={appUsageData} title="Application Usage" />
-          <TimeBreakdown
-            reports={domainUsageData}
-            title="Domain Usage"
-            permissionDisabled={!accessibilityPermission}
-            onEnablePermission={async () => {
-              await window.electronWindow.setAccessibilityPermission(true);
-              setAccessibilityPermission(true);
-            }}
-          />
-          <TimeBreakdown
-            reports={titleUsageData}
-            title="Title Usage"
-            permissionDisabled={!screenRecordingPermission}
-            onEnablePermission={async () => {
-              await window.electronWindow.setScreenRecordingPermission(true);
-              setScreenRecordingPermission(true);
-            }}
-          />
-          <div className="">
-            <CategoryTreeView categories={categoryReport} />
-          </div>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+        <BoardReport />
+      </div>
+      <div className="grid grid-cols-1 gap-6 pt-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+        <TimeBreakdown reports={appUsageData} title="Application Usage" />
+        <TimeBreakdown
+          reports={domainUsageData}
+          title="Domain Usage"
+          permissionDisabled={!accessibilityPermission}
+          onEnablePermission={async () => {
+            setAccessibilityPermission(true);
+          }}
+        />
+        <TimeBreakdown
+          reports={titleUsageData}
+          title="Title Usage"
+          permissionDisabled={!screenRecordingPermission}
+          onEnablePermission={async () => {
+            setScreenRecordingPermission(true);
+          }}
+        />
+        <div className="">
+          <CategoryTreeView categories={categoryReport} />
         </div>
       </div>
-    </TrackingProvider>
+    </div>
   );
 }

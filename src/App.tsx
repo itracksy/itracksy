@@ -14,7 +14,6 @@ import { api } from "../convex/_generated/api";
 import { ConvexQueryClient } from "@convex-dev/react-query";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { BoardProvider } from "./context/BoardContext";
 
 const convex = new ConvexReactClient(config.convexUrl);
 
@@ -72,9 +71,7 @@ root.render(
     <ConvexAuthProvider client={convex}>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <BoardProvider>
-            <App />
-          </BoardProvider>
+          <App />
         </TooltipProvider>
       </QueryClientProvider>
     </ConvexAuthProvider>

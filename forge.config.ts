@@ -16,11 +16,7 @@ const config: ForgeConfig = {
     asar: true,
   },
   makers: [
-    new MakerSquirrel({
-      name: "itracksy",
-      authors: "hunght",
-      description: "Electron Forge with shadcn-ui (Vite + Typescript)",
-    }),
+    new MakerSquirrel({}),
     new MakerZIP({}, ["darwin"]),
     new MakerDMG({
       appPath: "dist/itracksy-darwin-x64/itracksy.app",
