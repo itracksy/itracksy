@@ -4,6 +4,7 @@ import registerListeners from "./helpers/ipc/listeners-register";
 // "electron-squirrel-startup" seems broken when packaging with vite
 //import started from "electron-squirrel-startup";
 import path from "path";
+import { ActivityRecord } from "./types/activity";
 
 const inDevelopment = process.env.NODE_ENV === "development";
 
@@ -70,8 +71,8 @@ interface ElectronWindow {
   startTracking: (params: {
     accessibilityPermission: boolean;
     screenRecordingPermission: boolean;
-  }) => Promise<boolean>;
-  stopTracking: () => Promise<boolean>;
+  }) => Promise<ActivityRecord>;
+
   getTrackingState: () => Promise<boolean>;
 }
 

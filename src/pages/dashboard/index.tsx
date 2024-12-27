@@ -14,9 +14,10 @@ import { BoardReport } from "./components/BoardReport";
 import { useAtom, useAtomValue } from "jotai";
 import {
   accessibilityPermissionAtom,
-  activeWindowAtom,
+  activityWindowAtom,
   screenRecordingPermissionAtom,
 } from "@/context/activity";
+import { useThrottleAtomValue } from "@/hooks/useThrottleAtomValue";
 
 export default function DashboardPage() {
   const [durationReports, setDurationReports] = useState<{
@@ -31,7 +32,7 @@ export default function DashboardPage() {
   const [screenRecordingPermission, setScreenRecordingPermission] = useAtom(
     screenRecordingPermissionAtom
   );
-  const activityWindow = useAtomValue(activeWindowAtom);
+  const activityWindow = useThrottleAtomValue(activityWindowAtom, 10000);
 
   useEffect(() => {
     const processActivityData = () => {
@@ -90,6 +91,7 @@ export default function DashboardPage() {
       })),
     [durationReports.titles]
   );
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold">Activity Dashboard</h1>

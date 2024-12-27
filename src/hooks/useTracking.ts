@@ -1,8 +1,8 @@
 import { useRef } from "react";
 import { useAtom, useAtomValue } from "jotai";
-
 import {
   accessibilityPermissionAtom,
+  activityWindowAtom,
   isTrackingAtom,
   screenRecordingPermissionAtom,
 } from "@/context/activity";
@@ -14,6 +14,7 @@ export const useTracking = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const accessibilityPermission = useAtomValue(accessibilityPermissionAtom);
   const screenRecordingPermission = useAtomValue(screenRecordingPermissionAtom);
+  const [_, setActivityWindow] = useAtom(activityWindowAtom);
   const { toast } = useToast();
   const onTick = async () => {
     try {
@@ -21,26 +22,13 @@ export const useTracking = () => {
         accessibilityPermission,
         screenRecordingPermission,
       });
-      if (started) {
-        setIsTracking(true);
-        toast({
-          title: "Tracking Started",
-          description: "Window activity tracking has been started.",
-        });
-      }
+      setActivityWindow((prev) => [...prev, started]);
     } catch (error) {
       console.error("TrackingProvider: Error starting tracking", error);
-      toast({
-        title: "Error",
-        description: String(error),
-        variant: "destructive",
-      });
     }
   };
 
   const startTracking = () => {
-    setIsTracking(true);
-
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
@@ -48,15 +36,24 @@ export const useTracking = () => {
     intervalRef.current = setInterval(() => {
       onTick();
     }, intervalDuration);
+
+    setIsTracking(true);
+    toast({
+      title: "Tracking Started",
+      description: "Window activity tracking has been started.",
+    });
   };
 
   const stopTracking = () => {
-    setIsTracking(false);
-
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
+    setIsTracking(false);
+    toast({
+      title: "Tracking Stopped",
+      description: "Window activity tracking has been stopped.",
+    });
   };
 
   return {
