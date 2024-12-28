@@ -16,7 +16,8 @@ export interface ActivityRecord {
   };
   memoryUsage: number;
   url?: string;
-  timestamp: number;
+  timestamp: number; // timestamp: Date.now() in milliseconds
+  count: number;
 }
 
 export interface ApplicationDurationReport {

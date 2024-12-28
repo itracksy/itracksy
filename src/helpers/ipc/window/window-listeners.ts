@@ -7,13 +7,14 @@ import {
 } from "./window-channels";
 
 import { ActivityRecord } from "@/types/activity";
+import { safelyRegisterListener } from "../safelyRegisterListener";
 
 export const addWindowEventListeners = (mainWindow: BrowserWindow) => {
-  ipcMain.handle(WIN_MINIMIZE_CHANNEL, () => {
+  safelyRegisterListener(WIN_MINIMIZE_CHANNEL, () => {
     mainWindow.minimize();
   });
 
-  ipcMain.handle(WIN_MAXIMIZE_CHANNEL, () => {
+  safelyRegisterListener(WIN_MAXIMIZE_CHANNEL, () => {
     if (mainWindow.isMaximized()) {
       mainWindow.unmaximize();
     } else {
@@ -21,10 +22,10 @@ export const addWindowEventListeners = (mainWindow: BrowserWindow) => {
     }
   });
 
-  ipcMain.handle(WIN_CLOSE_CHANNEL, () => {
+  safelyRegisterListener(WIN_CLOSE_CHANNEL, () => {
     mainWindow.close();
   });
-  ipcMain.handle(
+  safelyRegisterListener(
     WIN_START_TRACKING_CHANNEL,
     async (_, params: { accessibilityPermission: boolean; screenRecordingPermission: boolean }) => {
       return await startTracking(params);
@@ -53,6 +54,7 @@ const startTracking = async (params: {
     const activityRecord: ActivityRecord = {
       ...result,
       timestamp: Date.now(),
+      count: 1,
     };
     return activityRecord;
   }

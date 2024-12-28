@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { syncThemeWithLocal } from "./helpers/theme_helpers";
 import { useTranslation } from "react-i18next";
@@ -9,21 +9,57 @@ import { RouterProvider } from "@tanstack/react-router";
 import { ConvexReactClient } from "convex/react";
 import { config } from "./config/env";
 import { ConvexAuthProvider, useAuthActions } from "@convex-dev/auth/react";
-import { Authenticated, Unauthenticated, useQuery } from "convex/react";
+import { Authenticated, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
-import { ConvexQueryClient } from "@convex-dev/react-query";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ConvexQueryClient, useConvexMutation } from "@convex-dev/react-query";
+import { QueryClient, QueryClientProvider, useMutation } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useAtom, useAtomValue } from "jotai";
+import { activityWindowAtom } from "./context/activity";
 
 const convex = new ConvexReactClient(config.convexUrl);
 
 function AuthenticatedApp() {
   const { i18n } = useTranslation();
+  const [activityWindows, setActivityWindows] = useAtom(activityWindowAtom);
+  const syncActivitiesMutation = useMutation({
+    mutationFn: useConvexMutation(api.activities.syncActivities),
+  });
+  const hasSynced = useRef(false);
 
   useEffect(() => {
     syncThemeWithLocal();
     updateAppLanguage(i18n);
   }, [i18n]);
+
+  useEffect(() => {
+    if (!hasSynced.current && activityWindows.length > 0) {
+      const transformedActivities = activityWindows.map((window) => ({
+        platform: window.platform,
+        id: window.id,
+        title: window.title,
+        ownerPath: window.owner.path,
+        ownerProcessId: window.owner.processId,
+        ownerName: window.owner.name,
+        timestamp: window.timestamp,
+        count: window.count ?? 1,
+      }));
+
+      syncActivitiesMutation
+        .mutateAsync({ activities: transformedActivities })
+        .then(() => {
+          hasSynced.current = true;
+          setActivityWindows([]);
+        })
+        .catch((error) => {
+          console.error("Failed to sync activities:", error);
+        });
+    }
+  }, [activityWindows, syncActivitiesMutation]);
+
+  if (!hasSynced.current && activityWindows.length > 0) {
+    return <div>Syncing activities...</div>;
+  }
 
   return <RouterProvider router={router} />;
 }

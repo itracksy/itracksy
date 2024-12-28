@@ -85,6 +85,22 @@ const schema = defineSchema({
     .index("item", ["itemId"])
     .index("board", ["boardId"])
     .index("invoice", ["invoiceId"]),
+
+  windowTracking: defineTable({
+    platform: v.string(),
+    id: v.number(),
+    title: v.string(),
+    ownerPath: v.string(),
+    ownerProcessId: v.number(),
+    ownerBundleId: v.optional(v.string()),
+    ownerName: v.string(),
+    url: v.optional(v.string()),
+    timestamp: v.number(),
+    count: v.number(),
+    userId: v.string(), // Added to track which user this belongs to
+  })
+    .index("timestamp", ["timestamp"])
+    .index("userId", ["userId"]),
 });
 
 export default schema;

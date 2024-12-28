@@ -72,8 +72,6 @@ interface ElectronWindow {
     accessibilityPermission: boolean;
     screenRecordingPermission: boolean;
   }) => Promise<ActivityRecord>;
-
-  getTrackingState: () => Promise<boolean>;
 }
 
 declare global {
