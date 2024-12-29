@@ -73,7 +73,7 @@ export class CategoryMapper {
 
     if (
       matches.application &&
-      activity.owner.name.toLowerCase().includes(matches.application.toLowerCase())
+      activity.ownerName.toLowerCase().includes(matches.application.toLowerCase())
     ) {
       return true;
     }

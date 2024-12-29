@@ -1,9 +1,9 @@
 import {
-  ActivityRecord,
   ApplicationDurationReport,
   DomainDurationReport,
   TitleDurationReport,
   CategoryDurationReport,
+  ActivityRecord,
 } from "@/types/activity";
 import { useState, useEffect, useMemo } from "react";
 import { calculateDurationsReport } from "@/services/ReportBuilder";
@@ -11,13 +11,9 @@ import TimeBreakdown from "./components/TimeBreakDown";
 import { CategoryMapper } from "@/services/CategoryMapper";
 import { CategoryTreeView } from "./components/CategoryTreeView";
 import { BoardReport } from "./components/BoardReport";
-import { useAtom, useAtomValue } from "jotai";
-import {
-  accessibilityPermissionAtom,
-  activityWindowAtom,
-  screenRecordingPermissionAtom,
-} from "@/context/activity";
-import { useThrottleAtomValue } from "@/hooks/useThrottleAtomValue";
+import { useAtom } from "jotai";
+import { accessibilityPermissionAtom, screenRecordingPermissionAtom } from "@/context/activity";
+import { useQuery } from "@tanstack/react-query";
 
 export default function DashboardPage() {
   const [durationReports, setDurationReports] = useState<{
@@ -32,24 +28,33 @@ export default function DashboardPage() {
   const [screenRecordingPermission, setScreenRecordingPermission] = useAtom(
     screenRecordingPermissionAtom
   );
-  const activityWindow = useThrottleAtomValue(activityWindowAtom, 10000);
+
+  const { data: activityWindow } = useQuery({
+    queryKey: ["activityWindow"],
+    queryFn: async () => {
+      return window.electronWindow.getActivities();
+    },
+    refetchInterval: 10000,
+  });
 
   useEffect(() => {
-    const processActivityData = () => {
-      // Calculate durations for the last 24 hours
-      const timeWindow = {
-        start: Date.now() - 24 * 60 * 60 * 1000,
-        end: Date.now(),
-      };
-
-      const durationReports = calculateDurationsReport(activityWindow, timeWindow);
-      setDurationReports(durationReports);
+    if (!activityWindow) {
+      return;
+    }
+    // Calculate durations for the last 24 hours
+    const timeWindow = {
+      start: Date.now() - 24 * 60 * 60 * 1000,
+      end: Date.now(),
     };
 
-    processActivityData();
+    const durationReports = calculateDurationsReport(activityWindow, timeWindow);
+    setDurationReports(durationReports);
   }, [activityWindow]);
 
   useEffect(() => {
+    if (!activityWindow) {
+      return;
+    }
     const categoryMapper = new CategoryMapper();
     const categories = categoryMapper.buildCategoryTree(activityWindow);
     setCategoryReport(categories);

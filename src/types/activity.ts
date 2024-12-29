@@ -1,23 +1,15 @@
 export interface ActivityRecord {
   platform: string;
   id: number;
-  bounds: {
-    width: number;
-    y: number;
-    height: number;
-    x: number;
-  };
   title: string;
-  owner: {
-    path: string;
-    processId: number;
-    bundleId?: string;
-    name: string;
-  };
-  memoryUsage: number;
+  ownerPath: string;
+  ownerProcessId: number;
+  ownerBundleId?: string;
+  ownerName: string;
   url?: string;
   timestamp: number; // timestamp: Date.now() in milliseconds
   count: number;
+  userId?: string;
 }
 
 export interface ApplicationDurationReport {

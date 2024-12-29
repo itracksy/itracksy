@@ -34,7 +34,7 @@ export function calculateDurationsReport(
 
   sortedRecords.forEach((record) => {
     if (record.timestamp >= timeWindow.start && record.timestamp <= timeWindow.end) {
-      const appName = record.owner.name;
+      const appName = record.ownerName;
 
       // Group by application
       if (!groupedByApp.has(appName)) {

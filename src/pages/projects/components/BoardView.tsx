@@ -6,13 +6,10 @@ import { NewColumn } from "./NewColumn";
 import { Column as ColumnComponent } from "./Column";
 import type { Column } from "convex/schema";
 
-import { Loader } from "@/components/Loader";
-import { GetBoard } from "convex/board";
+import { CompletedBoard } from "convex/board";
 
-export function BoardView({ board }: { board: GetBoard }) {
+export function BoardView({ board }: { board: CompletedBoard }) {
   const newColumnAddedRef = useRef(false);
-
-  const updateBoardMutation = useUpdateBoardMutation();
 
   // scroll right when new columns are added
   const scrollContainerRef = useRef<HTMLDivElement>(null);

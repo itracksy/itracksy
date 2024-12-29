@@ -1,4 +1,4 @@
-import { BrowserWindow, ipcMain } from "electron";
+import { BrowserWindow } from "electron";
 import { addThemeEventListeners } from "./theme/theme-listeners";
 import { addWindowEventListeners } from "./window/window-listeners";
 

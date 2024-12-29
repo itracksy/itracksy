@@ -1,8 +1,7 @@
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 import { useAtom, useAtomValue } from "jotai";
 import {
   accessibilityPermissionAtom,
-  activityWindowAtom,
   isTrackingAtom,
   screenRecordingPermissionAtom,
 } from "@/context/activity";
@@ -18,10 +17,10 @@ const mergeActivityRecord = (prev: ActivityRecord[], started: ActivityRecord): A
     return (
       a.id === b.id &&
       a.title === b.title &&
-      a.owner.bundleId === b.owner.bundleId &&
-      a.owner.processId === b.owner.processId &&
-      a.owner.name === b.owner.name &&
-      a.owner.path === b.owner.path &&
+      a.ownerBundleId === b.ownerBundleId &&
+      a.ownerProcessId === b.ownerProcessId &&
+      a.ownerName === b.ownerName &&
+      a.ownerPath === b.ownerPath &&
       a.platform === b.platform
     );
   };
@@ -49,16 +48,15 @@ const mergeActivityRecord = (prev: ActivityRecord[], started: ActivityRecord): A
 };
 
 export const useTracking = () => {
-  const intervalDuration = 3000;
   const [isTracking, setIsTracking] = useAtom(isTrackingAtom);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
   const accessibilityPermission = useAtomValue(accessibilityPermissionAtom);
   const screenRecordingPermission = useAtomValue(screenRecordingPermissionAtom);
-  const [_, setActivityWindow] = useAtom(activityWindowAtom);
+
   const { toast } = useToast();
-  const onTick = useCallback(async () => {
+  const startTracking = useCallback(async () => {
     try {
-      const started = await window.electronWindow.startTracking({
+      window.electronWindow.startTracking({
         accessibilityPermission,
         screenRecordingPermission,
       });
@@ -66,35 +64,18 @@ export const useTracking = () => {
         accessibilityPermission,
         screenRecordingPermission,
       });
-      console.log("started", started);
-      setActivityWindow((prev) => mergeActivityRecord(prev, started));
+
+      toast({
+        title: "Tracking Started",
+        description: "Window activity tracking has been started.",
+      });
     } catch (error) {
       console.error("TrackingProvider: Error starting tracking", error);
     }
   }, [accessibilityPermission, screenRecordingPermission]);
 
-  const startTracking = () => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-
-    intervalRef.current = setInterval(() => {
-      onTick();
-    }, intervalDuration);
-
-    setIsTracking(true);
-    toast({
-      title: "Tracking Started",
-      description: "Window activity tracking has been started.",
-    });
-  };
-
   const stopTracking = useCallback(() => {
     // Clear existing interval
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
 
     // Update tracking state
     setIsTracking(false);

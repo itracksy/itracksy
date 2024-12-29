@@ -4,7 +4,9 @@ import {
   WIN_MAXIMIZE_CHANNEL,
   WIN_CLOSE_CHANNEL,
   WIN_START_TRACKING_CHANNEL,
+  WIN_GET_ACTIVITIES_CHANNEL,
 } from "./window-channels";
+import { get } from "http";
 
 export function exposeWindowContext() {
   contextBridge.exposeInMainWorld("electronWindow", {
@@ -16,8 +18,10 @@ export function exposeWindowContext() {
       accessibilityPermission: true;
       screenRecordingPermission: true;
     }) => {
-      const result = await ipcRenderer.invoke(WIN_START_TRACKING_CHANNEL, params);
-      return result;
+      ipcRenderer.invoke(WIN_START_TRACKING_CHANNEL, params);
+    },
+    getActivities: async () => {
+      return await ipcRenderer.invoke(WIN_GET_ACTIVITIES_CHANNEL);
     },
   });
 }
