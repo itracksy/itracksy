@@ -5,8 +5,9 @@ import {
   WIN_CLOSE_CHANNEL,
   WIN_START_TRACKING_CHANNEL,
   WIN_GET_ACTIVITIES_CHANNEL,
+  WIN_STOP_TRACKING_CHANNEL,
+  WIN_CLEAR_ACTIVITIES_CHANNEL,
 } from "./window-channels";
-import { get } from "http";
 
 export function exposeWindowContext() {
   contextBridge.exposeInMainWorld("electronWindow", {
@@ -19,6 +20,12 @@ export function exposeWindowContext() {
       screenRecordingPermission: true;
     }) => {
       ipcRenderer.invoke(WIN_START_TRACKING_CHANNEL, params);
+    },
+    stopTracking: async () => {
+      await ipcRenderer.invoke(WIN_STOP_TRACKING_CHANNEL);
+    },
+    clearActivities: async () => {
+      return await ipcRenderer.invoke(WIN_CLEAR_ACTIVITIES_CHANNEL);
     },
     getActivities: async () => {
       return await ipcRenderer.invoke(WIN_GET_ACTIVITIES_CHANNEL);

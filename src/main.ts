@@ -72,6 +72,7 @@ interface ElectronWindow {
     accessibilityPermission: boolean;
     screenRecordingPermission: boolean;
   }) => Promise<void>;
+  clearActivities: () => Promise<void>;
   getActivities: () => Promise<ActivityRecord[]>;
 }
 

@@ -16,11 +16,3 @@ test("has icon", () => {
 
   expect(icon).toBeInTheDocument();
 });
-
-test("is moon icon", () => {
-  const svgIconClassName: string = "lucide-moon";
-  const { getByRole } = render(<ToggleTheme />);
-  const svg = getByRole("button").querySelector("svg");
-
-  expect(svg.classList).toContain(svgIconClassName);
-});

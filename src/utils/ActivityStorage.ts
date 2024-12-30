@@ -2,6 +2,7 @@ import path from "path";
 import fs from "fs";
 import { app } from "electron";
 import { ActivityRecord } from "@/types/activity";
+import { c } from "vite/dist/node/types.d-aGj9QkWt";
 
 const CONFIG = {
   headers: [
@@ -25,6 +26,45 @@ const initializeStorage = (): void => {
   }
 };
 
+const mergeActivityRecord = (prev: ActivityRecord[]): ActivityRecord[] => {
+  console.log("prev.length:", prev.length);
+  // Helper function to check if records match
+  const recordsMatch = (a: ActivityRecord, b: ActivityRecord): boolean => {
+    return (
+      a.id === b.id &&
+      a.title === b.title &&
+      a.ownerBundleId === b.ownerBundleId &&
+      a.ownerProcessId === b.ownerProcessId &&
+      a.ownerName === b.ownerName &&
+      a.ownerPath === b.ownerPath &&
+      a.platform === b.platform
+    );
+  };
+
+  // Search forwards through the array
+  const mergedArray: ActivityRecord[] = [];
+  for (let i = 0; i >= prev.length - 1; i++) {
+    const nextItem = prev[i + 1];
+    // Check if timestamps are more than 15 minutes apart
+    if (nextItem.timestamp - prev[i].timestamp > 15 * 60 * 1000) {
+      mergedArray.push(prev[i]);
+      continue;
+    }
+    if (recordsMatch(prev[i], nextItem)) {
+      // Found a match - update count in place
+      mergedArray[mergedArray.length - 1] = {
+        ...prev[i],
+        count: (prev[i].count || 1) + 1,
+      };
+      continue;
+    }
+    // No match found - add record to merged array
+    mergedArray.push(prev[i]);
+  }
+  console.log("mergedArray.length:", mergedArray.length);
+  return mergedArray;
+};
+let count = 0;
 const addActivity = async (activity: ActivityRecord): Promise<void> => {
   const line =
     [
@@ -41,6 +81,31 @@ const addActivity = async (activity: ActivityRecord): Promise<void> => {
     ].join(",") + "\n";
 
   await fs.promises.appendFile(CONFIG.filePath, line);
+  count++;
+  if (count % 100 === 0) {
+    console.log(`Added ${count} activities`);
+    const activities = await getActivities();
+    const mergedActivities = mergeActivityRecord(activities);
+    const allLines = mergedActivities
+      .map(
+        (activity) =>
+          [
+            activity.platform,
+            activity.id,
+            `"${activity.title.replace(/"/g, '""')}"`,
+            `"${activity.ownerPath.replace(/"/g, '""')}"`,
+            activity.ownerProcessId,
+            activity.ownerBundleId || "",
+            `"${activity.ownerName.replace(/"/g, '""')}"`,
+            activity.url || "",
+            activity.timestamp,
+            activity.count,
+          ].join(",") + "\n"
+      )
+      .join("");
+
+    await fs.promises.writeFile(CONFIG.filePath, CONFIG.headers.join(",") + "\n" + allLines);
+  }
 };
 
 const parseCsvLine = (line: string): string[] => {
@@ -95,28 +160,9 @@ const getActivities = async (): Promise<ActivityRecord[]> => {
   });
 };
 
-const clearActivities = async (beforeTimestamp: number): Promise<void> => {
+const clearActivities = async (): Promise<void> => {
   try {
-    // Read file content
-    const content = await fs.promises.readFile(CONFIG.filePath, "utf-8");
-    const lines = content.trim().split("\n");
-
-    // Separate header and data
-    const [header, ...dataLines] = lines;
-
-    // Filter lines while preserving order
-    const remainingLines = dataLines.filter((line) => {
-      if (!line.trim()) return false;
-      const values = parseCsvLine(line);
-      const timestamp = parseInt(values[8], 10);
-      return !isNaN(timestamp) && timestamp >= beforeTimestamp;
-    });
-
-    // Combine header with filtered lines
-    const newContent = [header, ...remainingLines].join("\n") + "\n";
-
-    // Write back to file
-    await fs.promises.writeFile(CONFIG.filePath, newContent);
+    await fs.promises.writeFile(CONFIG.filePath, CONFIG.headers.join(",") + "\n");
   } catch (error) {
     console.error("Error clearing activities:", error);
     throw error;

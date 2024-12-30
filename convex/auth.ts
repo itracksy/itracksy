@@ -1,5 +1,6 @@
 import GitHub from "@auth/core/providers/github";
 import Resend from "@auth/core/providers/resend";
+//@ts-ignore
 import { Anonymous } from "@convex-dev/auth/providers/Anonymous";
 import { convexAuth } from "@convex-dev/auth/server";
 

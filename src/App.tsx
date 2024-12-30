@@ -15,6 +15,8 @@ import { ConvexQueryClient, useConvexMutation } from "@convex-dev/react-query";
 import { QueryClient, QueryClientProvider, useMutation } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
+import { useTracking } from "./hooks/useTracking";
+
 const convex = new ConvexReactClient(config.convexUrl);
 
 function AuthenticatedApp() {
@@ -23,6 +25,7 @@ function AuthenticatedApp() {
   const syncActivitiesMutation = useMutation({
     mutationFn: useConvexMutation(api.activities.syncActivities),
   });
+  const { isTracking, startTracking } = useTracking();
   const hasSynced = useRef(false);
 
   useEffect(() => {
@@ -35,6 +38,10 @@ function AuthenticatedApp() {
       window.electronWindow.getActivities().then((activities) => {
         syncActivitiesMutation.mutateAsync({ activities: activities }).finally(() => {
           hasSynced.current = true;
+          window.electronWindow.clearActivities();
+          if (isTracking) {
+            startTracking();
+          }
         });
       });
     }

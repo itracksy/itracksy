@@ -49,7 +49,7 @@ export function TimeEntryDialog({
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Select Board</label>
-            <Select value={selectedBoardId ?? ""} onValueChange={setSelectedBoardId}>
+            <Select value={selectedBoardId ?? undefined} onValueChange={setSelectedBoardId}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a board" />
               </SelectTrigger>

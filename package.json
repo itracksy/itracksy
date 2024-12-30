@@ -6,7 +6,9 @@
   "main": ".vite/build/main.js",
   "scripts": {
     "clear": "rm -rf .vite dist out node_modules",
-    "dev": "npm-run-all --parallel dev:backend dev:log",
+    "type-check": "tsc --noEmit",
+    "dev": "npm-run-all --parallel type-check:watch dev:backend dev:log dev:frontend",
+    "type-check:watch": "tsc --noEmit --watch",
     "dev:frontend": "electron-forge start",
     "dev:backend": "convex dev",
     "dev:log": "convex logs",
