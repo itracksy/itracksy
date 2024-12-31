@@ -7,7 +7,7 @@
   "scripts": {
     "clear": "rm -rf .vite dist out node_modules",
     "type-check": "tsc --noEmit",
-    "dev": "npm-run-all --parallel type-check:watch dev:backend dev:log dev:frontend",
+    "dev": "npm-run-all --parallel type-check:watch dev:backend dev:log",
     "type-check:watch": "tsc --noEmit --watch",
     "dev:frontend": "electron-forge start",
     "dev:backend": "convex dev",
@@ -24,7 +24,8 @@
     "test:unit": "jest",
     "test:e2e": "playwright test",
     "test:all": "jest && playwright test",
-    "release": "./scripts/release.sh"
+    "release": "./scripts/release.sh",
+    "db": "supabase gen types typescript --project-id vvjsycgvzugdktxsjhnl --schema public > lib/schema.ts"
   },
   "author": "HungHoang <hth321@gmail.com>",
   "license": "MIT",
@@ -95,6 +96,7 @@
     "@radix-ui/react-toggle": "^1.1.0",
     "@radix-ui/react-toggle-group": "^1.1.0",
     "@radix-ui/react-tooltip": "^1.1.4",
+    "@supabase/supabase-js": "^2.47.10",
     "@tanstack/react-query": "^5.62.2",
     "@tanstack/react-router": "^1.82.1",
     "@tanstack/router-devtools": "^1.82.0",

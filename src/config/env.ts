@@ -1,5 +1,4 @@
 interface ImportMetaEnv {
-  readonly VITE_CONVEX_URL: string;
   // Add other env variables here as needed
 }
 
@@ -14,13 +13,9 @@ function validateEnvVar(value: string | undefined, name: string): string {
   return value;
 }
 
-// @ts-ignore
-const CONVEX_URL = validateEnvVar(import.meta.env.VITE_CONVEX_URL, "VITE_CONVEX_URL");
-
 export const config = {
-  convexUrl: CONVEX_URL,
-  isDevelopment: process.env.NODE_ENV === "development",
-  // Add other config values here
+  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
 } as const;
 
 // Type-safe config getter

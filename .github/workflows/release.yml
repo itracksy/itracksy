@@ -28,14 +28,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Deploy Convex
-        run: npx convex deploy
-        env:
-          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
-          VITE_CONVEX_URL: ${{ secrets.VITE_CONVEX_URL }}
-
       - name: Build and publish
         run: npm run publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VITE_CONVEX_URL: ${{ secrets.VITE_CONVEX_URL }}

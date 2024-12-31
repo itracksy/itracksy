@@ -5,26 +5,24 @@ import { useTranslation } from "react-i18next";
 import "./localization/i18n";
 import { updateAppLanguage } from "./helpers/language_helpers";
 import { router } from "./routes/router";
-import { RouterProvider } from "@tanstack/react-router";
-import { ConvexReactClient } from "convex/react";
-import { config } from "./config/env";
-import { ConvexAuthProvider, useAuthActions } from "@convex-dev/auth/react";
-import { Authenticated, useQuery } from "convex/react";
-import { api } from "../convex/_generated/api";
-import { ConvexQueryClient, useConvexMutation } from "@convex-dev/react-query";
-import { QueryClient, QueryClientProvider, useMutation } from "@tanstack/react-query";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { UserProvider } from "./context/UserContext";
+import { supabase } from "./services/supabaseClient";
+import { useTracking } from "./hooks/useTracking";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-import { useTracking } from "./hooks/useTracking";
-
-const convex = new ConvexReactClient(config.convexUrl);
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function AuthenticatedApp() {
   const { i18n } = useTranslation();
 
-  const syncActivitiesMutation = useMutation({
-    mutationFn: useConvexMutation(api.activities.syncActivities),
-  });
   const { isTracking, startTracking } = useTracking();
   const hasSynced = useRef(false);
 
@@ -36,66 +34,34 @@ function AuthenticatedApp() {
   useEffect(() => {
     if (!hasSynced.current) {
       window.electronWindow.getActivities().then((activities) => {
-        syncActivitiesMutation.mutateAsync({ activities: activities }).finally(() => {
-          hasSynced.current = true;
-          window.electronWindow.clearActivities();
-          if (isTracking) {
-            startTracking();
-          }
-        });
+        // Removed syncActivitiesMutation as it's not defined in the updated code
+        hasSynced.current = true;
+        window.electronWindow.clearActivities();
+        if (isTracking) {
+          startTracking();
+        }
       });
     }
-  }, [syncActivitiesMutation]);
+  }, []);
 
   return <RouterProvider router={router} />;
 }
 
 export default function App() {
-  const userQuery = useQuery(api.users.viewer);
-  const { signIn, signOut } = useAuthActions();
-
-  useEffect(() => {
-    // Skip if the query is still loading
-    if (userQuery === undefined) return;
-
-    if (!userQuery) {
-      console.log("signing in");
-
-      void signIn("anonymous");
-    } else {
-      console.log("user is authenticated:", userQuery);
-    }
-  }, [signIn, userQuery]);
-
   return (
-    <>
-      <Authenticated>
-        <AuthenticatedApp />
-      </Authenticated>
-    </>
+    <QueryClientProvider client={queryClient}>
+      <UserProvider>
+        <TooltipProvider>
+          <AuthenticatedApp />
+        </TooltipProvider>
+      </UserProvider>
+    </QueryClientProvider>
   );
 }
-
-const convexQueryClient = new ConvexQueryClient(convex);
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      queryKeyHashFn: convexQueryClient.hashFn(),
-      queryFn: convexQueryClient.queryFn(),
-    },
-  },
-});
-convexQueryClient.connect(queryClient);
 
 const root = createRoot(document.getElementById("app")!);
 root.render(
   <React.StrictMode>
-    <ConvexAuthProvider client={convex}>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <App />
-        </TooltipProvider>
-      </QueryClientProvider>
-    </ConvexAuthProvider>
+    <App />
   </React.StrictMode>
 );
