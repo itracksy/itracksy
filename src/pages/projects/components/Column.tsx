@@ -7,27 +7,23 @@ import { useConfirmationDialog } from "@/components/providers/ConfirmationDialog
 
 import {
   useDeleteColumnMutation,
-  useUpdateCardMutation,
+  useUpdateItemMutation,
   useUpdateColumnMutation,
 } from "@/services/hooks/useBoardQueries";
 import { EditableText } from "./EditableText";
 import { NewCard } from "./NewCard";
 import { Card } from "./Card";
-import type { RenderedItem } from "@/types";
+
 import { PlusIcon, TrashIcon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Item } from "@/types/supabase";
 
 interface ColumnProps {
   name: string;
   boardId: string;
   columnId: string;
-  items: Array<RenderedItem>;
+  items: Array<Item>;
   nextOrder: number;
   previousOrder: number;
   order: number;
@@ -58,7 +54,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
 
     const updateColumnMutation = useUpdateColumnMutation();
     const deleteColumnMutation = useDeleteColumnMutation();
-    const updateCardMutation = useUpdateCardMutation();
+    const updateCardMutation = useUpdateItemMutation();
 
     const sortedItems = useMemo(() => [...items].sort((a, b) => a.order - b.order), [items]);
     const hasItems = items.length > 0;
@@ -68,7 +64,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
         title: "Delete Column",
         description: `Are you sure you want to delete the column "${name}"? This action cannot be undone.`,
         confirmText: "Delete",
-        variant: "destructive"
+        variant: "destructive",
       });
 
       if (!confirmed) return;
@@ -109,8 +105,8 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
 
         updateCardMutation.mutate({
           order: (sortedItems[sortedItems.length - 1]?.order ?? 0) + 1,
-          columnId: columnId,
-          boardId,
+          column_id: columnId,
+          board_id: boardId,
           id: transfer.id,
           title: transfer.title,
         });
@@ -147,7 +143,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
           const moveOrder = (droppedOrder + order) / 2;
 
           updateColumnMutation.mutate({
-            boardId,
+            board_id: boardId,
             id: transfer.id,
             order: moveOrder,
           });
@@ -194,7 +190,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
               buttonClassName="block rounded-lg text-left w-full border border-transparent py-1 px-2 font-medium text-slate-600 dark:text-slate-300"
               onChange={(value) => {
                 updateColumnMutation.mutate({
-                  boardId,
+                  board_id: boardId,
                   id: columnId,
                   name: value,
                 });
@@ -210,9 +206,9 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
                 title={item.title}
                 content={item.content ?? ""}
                 id={item.id}
-                boardId={boardId}
+                board_id={boardId}
                 order={item.order}
-                columnId={columnId}
+                column_id={columnId}
                 previousOrder={items[index - 1] ? items[index - 1].order : 0}
                 nextOrder={items[index + 1] ? items[index + 1].order : item.order + 1}
               />

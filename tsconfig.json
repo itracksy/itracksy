@@ -28,7 +28,6 @@
     "skipLibCheck": true
   },
   "include": [
-    "src/**/*",
-    "convex"
+    "src/**/*"
   ]
 }

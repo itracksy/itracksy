@@ -42,9 +42,9 @@ export function NewCard({
     },
   });
 
-  const onSubmit = (values: FormValues) => {
+  const onSubmit = ({ title, boardId: board_id, columnId: column_id, order }: FormValues) => {
     const id = crypto.randomUUID();
-    mutate({ ...values, id });
+    mutate({ order, id, board_id, column_id, title });
     form.reset();
     onComplete();
   };
@@ -93,7 +93,7 @@ export function NewCard({
             </FormItem>
           )}
         />
-        <div className="flex justify-between gap-2 mt-2">
+        <div className="mt-2 flex justify-between gap-2">
           <Button type="submit">Save Card</Button>
           <Button type="button" variant="ghost" onClick={onComplete}>
             Cancel

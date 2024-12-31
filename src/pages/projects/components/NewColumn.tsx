@@ -9,10 +9,12 @@ export function NewColumn({
   boardId,
   editInitially,
   onNewColumnAdded,
+  order,
 }: {
   boardId: string;
   editInitially: boolean;
   onNewColumnAdded: () => void;
+  order: number;
 }) {
   const [editing, setEditing] = useState(editInitially);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -27,8 +29,9 @@ export function NewColumn({
         invariant(inputRef.current, "missing input ref");
 
         newColumnMutation.mutate({
-          boardId,
+          board_id: boardId,
           name: inputRef.current.value,
+          order,
         });
 
         inputRef.current.value = "";

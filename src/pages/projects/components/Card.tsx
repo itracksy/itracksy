@@ -1,98 +1,90 @@
 import invariant from "tiny-invariant";
 import { forwardRef, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { convexQuery } from "@convex-dev/react-query";
-import { api } from "../../../../convex/_generated/api";
-
 import { CONTENT_TYPES } from "@/types";
 import { TrashIcon, PlayIcon, StopIcon, TimerIcon } from "@radix-ui/react-icons";
-import { useDeleteCardMutation, useUpdateCardMutation } from "@/services/hooks/useBoardQueries";
+import { useDeleteItemMutation, useUpdateItemMutation } from "@/services/hooks/useBoardQueries";
 import { formatDuration } from "@/utils/timeUtils";
 import {
   useCreateTimeEntryMutation,
   useUpdateTimeEntryMutation,
   useActiveTimeEntry,
+  useTimeEntriesForItem,
 } from "@/services/hooks/useTimeEntryQueries";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useConfirmationDialog } from "@/components/providers/ConfirmationDialog";
 import { ItemDetailDialog } from "./ItemDetailDialog";
+import type { Item } from "@/types/supabase";
 
 interface CardProps {
   title: string;
   content: string | null;
   id: string;
-  columnId: string;
-  boardId: string;
+  column_id: string;
+  board_id: string;
   order: number;
   nextOrder: number;
   previousOrder: number;
 }
 
 export const Card = forwardRef<HTMLLIElement, CardProps>(
-  ({ title, content, id, columnId, boardId, order, nextOrder, previousOrder }, ref) => {
+  ({ title, content, id, column_id, board_id, order, nextOrder, previousOrder }, ref) => {
     const [acceptDrop, setAcceptDrop] = useState<"none" | "top" | "bottom">("none");
     const [totalDuration, setTotalDuration] = useState<string>("00:00:00");
     const [showDetailDialog, setShowDetailDialog] = useState(false);
 
-    const deleteCard = useDeleteCardMutation();
-    const moveCard = useUpdateCardMutation();
+    const deleteItem = useDeleteItemMutation();
+    const moveItem = useUpdateItemMutation();
     const createTimeEntry = useCreateTimeEntryMutation();
     const updateTimeEntry = useUpdateTimeEntryMutation();
     const { data: activeTimeEntry } = useActiveTimeEntry();
+    const { data: timeEntries = [] } = useTimeEntriesForItem(id);
     const { toast } = useToast();
     const { confirm } = useConfirmationDialog();
 
-    const { data: item } = useQuery({
-      ...convexQuery(api.board.getItem, { id }),
-    });
-
     useEffect(() => {
-      if (!item?.timeEntries) return;
+      if (!timeEntries.length) return;
 
-      const total = item.timeEntries.reduce((acc, entry) => {
-        const start = new Date(entry.start).getTime();
-        const end = entry.end
-          ? new Date(entry.end).getTime()
-          : activeTimeEntry?.itemId === id
+      const total = timeEntries.reduce((acc, entry) => {
+        const start = new Date(entry.start_time).getTime();
+        const end = entry.end_time
+          ? new Date(entry.end_time).getTime()
+          : activeTimeEntry?.item_id === id
             ? new Date().getTime()
             : start;
         return acc + (end - start);
       }, 0);
 
-      const hours = Math.floor(total / (1000 * 60 * 60));
-      const minutes = Math.floor((total % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((total % (1000 * 60)) / 1000);
-
-      setTotalDuration(
-        `${hours.toString().padStart(2, "0")}:${minutes
-          .toString()
-          .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`
-      );
-    }, [item?.timeEntries, activeTimeEntry?.itemId, id]);
+      setTotalDuration(formatDuration(total));
+    }, [timeEntries, activeTimeEntry?.item_id, id]);
 
     const handleStartTracking = () => {
       if (activeTimeEntry) {
-        alert("Please stop the current active timer before starting a new one");
+        toast({
+          variant: "destructive",
+          title: "Active Timer",
+          description: "Please stop the current active timer before starting a new one",
+        });
         return;
       }
 
       createTimeEntry.mutate({
         id: crypto.randomUUID(),
-        itemId: id,
-        boardId,
-        start: Date.now(),
+        item_id: id,
+        board_id,
+        start_time: new Date().toISOString(),
       });
     };
 
     const handleStopTracking = () => {
-      if (!activeTimeEntry || activeTimeEntry.itemId !== id) {
+      if (!activeTimeEntry || activeTimeEntry.item_id !== id) {
         return;
       }
 
       updateTimeEntry.mutate({
         id: activeTimeEntry.id,
-        end: Date.now(),
+        end_time: new Date().toISOString(),
       });
     };
 
@@ -107,9 +99,9 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
       if (!confirmed) return;
 
       try {
-        await deleteCard.mutateAsync({
+        await deleteItem.mutateAsync({
           id,
-          boardId,
+          boardId: board_id,
         });
       } catch (error) {
         toast({
@@ -150,10 +142,10 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
           const droppedOrder = acceptDrop === "top" ? previousOrder : nextOrder;
           const moveOrder = (droppedOrder + order) / 2;
 
-          moveCard.mutate({
+          moveItem.mutate({
             order: moveOrder,
-            columnId,
-            boardId,
+            column_id,
+            board_id,
             id: transfer.id,
             title: transfer.title,
           });
@@ -183,7 +175,7 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
           <div className="mt-2 text-muted-foreground">{content || <>&nbsp;</>}</div>
           <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
             <TimerIcon className="h-4 w-4" />
-            {activeTimeEntry?.itemId === id ? (
+            {activeTimeEntry?.item_id === id ? (
               <span className="font-medium text-green-500">Recording...</span>
             ) : (
               <span>{totalDuration}</span>
@@ -191,14 +183,14 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
             <Button
               onClick={(e) => {
                 e.stopPropagation();
-                activeTimeEntry?.itemId === id ? handleStopTracking() : handleStartTracking();
+                activeTimeEntry?.item_id === id ? handleStopTracking() : handleStartTracking();
               }}
-              disabled={activeTimeEntry ? activeTimeEntry.itemId !== id : false}
+              disabled={activeTimeEntry ? activeTimeEntry.item_id !== id : false}
               variant="ghost"
               size="sm"
               className="ml-auto"
             >
-              {activeTimeEntry?.itemId === id ? (
+              {activeTimeEntry?.item_id === id ? (
                 <>
                   <StopIcon className="mr-1 h-3 w-3" />
                   Stop
@@ -224,13 +216,19 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
           </div>
         </div>
 
-        {item && (
-          <ItemDetailDialog
-            open={showDetailDialog}
-            onOpenChange={setShowDetailDialog}
-            item={item}
-          />
-        )}
+        <ItemDetailDialog
+          open={showDetailDialog}
+          onOpenChange={setShowDetailDialog}
+          item={{
+            id,
+            title,
+            content,
+            board_id,
+            column_id,
+            order,
+            created_at: null,
+          }}
+        />
       </li>
     );
   }

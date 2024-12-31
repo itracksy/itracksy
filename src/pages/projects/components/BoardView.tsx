@@ -1,14 +1,11 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import invariant from "tiny-invariant";
 
-import { useUpdateBoardMutation } from "@/services/hooks/useBoardQueries";
 import { NewColumn } from "./NewColumn";
 import { Column as ColumnComponent } from "./Column";
-import type { Column } from "convex/schema";
+import { BoardWithRelations, Column, Item } from "@/types/supabase";
 
-import { CompletedBoard } from "convex/board";
-
-export function BoardView({ board }: { board: CompletedBoard }) {
+export function BoardView({ board }: { board: BoardWithRelations }) {
   const newColumnAddedRef = useRef(false);
 
   // scroll right when new columns are added
@@ -21,29 +18,29 @@ export function BoardView({ board }: { board: CompletedBoard }) {
   }, []);
 
   const itemsById = useMemo(
-    () => new Map(board?.items.map((item) => [item.id, item])),
-    [board?.items]
+    () => new Map(board.items?.map((item) => [item.id, item]) || []),
+    [board.items]
   );
 
   const columns = useMemo(() => {
     if (!board) return [];
-    type ColumnWithItems = Column & { items: typeof board.items };
+    type ColumnWithItems = Column & { items: Item[] };
     const columnsMap = new Map<string, ColumnWithItems>();
 
-    for (const column of [...board.columns]) {
+    for (const column of board.columns) {
       columnsMap.set(column.id, { ...column, items: [] });
     }
 
     // add items to their columns
     for (const item of itemsById.values()) {
-      const columnId = item.columnId;
+      const columnId = item.column_id;
       const column = columnsMap.get(columnId);
       invariant(column, `missing column: ${columnId} from ${[...columnsMap.keys()]}`);
       column.items.push(item);
     }
 
     return [...columnsMap.values()].sort((a, b) => a.order - b.order);
-  }, [board?.columns, itemsById]);
+  }, [board.columns, itemsById]);
 
   return (
     <div className="flex h-full flex-col">
@@ -65,6 +62,7 @@ export function BoardView({ board }: { board: CompletedBoard }) {
           <NewColumn
             boardId={board.id}
             editInitially={board.columns.length === 0}
+            order={columns.length + 1}
             onNewColumnAdded={() => {
               newColumnAddedRef.current = true;
             }}

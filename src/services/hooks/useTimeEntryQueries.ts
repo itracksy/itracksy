@@ -1,34 +1,97 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { convexQuery, useConvexMutation } from "@convex-dev/react-query";
-import { api } from "../../../convex/_generated/api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  createTimeEntry,
+  deleteTimeEntry,
+  getActiveTimeEntry,
+  getTimeEntriesForItem,
+  updateTimeEntry,
+} from "../timeEntry";
+import type { TimeEntry, TimeEntryInsert } from "@/types/supabase";
 
 export function useActiveTimeEntry() {
-  return useQuery(convexQuery(api.timeEntries.getActiveTimeEntry, {}));
+  return useQuery({
+    queryKey: ["timeEntries", "active"],
+    queryFn: getActiveTimeEntry,
+  });
 }
 
-// Hook to create a time entry
+export function useTimeEntriesForItem(itemId: string) {
+  return useQuery({
+    queryKey: ["timeEntries", "item", itemId],
+    queryFn: () => getTimeEntriesForItem(itemId),
+    enabled: !!itemId,
+  });
+}
+
 export function useCreateTimeEntryMutation() {
-  const mutationFn = useConvexMutation(api.timeEntries.createTimeEntry);
-  return useMutation({ mutationFn });
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createTimeEntry,
+    onSuccess: ({ data }) => {
+      queryClient.invalidateQueries({ queryKey: ["timeEntries"] });
+      queryClient.invalidateQueries({ queryKey: ["board", data?.board_id] });
+    },
+  });
 }
 
-// Hook to update a time entry
 export function useUpdateTimeEntryMutation() {
-  const mutationFn = useConvexMutation(api.timeEntries.updateTimeEntry);
-  return useMutation({ mutationFn });
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...timeEntry }: { id: string } & Partial<TimeEntryInsert>) => {
+      const { data, error } = await updateTimeEntry(id, timeEntry);
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["timeEntries"] });
+      queryClient.invalidateQueries({ queryKey: ["board", data.board_id] });
+    },
+  });
 }
 
-// Hook to delete a time entry
 export function useDeleteTimeEntryMutation() {
-  const mutationFn = useConvexMutation(api.timeEntries.deleteTimeEntry).withOptimisticUpdate(
-    (localStore, args) => {
-      const item = localStore.getQuery(api.board.getItem, { id: args.itemId });
-      if (!item) return;
+  const queryClient = useQueryClient();
 
-      const timeEntries = item.timeEntries.filter((entry) => entry.id !== args.id);
-      localStore.setQuery(api.board.getItem, { id: item.id }, { ...item, timeEntries });
-    }
-  );
+  return useMutation({
+    mutationFn: async ({ id, itemId }: { id: string; itemId: string }) => {
+      const { error } = await deleteTimeEntry(id);
+      if (error) throw error;
+      return { id, itemId };
+    },
+    onMutate: async ({ id, itemId }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["timeEntries", "item", itemId] });
 
-  return useMutation({ mutationFn });
+      // Snapshot the previous value
+      const previousTimeEntries = queryClient.getQueryData<TimeEntry[]>([
+        "timeEntries",
+        "item",
+        itemId,
+      ]);
+
+      // Optimistically update to the new value
+      if (previousTimeEntries) {
+        queryClient.setQueryData<TimeEntry[]>(
+          ["timeEntries", "item", itemId],
+          previousTimeEntries.filter((entry) => entry.id !== id)
+        );
+      }
+
+      return { previousTimeEntries };
+    },
+    onError: (err, { itemId }, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousTimeEntries) {
+        queryClient.setQueryData(["timeEntries", "item", itemId], context.previousTimeEntries);
+      }
+    },
+    onSettled: (data) => {
+      if (data) {
+        queryClient.invalidateQueries({ queryKey: ["timeEntries"] });
+        queryClient.invalidateQueries({ queryKey: ["timeEntries", "item", data.itemId] });
+      }
+    },
+  });
 }

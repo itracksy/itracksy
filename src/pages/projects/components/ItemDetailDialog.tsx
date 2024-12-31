@@ -15,53 +15,43 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useConfirmationDialog } from "@/components/providers/ConfirmationDialog";
-import { useUpdateCardMutation } from "@/services/hooks/useBoardQueries";
+import { useUpdateItemMutation } from "@/services/hooks/useBoardQueries";
 import {
   useUpdateTimeEntryMutation,
   useDeleteTimeEntryMutation,
+  useTimeEntriesForItem,
 } from "@/services/hooks/useTimeEntryQueries";
 import { formatDuration } from "@/utils/timeUtils";
-import { FunctionReturnType } from "convex/server";
-import { api } from "convex/_generated/api";
-
-interface TimeEntry {
-  id: string;
-  start: number;
-  end?: number | undefined;
-  itemId: string;
-  boardId: string;
-}
+import type { Item, TimeEntry } from "@/types/supabase";
 
 interface ItemDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  item: FunctionReturnType<typeof api.board.getItem>;
+  item: Item;
 }
 
 export function ItemDetailDialog({ open, onOpenChange, item }: ItemDetailDialogProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(item.title);
-  const [content, setContent] = useState(item.content || "");
-  const [editingEntry, setEditingEntry] = useState<string | null>(null);
-
-  const updateCard = useUpdateCardMutation();
-  const updateTimeEntry = useUpdateTimeEntryMutation();
-  const deleteTimeEntry = useDeleteTimeEntryMutation();
+  const [content, setContent] = useState(item.content ?? "");
   const { confirm } = useConfirmationDialog();
 
+  const { data: timeEntries = [] } = useTimeEntriesForItem(item.id);
+  const updateCardMutation = useUpdateItemMutation();
+  const updateTimeEntryMutation = useUpdateTimeEntryMutation();
+  const deleteTimeEntryMutation = useDeleteTimeEntryMutation();
+
   const handleSave = () => {
-    updateCard.mutate({
+    updateCardMutation.mutate({
       id: item.id,
-      boardId: item.boardId,
+      board_id: item.board_id,
       title,
-      content,
-      order: item.order,
-      columnId: item.columnId,
+      content: content || null,
     });
     setIsEditing(false);
   };
 
-  const handleDeleteTimeEntry = async (entryId: string) => {
+  const handleDeleteTimeEntry = async (timeEntryId: string) => {
     const confirmed = await confirm({
       title: "Delete Time Entry",
       description: "Are you sure you want to delete this time entry? This action cannot be undone.",
@@ -71,128 +61,109 @@ export function ItemDetailDialog({ open, onOpenChange, item }: ItemDetailDialogP
 
     if (!confirmed) return;
 
-    deleteTimeEntry.mutate({
-      id: entryId,
+    deleteTimeEntryMutation.mutate({
+      id: timeEntryId,
       itemId: item.id,
     });
   };
-
-  const handleUpdateTimeEntry = (entry: TimeEntry, field: "start" | "end", value: Date) => {
-    updateTimeEntry.mutate({
-      id: entry.id,
-      [field]: value.getTime(),
-    });
-    setEditingEntry(null);
-  };
-
-  const totalDuration =
-    item.timeEntries?.reduce((acc, entry) => {
-      const start = entry.start;
-      const end = typeof entry.end === "number" ? entry.end : Date.now();
-      return acc + (end - start);
-    }, 0) || 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl">
-              {isEditing ? (
-                <Input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1" />
-              ) : (
-                item.title
-              )}
-            </DialogTitle>
-            <div className="flex gap-2 py-2">
-              {isEditing ? (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      setIsEditing(false);
-                      setTitle(item.title);
-                      setContent(item.content || "");
-                    }}
-                  >
-                    <Cross2Icon />
-                  </Button>
-                  <Button variant="default" onClick={handleSave}>
-                    Save
-                  </Button>
-                </>
-              ) : (
-                <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)}>
-                  <Pencil2Icon />
+          <DialogTitle className="flex items-center justify-between">
+            {isEditing ? (
+              <div className="flex w-full gap-2">
+                <Input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="flex-1"
+                />
+                <Button onClick={handleSave}>Save</Button>
+                <Button variant="ghost" onClick={() => setIsEditing(false)}>
+                  Cancel
                 </Button>
-              )}
-            </div>
-          </div>
+              </div>
+            ) : (
+              <div className="flex w-full items-center justify-between">
+                <span>{item.title}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsEditing(true)}
+                >
+                  <Pencil2Icon className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div>
+        <div className="space-y-6">
+          <div className="space-y-2">
             <Label>Description</Label>
             {isEditing ? (
               <Textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                className="mt-1"
-                rows={4}
+                className="min-h-[100px]"
               />
             ) : (
-              <p className="mt-1 text-sm text-muted-foreground">{content || "No description"}</p>
+              <div className="rounded-md border p-3">
+                {content || "No description"}
+              </div>
             )}
           </div>
 
-          <div>
-            <div className="flex items-center justify-between">
-              <Label>Time Entries</Label>
-              <p className="text-sm text-muted-foreground">
-                Total: {formatDuration(totalDuration)}
-              </p>
-            </div>
-            <div className="mt-2 rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Start Time</TableHead>
-                    <TableHead>End Time</TableHead>
-                    <TableHead>Duration</TableHead>
-                    <TableHead className="w-[100px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {item.timeEntries?.map((entry) => (
-                    <TableRow key={entry.id}>
-                      <TableCell>
-                        <span className="text-sm">{format(entry.start, "PPp")}</span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm">
-                          {entry.end ? format(entry.end, "PPp") : "In Progress"}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        {formatDuration(
-                          entry.end ? entry.end - entry.start : Date.now() - entry.start
-                        )}
-                      </TableCell>
-                      <TableCell>
+          <div className="space-y-2">
+            <Label>Time Entries</Label>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Start Time</TableHead>
+                  <TableHead>End Time</TableHead>
+                  <TableHead>Duration</TableHead>
+                  <TableHead className="w-[100px]"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {timeEntries.map((entry) => (
+                  <TableRow key={entry.id}>
+                    <TableCell>
+                      {format(new Date(entry.start_time), "MMM d, yyyy HH:mm")}
+                    </TableCell>
+                    <TableCell>
+                      {entry.end_time
+                        ? format(new Date(entry.end_time), "MMM d, yyyy HH:mm")
+                        : "Running"}
+                    </TableCell>
+                    <TableCell>
+                      {entry.end_time
+                        ? formatDuration(
+                            new Date(entry.end_time).getTime() -
+                              new Date(entry.start_time).getTime()
+                          )
+                        : formatDuration(
+                            Date.now() - new Date(entry.start_time).getTime()
+                          )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-end gap-2">
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDeleteTimeEntry(entry.id)}
+                          onClick={() =>
+                            handleDeleteTimeEntry(entry.id)
+                          }
                         >
                           <TrashIcon className="h-4 w-4" />
                         </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         </div>
       </DialogContent>

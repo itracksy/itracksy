@@ -7,12 +7,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-
 import { useQuery } from "@tanstack/react-query";
-import { convexQuery } from "@convex-dev/react-query";
-import { api } from "../../../convex/_generated/api";
 import { useAtom } from "jotai";
 import { selectedBoardIdAtom } from "@/context/board";
+import { supabase } from "@/lib/supabase";
+import { BoardWithRelations } from "@/types/supabase";
+import { getBoard } from "@/services/board";
 
 interface TimeEntryDialogProps {
   open: boolean;
@@ -32,11 +32,18 @@ export function TimeEntryDialog({
   const [selectedBoardId, setSelectedBoardId] = useAtom(selectedBoardIdAtom);
 
   const { data: boards } = useQuery({
-    ...convexQuery(api.board.getBoards, {}),
+    queryKey: ["boards"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("boards").select("*").order("name");
+
+      if (error) throw error;
+      return data;
+    },
   });
 
-  const { data: selectedBoard } = useQuery({
-    ...convexQuery(api.board.getBoard, { id: selectedBoardId ?? "" }),
+  const { data: selectedBoard } = useQuery<BoardWithRelations | null>({
+    queryKey: ["board", selectedBoardId],
+    queryFn: async () => getBoard(selectedBoardId ?? ""),
     enabled: !!selectedBoardId,
   });
 
@@ -65,10 +72,10 @@ export function TimeEntryDialog({
 
           {selectedBoard && (
             <div className="space-y-2">
-              <label className="text-sm font-medium">Select Task</label>
+              <label className="text-sm font-medium">Select Item</label>
               <Select value={selectedItemId} onValueChange={setSelectedItemId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a task" />
+                  <SelectValue placeholder="Select an item" />
                 </SelectTrigger>
                 <SelectContent>
                   {selectedBoard.items?.map((item) => (
@@ -82,7 +89,7 @@ export function TimeEntryDialog({
           )}
 
           <Button
-            onClick={onCreateTimeEntry}
+            onClick={() => void onCreateTimeEntry()}
             disabled={!selectedItemId || !selectedBoardId}
             className="w-full"
           >

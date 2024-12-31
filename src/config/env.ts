@@ -1,5 +1,7 @@
 interface ImportMetaEnv {
   // Add other env variables here as needed
+  VITE_SUPABASE_URL: string | undefined;
+  VITE_SUPABASE_KEY: string | undefined;
 }
 
 interface ImportMeta {
@@ -14,10 +16,11 @@ function validateEnvVar(value: string | undefined, name: string): string {
 }
 
 export const config = {
-  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  supabaseUrl: validateEnvVar(import.meta.env.VITE_SUPABASE_URL, "VITE_SUPABASE_URL"),
+  supabaseKey: validateEnvVar(import.meta.env.VITE_SUPABASE_KEY, "VITE_SUPABASE_KEY"),
 } as const;
-
+console.log(config.supabaseUrl);
+console.log(config.supabaseKey);
 // Type-safe config getter
 export function getConfig<T extends keyof typeof config>(key: T): (typeof config)[T] {
   return config[key];

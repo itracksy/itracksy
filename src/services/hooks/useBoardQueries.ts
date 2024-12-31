@@ -1,108 +1,233 @@
-import { useMutation } from "@tanstack/react-query";
-import { convexQuery, useConvexMutation } from "@convex-dev/react-query";
-import { api } from "../../../convex/_generated/api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  createColumn,
+  createItem,
+  deleteColumn,
+  deleteItem,
+  updateColumn,
+  updateItem,
+} from "../board";
+import { Board, BoardWithRelations } from "@/types/supabase";
+import { ColumnInsert, ItemInsert } from "@/types/supabase";
 
 export const boardQueries = {
-  list: () => convexQuery(api.board.getBoards, {}),
-  detail: (id: string) => convexQuery(api.board.getBoard, { id }),
+  list: () => {}, // TO DO: implement list query
+  detail: (id: string) => {}, // TO DO: implement detail query
 };
 
 export function useCreateColumnMutation() {
-  const mutationFn = useConvexMutation(api.board.createColumn).withOptimisticUpdate(
-    (localStore, args) => {
-      const board = localStore.getQuery(api.board.getBoard, { id: args.boardId });
-      if (!board) return;
+  const queryClient = useQueryClient();
 
-      const randomId = Math.random() + "";
+  return useMutation({
+    mutationFn: createColumn,
+    onMutate: async (newColumn) => {
+      const boardKey = ["board", newColumn.board_id];
+      await queryClient.cancelQueries({ queryKey: boardKey });
 
-      const newBoard = {
-        ...board,
-        columns: [
-          ...board.columns,
-          {
-            ...args,
-            order: board.columns.length + 1,
-            id: randomId,
-            items: [],
-          },
-        ],
-      };
+      const previousBoard = queryClient.getQueryData<BoardWithRelations>(boardKey);
 
-      localStore.setQuery(api.board.getBoard, { id: board.id }, newBoard);
-    }
-  );
+      if (previousBoard) {
+        queryClient.setQueryData<BoardWithRelations>(boardKey, {
+          ...previousBoard,
+          columns: [
+            ...(previousBoard.columns || []),
+            {
+              ...newColumn,
+              id: crypto.randomUUID(),
+              created_at: new Date().toISOString(),
+              order: previousBoard.columns?.length + 1,
+            },
+          ],
+        });
+      }
 
-  return useMutation({ mutationFn });
+      return { previousBoard };
+    },
+    onError: (err, newColumn, context) => {
+      if (context?.previousBoard) {
+        queryClient.setQueryData(["board", newColumn.board_id], context.previousBoard);
+      }
+    },
+    onSettled: (data, error, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["board", variables.board_id] });
+    },
+  });
 }
 
 export function useCreateItemMutation() {
-  const mutationFn = useConvexMutation(api.board.createItem).withOptimisticUpdate(
-    (localStore, args) => {
-      const board = localStore.getQuery(api.board.getBoard, { id: args.boardId });
-      if (!board) return;
+  const queryClient = useQueryClient();
 
-      const items = [...board.items, args];
-      localStore.setQuery(api.board.getBoard, { id: board.id }, { ...board, items });
-    }
-  );
+  return useMutation({
+    mutationFn: createItem,
+    onMutate: async (newItem) => {
+      const boardKey = ["board", newItem.board_id];
+      await queryClient.cancelQueries({ queryKey: boardKey });
 
-  return useMutation({ mutationFn });
+      const previousBoard = queryClient.getQueryData<BoardWithRelations>(boardKey);
+
+      if (previousBoard) {
+        queryClient.setQueryData<BoardWithRelations>(boardKey, {
+          ...previousBoard,
+          items: [
+            ...previousBoard.items,
+            {
+              ...newItem,
+              content: newItem.content ?? null,
+              id: crypto.randomUUID(),
+              created_at: new Date().toISOString(),
+            },
+          ],
+        });
+      }
+
+      return { previousBoard };
+    },
+    onError: (err, newItem, context) => {
+      if (context?.previousBoard) {
+        queryClient.setQueryData(["board", newItem.board_id], context.previousBoard);
+      }
+    },
+    onSettled: (data, error, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["board", variables.board_id] });
+    },
+  });
 }
 
-export function useUpdateCardMutation() {
-  const mutationFn = useConvexMutation(api.board.updateItem).withOptimisticUpdate(
-    (localStore, args) => {
-      const board = localStore.getQuery(api.board.getBoard, { id: args.boardId });
-      if (!board) return;
-      const items = board.items.map((item) => (item.id === args.id ? args : item));
-      localStore.setQuery(api.board.getBoard, { id: board.id }, { ...board, items });
-    }
-  );
+export function useUpdateItemMutation() {
+  const queryClient = useQueryClient();
 
-  return useMutation({ mutationFn });
+  return useMutation({
+    mutationFn: async ({ id, ...item }: { id: string } & Partial<ItemInsert>) => {
+      await updateItem(id, item);
+    },
+    onMutate: async (newItem) => {
+      const boardKey = ["board", newItem.board_id];
+      await queryClient.cancelQueries({ queryKey: boardKey });
+
+      const previousBoard = queryClient.getQueryData<BoardWithRelations>(boardKey);
+
+      if (previousBoard) {
+        queryClient.setQueryData<BoardWithRelations>(boardKey, {
+          ...previousBoard,
+          items: previousBoard.items?.map((item) =>
+            item.id === newItem.id
+              ? { ...item, ...newItem, content: newItem.content ?? null }
+              : item
+          ),
+        });
+      }
+
+      return { previousBoard };
+    },
+    onError: (err, { board_id }, context) => {
+      if (context?.previousBoard) {
+        queryClient.setQueryData(["board", board_id], context.previousBoard);
+      }
+    },
+    onSettled: (data, error, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["board", variables.board_id] });
+    },
+  });
 }
 
-export function useDeleteCardMutation() {
-  const mutationFn = useConvexMutation(api.board.deleteItem).withOptimisticUpdate(
-    (localStore, args) => {
-      const board = localStore.getQuery(api.board.getBoard, { id: args.boardId });
-      if (!board) return;
-      const items = board.items.filter((item) => item.id !== args.id);
-      localStore.setQuery(api.board.getBoard, { id: board.id }, { ...board, items });
-    }
-  );
+export function useDeleteItemMutation() {
+  const queryClient = useQueryClient();
 
-  return useMutation({ mutationFn });
+  return useMutation({
+    mutationFn: async ({ id, boardId }: { id: string; boardId: string }) => {
+      await deleteItem(id);
+    },
+    onMutate: async ({ id, boardId }) => {
+      const boardKey = ["board", boardId];
+      await queryClient.cancelQueries({ queryKey: boardKey });
+
+      const previousBoard = queryClient.getQueryData<BoardWithRelations>(boardKey);
+
+      if (previousBoard) {
+        queryClient.setQueryData<BoardWithRelations>(boardKey, {
+          ...previousBoard,
+          items: previousBoard.items?.filter((item) => item.id !== id),
+        });
+      }
+
+      return { previousBoard };
+    },
+    onError: (err, { boardId }, context) => {
+      if (context?.previousBoard) {
+        queryClient.setQueryData(["board", boardId], context.previousBoard);
+      }
+    },
+    onSettled: (data, error, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["board", variables.boardId] });
+    },
+  });
 }
 
 export function useDeleteColumnMutation() {
-  const mutationFn = useConvexMutation(api.board.deleteColumn).withOptimisticUpdate(
-    (localStore, args) => {
-      const board = localStore.getQuery(api.board.getBoard, { id: args.boardId });
-      if (!board) return;
-      const columns = board.columns.filter((col) => col.id !== args.id);
-      const items = board.items.filter((item) => item.columnId !== args.id);
-      localStore.setQuery(api.board.getBoard, { id: board.id }, { ...board, items, columns });
-    }
-  );
+  const queryClient = useQueryClient();
 
-  return useMutation({ mutationFn });
-}
+  return useMutation({
+    mutationFn: async ({ id }: { id: string; boardId: string }) => {
+      await deleteColumn(id);
+    },
+    onMutate: async ({ id, boardId }) => {
+      const boardKey = ["board", boardId];
+      await queryClient.cancelQueries({ queryKey: boardKey });
 
-export function useUpdateBoardMutation() {
-  const mutationFn = useConvexMutation(api.board.updateBoard);
-  return useMutation({ mutationFn });
+      const previousBoard = queryClient.getQueryData<BoardWithRelations>(boardKey);
+
+      if (previousBoard) {
+        queryClient.setQueryData<BoardWithRelations>(boardKey, {
+          ...previousBoard,
+          columns: previousBoard.columns?.filter((col) => col.id !== id),
+          items: previousBoard.items?.filter((item) => item.column_id !== id),
+        });
+      }
+
+      return { previousBoard };
+    },
+    onError: (err, { boardId }, context) => {
+      if (context?.previousBoard) {
+        queryClient.setQueryData(["board", boardId], context.previousBoard);
+      }
+    },
+    onSettled: (data, error, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["board", variables.boardId] });
+    },
+  });
 }
 
 export function useUpdateColumnMutation() {
-  const mutationFn = useConvexMutation(api.board.updateColumn).withOptimisticUpdate(
-    (localStore, args) => {
-      const board = localStore.getQuery(api.board.getBoard, { id: args.boardId });
-      if (!board) return;
-      const columns = board.columns.map((col) => (col.id === args.id ? { ...col, ...args } : col));
-      localStore.setQuery(api.board.getBoard, { id: board.id }, { ...board, columns });
-    }
-  );
+  const queryClient = useQueryClient();
 
-  return useMutation({ mutationFn });
+  return useMutation({
+    mutationFn: async ({ id, ...column }: { id: string } & Partial<ColumnInsert>) => {
+      await updateColumn(id, column);
+    },
+    onMutate: async ({ id, board_id, ...newColumn }) => {
+      const boardKey = ["board", board_id];
+      await queryClient.cancelQueries({ queryKey: boardKey });
+
+      const previousBoard = queryClient.getQueryData<BoardWithRelations>(boardKey);
+
+      if (previousBoard) {
+        queryClient.setQueryData<BoardWithRelations>(boardKey, {
+          ...previousBoard,
+          columns: previousBoard.columns?.map((col) =>
+            col.id === id ? { ...col, ...newColumn } : col
+          ),
+        });
+      }
+
+      return { previousBoard };
+    },
+    onError: (err, { board_id }, context) => {
+      if (context?.previousBoard) {
+        queryClient.setQueryData(["board", board_id], context.previousBoard);
+      }
+    },
+    onSettled: (data, error, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["board", variables.board_id] });
+    },
+  });
 }

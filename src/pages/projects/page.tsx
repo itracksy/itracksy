@@ -2,12 +2,9 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { convexQuery } from "@convex-dev/react-query";
-import { api } from "../../../convex/_generated/api.js";
-import { useMutation as useConvexMutation, useQuery as useConvexQuery } from "convex/react";
 
 import { Loader } from "@/components/Loader";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery, useMutation } from "@tanstack/react-query";
 import { BoardView } from "./components/BoardView.js";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,6 +45,8 @@ import {
 } from "@/components/ui/table";
 import { useAtom } from "jotai";
 import { selectedBoardIdAtom } from "@/context/board";
+import { getBoard, getBoards, createBoard } from "@/services/board";
+import { supabase } from "@/services/supabaseClient";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -60,7 +59,17 @@ export function ProjectsPage() {
   const [selectedBoardId, setSelectedBoardId] = useAtom(selectedBoardIdAtom);
   const [viewMode, setViewMode] = useState<"board" | "list">("board");
   const [open, setOpen] = useState(false);
-  const currentUser = useConvexQuery(api.users.viewer);
+
+  const { data: currentUser } = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      return user;
+    },
+  });
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -72,31 +81,36 @@ export function ProjectsPage() {
   });
 
   const { data: board, isLoading: boardLoading } = useQuery({
-    ...convexQuery(api.board.getBoard, { id: selectedBoardId ?? "" }),
+    queryKey: ["board", selectedBoardId],
+    queryFn: () => getBoard(selectedBoardId ?? ""),
     enabled: !!selectedBoardId,
   });
-  const { data: boards, isLoading: boardsLoading } = useSuspenseQuery(
-    convexQuery(api.board.getBoards, {})
-  );
-  console.log("Boards query state:", { boards, boardsLoading });
-  console.log("currentUser", currentUser);
-  const createBoard = useConvexMutation(api.board.createBoard);
+
+  const { data: boards = [], isLoading: boardsLoading } = useSuspenseQuery({
+    queryKey: ["boards"],
+    queryFn: getBoards,
+  });
+
+  const createBoardMutation = useMutation({
+    mutationFn: createBoard,
+    onSuccess: () => {
+      form.reset();
+      setOpen(false);
+    },
+  });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!currentUser?._id) {
+    if (!currentUser?.id) {
       throw new Error("User not found");
     }
 
-    await createBoard({
+    await createBoardMutation.mutateAsync({
       id: crypto.randomUUID(),
       name: values.name.trim(),
       color: values.color,
-      userId: currentUser._id,
-      hourlyRate: values.hourlyRate,
+      hourly_rate: values.hourlyRate,
       currency: values.currency,
     });
-    form.reset();
-    setOpen(false);
   };
 
   useEffect(() => {
@@ -174,7 +188,7 @@ export function ProjectsPage() {
             </TableHeader>
             <TableBody>
               {board.items.map((item) => {
-                const column = board.columns.find((col) => col.id === item.columnId);
+                const column = board.columns.find((col) => col.id === item.column_id);
 
                 return (
                   <TableRow key={item.id}>

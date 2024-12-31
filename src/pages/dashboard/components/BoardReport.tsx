@@ -1,6 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { convexQuery } from "@convex-dev/react-query";
-import { api } from "../../../../convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -12,43 +10,49 @@ import {
 import { useAtom } from "jotai";
 import { selectedBoardIdAtom } from "@/context/board";
 
+import { formatDuration } from "@/utils/timeUtils";
+import { getBoards } from "@/services/board";
+import { getTimeEntriesForBoard } from "@/services/timeEntry";
+
 export function BoardReport() {
   const [selectedBoardId, setSelectedBoardId] = useAtom(selectedBoardIdAtom);
 
   // Get all boards for the user
-  const { data: boards } = useQuery({
-    ...convexQuery(api.board.getBoards, {}),
+  const { data: boards = [] } = useQuery({
+    queryKey: ["boards"],
+    queryFn: getBoards,
   });
 
   // Get time entries for the selected board
-  const { data: timeEntries } = useQuery({
-    ...convexQuery(api.timeEntries.getBoardTimeEntries, { boardId: selectedBoardId ?? "" }),
-    enabled: !!selectedBoardId,
+  const { data: timeEntries = [] } = useQuery({
+    queryKey: ["timeEntries", selectedBoardId],
+    queryFn: () => getTimeEntriesForBoard(selectedBoardId ?? ""),
   });
 
   // Calculate total time spent on the board
-  const totalTime = timeEntries?.reduce((acc, entry) => {
-    const duration = entry.end ? entry.end - entry.start : 0;
+  const totalTime = timeEntries.reduce((acc, entry) => {
+    const start = new Date(entry.start_time).getTime();
+    const end = entry.end_time ? new Date(entry.end_time).getTime() : 0;
+    const duration = end ? end - start : 0;
     return acc + duration;
   }, 0);
-
-  // Format time to hours and minutes
-  const formatTime = (ms: number) => {
-    const hours = Math.floor(ms / (1000 * 60 * 60));
-    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-    return `${hours}h ${minutes}m`;
-  };
-
   // Group time entries by item
-  const itemBreakdown = timeEntries?.reduce(
+  const itemBreakdown = timeEntries.reduce(
     (acc, entry) => {
-      if (!acc[entry.itemId]) {
-        acc[entry.itemId] = 0;
+      const start = new Date(entry.start_time).getTime();
+      const end = entry.end_time ? new Date(entry.end_time).getTime() : 0;
+      const duration = end ? end - start : 0;
+
+      if (!acc[entry.item_id]) {
+        acc[entry.item_id] = {
+          duration: 0,
+          title: entry.items?.title || "Unknown Task",
+        };
       }
-      acc[entry.itemId] += entry.end ? entry.end - entry.start : 0;
+      acc[entry.item_id].duration += duration;
       return acc;
     },
-    {} as Record<string, number>
+    {} as Record<string, { duration: number; title: string }>
   );
 
   return (
@@ -60,7 +64,7 @@ export function BoardReport() {
             <SelectValue placeholder="Select a board" />
           </SelectTrigger>
           <SelectContent>
-            {boards?.map((board) => (
+            {boards.map((board) => (
               <SelectItem key={board.id} value={board.id}>
                 {board.name}
               </SelectItem>
@@ -74,21 +78,18 @@ export function BoardReport() {
           <div className="space-y-4">
             <div>
               <h3 className="text-sm font-medium text-muted-foreground">Total Time</h3>
-              <p className="text-2xl font-bold">{formatTime(totalTime || 0)}</p>
+              <p className="text-2xl font-bold">{formatDuration(totalTime)}</p>
             </div>
 
             <div>
               <h3 className="mb-2 text-sm font-medium text-muted-foreground">Task Breakdown</h3>
               <div className="space-y-2">
-                {Object.entries(itemBreakdown || {}).map(([itemId, time]) => {
-                  const item = timeEntries.find((entry) => entry.itemId === itemId)?.item;
-                  return (
-                    <div key={itemId} className="flex justify-between">
-                      <span className="truncate text-sm">{item?.title || "Unknown Task"}</span>
-                      <span className="text-sm font-medium">{formatTime(time)}</span>
-                    </div>
-                  );
-                })}
+                {Object.entries(itemBreakdown).map(([itemId, { duration, title }]) => (
+                  <div key={itemId} className="flex justify-between">
+                    <span className="truncate text-sm">{title}</span>
+                    <span className="text-sm font-medium">{formatDuration(duration)}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

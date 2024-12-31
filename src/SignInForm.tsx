@@ -3,10 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
-import { useAuthActions } from "@convex-dev/auth/react";
 import { GitHubLogoIcon } from "@radix-ui/react-icons";
 import { GoogleLogo } from "@/components/GoogleLogo";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 import {
   Dialog,
   DialogContent,
@@ -17,97 +17,130 @@ import {
 
 export function SignInForm() {
   const [step, setStep] = useState<"signIn" | "linkSent">("signIn");
-  const { signIn } = useAuthActions();
   const [open, setOpen] = useState(false);
+  const { toast } = useToast();
 
-  useEffect(() => {
-    void signIn("anonymous");
-  }, [signIn]);
+  const handleSignInWithGitHub = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'github',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`
+      }
+    });
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
+    }
+  };
+
+  const handleSignInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`
+      }
+    });
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline">Sign In</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent>
         <DialogHeader>
-          {step === "signIn" ? (
-            <DialogTitle>Sign in or create an account</DialogTitle>
-          ) : (
-            <DialogTitle>Check your email</DialogTitle>
-          )}
+          <DialogTitle>Sign In</DialogTitle>
         </DialogHeader>
-        <div className="flex flex-col gap-4">
-          {step === "signIn" ? (
-            <>
-              <SignInWithGitHub />
-              <Button
-                className="flex-1"
-                variant="outline"
-                type="button"
-                onClick={() => void signIn("google")}
-              >
-                <GoogleLogo className="mr-2 h-4 w-4" /> Google
-              </Button>
-              <SignInMethodDivider />
-              <SignInWithMagicLink
-                handleLinkSent={() => {
-                  setStep("linkSent");
-                }}
-              />
-            </>
-          ) : (
-            <>
-              <p>A sign-in link has been sent to your email address.</p>
-              <Button className="self-start p-0" variant="link" onClick={() => setStep("signIn")}>
-                Cancel
-              </Button>
-            </>
-          )}
-        </div>
+        {step === "signIn" ? (
+          <div className="space-y-4">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={handleSignInWithGitHub}
+            >
+              <GitHubLogoIcon className="mr-2 h-4 w-4" />
+              Continue with GitHub
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={handleSignInWithGoogle}
+            >
+              <GoogleLogo className="mr-2 h-4 w-4" />
+              Continue with Google
+            </Button>
+            <SignInMethodDivider />
+            <SignInWithMagicLink handleLinkSent={() => setStep("linkSent")} />
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <p className="text-center text-sm text-muted-foreground">
+              Check your email for a sign in link
+            </p>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setStep("signIn")}
+            >
+              Back
+            </Button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
 }
 
-export function SignInWithGitHub() {
-  const { signIn } = useAuthActions();
-  return (
-    <Button
-      className="flex-1"
-      variant="outline"
-      type="button"
-      onClick={() => void signIn("github")}
-    >
-      <GitHubLogoIcon className="mr-2 h-4 w-4" /> GitHub
-    </Button>
-  );
-}
-
 function SignInWithMagicLink({ handleLinkSent }: { handleLinkSent: () => void }) {
-  const { signIn } = useAuthActions();
+  const [email, setEmail] = useState("");
   const { toast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`
+      }
+    });
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
+      return;
+    }
+
+    handleLinkSent();
+  };
+
   return (
-    <form
-      className="flex flex-col"
-      onSubmit={(event) => {
-        event.preventDefault();
-        const formData = new FormData(event.currentTarget);
-        signIn("resend", formData)
-          .then(handleLinkSent)
-          .catch((error) => {
-            console.error(error);
-            toast({
-              title: "Could not send sign-in link",
-              variant: "destructive",
-            });
-          });
-      }}
-    >
-      <label htmlFor="email">Email</label>
-      <Input name="email" id="email" className="mb-4" autoComplete="email" />
-      <Button type="submit">Send sign-in link</Button>
-      <Toaster />
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Input
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
+      <Button type="submit" className="w-full">
+        Sign in with Email
+      </Button>
     </form>
   );
 }
