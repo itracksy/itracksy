@@ -185,7 +185,6 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
                 e.stopPropagation();
                 activeTimeEntry?.item_id === id ? handleStopTracking() : handleStartTracking();
               }}
-              disabled={activeTimeEntry ? activeTimeEntry.item_id !== id : false}
               variant="ghost"
               size="sm"
               className="ml-auto"

@@ -17,7 +17,6 @@ import {
 import { useConfirmationDialog } from "@/components/providers/ConfirmationDialog";
 import { useUpdateItemMutation } from "@/services/hooks/useBoardQueries";
 import {
-  useUpdateTimeEntryMutation,
   useDeleteTimeEntryMutation,
   useTimeEntriesForItem,
 } from "@/services/hooks/useTimeEntryQueries";
@@ -38,7 +37,7 @@ export function ItemDetailDialog({ open, onOpenChange, item }: ItemDetailDialogP
 
   const { data: timeEntries = [] } = useTimeEntriesForItem(item.id);
   const updateCardMutation = useUpdateItemMutation();
-  const updateTimeEntryMutation = useUpdateTimeEntryMutation();
+
   const deleteTimeEntryMutation = useDeleteTimeEntryMutation();
 
   const handleSave = () => {
@@ -87,11 +86,7 @@ export function ItemDetailDialog({ open, onOpenChange, item }: ItemDetailDialogP
             ) : (
               <div className="flex w-full items-center justify-between">
                 <span>{item.title}</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsEditing(true)}
-                >
+                <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)}>
                   <Pencil2Icon className="h-4 w-4" />
                 </Button>
               </div>
@@ -109,9 +104,7 @@ export function ItemDetailDialog({ open, onOpenChange, item }: ItemDetailDialogP
                 className="min-h-[100px]"
               />
             ) : (
-              <div className="rounded-md border p-3">
-                {content || "No description"}
-              </div>
+              <div className="rounded-md border p-3">{content || "No description"}</div>
             )}
           </div>
 
@@ -129,9 +122,7 @@ export function ItemDetailDialog({ open, onOpenChange, item }: ItemDetailDialogP
               <TableBody>
                 {timeEntries.map((entry) => (
                   <TableRow key={entry.id}>
-                    <TableCell>
-                      {format(new Date(entry.start_time), "MMM d, yyyy HH:mm")}
-                    </TableCell>
+                    <TableCell>{format(new Date(entry.start_time), "MMM d, yyyy HH:mm")}</TableCell>
                     <TableCell>
                       {entry.end_time
                         ? format(new Date(entry.end_time), "MMM d, yyyy HH:mm")
@@ -143,18 +134,14 @@ export function ItemDetailDialog({ open, onOpenChange, item }: ItemDetailDialogP
                             new Date(entry.end_time).getTime() -
                               new Date(entry.start_time).getTime()
                           )
-                        : formatDuration(
-                            Date.now() - new Date(entry.start_time).getTime()
-                          )}
+                        : formatDuration(Date.now() - new Date(entry.start_time).getTime())}
                     </TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-2">
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() =>
-                            handleDeleteTimeEntry(entry.id)
-                          }
+                          onClick={() => handleDeleteTimeEntry(entry.id)}
                         >
                           <TrashIcon className="h-4 w-4" />
                         </Button>

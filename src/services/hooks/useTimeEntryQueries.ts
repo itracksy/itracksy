@@ -45,6 +45,11 @@ export function useUpdateTimeEntryMutation() {
       return data;
     },
     onSuccess: (data) => {
+      console.log("updating time entry", data);
+      if (data.end_time) {
+        console.log("invalidating active time entry", data.end_time);
+        queryClient.invalidateQueries({ queryKey: ["timeEntries", "active"] });
+      }
       queryClient.invalidateQueries({ queryKey: ["timeEntries"] });
       queryClient.invalidateQueries({ queryKey: ["board", data.board_id] });
     },

@@ -27,6 +27,7 @@ export function BoardReport() {
   const { data: timeEntries = [] } = useQuery({
     queryKey: ["timeEntries", selectedBoardId],
     queryFn: () => getTimeEntriesForBoard(selectedBoardId ?? ""),
+    enabled: !!selectedBoardId,
   });
 
   // Calculate total time spent on the board

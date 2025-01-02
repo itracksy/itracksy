@@ -46,7 +46,6 @@ import {
 import { useAtom } from "jotai";
 import { selectedBoardIdAtom } from "@/context/board";
 import { getBoard, getBoards, createBoard } from "@/services/board";
-import { supabase } from "@/services/supabaseClient";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -59,16 +58,6 @@ export function ProjectsPage() {
   const [selectedBoardId, setSelectedBoardId] = useAtom(selectedBoardIdAtom);
   const [viewMode, setViewMode] = useState<"board" | "list">("board");
   const [open, setOpen] = useState(false);
-
-  const { data: currentUser } = useQuery({
-    queryKey: ["currentUser"],
-    queryFn: async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      return user;
-    },
-  });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -86,7 +75,7 @@ export function ProjectsPage() {
     enabled: !!selectedBoardId,
   });
 
-  const { data: boards = [], isLoading: boardsLoading } = useSuspenseQuery({
+  const { data: boards, isLoading: boardsLoading } = useQuery({
     queryKey: ["boards"],
     queryFn: getBoards,
   });
@@ -100,12 +89,9 @@ export function ProjectsPage() {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!currentUser?.id) {
-      throw new Error("User not found");
-    }
-
+    const boardId = crypto.randomUUID();
     await createBoardMutation.mutateAsync({
-      id: crypto.randomUUID(),
+      id: boardId,
       name: values.name.trim(),
       color: values.color,
       hourly_rate: values.hourlyRate,
@@ -114,13 +100,13 @@ export function ProjectsPage() {
   };
 
   useEffect(() => {
-    if (boards.length > 0 && !selectedBoardId) {
+    if (boards && boards.length > 0 && !selectedBoardId) {
       setSelectedBoardId(boards[0].id);
     }
   }, [boards, selectedBoardId]);
 
   if (boardLoading || boardsLoading) return <Loader />;
-  console.log("viewMode", viewMode);
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b p-4">
@@ -136,10 +122,10 @@ export function ProjectsPage() {
             }}
           >
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Theme" />
+              <SelectValue placeholder="Select a board" />
             </SelectTrigger>
             <SelectContent>
-              {boards.map((board) => (
+              {boards?.map((board) => (
                 <SelectItem key={board.id} value={board.id}>
                   {board.name}
                 </SelectItem>
@@ -286,12 +272,4 @@ export function ProjectsPage() {
       </Dialog>
     </div>
   );
-}
-
-function formatDuration(duration: number) {
-  const hours = Math.floor(duration / 3600000);
-  const minutes = Math.floor((duration % 3600000) / 60000);
-  const seconds = Math.floor((duration % 60000) / 1000);
-
-  return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 }

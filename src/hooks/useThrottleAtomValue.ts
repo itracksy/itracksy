@@ -12,7 +12,6 @@ export function useThrottleAtomValue<T>(atom: PrimitiveAtom<T>, wait: number = 1
     const now = Date.now();
 
     if (!lastCallRef.current || now - lastCallRef.current >= wait) {
-      console.log("now", now);
       setThrottledValue(value);
       lastCallRef.current = now;
     } else {
@@ -23,7 +22,6 @@ export function useThrottleAtomValue<T>(atom: PrimitiveAtom<T>, wait: number = 1
 
       timeoutRef.current = setTimeout(
         () => {
-          console.log("now", now);
           setThrottledValue(value);
           lastCallRef.current = Date.now();
         },

@@ -29,7 +29,6 @@ CREATE TABLE IF NOT EXISTS public.boards (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     color TEXT,
-    client_id UUID REFERENCES public.clients(id),
     hourly_rate DECIMAL,
     currency TEXT,
     user_id UUID REFERENCES auth.users(id) NOT NULL,
@@ -134,15 +133,6 @@ CREATE POLICY "Users can update their own boards"
 CREATE POLICY "Users can delete their own boards"
     ON public.boards FOR DELETE
     USING (auth.uid() = user_id);
-
--- Similar policies for other tables
-CREATE POLICY "Users can view columns in their boards"
-    ON public.columns FOR SELECT
-    USING (EXISTS (
-        SELECT 1 FROM public.boards
-        WHERE boards.id = columns.board_id
-        AND boards.user_id = auth.uid()
-    ));
 
 CREATE POLICY "Users can manage items in their boards"
     ON public.items FOR ALL

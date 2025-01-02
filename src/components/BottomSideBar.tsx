@@ -26,9 +26,9 @@ export function BottomSideBar() {
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
 
-    if (activeTimeEntry?.start) {
+    if (activeTimeEntry?.start_time) {
       const updateDuration = () => {
-        const start = new Date(activeTimeEntry.start).getTime();
+        const start = new Date(activeTimeEntry.start_time).getTime();
         const now = new Date().getTime();
         const diff = now - start;
 
@@ -54,7 +54,7 @@ export function BottomSideBar() {
         clearInterval(intervalId);
       }
     };
-  }, [activeTimeEntry?.start]);
+  }, [activeTimeEntry?.start_time]);
 
   const handleStopTimeEntry = async () => {
     if (!activeTimeEntry) return;
@@ -62,7 +62,7 @@ export function BottomSideBar() {
     try {
       await updateTimeEntry.mutateAsync({
         id: activeTimeEntry.id,
-        end: new Date().getTime(),
+        end_time: new Date().toISOString(),
       });
 
       toast({
@@ -89,9 +89,9 @@ export function BottomSideBar() {
     try {
       await createTimeEntry.mutateAsync({
         id: crypto.randomUUID(),
-        itemId: selectedItemId,
-        boardId: selectedBoardId,
-        start: new Date().getTime(),
+        item_id: selectedItemId,
+        board_id: selectedBoardId,
+        start_time: new Date().toISOString(),
       });
 
       toast({
@@ -121,11 +121,11 @@ export function BottomSideBar() {
           <SidebarMenuButton
             onClick={handleStopTimeEntry}
             className="hover:text-red-600"
-            tooltip={`Stop: ${activeTimeEntry?.item?.title}`}
+            tooltip={`Stop: ${activeTimeEntry?.items?.title}`}
           >
             <StopCircle className="h-5 w-5 text-red-600" />
             <span className="flex items-center gap-2 text-sm font-medium">
-              <span>Stop: {activeTimeEntry?.item?.title}</span>
+              <span>Stop: {activeTimeEntry?.items?.title}</span>
               <span className="text-xs text-muted-foreground">({duration})</span>
             </span>
           </SidebarMenuButton>

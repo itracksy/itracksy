@@ -6,19 +6,23 @@ import "./localization/i18n";
 import { updateAppLanguage } from "./helpers/language_helpers";
 import { router } from "./routes/router";
 import { RouterProvider } from "@tanstack/react-router";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useTracking } from "./hooks/useTracking";
 import { useAuth } from "./hooks/useAuth";
 import { supabase } from "./lib/supabase";
 
 const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      staleTime: 1000 * 60 * 5, // 5 minutes
+  queryCache: new QueryCache({
+    onError: (error) => {
+      console.error(error);
     },
-  },
+  }),
+  mutationCache: new MutationCache({
+    onError: (error) => {
+      console.error(error);
+    },
+  }),
 });
 
 function AuthenticatedApp() {
@@ -50,6 +54,8 @@ function App() {
 
   useEffect(() => {
     async function signInAnonymously() {
+      console.log("user", user);
+      console.log("loading", loading);
       if (!loading && !user) {
         const { data, error } = await supabase.auth.signInAnonymously();
         if (localStorage.getItem("supabase.auth.user")) {
@@ -67,7 +73,7 @@ function App() {
     }
     signInAnonymously();
   }, [user]);
-
+  console.log("user", user);
   return (
     <TooltipProvider>
       <QueryClientProvider client={queryClient}>

@@ -1,14 +1,18 @@
 import { supabase } from "@/lib/supabase";
-import type { TimeEntry, TimeEntryInsert } from "@/types/supabase";
+import type { TimeEntryInsert } from "@/types/supabase";
 
 export async function getActiveTimeEntry() {
   const { data, error } = await supabase
     .from("time_entries")
-    .select("*")
+    .select(`*, items (*)`)
     .is("end_time", null)
-    .single();
+    .maybeSingle();
 
-  if (error) throw error;
+  if (error) {
+    //remove all time entries with no end time
+    await supabase.from("time_entries").delete().is("end_time", null);
+    throw error;
+  }
   return data;
 }
 
@@ -17,6 +21,7 @@ export async function createTimeEntry(timeEntry: Omit<TimeEntryInsert, "user_id"
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error("not authenticated");
+  console.log("creating time entry", timeEntry);
   return await supabase
     .from("time_entries")
     .insert({ ...timeEntry, user_id: user.id })

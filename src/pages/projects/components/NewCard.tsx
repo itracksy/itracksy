@@ -45,6 +45,7 @@ export function NewCard({
   const onSubmit = ({ title, boardId: board_id, columnId: column_id, order }: FormValues) => {
     const id = crypto.randomUUID();
     mutate({ order, id, board_id, column_id, title });
+
     form.reset();
     onComplete();
   };

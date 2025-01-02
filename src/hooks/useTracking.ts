@@ -6,6 +6,7 @@ import {
   screenRecordingPermissionAtom,
 } from "@/context/activity";
 import { useToast } from "./use-toast";
+import { logger } from "@/services/logger";
 
 export const useTracking = () => {
   const [isTracking, setIsTracking] = useAtom(isTrackingAtom);

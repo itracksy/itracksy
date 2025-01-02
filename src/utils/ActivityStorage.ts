@@ -2,7 +2,6 @@ import path from "path";
 import fs from "fs";
 import { app } from "electron";
 import { ActivityRecord } from "@/types/activity";
-import { c } from "vite/dist/node/types.d-aGj9QkWt";
 
 const CONFIG = {
   headers: [
