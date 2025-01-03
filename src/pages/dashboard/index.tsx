@@ -14,6 +14,7 @@ import { BoardReport } from "./components/BoardReport";
 import { useAtom } from "jotai";
 import { accessibilityPermissionAtom, screenRecordingPermissionAtom } from "@/context/activity";
 import { useQuery } from "@tanstack/react-query";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 export default function DashboardPage() {
   const [durationReports, setDurationReports] = useState<{
@@ -98,32 +99,45 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold">Activity Dashboard</h1>
+    <div className="from-tracksy-blue/5 to-tracksy-gold/5 dark:from-tracksy-blue/10 dark:to-tracksy-gold/10 min-h-screen bg-gradient-to-br">
+      <div className="container mx-auto p-6">
+        <h1 className="text-tracksy-blue mb-8 text-3xl font-bold dark:text-white">
+          Activity Dashboard
+          <div className="bg-tracksy-gold dark:bg-tracksy-gold/70 mt-2 h-1 w-20 rounded"></div>
+        </h1>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-        <BoardReport />
-      </div>
-      <div className="grid grid-cols-1 gap-6 pt-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-        <TimeBreakdown reports={appUsageData} title="Application Usage" />
-        <TimeBreakdown
-          reports={domainUsageData}
-          title="Domain Usage"
-          permissionDisabled={!accessibilityPermission}
-          onEnablePermission={async () => {
-            setAccessibilityPermission(true);
-          }}
-        />
-        <TimeBreakdown
-          reports={titleUsageData}
-          title="Title Usage"
-          permissionDisabled={!screenRecordingPermission}
-          onEnablePermission={async () => {
-            setScreenRecordingPermission(true);
-          }}
-        />
-        <div className="">
-          <CategoryTreeView categories={categoryReport} />
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+          <BoardReport />
+        </div>
+
+        <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <TimeBreakdown
+            reports={appUsageData}
+            title="Application Usage"
+            className="border-tracksy-gold/20 dark:border-tracksy-gold/10 rounded-lg border bg-white/80 shadow-lg backdrop-blur-sm dark:bg-gray-900/80"
+          />
+          <TimeBreakdown
+            reports={domainUsageData}
+            title="Domain Usage"
+            permissionDisabled={!accessibilityPermission}
+            onEnablePermission={async () => {
+              setAccessibilityPermission(true);
+            }}
+            className="border-tracksy-gold/20 dark:border-tracksy-gold/10 rounded-lg border bg-white/80 shadow-lg backdrop-blur-sm dark:bg-gray-900/80"
+          />
+          <TimeBreakdown
+            reports={titleUsageData}
+            title="Title Usage"
+            permissionDisabled={!screenRecordingPermission}
+            onEnablePermission={async () => {
+              setScreenRecordingPermission(true);
+            }}
+            className="border-tracksy-gold/20 dark:border-tracksy-gold/10 rounded-lg border bg-white/80 shadow-lg backdrop-blur-sm dark:bg-gray-900/80"
+          />
+
+          <div className="border-tracksy-gold/20 dark:border-tracksy-gold/10 rounded-lg border bg-white/80 p-4 shadow-lg backdrop-blur-sm dark:bg-gray-900/80">
+            <CategoryTreeView categories={categoryReport} />
+          </div>
         </div>
       </div>
     </div>

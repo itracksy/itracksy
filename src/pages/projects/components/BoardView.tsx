@@ -44,12 +44,10 @@ export function BoardView({ board }: { board: BoardWithRelations }) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex min-h-0 flex-grow flex-col bg-background" ref={scrollContainerRef}>
-        <div className="flex h-full min-h-0 w-fit flex-grow items-start gap-2 overflow-x-auto px-8 py-4">
+      <div className="flex min-h-0 flex-grow flex-col" ref={scrollContainerRef}>
+        <div className="flex h-full min-h-0 w-fit flex-grow items-start gap-4 overflow-x-auto p-6">
           {columns.map((col, index) => (
             <ColumnComponent
-              ref={columnRef}
-              key={col.id}
               name={col.name}
               columnId={col.id}
               boardId={board.id}
@@ -57,6 +55,7 @@ export function BoardView({ board }: { board: BoardWithRelations }) {
               order={col.order}
               previousOrder={columns[index - 1] ? columns[index - 1].order : 0}
               nextOrder={columns[index + 1] ? columns[index + 1].order : col.order + 1}
+              className="border-tracksy-gold/20 dark:border-tracksy-gold/10 min-w-[300px] rounded-lg border bg-white/80 dark:bg-gray-900/80 shadow-lg backdrop-blur-sm"
             />
           ))}
           <NewColumn
@@ -66,10 +65,9 @@ export function BoardView({ board }: { board: BoardWithRelations }) {
             onNewColumnAdded={() => {
               newColumnAddedRef.current = true;
             }}
+            className="border-tracksy-gold/20 dark:border-tracksy-gold/10 hover:border-tracksy-gold/40 dark:hover:border-tracksy-gold/20 min-w-[300px] rounded-lg border bg-white/80 dark:bg-gray-900/80 p-4 shadow-lg backdrop-blur-sm hover:bg-white dark:hover:bg-gray-800"
           />
         </div>
-
-        <div data-lol className="h-1 w-8 flex-shrink-0" />
       </div>
     </div>
   );

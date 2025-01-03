@@ -40,8 +40,15 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
   const [activeItem, setActiveItem] = React.useState<string | null>(null);
 
   return (
-    <Sidebar collapsible="icon" className={cn("bg-white dark:bg-background", className)} {...props}>
-      <SidebarHeader className="text-sm font-semibold"></SidebarHeader>
+    <Sidebar
+      collapsible="icon"
+      className={cn(
+        "border-tracksy-gold/20 dark:border-tracksy-gold/10 border-r bg-white/80 backdrop-blur-sm dark:bg-gray-900/80",
+        className
+      )}
+      {...props}
+    >
+      <SidebarHeader className="text-tracksy-blue text-sm font-semibold dark:text-white"></SidebarHeader>
 
       <SidebarContent className="pt-7">
         <SidebarMenu>
@@ -51,7 +58,13 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
                 asChild
                 isActive={activeItem === item.title}
                 tooltip={item.title}
-                className="gap-2"
+                className={cn(
+                  "text-tracksy-blue/70 gap-2 transition-colors dark:text-white/70",
+                  "hover:text-tracksy-blue hover:bg-tracksy-gold/10",
+                  "dark:hover:text-tracksy-gold dark:hover:bg-tracksy-gold/5",
+                  activeItem === item.title &&
+                    "bg-tracksy-gold/10 text-tracksy-blue dark:bg-tracksy-gold/5 dark:text-white"
+                )}
               >
                 <Link
                   to={item.url}
@@ -70,7 +83,7 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
       <SidebarFooter>
         <BottomSideBar />
       </SidebarFooter>
-      <SidebarRail />
+      <SidebarRail className="border-tracksy-gold/20 dark:border-tracksy-gold/10" />
     </Sidebar>
   );
 }

@@ -108,8 +108,8 @@ export function ProjectsPage() {
   if (boardLoading || boardsLoading) return <Loader />;
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b p-4">
+    <div className="from-tracksy-blue/5 to-tracksy-gold/5 flex h-full flex-col bg-gradient-to-br">
+      <div className="border-tracksy-gold/20 flex items-center justify-between border-b p-4 backdrop-blur-sm">
         <div className="flex items-center gap-4">
           <Select
             value={selectedBoardId ?? ""}
@@ -121,18 +121,22 @@ export function ProjectsPage() {
               setSelectedBoardId(value);
             }}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="border-tracksy-gold/30 dark:border-tracksy-gold/20 text-tracksy-blue hover:border-tracksy-gold/50 dark:hover:border-tracksy-gold/40 w-[180px] bg-white dark:bg-gray-900 dark:text-white">
               <SelectValue placeholder="Select a board" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="border-tracksy-gold/30 dark:border-tracksy-gold/20 bg-white dark:bg-gray-900">
               {boards?.map((board) => (
-                <SelectItem key={board.id} value={board.id}>
+                <SelectItem
+                  key={board.id}
+                  value={board.id}
+                  className="text-tracksy-blue hover:bg-tracksy-gold/5 dark:hover:bg-tracksy-gold/10 dark:text-white"
+                >
                   {board.name}
                 </SelectItem>
               ))}
-              <SelectSeparator />
+              <SelectSeparator className="bg-tracksy-gold/20 dark:bg-tracksy-gold/10" />
               <SelectItem value="new" onSelect={() => setOpen(true)}>
-                <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                <div className="text-tracksy-gold hover:text-tracksy-gold/80 flex items-center gap-2 dark:text-white/80">
                   <PlusCircle className="h-4 w-4" /> Create Board
                 </div>
               </SelectItem>
@@ -146,6 +150,7 @@ export function ProjectsPage() {
               size="icon"
               onClick={() => setViewMode(viewMode === "board" ? "list" : "board")}
               aria-label={viewMode === "board" ? "Switch to list view" : "Switch to board view"}
+              className="border-tracksy-gold/30 text-tracksy-blue hover:border-tracksy-gold/50 hover:bg-tracksy-gold/10 bg-white"
             >
               {viewMode === "board" ? (
                 <List className="h-4 w-4" />
@@ -162,40 +167,46 @@ export function ProjectsPage() {
 
       {board && viewMode === "board" && <BoardView board={board} />}
       {board && viewMode === "list" && (
-        <div className="p-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Status</TableHead>
+        <div className="p-6">
+          <div className="border-tracksy-gold/20 rounded-lg border bg-white shadow-lg">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-tracksy-gold/20 hover:bg-tracksy-gold/5 border-b">
+                  <TableHead className="text-tracksy-blue">Title</TableHead>
+                  <TableHead className="text-tracksy-blue">Status</TableHead>
+                  <TableHead className="text-tracksy-blue">Description</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {board.items.map((item) => {
+                  const column = board.columns.find((col) => col.id === item.column_id);
 
-                <TableHead>Description</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {board.items.map((item) => {
-                const column = board.columns.find((col) => col.id === item.column_id);
-
-                return (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.title}</TableCell>
-                    <TableCell>{column?.name || "No Status"}</TableCell>
-
-                    <TableCell className="max-w-md truncate">
-                      {item.content || "No description"}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                  return (
+                    <TableRow key={item.id} className="hover:bg-tracksy-gold/5">
+                      <TableCell className="text-tracksy-blue font-medium">{item.title}</TableCell>
+                      <TableCell>
+                        <span className="bg-tracksy-gold/10 text-tracksy-blue rounded-full px-2 py-1 text-sm">
+                          {column?.name || "No Status"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="max-w-md truncate text-muted-foreground">
+                        {item.content || "No description"}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       )}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="border-tracksy-gold/20 bg-white sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Create New Board</DialogTitle>
-            <DialogDescription>Add a new board to organize your projects.</DialogDescription>
+            <DialogTitle className="text-tracksy-blue">Create New Board</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Add a new board to organize your projects.
+            </DialogDescription>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -204,11 +215,15 @@ export function ProjectsPage() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-right">Name</FormLabel>
+                    <FormLabel className="text-tracksy-blue">Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter board name" {...field} />
+                      <Input
+                        placeholder="Enter board name"
+                        className="border-tracksy-gold/30 focus:border-tracksy-gold focus:ring-tracksy-gold/20"
+                        {...field}
+                      />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-500" />
                   </FormItem>
                 )}
               />
@@ -218,18 +233,19 @@ export function ProjectsPage() {
                 name="hourlyRate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-right">Hourly Rate</FormLabel>
+                    <FormLabel className="text-tracksy-blue">Hourly Rate</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         placeholder="Optional hourly rate"
+                        className="border-tracksy-gold/30 focus:border-tracksy-gold focus:ring-tracksy-gold/20"
                         {...field}
                         onChange={(e) =>
                           field.onChange(e.target.value ? Number(e.target.value) : undefined)
                         }
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-500" />
                   </FormItem>
                 )}
               />
@@ -239,10 +255,10 @@ export function ProjectsPage() {
                 name="currency"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-right">Currency</FormLabel>
+                    <FormLabel className="text-tracksy-blue">Currency</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="border-tracksy-gold/30 focus:border-tracksy-gold focus:ring-tracksy-gold/20">
                           <SelectValue placeholder="Select currency" />
                         </SelectTrigger>
                       </FormControl>
@@ -255,16 +271,26 @@ export function ProjectsPage() {
                         <SelectItem value="CAD">CAD</SelectItem>
                       </SelectContent>
                     </Select>
-                    <FormMessage />
+                    <FormMessage className="text-red-500" />
                   </FormItem>
                 )}
               />
 
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setOpen(false)}
+                  className="border-tracksy-gold/30 hover:bg-tracksy-gold/10 hover:text-tracksy-blue"
+                >
                   Cancel
                 </Button>
-                <Button type="submit">Create</Button>
+                <Button
+                  type="submit"
+                  className="bg-tracksy-gold hover:bg-tracksy-gold/90 text-white"
+                >
+                  Create
+                </Button>
               </DialogFooter>
             </form>
           </Form>

@@ -17,14 +17,22 @@ const CONFIG = {
     "timestamp",
     "count",
   ],
-  filePath: path.join(app.getPath("userData"), "activities.csv"),
+  baseDir: path.join(app.getPath("userData"), "activities"),
+};
+
+const getFilePath = (date: string = new Date().toISOString().split("T")[0]): string => {
+  return path.join(CONFIG.baseDir, `${date}.csv`);
 };
 
 const initializeStorage = (): void => {
-  if (!fs.existsSync(CONFIG.filePath)) {
-    fs.writeFileSync(CONFIG.filePath, CONFIG.headers.join(",") + "\n");
+  if (!fs.existsSync(CONFIG.baseDir)) {
+    fs.mkdirSync(CONFIG.baseDir, { recursive: true });
   }
-  console.log("Storage initialized", CONFIG.filePath);
+  const currentFilePath = getFilePath();
+  if (!fs.existsSync(currentFilePath)) {
+    fs.writeFileSync(currentFilePath, CONFIG.headers.join(",") + "\n");
+  }
+  console.log("Storage initialized", CONFIG.baseDir);
 };
 
 const mergeActivityRecord = (prev: ActivityRecord[]): ActivityRecord[] => {
@@ -80,49 +88,58 @@ const mergeActivityRecord = (prev: ActivityRecord[]): ActivityRecord[] => {
   return mergedArray;
 };
 
+const mergeRecords = async (): Promise<void> => {
+  const activities = await getActivities();
+  const mergedActivities = mergeActivityRecord(activities);
+  const allLines = mergedActivities
+    .map(
+      (activity) =>
+        [
+          activity.platform,
+          activity.id,
+          activity.title?.replace(/,/g, ";"),
+          activity.ownerPath?.replace(/,/g, ";"),
+          activity.ownerProcessId,
+          activity.ownerBundleId?.replace(/,/g, ";"),
+          activity.ownerName?.replace(/,/g, ";"),
+          activity.url?.replace(/,/g, ";"),
+          activity.timestamp,
+          activity.count,
+        ].join(",") + "\n"
+    )
+    .join("");
+  await fs.promises.writeFile(getFilePath(), CONFIG.headers.join(",") + "\n" + allLines);
+};
+
 let count = 0;
 const addActivity = async (activity: ActivityRecord): Promise<void> => {
-  const line =
-    [
-      activity.platform,
-      activity.id,
-      `"${activity.title.replace(/"/g, '""')}"`,
-      `"${activity.ownerPath.replace(/"/g, '""')}"`,
-      activity.ownerProcessId,
-      activity.ownerBundleId || "",
-      `"${activity.ownerName.replace(/"/g, '""')}"`,
-      activity.url || "",
-      activity.timestamp,
-      activity.count,
-    ].join(",") + "\n";
+  const date = new Date(activity.timestamp).toISOString().split("T")[0];
+  const filePath = getFilePath(date);
 
-  await fs.promises.appendFile(CONFIG.filePath, line);
+  // Initialize file if it doesn't exist
+  if (!fs.existsSync(filePath)) {
+    fs.writeFileSync(filePath, CONFIG.headers.join(",") + "\n");
+  }
+
+  const line = [
+    activity.platform,
+    activity.id,
+    activity.title?.replace(/,/g, ";"),
+    activity.ownerPath?.replace(/,/g, ";"),
+    activity.ownerProcessId,
+    activity.ownerBundleId?.replace(/,/g, ";"),
+    activity.ownerName?.replace(/,/g, ";"),
+    activity.url?.replace(/,/g, ";"),
+    activity.timestamp,
+    activity.count,
+  ].join(",");
+
+  await fs.promises.appendFile(filePath, line + "\n");
   count++;
-  console.log("count:", count);
 
-  if (count % MERGING_BATCH_SIZE === 0) {
-    console.log(`Added ${count} activities`);
-    const activities = await getActivities();
-    const mergedActivities = mergeActivityRecord(activities);
-    const allLines = mergedActivities
-      .map(
-        (activity) =>
-          [
-            activity.platform,
-            activity.id,
-            `"${activity.title.replace(/"/g, '""')}"`,
-            `"${activity.ownerPath.replace(/"/g, '""')}"`,
-            activity.ownerProcessId,
-            activity.ownerBundleId || "",
-            `"${activity.ownerName.replace(/"/g, '""')}"`,
-            activity.url || "",
-            activity.timestamp,
-            activity.count,
-          ].join(",") + "\n"
-      )
-      .join("");
-    console.log("mergedActivities:", mergedActivities);
-    await fs.promises.writeFile(CONFIG.filePath, CONFIG.headers.join(",") + "\n" + allLines);
+  if (count >= MERGING_BATCH_SIZE) {
+    await mergeRecords();
+    count = 0;
   }
 };
 
@@ -145,8 +162,13 @@ const parseCsvLine = (line: string): string[] => {
   return values;
 };
 
-const getActivities = async (): Promise<ActivityRecord[]> => {
-  const content = await fs.promises.readFile(CONFIG.filePath, "utf-8");
+const getActivities = async (date?: string): Promise<ActivityRecord[]> => {
+  const filePath = getFilePath(date);
+  if (!fs.existsSync(filePath)) {
+    return [];
+  }
+
+  const content = await fs.promises.readFile(filePath, "utf-8");
   const lines = content.split("\n").filter((line) => line.length > 0);
   lines.shift(); // Remove headers
 
@@ -178,12 +200,10 @@ const getActivities = async (): Promise<ActivityRecord[]> => {
   });
 };
 
-const clearActivities = async (): Promise<void> => {
-  try {
-    await fs.promises.writeFile(CONFIG.filePath, CONFIG.headers.join(",") + "\n");
-  } catch (error) {
-    console.error("Error clearing activities:", error);
-    throw error;
+const clearActivities = async (date?: string): Promise<void> => {
+  const filePath = getFilePath(date);
+  if (fs.existsSync(filePath)) {
+    await fs.promises.writeFile(filePath, CONFIG.headers.join(",") + "\n");
   }
 };
 

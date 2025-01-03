@@ -15,12 +15,15 @@ const CategoryTree: React.FC<CategoryTreeViewProps> = ({ categories, level = 0 }
         <div key={index} className="text-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <span style={{ marginLeft: `${level * 16}px` }}>
+              <span
+                style={{ marginLeft: `${level * 16}px` }}
+                className="text-tracksy-blue dark:text-white"
+              >
                 {category.children.length > 0 ? "▼" : "•"}{" "}
                 {category.category[category.category.length - 1]}
               </span>
             </div>
-            <div className="text-muted-foreground dark:text-muted-foreground-dark">
+            <div className="text-tracksy-blue/70 dark:text-white/70">
               {formatDuration(category.totalDuration)}
             </div>
           </div>
@@ -33,11 +36,15 @@ const CategoryTree: React.FC<CategoryTreeViewProps> = ({ categories, level = 0 }
   );
 };
 
-export const CategoryTreeView: React.FC<Omit<CategoryTreeViewProps, "level">> = ({ categories }) => {
+export const CategoryTreeView: React.FC<Omit<CategoryTreeViewProps, "level">> = ({
+  categories,
+}) => {
   return (
     <Card className="col-span-1">
       <CardHeader>
-        <CardTitle className="text-lg font-semibold">Category Breakdown</CardTitle>
+        <CardTitle className="text-tracksy-blue text-lg font-semibold dark:text-white">
+          Category Breakdown
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <CategoryTree categories={categories} />

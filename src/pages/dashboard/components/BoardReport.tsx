@@ -59,14 +59,18 @@ export function BoardReport() {
   return (
     <Card className="col-span-1">
       <CardHeader>
-        <CardTitle className="text-lg font-semibold">Board Time Report</CardTitle>
+        <CardTitle className="text-lg font-semibold text-tracksy-blue dark:text-white">Board Time Report</CardTitle>
         <Select value={selectedBoardId ?? ""} onValueChange={setSelectedBoardId}>
-          <SelectTrigger>
+          <SelectTrigger className="border-tracksy-gold/30 dark:border-tracksy-gold/20 text-tracksy-blue dark:text-white hover:border-tracksy-gold/50 dark:hover:border-tracksy-gold/40 bg-white dark:bg-gray-900">
             <SelectValue placeholder="Select a board" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="border-tracksy-gold/30 dark:border-tracksy-gold/20 bg-white dark:bg-gray-900">
             {boards.map((board) => (
-              <SelectItem key={board.id} value={board.id}>
+              <SelectItem 
+                key={board.id} 
+                value={board.id}
+                className="text-tracksy-blue dark:text-white hover:bg-tracksy-gold/5 dark:hover:bg-tracksy-gold/10"
+              >
                 {board.name}
               </SelectItem>
             ))}
@@ -78,24 +82,26 @@ export function BoardReport() {
         {selectedBoardId && timeEntries ? (
           <div className="space-y-4">
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Total Time</h3>
-              <p className="text-2xl font-bold">{formatDuration(totalTime)}</p>
+              <h3 className="text-sm font-medium text-tracksy-blue/70 dark:text-white/70">Total Time</h3>
+              <p className="text-2xl font-bold text-tracksy-blue dark:text-white">{formatDuration(totalTime)}</p>
             </div>
 
             <div>
-              <h3 className="mb-2 text-sm font-medium text-muted-foreground">Task Breakdown</h3>
+              <h3 className="mb-2 text-sm font-medium text-tracksy-blue/70 dark:text-white/70">Task Breakdown</h3>
               <div className="space-y-2">
                 {Object.entries(itemBreakdown).map(([itemId, { duration, title }]) => (
                   <div key={itemId} className="flex justify-between">
-                    <span className="truncate text-sm">{title}</span>
-                    <span className="text-sm font-medium">{formatDuration(duration)}</span>
+                    <span className="truncate text-sm text-tracksy-blue dark:text-white">{title}</span>
+                    <span className="text-sm font-medium text-tracksy-blue/90 dark:text-white/90">
+                      {formatDuration(duration)}
+                    </span>
                   </div>
                 ))}
               </div>
             </div>
           </div>
         ) : (
-          <div className="text-sm text-muted-foreground">Select a board to view time report</div>
+          <div className="text-sm text-tracksy-blue/70 dark:text-white/70">Select a board to view time report</div>
         )}
       </CardContent>
     </Card>

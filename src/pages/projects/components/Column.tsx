@@ -27,10 +27,11 @@ interface ColumnProps {
   nextOrder: number;
   previousOrder: number;
   order: number;
+  className?: string;
 }
 
 export const Column = forwardRef<HTMLDivElement, ColumnProps>(
-  ({ name, columnId, boardId, items, nextOrder, previousOrder, order }, ref) => {
+  ({ name, columnId, boardId, items, nextOrder, previousOrder, order, className }, ref) => {
     const [acceptCardDrop, setAcceptCardDrop] = useState(false);
     const editState = useState(false);
     const { confirm } = useConfirmationDialog();
@@ -153,9 +154,9 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
         className={twMerge(
           "-mr-[2px] flex max-h-full flex-shrink-0 cursor-grab flex-col border-l-2 border-r-2 border-l-transparent border-r-transparent px-2 last:mr-0 active:cursor-grabbing",
           acceptColumnDrop === "left"
-            ? "border-l-red-500 border-r-transparent"
+            ? "border-l-tracksy-gold dark:border-l-tracksy-gold/70 border-r-transparent"
             : acceptColumnDrop === "right"
-              ? "border-l-transparent border-r-red-500"
+              ? "border-r-tracksy-gold dark:border-r-tracksy-gold/70 border-l-transparent"
               : ""
         )}
       >
@@ -170,8 +171,8 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
           }}
           {...(!items.length ? cardDndProps : {})}
           className={twMerge(
-            "relative flex max-h-full w-80 flex-shrink-0 flex-col rounded-xl border-slate-400 bg-slate-100 shadow-sm shadow-slate-400 dark:bg-gray-700",
-            acceptCardDrop && `outline outline-2 outline-red-500`
+            "relative flex max-h-full w-80 flex-shrink-0 flex-col rounded-xl border-slate-200 bg-white/80 shadow-sm backdrop-blur-sm dark:border-slate-700 dark:bg-gray-900/80",
+            acceptCardDrop && "outline-tracksy-gold dark:outline-tracksy-gold/70 outline outline-2"
           )}
         >
           <div className="p-2" {...(items.length ? cardDndProps : {})}>
@@ -186,8 +187,8 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
               }
               inputLabel="Edit column name"
               buttonLabel={`Edit column "${name}" name`}
-              inputClassName="border border-slate-400 w-full rounded-lg py-1 px-2 font-medium text-black"
-              buttonClassName="block rounded-lg text-left w-full border border-transparent py-1 px-2 font-medium text-slate-600 dark:text-slate-300"
+              inputClassName="border border-tracksy-gold/30 dark:border-tracksy-gold/20 w-full rounded-lg py-1 px-2 font-medium text-tracksy-blue dark:text-white bg-white dark:bg-gray-800 focus:border-tracksy-gold dark:focus:border-tracksy-gold/70 focus:ring-tracksy-gold/20 dark:focus:ring-tracksy-gold/10"
+              buttonClassName="block rounded-lg text-left w-full border border-transparent py-1 px-2 font-medium text-tracksy-blue dark:text-white hover:bg-tracksy-gold/10 dark:hover:bg-tracksy-gold/5"
               onChange={(value) => {
                 updateColumnMutation.mutate({
                   board_id: boardId,
@@ -231,12 +232,13 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
                   });
                   scrollList();
                 }}
-                className="w-full"
+                className="text-tracksy-blue hover:bg-tracksy-gold/10 dark:hover:bg-tracksy-gold/5 w-full dark:text-white"
               >
-                <PlusIcon /> Add a card
+                <PlusIcon className="mr-2 h-4 w-4" /> Add a card
               </Button>
             </div>
           )}
+
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -244,12 +246,14 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
                   onClick={hasItems ? undefined : handleDelete}
                   aria-label="Delete column"
                   className={twMerge(
-                    "absolute right-4 top-4 flex items-center gap-2",
-                    hasItems ? "cursor-not-allowed text-muted-foreground" : "hover:text-red-500"
+                    "absolute right-4 top-4 flex items-center gap-2 transition-colors",
+                    hasItems
+                      ? "cursor-not-allowed text-muted-foreground dark:text-muted-foreground"
+                      : "text-red-400 hover:text-red-500 dark:text-red-400 dark:hover:text-red-300"
                   )}
                   type="button"
                 >
-                  <TrashIcon />
+                  <TrashIcon className="h-4 w-4" />
                 </button>
               </TooltipTrigger>
               {hasItems && (
