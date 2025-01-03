@@ -1,4 +1,4 @@
-import { BrowserWindow, ipcMain } from "electron";
+import { BrowserWindow } from "electron";
 import {
   WIN_CLEAR_ACTIVITIES_CHANNEL,
   WIN_CLOSE_CHANNEL,
@@ -11,9 +11,9 @@ import {
 
 import { ActivityRecord } from "@/types/activity";
 import { safelyRegisterListener } from "../safelyRegisterListener";
-import { addActivity, getActivities, clearActivities } from "../../../utils/ActivityStorage";
+import { addActivity, getActivities, clearActivities } from "../../../services/ActivityStorage";
+import { TRACKING_INTERVAL } from "../../../config/tracking";
 
-const TRACKING_INTERVAL = 3000; // 3 seconds
 let trackingIntervalId: NodeJS.Timeout | null = null;
 
 export const addWindowEventListeners = (mainWindow: BrowserWindow) => {

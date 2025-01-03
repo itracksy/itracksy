@@ -4,6 +4,7 @@ import {
   TitleDurationReport,
 } from "@/types/activity";
 import { ActivityRecord } from "@/types/activity";
+import { TRACKING_INTERVAL } from "@/config/tracking";
 
 const MAX_ITEMS_PER_REPORT = 7;
 
@@ -68,6 +69,7 @@ export function calculateDurationsReport(
     let currentInstance = {
       startTime: records[0].timestamp,
       endTime: records[0].timestamp,
+      duration: records[0].count * TRACKING_INTERVAL,
     };
 
     const GAP_THRESHOLD = 5000;
@@ -76,23 +78,19 @@ export function calculateDurationsReport(
       const timeDiff = records[i].timestamp - records[i - 1].timestamp;
 
       if (timeDiff > GAP_THRESHOLD) {
-        instances.push({
-          ...currentInstance,
-          duration: currentInstance.endTime - currentInstance.startTime,
-        });
+        instances.push(currentInstance);
         currentInstance = {
           startTime: records[i].timestamp,
           endTime: records[i].timestamp,
+          duration: records[i].count * TRACKING_INTERVAL,
         };
       } else {
         currentInstance.endTime = records[i].timestamp;
+        currentInstance.duration += records[i].count * TRACKING_INTERVAL;
       }
     }
 
-    instances.push({
-      ...currentInstance,
-      duration: currentInstance.endTime - currentInstance.startTime,
-    });
+    instances.push(currentInstance);
 
     return instances;
   };

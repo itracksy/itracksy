@@ -2,6 +2,7 @@ import path from "path";
 import fs from "fs";
 import { app } from "electron";
 import { ActivityRecord } from "@/types/activity";
+import { LIMIT_TIME_APART, MERGING_BATCH_SIZE } from "../config/tracking";
 
 const CONFIG = {
   headers: [
@@ -52,7 +53,7 @@ const mergeActivityRecord = (prev: ActivityRecord[]): ActivityRecord[] => {
     // Try to find a matching record that's within 15 minutes
     for (const existing of mergedArray) {
       if (
-        record.timestamp - existing.timestamp <= 15 * 60 * 1000 &&
+        record.timestamp - existing.timestamp <= LIMIT_TIME_APART &&
         recordsMatch(existing, record)
       ) {
         existing.count = (existing.count || 1) + (record.count || 1);
@@ -98,7 +99,8 @@ const addActivity = async (activity: ActivityRecord): Promise<void> => {
   await fs.promises.appendFile(CONFIG.filePath, line);
   count++;
   console.log("count:", count);
-  if (count % 100 === 0) {
+
+  if (count % MERGING_BATCH_SIZE === 0) {
     console.log(`Added ${count} activities`);
     const activities = await getActivities();
     const mergedActivities = mergeActivityRecord(activities);
