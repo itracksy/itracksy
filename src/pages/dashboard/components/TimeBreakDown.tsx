@@ -101,9 +101,16 @@ export default function TimeBreakdown({
         {reports.map((report) => (
           <div key={report.name} className="group flex items-center justify-between space-x-2">
             <div className="flex-1 space-y-1">
-              <p className="text-tracksy-blue truncate text-sm font-medium leading-none dark:text-white">
-                {report.name}
-              </p>
+              <div className="flex items-center justify-between text-sm">
+                <p className="text-tracksy-blue max-w-[250px] truncate font-medium leading-none dark:text-white">
+                  {report.name}
+                </p>
+                <span className="text-right">
+                  {Math.round(report.duration / 60) === 0
+                    ? "--"
+                    : `${Math.round(report.duration / 60)} min (${Math.round(report.percentage)}%)`}
+                </span>
+              </div>
               <div className="bg-tracksy-gold/10 dark:bg-tracksy-gold/5 h-2 w-full overflow-hidden rounded-full">
                 <div
                   className="bg-tracksy-gold dark:bg-tracksy-gold/80 h-full rounded-full transition-all"
@@ -111,11 +118,6 @@ export default function TimeBreakdown({
                 />
               </div>
             </div>
-            <span className="text-tracksy-blue/70 min-w-[4.5rem] text-right text-sm dark:text-white/70">
-              {Math.round(report.duration / 60) === 0
-                ? "--"
-                : `${Math.round(report.duration / 60)} min (${Math.round(report.percentage)}%)`}
-            </span>
           </div>
         ))}
       </CardContent>
