@@ -13,9 +13,9 @@ const config: Config = {
     "^@/(.*)$": "<rootDir>/src/$1",
   },
 
-  roots: ["<rootDir>/src/tests/unit"],
-
+  testMatch: ["**/__tests__/**/*.test.ts"],
   setupFilesAfterEnv: ["<rootDir>/src/tests/unit/setup.ts"],
+  roots: ["<rootDir>/src"],
 
   testEnvironment: "jsdom",
 

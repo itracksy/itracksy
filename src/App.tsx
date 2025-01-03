@@ -36,13 +36,14 @@ function AuthenticatedApp() {
 
   useEffect(() => {
     if (!hasSynced.current) {
-      // window.electronWindow.getActivities().then((activities) => {
-      //   hasSynced.current = true;
-      //   window.electronWindow.clearActivities();
-      //   if (isTracking) {
-      //     startTracking();
-      //   }
-      // });
+      window.electronWindow.getActivities().then((activities) => {
+        hasSynced.current = true;
+        // window.electronWindow.clearActivities();
+        console.log("isTracking", isTracking);
+        if (isTracking) {
+          startTracking();
+        }
+      });
     }
   }, [isTracking, startTracking]);
 

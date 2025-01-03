@@ -64,15 +64,7 @@ const startTracking = async (params: {
     const result = await getWindows.activeWindow(params);
 
     if (result) {
-      if (result.platform === "macos") {
-        console.log(
-          `ActivityTracker: Active window - ${result.title} (Bundle ID: ${result.owner.bundleId})`
-        );
-      } else {
-        console.log(
-          `ActivityTracker: Active window - ${result.title} (Path: ${result.owner.path})`
-        );
-      }
+      console.log(`ActivityTracker: Active window:`, result);
 
       const transformedActivities: ActivityRecord = {
         platform: result.platform,
@@ -83,6 +75,8 @@ const startTracking = async (params: {
         ownerName: result.owner.name,
         timestamp: Date.now(),
         count: 1,
+        //@ts-ignore
+        url: result.url,
       };
 
       await addActivity(transformedActivities);

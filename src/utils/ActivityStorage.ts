@@ -23,46 +23,62 @@ const initializeStorage = (): void => {
   if (!fs.existsSync(CONFIG.filePath)) {
     fs.writeFileSync(CONFIG.filePath, CONFIG.headers.join(",") + "\n");
   }
+  console.log("Storage initialized", CONFIG.filePath);
 };
 
 const mergeActivityRecord = (prev: ActivityRecord[]): ActivityRecord[] => {
+  if (prev.length === 0) return [];
+
   console.log("prev.length:", prev.length);
   // Helper function to check if records match
   const recordsMatch = (a: ActivityRecord, b: ActivityRecord): boolean => {
-    return (
-      a.id === b.id &&
+    const matches =
       a.title === b.title &&
       a.ownerBundleId === b.ownerBundleId &&
-      a.ownerProcessId === b.ownerProcessId &&
       a.ownerName === b.ownerName &&
       a.ownerPath === b.ownerPath &&
-      a.platform === b.platform
-    );
+      a.platform === b.platform;
+
+    return matches;
   };
 
-  // Search forwards through the array
+  // Sort by timestamp first to ensure we process records in order
+  const sortedRecords = prev;
   const mergedArray: ActivityRecord[] = [];
-  for (let i = 0; i >= prev.length - 1; i++) {
-    const nextItem = prev[i + 1];
-    // Check if timestamps are more than 15 minutes apart
-    if (nextItem.timestamp - prev[i].timestamp > 15 * 60 * 1000) {
-      mergedArray.push(prev[i]);
-      continue;
+
+  for (const record of sortedRecords) {
+    let merged = false;
+
+    // Try to find a matching record that's within 15 minutes
+    for (const existing of mergedArray) {
+      if (
+        record.timestamp - existing.timestamp <= 15 * 60 * 1000 &&
+        recordsMatch(existing, record)
+      ) {
+        existing.count = (existing.count || 1) + (record.count || 1);
+        merged = true;
+        break;
+      }
     }
-    if (recordsMatch(prev[i], nextItem)) {
-      // Found a match - update count in place
-      mergedArray[mergedArray.length - 1] = {
-        ...prev[i],
-        count: (prev[i].count || 1) + 1,
-      };
-      continue;
+
+    if (!merged) {
+      mergedArray.push({ ...record });
     }
-    // No match found - add record to merged array
-    mergedArray.push(prev[i]);
   }
-  console.log("mergedArray.length:", mergedArray.length);
+
+  console.log(
+    "Final merged records:",
+    mergedArray.map((r) => ({
+      id: r.id,
+      title: r.title.substring(0, 30) + "...",
+      count: r.count,
+      timestamp: r.timestamp,
+    }))
+  );
+
   return mergedArray;
 };
+
 let count = 0;
 const addActivity = async (activity: ActivityRecord): Promise<void> => {
   const line =
@@ -81,6 +97,7 @@ const addActivity = async (activity: ActivityRecord): Promise<void> => {
 
   await fs.promises.appendFile(CONFIG.filePath, line);
   count++;
+  console.log("count:", count);
   if (count % 100 === 0) {
     console.log(`Added ${count} activities`);
     const activities = await getActivities();
@@ -102,7 +119,7 @@ const addActivity = async (activity: ActivityRecord): Promise<void> => {
           ].join(",") + "\n"
       )
       .join("");
-
+    console.log("mergedActivities:", mergedActivities);
     await fs.promises.writeFile(CONFIG.filePath, CONFIG.headers.join(",") + "\n" + allLines);
   }
 };
@@ -171,4 +188,4 @@ const clearActivities = async (): Promise<void> => {
 // Initialize storage on module load
 initializeStorage();
 
-export { addActivity, getActivities, clearActivities };
+export { addActivity, getActivities, clearActivities, mergeActivityRecord };
