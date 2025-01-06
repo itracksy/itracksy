@@ -4,19 +4,21 @@ import {
   useUpdateTimeEntryMutation,
   useCreateTimeEntryMutation,
 } from "@/services/hooks/useTimeEntryQueries";
-import { Clock, PlayCircle, StopCircle } from "lucide-react";
+import { Clock, PlayCircle, StopCircle, Focus } from "lucide-react";
 
 import { TimeEntryDialog } from "@/components/tracking/TimeEntryDialog";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { selectedBoardIdAtom } from "@/context/board";
+import { isFocusModeAtom } from "@/context/activity";
 
 export function BottomSideBar() {
   const [open, setOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string>("");
   const [duration, setDuration] = useState<string>("00:00:00");
   const selectedBoardId = useAtomValue(selectedBoardIdAtom);
+  const [isFocusMode, setIsFocusMode] = useAtom(isFocusModeAtom);
 
   const { data: activeTimeEntry, isLoading } = useActiveTimeEntry();
   const updateTimeEntry = useUpdateTimeEntryMutation();
@@ -139,6 +141,17 @@ export function BottomSideBar() {
             <span className="text-sm text-muted-foreground">Start new time entry</span>
           </SidebarMenuButton>
         )}
+
+        <SidebarMenuButton
+          onClick={() => setIsFocusMode(!isFocusMode)}
+          className={isFocusMode ? "text-purple-600" : "hover:text-purple-600"}
+          tooltip={isFocusMode ? "Disable focus mode" : "Enable focus mode"}
+        >
+          <Focus className={`h-5 w-5 ${isFocusMode ? "text-purple-600" : ""}`} />
+          <span className="text-sm text-muted-foreground">
+            {isFocusMode ? "Disable focus mode" : "Enable focus mode"}
+          </span>
+        </SidebarMenuButton>
       </>
 
       <TimeEntryDialog

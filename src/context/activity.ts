@@ -17,3 +17,5 @@ export const screenRecordingPermissionAtom = atomWithStorage(
 );
 
 export const isTrackingAtom = atomWithStorage(localKey.IS_TRACKING, false);
+
+export const isFocusModeAtom = atomWithStorage(localKey.IS_FOCUS_MODE, false);

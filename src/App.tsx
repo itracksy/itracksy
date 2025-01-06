@@ -8,9 +8,9 @@ import { router } from "./routes/router";
 import { RouterProvider } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useTracking } from "./hooks/useTracking";
 import { useAuth } from "./hooks/useAuth";
 import { supabase } from "./lib/supabase";
+import { useTracking } from "./hooks/useTracking";
 
 const queryClient = new QueryClient({
   queryCache: new QueryCache({
