@@ -1,16 +1,74 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, Tray, Menu, nativeImage, Notification } from "electron";
 import registerListeners from "./helpers/ipc/listeners-register";
+import * as path from "path";
+import { ActivityRecord } from "./types/activity";
 
 // "electron-squirrel-startup" seems broken when packaging with vite
 //import started from "electron-squirrel-startup";
-import path from "path";
-import { ActivityRecord } from "./types/activity";
 
-const inDevelopment = process.env.NODE_ENV === "development";
+const inDevelopment: boolean = process.env.NODE_ENV === "development";
 
-function createWindow() {
+let mainWindow: BrowserWindow | null = null;
+let tray: Tray | null = null;
+let isQuiting: boolean = false;
+
+async function createTray() {
+  // Request notification permission on macOS
+  if (process.platform === "darwin") {
+    await app.whenReady();
+    if (!Notification.isSupported()) {
+      console.log("Notifications not supported");
+    }
+  }
+
+  const icon = nativeImage
+    .createFromPath(path.join(__dirname, "../resources/icon.png"))
+    .resize({ width: 18, height: 18 }); // Slightly larger for macOS
+
+  // Set as template image for better dark/light mode support
+  icon.setTemplateImage(true);
+
+  tray = new Tray(icon);
+
+  // Make sure tray icon is visible on Retina displays
+  if (process.platform === "darwin") {
+    tray.setPressedImage(icon);
+  }
+
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: "Show",
+      click: () => {
+        if (mainWindow) {
+          mainWindow.show();
+          mainWindow.focus();
+        }
+      },
+    },
+    {
+      label: "Quit",
+      click: () => {
+        app.quit();
+      },
+    },
+  ]);
+
+  tray.setContextMenu(contextMenu);
+  tray.setToolTip("iTracksy");
+
+  tray.on("click", () => {
+    if (!mainWindow) {
+      createWindow();
+    } else {
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+}
+
+function createWindow(): void {
   const preload = path.join(__dirname, "preload.js");
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
@@ -18,12 +76,19 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: true,
       nodeIntegrationInSubFrames: false,
-
       preload: preload,
     },
     titleBarStyle: "hidden",
   });
+
   registerListeners(mainWindow);
+
+  mainWindow.on("close", (event) => {
+    if (!isQuiting) {
+      event.preventDefault();
+      mainWindow?.hide();
+    }
+  });
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
@@ -32,9 +97,15 @@ function createWindow() {
   }
 }
 
-// Initialize activity tracker when app is ready
+// Initialize app when ready
 app.whenReady().then(() => {
   createWindow();
+  createTray();
+});
+
+// Handle app quit
+app.on("before-quit", () => {
+  isQuiting = true;
 });
 
 //osX only
@@ -47,6 +118,9 @@ app.on("window-all-closed", () => {
 app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
+  } else if (mainWindow) {
+    mainWindow.show();
+    mainWindow.focus();
   }
 });
 //osX only ends

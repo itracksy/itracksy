@@ -4,7 +4,6 @@ import { Lock, Loader2, PlayCircle, StopCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useState } from "react";
 import { useTracking } from "@/hooks/useTracking";
-import { cn } from "@/lib/utils";
 
 type Props = {
   title: string;
@@ -15,7 +14,6 @@ type Props = {
   }[];
   permissionDisabled?: boolean;
   onEnablePermission?: () => Promise<void>;
-  className?: string;
 };
 
 export default function TimeBreakdown({
@@ -23,7 +21,6 @@ export default function TimeBreakdown({
   title,
   permissionDisabled,
   onEnablePermission,
-  className,
 }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const { isTracking, startTracking, stopTracking } = useTracking();
@@ -39,11 +36,9 @@ export default function TimeBreakdown({
   };
 
   return (
-    <Card className={cn("col-span-1", className, !isTracking && "opacity-90")}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-tracksy-blue text-lg font-medium dark:text-white">
-          {title}
-        </CardTitle>
+    <Card className={`col-span-1 ${!isTracking ? "opacity-90" : ""}`}>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-lg font-semibold">{title}</CardTitle>
         {!permissionDisabled && (
           <TooltipProvider>
             <Tooltip>
@@ -52,17 +47,12 @@ export default function TimeBreakdown({
                   variant={isTracking ? "destructive" : "default"}
                   size="icon"
                   onClick={isTracking ? stopTracking : startTracking}
-                  className={cn(
-                    "h-7 w-7",
-                    isTracking
-                      ? "bg-red-500 text-white hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700"
-                      : "bg-tracksy-gold hover:bg-tracksy-gold/90 dark:bg-tracksy-gold/80 dark:hover:bg-tracksy-gold/70 text-white"
-                  )}
+                  className="h-6 w-6"
                 >
                   {isTracking ? (
-                    <StopCircle className="h-4 w-4" />
+                    <StopCircle className="h-5 w-5" />
                   ) : (
-                    <PlayCircle className="h-4 w-4" />
+                    <PlayCircle className="h-5 w-5" />
                   )}
                 </Button>
               </TooltipTrigger>
@@ -72,54 +62,37 @@ export default function TimeBreakdown({
             </Tooltip>
           </TooltipProvider>
         )}
-        {permissionDisabled && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleEnablePermission}
-                  disabled={isLoading}
-                  className="border-tracksy-gold/50 dark:border-tracksy-gold/30 hover:border-tracksy-gold dark:hover:border-tracksy-gold/60 hover:bg-tracksy-gold/10 dark:hover:bg-tracksy-gold/5 h-7 w-7"
-                >
-                  {isLoading ? (
-                    <Loader2 className="text-tracksy-gold h-4 w-4 animate-spin dark:text-white/80" />
-                  ) : (
-                    <Lock className="text-tracksy-gold h-4 w-4 dark:text-white/80" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Enable Permission</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
       </CardHeader>
-      <CardContent className="space-y-2">
-        {reports.map((report) => (
-          <div key={report.name} className="group flex items-center justify-between space-x-2">
-            <div className="flex-1 space-y-1">
-              <div className="flex items-center justify-between text-sm">
-                <p className="text-tracksy-blue max-w-[250px] truncate font-medium leading-none dark:text-white">
-                  {report.name}
-                </p>
-                <span className="text-right">
-                  {Math.round(report.duration / 60) === 0
-                    ? "--"
-                    : `${Math.round(report.duration / 60)} min (${Math.round(report.percentage)}%)`}
-                </span>
-              </div>
-              <div className="bg-tracksy-gold/10 dark:bg-tracksy-gold/5 h-2 w-full overflow-hidden rounded-full">
-                <div
-                  className="bg-tracksy-gold dark:bg-tracksy-gold/80 h-full rounded-full transition-all"
-                  style={{ width: `${report.percentage}%` }}
-                />
-              </div>
-            </div>
+      <CardContent className={`space-y-4 ${!isTracking ? "opacity-50" : ""}`}>
+        {permissionDisabled ? (
+          <div className="flex flex-col items-center justify-center space-y-4 py-8">
+            <Lock className="h-12 w-12 text-muted-foreground" />
+            <p className="text-center text-sm text-muted-foreground">
+              {title === "Domain Usage"
+                ? "Enable accessibility permission to track domain usage"
+                : "Enable screen recording permission to track window titles"}
+            </p>
+            <Button onClick={handleEnablePermission} variant="outline" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Enabling...
+                </>
+              ) : (
+                "Enable Permission"
+              )}
+            </Button>
           </div>
-        ))}
+        ) : (
+          reports.map((report) => (
+            <div key={report.name} className="flex items-center justify-between space-x-2">
+              <span className="flex-1 truncate text-sm font-medium">{report.name}</span>
+              <span className="whitespace-nowrap text-sm text-muted-foreground">
+                {Math.round(report.duration / 60)} min ({Math.round(report.percentage)}%)
+              </span>
+            </div>
+          ))
+        )}
       </CardContent>
     </Card>
   );
