@@ -56,6 +56,13 @@ async function createTray() {
   tray.setContextMenu(contextMenu);
   tray.setToolTip("iTracksy");
 
+  if (process.platform === "darwin") {
+    let count = 0;
+    setInterval(() => {
+      tray?.setTitle(`iTracksy: ${count++}`);
+    }, 1000);
+  }
+
   tray.on("click", () => {
     if (!mainWindow) {
       createWindow();

@@ -4,6 +4,7 @@ import { Lock, Loader2, PlayCircle, StopCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useState } from "react";
 import { useTracking } from "@/hooks/useTracking";
+import { cn } from "@/lib/utils";
 
 type Props = {
   title: string;
@@ -14,6 +15,7 @@ type Props = {
   }[];
   permissionDisabled?: boolean;
   onEnablePermission?: () => Promise<void>;
+  className?: string;
 };
 
 export default function TimeBreakdown({
@@ -21,6 +23,7 @@ export default function TimeBreakdown({
   title,
   permissionDisabled,
   onEnablePermission,
+  className,
 }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const { isTracking, startTracking, stopTracking } = useTracking();
@@ -36,7 +39,7 @@ export default function TimeBreakdown({
   };
 
   return (
-    <Card className={`col-span-1 ${!isTracking ? "opacity-90" : ""}`}>
+    <Card className={cn("col-span-1", className, !isTracking && "opacity-90")}>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg font-semibold">{title}</CardTitle>
         {!permissionDisabled && (
