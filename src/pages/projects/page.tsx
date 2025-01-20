@@ -79,7 +79,7 @@ export function ProjectsPage() {
     queryKey: ["boards"],
     queryFn: getBoards,
   });
-
+  console.log("boards", boards);
   const createBoardMutation = useMutation({
     mutationFn: createBoard,
     onSuccess: () => {
@@ -108,8 +108,8 @@ export function ProjectsPage() {
   if (boardLoading || boardsLoading) return <Loader />;
 
   return (
-    <div className="from-tracksy-blue/5 to-tracksy-gold/5 flex h-full flex-col bg-gradient-to-br">
-      <div className="border-tracksy-gold/20 flex items-center justify-between border-b p-4 backdrop-blur-sm">
+    <div className="flex h-full flex-col bg-gradient-to-br from-tracksy-blue/5 to-tracksy-gold/5">
+      <div className="flex items-center justify-between border-b border-tracksy-gold/20 p-4 backdrop-blur-sm">
         <div className="flex items-center gap-4">
           <Select
             value={selectedBoardId ?? ""}
@@ -121,22 +121,22 @@ export function ProjectsPage() {
               setSelectedBoardId(value);
             }}
           >
-            <SelectTrigger className="border-tracksy-gold/30 dark:border-tracksy-gold/20 text-tracksy-blue hover:border-tracksy-gold/50 dark:hover:border-tracksy-gold/40 w-[180px] bg-white dark:bg-gray-900 dark:text-white">
+            <SelectTrigger className="w-[180px] border-tracksy-gold/30 bg-white text-tracksy-blue hover:border-tracksy-gold/50 dark:border-tracksy-gold/20 dark:bg-gray-900 dark:text-white dark:hover:border-tracksy-gold/40">
               <SelectValue placeholder="Select a board" />
             </SelectTrigger>
-            <SelectContent className="border-tracksy-gold/30 dark:border-tracksy-gold/20 bg-white dark:bg-gray-900">
+            <SelectContent className="border-tracksy-gold/30 bg-white dark:border-tracksy-gold/20 dark:bg-gray-900">
               {boards?.map((board) => (
                 <SelectItem
                   key={board.id}
                   value={board.id}
-                  className="text-tracksy-blue hover:bg-tracksy-gold/5 dark:hover:bg-tracksy-gold/10 dark:text-white"
+                  className="text-tracksy-blue hover:bg-tracksy-gold/5 dark:text-white dark:hover:bg-tracksy-gold/10"
                 >
                   {board.name}
                 </SelectItem>
               ))}
               <SelectSeparator className="bg-tracksy-gold/20 dark:bg-tracksy-gold/10" />
               <SelectItem value="new" onSelect={() => setOpen(true)}>
-                <div className="text-tracksy-gold hover:text-tracksy-gold/80 flex items-center gap-2 dark:text-white/80">
+                <div className="flex items-center gap-2 text-tracksy-gold hover:text-tracksy-gold/80 dark:text-white/80">
                   <PlusCircle className="h-4 w-4" /> Create Board
                 </div>
               </SelectItem>
@@ -150,7 +150,7 @@ export function ProjectsPage() {
               size="icon"
               onClick={() => setViewMode(viewMode === "board" ? "list" : "board")}
               aria-label={viewMode === "board" ? "Switch to list view" : "Switch to board view"}
-              className="border-tracksy-gold/30 text-tracksy-blue hover:border-tracksy-gold/50 hover:bg-tracksy-gold/10 bg-white"
+              className="border-tracksy-gold/30 bg-white text-tracksy-blue hover:border-tracksy-gold/50 hover:bg-tracksy-gold/10"
             >
               {viewMode === "board" ? (
                 <List className="h-4 w-4" />
@@ -168,10 +168,10 @@ export function ProjectsPage() {
       {board && viewMode === "board" && <BoardView board={board} />}
       {board && viewMode === "list" && (
         <div className="p-6">
-          <div className="border-tracksy-gold/20 rounded-lg border bg-white shadow-lg">
+          <div className="rounded-lg border border-tracksy-gold/20 bg-white shadow-lg">
             <Table>
               <TableHeader>
-                <TableRow className="border-tracksy-gold/20 hover:bg-tracksy-gold/5 border-b">
+                <TableRow className="border-b border-tracksy-gold/20 hover:bg-tracksy-gold/5">
                   <TableHead className="text-tracksy-blue">Title</TableHead>
                   <TableHead className="text-tracksy-blue">Status</TableHead>
                   <TableHead className="text-tracksy-blue">Description</TableHead>
@@ -183,9 +183,9 @@ export function ProjectsPage() {
 
                   return (
                     <TableRow key={item.id} className="hover:bg-tracksy-gold/5">
-                      <TableCell className="text-tracksy-blue font-medium">{item.title}</TableCell>
+                      <TableCell className="font-medium text-tracksy-blue">{item.title}</TableCell>
                       <TableCell>
-                        <span className="bg-tracksy-gold/10 text-tracksy-blue rounded-full px-2 py-1 text-sm">
+                        <span className="rounded-full bg-tracksy-gold/10 px-2 py-1 text-sm text-tracksy-blue">
                           {column?.name || "No Status"}
                         </span>
                       </TableCell>
@@ -287,7 +287,7 @@ export function ProjectsPage() {
                 </Button>
                 <Button
                   type="submit"
-                  className="bg-tracksy-gold hover:bg-tracksy-gold/90 text-white"
+                  className="bg-tracksy-gold text-white hover:bg-tracksy-gold/90"
                 >
                   Create
                 </Button>

@@ -37,7 +37,9 @@ export function BottomSideBar() {
         const hours = Math.floor(diff / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
+        window.electronWindow.updateTrayTitle(
+          `Tracking: ${activeTimeEntry.items?.title} - ${duration}`
+        );
         setDuration(
           `${hours.toString().padStart(2, "0")}:${minutes
             .toString()

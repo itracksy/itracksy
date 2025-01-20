@@ -1,4 +1,4 @@
-import { BrowserWindow, app, dialog, ipcMain, screen } from "electron";
+import { BrowserWindow, app, dialog, ipcMain, screen, Tray } from "electron";
 import {
   WIN_CLEAR_ACTIVITIES_CHANNEL,
   WIN_CLOSE_CHANNEL,
@@ -7,6 +7,7 @@ import {
   WIN_MINIMIZE_CHANNEL,
   WIN_START_TRACKING_CHANNEL,
   WIN_STOP_TRACKING_CHANNEL,
+  WIN_UPDATE_TRAY_TITLE_CHANNEL,
 } from "./window-channels";
 
 import { ActivityRecord } from "@/types/activity";
@@ -16,6 +17,7 @@ import { TRACKING_INTERVAL } from "../../../config/tracking";
 
 let trackingIntervalId: NodeJS.Timeout | null = null;
 let mainWindowRef: BrowserWindow | null = null;
+let trayRef: Tray | null = null;
 let notificationWindow: BrowserWindow | null = null;
 let breakTimer: NodeJS.Timeout | null = null;
 let lastNotificationTime: number = 0;
@@ -23,9 +25,11 @@ let isNotificationEnabled: boolean = true;
 
 const NOTIFICATION_COOLDOWN = 60 * 1000; // 1 minute in milliseconds
 
-export const addWindowEventListeners = (mainWindow: BrowserWindow) => {
+export const addWindowEventListeners = (mainWindow: BrowserWindow, tray: Tray | null) => {
+  console.log("WindowListeners: Adding listeners with tray", tray ? "defined" : "undefined");
   mainWindowRef = mainWindow;
-
+  trayRef = tray;
+  console.log("WindowListeners: trayRef set to", trayRef ? "defined" : "undefined");
   safelyRegisterListener(WIN_MINIMIZE_CHANNEL, () => {
     mainWindow.minimize();
   });
@@ -63,6 +67,14 @@ export const addWindowEventListeners = (mainWindow: BrowserWindow) => {
   });
   safelyRegisterListener(WIN_GET_ACTIVITIES_CHANNEL, async () => {
     return await getActivities();
+  });
+  safelyRegisterListener(WIN_UPDATE_TRAY_TITLE_CHANNEL, (_event, title: string) => {
+    console.log("WindowListeners: Updating tray title", title);
+    console.log("WindowListeners: trayRef is", trayRef ? "defined" : "undefined");
+    if (trayRef) {
+      console.log("Window: Updating trayRef title", title);
+      trayRef.setTitle(title);
+    }
   });
 };
 

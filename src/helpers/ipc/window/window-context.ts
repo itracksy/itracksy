@@ -7,6 +7,7 @@ import {
   WIN_GET_ACTIVITIES_CHANNEL,
   WIN_STOP_TRACKING_CHANNEL,
   WIN_CLEAR_ACTIVITIES_CHANNEL,
+  WIN_UPDATE_TRAY_TITLE_CHANNEL,
 } from "./window-channels";
 
 export function exposeWindowContext() {
@@ -14,6 +15,7 @@ export function exposeWindowContext() {
     minimize: () => ipcRenderer.invoke(WIN_MINIMIZE_CHANNEL),
     maximize: () => ipcRenderer.invoke(WIN_MAXIMIZE_CHANNEL),
     close: () => ipcRenderer.invoke(WIN_CLOSE_CHANNEL),
+    updateTrayTitle: (title: string) => ipcRenderer.invoke(WIN_UPDATE_TRAY_TITLE_CHANNEL, title),
 
     startTracking: async (params: {
       accessibilityPermission: true;

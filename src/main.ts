@@ -13,6 +13,7 @@ let tray: Tray | null = null;
 let isQuiting: boolean = false;
 
 async function createTray() {
+  console.log("Main: Creating tray");
   // Request notification permission on macOS
   if (process.platform === "darwin") {
     await app.whenReady();
@@ -29,6 +30,8 @@ async function createTray() {
   icon.setTemplateImage(true);
 
   tray = new Tray(icon);
+
+  console.log("Main: Tray created");
 
   // Make sure tray icon is visible on Retina displays
   if (process.platform === "darwin") {
@@ -57,9 +60,8 @@ async function createTray() {
   tray.setToolTip("iTracksy");
 
   if (process.platform === "darwin") {
-    let count = 0;
     setInterval(() => {
-      tray?.setTitle(`iTracksy: ${count++}`);
+      tray?.setTitle("iTracksy");
     }, 1000);
   }
 
@@ -88,7 +90,14 @@ function createWindow(): void {
     titleBarStyle: "hidden",
   });
 
-  registerListeners(mainWindow);
+  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+  } else {
+    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
+  }
+
+  registerListeners(mainWindow, tray);
+  console.log("Main: Registering listeners with tray", tray ? "defined" : "undefined");
 
   mainWindow.on("close", (event) => {
     if (!isQuiting) {
@@ -96,18 +105,12 @@ function createWindow(): void {
       mainWindow?.hide();
     }
   });
-
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
-  } else {
-    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
-  }
 }
 
 // Initialize app when ready
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  await createTray();
   createWindow();
-  createTray();
 });
 
 // Handle app quit
@@ -157,6 +160,7 @@ interface ElectronWindow {
   }) => Promise<void>;
   clearActivities: () => Promise<void>;
   getActivities: () => Promise<ActivityRecord[]>;
+  updateTrayTitle: (title: string) => Promise<void>;
 }
 
 declare global {
