@@ -75,16 +75,6 @@ const mergeActivityRecord = (prev: ActivityRecord[]): ActivityRecord[] => {
     }
   }
 
-  console.log(
-    "Final merged records:",
-    mergedArray.map((r) => ({
-      id: r.id,
-      title: r.title.substring(0, 30) + "...",
-      count: r.count,
-      timestamp: r.timestamp,
-    }))
-  );
-
   return mergedArray;
 };
 

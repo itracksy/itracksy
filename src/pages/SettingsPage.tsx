@@ -1,11 +1,24 @@
 import { useEffect, useState } from "react";
-import { SunIcon, MoonIcon } from "@radix-ui/react-icons";
+import { SunIcon, MoonIcon, Cross2Icon } from "@radix-ui/react-icons";
 import { useAtom } from "jotai";
 
 import { setTheme, getCurrentTheme } from "../helpers/theme_helpers";
 import { ThemeMode } from "@/lib/types/theme-mode";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { blockedDomainsAtom, blockedAppsAtom } from "@/context/activity";
+import { useTracking } from "@/hooks/useTracking";
 
 export default function SettingsPage() {
   const [currentTheme, setCurrentTheme] = useState<ThemeMode>("light");
@@ -13,12 +26,23 @@ export default function SettingsPage() {
   const [blockedApps, setBlockedApps] = useAtom(blockedAppsAtom);
   const [newDomain, setNewDomain] = useState("");
   const [newApp, setNewApp] = useState("");
-
+  const [itemToDelete, setItemToDelete] = useState<{
+    type: "domain" | "app";
+    index: number;
+  } | null>(null);
+  const { isTracking, startTracking, stopTracking } = useTracking();
   useEffect(() => {
     getCurrentTheme().then((theme) => {
       setCurrentTheme(theme.local || theme.system);
     });
   }, []);
+
+  useEffect(() => {
+    if (isTracking) {
+      stopTracking();
+      startTracking();
+    }
+  }, [blockedDomains, blockedApps, isTracking, startTracking, stopTracking]);
 
   const handleThemeChange = async (theme: ThemeMode) => {
     await setTheme(theme);
@@ -36,6 +60,7 @@ export default function SettingsPage() {
     const updated = [...blockedDomains];
     updated.splice(index, 1);
     setBlockedDomains(updated);
+    setItemToDelete(null);
   };
 
   const handleAddApp = () => {
@@ -49,10 +74,46 @@ export default function SettingsPage() {
     const updated = [...blockedApps];
     updated.splice(index, 1);
     setBlockedApps(updated);
+    setItemToDelete(null);
   };
 
+  const index = itemToDelete?.index;
   return (
     <div className="p-6">
+      {index && (
+        <AlertDialog
+          open={itemToDelete !== null}
+          onOpenChange={(open) => !open && setItemToDelete(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will remove the {itemToDelete?.type === "domain" ? "domain" : "app"}{" "}
+                {itemToDelete?.type === "domain"
+                  ? blockedDomains[itemToDelete.index]
+                  : blockedApps[index]}{" "}
+                from your blocked list.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  if (itemToDelete?.type === "domain") {
+                    handleRemoveDomain(itemToDelete.index);
+                  } else if (itemToDelete?.type === "app") {
+                    handleRemoveApp(itemToDelete.index);
+                  }
+                }}
+              >
+                Remove
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+
       <h1 className="text-3xl font-bold text-foreground">Settings</h1>
       <p className="mt-2 text-muted-foreground">Configure your application settings</p>
 
@@ -93,49 +154,65 @@ export default function SettingsPage() {
       <div className="mt-6">
         <h2 className="text-xl font-semibold text-foreground">Focus Mode Blocked Domains</h2>
         <div className="mt-2 flex gap-2">
-          <input
+          <Input
             type="text"
             value={newDomain}
             onChange={(e) => setNewDomain(e.target.value)}
             placeholder="Enter domain to block"
-            className="rounded-md border px-4 py-2"
+            className="max-w-sm"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && newDomain.trim()) {
+                handleAddDomain();
+              }
+            }}
           />
           <Button onClick={handleAddDomain}>Add</Button>
         </div>
-        <ul className="mt-2">
+        <div className="mt-4 flex flex-wrap gap-2">
           {blockedDomains.map((domain, index) => (
-            <li key={index} className="flex items-center justify-between">
+            <Badge key={index} variant="secondary" className="flex items-center gap-1 px-3 py-1">
               {domain}
-              <Button variant="outline" onClick={() => handleRemoveDomain(index)}>
-                Remove
-              </Button>
-            </li>
+              <button
+                onClick={() => setItemToDelete({ type: "domain", index })}
+                className="ml-1 rounded-full p-1 hover:bg-secondary-foreground/10"
+              >
+                <Cross2Icon className="h-3 w-3" />
+              </button>
+            </Badge>
           ))}
-        </ul>
+        </div>
       </div>
 
       <div className="mt-6">
         <h2 className="text-xl font-semibold text-foreground">Focus Mode Blocked Apps</h2>
         <div className="mt-2 flex gap-2">
-          <input
+          <Input
             type="text"
             value={newApp}
             onChange={(e) => setNewApp(e.target.value)}
             placeholder="Enter app name to block"
-            className="rounded-md border px-4 py-2"
+            className="max-w-sm"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && newApp.trim()) {
+                handleAddApp();
+              }
+            }}
           />
           <Button onClick={handleAddApp}>Add</Button>
         </div>
-        <ul className="mt-2">
+        <div className="mt-4 flex flex-wrap gap-2">
           {blockedApps.map((app, index) => (
-            <li key={index} className="flex items-center justify-between">
+            <Badge key={index} variant="secondary" className="flex items-center gap-1 px-3 py-1">
               {app}
-              <Button variant="outline" onClick={() => handleRemoveApp(index)}>
-                Remove
-              </Button>
-            </li>
+              <button
+                onClick={() => setItemToDelete({ type: "app", index })}
+                className="ml-1 rounded-full p-1 hover:bg-secondary-foreground/10"
+              >
+                <Cross2Icon className="h-3 w-3" />
+              </button>
+            </Badge>
           ))}
-        </ul>
+        </div>
       </div>
     </div>
   );

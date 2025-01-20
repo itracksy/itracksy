@@ -83,8 +83,6 @@ const startTracking = async (params: {
     const result = await getWindows.activeWindow(params);
 
     if (result) {
-      console.log(`ActivityTracker: Active window:`, result);
-
       const transformedActivities: ActivityRecord = {
         platform: result.platform,
         id: result.id,
@@ -104,7 +102,8 @@ const startTracking = async (params: {
       // Show notification in full-screen window
       if (
         ((url && params.blockedDomains.some((domain) => url.includes(domain))) ||
-          (appName && params.blockedApps.some((app) => appName.toLowerCase().includes(app.toLowerCase())))) &&
+          (appName &&
+            params.blockedApps.some((app) => appName.toLowerCase().includes(app.toLowerCase())))) &&
         isNotificationEnabled &&
         Date.now() - lastNotificationTime >= NOTIFICATION_COOLDOWN
       ) {
