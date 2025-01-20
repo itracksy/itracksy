@@ -1,8 +1,10 @@
 export const localKey = {
-  ACCESSIBILITY_PERMISSION: "ACCESSIBILITY_PERMISSION",
-  BOARD_STORAGE_KEY: "BOARD_STORAGE_KEY",
-  SCREEN_RECORDING_PERMISSION: "SCREEN_RECORDING_PERMISSION",
-  IS_TRACKING: "IS_TRACKING",
-  ACTIVITY_WINDOW: "ACTIVITY_WINDOW",
-  IS_FOCUS_MODE: "IS_FOCUS_MODE",
-};
+  ACTIVITY_WINDOW: "itracksy-activity-window",
+  ACCESSIBILITY_PERMISSION: "itracksy-accessibility-permission",
+  SCREEN_RECORDING_PERMISSION: "itracksy-screen-recording-permission",
+  BOARD_STORAGE_KEY: "itracksy-board-storage-key",
+  IS_TRACKING: "itracksy-is-tracking",
+  IS_FOCUS_MODE: "itracksy-is-focus-mode",
+  BLOCKED_DOMAINS: "itracksy-blocked-domains",
+  BLOCKED_APPS: "itracksy-blocked-apps",
+} as const;

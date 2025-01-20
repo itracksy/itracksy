@@ -4,13 +4,15 @@ import {
   accessibilityPermissionAtom,
   isTrackingAtom,
   screenRecordingPermissionAtom,
+  blockedDomainsAtom,
+  blockedAppsAtom,
 } from "@/context/activity";
 import { useToast } from "./use-toast";
-import { logger } from "@/services/logger";
 
 export const useTracking = () => {
   const [isTracking, setIsTracking] = useAtom(isTrackingAtom);
-
+  const blockedDomains = useAtomValue(blockedDomainsAtom);
+  const blockedApps = useAtomValue(blockedAppsAtom);
   const accessibilityPermission = useAtomValue(accessibilityPermissionAtom);
   const screenRecordingPermission = useAtomValue(screenRecordingPermissionAtom);
 
@@ -20,10 +22,14 @@ export const useTracking = () => {
       window.electronWindow.startTracking({
         accessibilityPermission,
         screenRecordingPermission,
+        blockedDomains,
+        blockedApps,
       });
       console.log("TrackingProvider: Tracking started)", {
         accessibilityPermission,
         screenRecordingPermission,
+        blockedDomains,
+        blockedApps,
       });
 
       toast({
@@ -33,7 +39,7 @@ export const useTracking = () => {
     } catch (error) {
       console.error("TrackingProvider: Error starting tracking", error);
     }
-  }, [accessibilityPermission, screenRecordingPermission]);
+  }, [accessibilityPermission, screenRecordingPermission, blockedDomains, blockedApps]);
 
   const stopTracking = useCallback(() => {
     // Clear existing interval

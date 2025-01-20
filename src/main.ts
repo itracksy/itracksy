@@ -152,6 +152,8 @@ interface ElectronWindow {
   startTracking: (params: {
     accessibilityPermission: boolean;
     screenRecordingPermission: boolean;
+    blockedDomains: string[];
+    blockedApps: string[];
   }) => Promise<void>;
   clearActivities: () => Promise<void>;
   getActivities: () => Promise<ActivityRecord[]>;

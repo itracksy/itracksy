@@ -43,7 +43,15 @@ export const addWindowEventListeners = (mainWindow: BrowserWindow) => {
   });
   safelyRegisterListener(
     WIN_START_TRACKING_CHANNEL,
-    async (_, params: { accessibilityPermission: boolean; screenRecordingPermission: boolean }) => {
+    async (
+      _,
+      params: {
+        accessibilityPermission: boolean;
+        screenRecordingPermission: boolean;
+        blockedDomains: string[];
+        blockedApps: string[];
+      }
+    ) => {
       return await startTracking(params);
     }
   );
@@ -61,6 +69,8 @@ export const addWindowEventListeners = (mainWindow: BrowserWindow) => {
 const startTracking = async (params: {
   accessibilityPermission: boolean;
   screenRecordingPermission: boolean;
+  blockedDomains: string[];
+  blockedApps: string[];
 }): Promise<void> => {
   console.log("Window: Calling startTracking", params);
 
@@ -89,10 +99,12 @@ const startTracking = async (params: {
       };
 
       await addActivity(transformedActivities);
+      const url = transformedActivities.url;
+      const appName = transformedActivities.ownerName;
       // Show notification in full-screen window
       if (
-        transformedActivities.url &&
-        transformedActivities.url.includes("facebook.com") &&
+        ((url && params.blockedDomains.some((domain) => url.includes(domain))) ||
+          (appName && params.blockedApps.some((app) => appName.toLowerCase().includes(app.toLowerCase())))) &&
         isNotificationEnabled &&
         Date.now() - lastNotificationTime >= NOTIFICATION_COOLDOWN
       ) {
