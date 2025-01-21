@@ -1,5 +1,5 @@
 import { Board, BoardInsert, BoardWithRelations, ColumnInsert, ItemInsert } from "@/types/supabase";
-import { supabase } from "./supabaseClient";
+import { supabase } from "@/lib/supabase";
 
 export async function getBoard(id: string): Promise<BoardWithRelations> {
   const {

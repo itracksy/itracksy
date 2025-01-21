@@ -18,9 +18,17 @@ export function BoardReport() {
   const [selectedBoardId, setSelectedBoardId] = useAtom(selectedBoardIdAtom);
 
   // Get all boards for the user
-  const { data: boards = [] } = useQuery({
+  const { data: boards = [], isLoading, isError, error } = useQuery({
     queryKey: ["boards"],
     queryFn: getBoards,
+    enabled: true,
+  });
+
+  console.log('BoardReport Query Status:', { 
+    hasBoards: boards.length > 0,
+    isLoading,
+    isError,
+    error
   });
 
   // Get time entries for the selected board

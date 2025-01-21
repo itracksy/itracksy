@@ -1,12 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { getConfig } from "@/config/env";
-import { Database } from "./schema";
+import { config } from "../config/env";
+import { TypedSupabaseClient } from "@/types/supabase";
 
-export const supabase = createClient<Database>(getConfig("supabaseUrl"), getConfig("supabaseKey"), {
-  auth: {
-    persistSession: true,
-    storageKey: "itracksy-anonymous-key",
-    storage: localStorage,
-    autoRefreshToken: true,
-  },
-});
+export const supabase: TypedSupabaseClient = createClient(config.supabaseUrl, config.supabaseKey);

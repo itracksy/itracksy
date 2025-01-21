@@ -1,5 +1,5 @@
 import { WindowTrackingInsert } from "@/types/supabase";
-import { supabase } from "./supabaseClient";
+import { supabase } from "@/lib/supabase";
 
 export async function syncActivities(activities: WindowTrackingInsert[]) {
   const {

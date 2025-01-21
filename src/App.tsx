@@ -13,6 +13,14 @@ import { supabase } from "./lib/supabase";
 import { useTracking } from "./hooks/useTracking";
 
 const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: true,
+      refetchOnMount: "always",
+      refetchOnReconnect: "always",
+    },
+  },
   queryCache: new QueryCache({
     onError: (error) => {
       console.error(error);
@@ -47,38 +55,35 @@ function AuthenticatedApp() {
     }
   }, [isTracking, startTracking]);
 
-  return <RouterProvider router={router} />;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <RouterProvider router={router} />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
 }
 
 function App() {
   const { user, loading } = useAuth();
 
-  useEffect(() => {
-    async function signInAnonymously() {
-      if (!loading && !user) {
-        const { data, error } = await supabase.auth.signInAnonymously();
-        if (localStorage.getItem("supabase.auth.user")) {
-          console.error(
-            `already signed in as ${localStorage.getItem("supabase.auth.user")} new user: ${data.user?.id}`
-          );
-        }
-        if (data.user?.id) {
-          localStorage.setItem("supabase.auth.user", data.user.id);
-        }
-        if (error) {
-          console.error("Error signing in anonymously:", error.message);
-        }
-      }
-    }
-    signInAnonymously();
-  }, [user]);
-  return (
-    <TooltipProvider>
-      <QueryClientProvider client={queryClient}>
-        {user && !loading && <AuthenticatedApp />}
-      </QueryClientProvider>
-    </TooltipProvider>
-  );
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-lg">Please sign in to continue</div>
+      </div>
+    );
+  }
+
+  return <AuthenticatedApp />;
 }
 
 const root = createRoot(document.getElementById("app")!);
