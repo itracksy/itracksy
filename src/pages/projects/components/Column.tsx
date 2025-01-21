@@ -154,9 +154,9 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
         className={twMerge(
           "-mr-[2px] flex max-h-full flex-shrink-0 cursor-grab flex-col border-l-2 border-r-2 border-l-transparent border-r-transparent px-2 last:mr-0 active:cursor-grabbing",
           acceptColumnDrop === "left"
-            ? "border-l-tracksy-gold dark:border-l-tracksy-gold/70 border-r-transparent"
+            ? "border-l-tracksy-gold border-r-transparent dark:border-l-tracksy-gold/70"
             : acceptColumnDrop === "right"
-              ? "border-r-tracksy-gold dark:border-r-tracksy-gold/70 border-l-transparent"
+              ? "border-l-transparent border-r-tracksy-gold dark:border-r-tracksy-gold/70"
               : ""
         )}
       >
@@ -172,7 +172,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
           {...(!items.length ? cardDndProps : {})}
           className={twMerge(
             "relative flex max-h-full w-80 flex-shrink-0 flex-col rounded-xl border-slate-200 bg-white/80 shadow-sm backdrop-blur-sm dark:border-slate-700 dark:bg-gray-900/80",
-            acceptCardDrop && "outline-tracksy-gold dark:outline-tracksy-gold/70 outline outline-2"
+            acceptCardDrop && "outline outline-2 outline-tracksy-gold dark:outline-tracksy-gold/70"
           )}
         >
           <div className="p-2" {...(items.length ? cardDndProps : {})}>
@@ -232,7 +232,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
                   });
                   scrollList();
                 }}
-                className="text-tracksy-blue hover:bg-tracksy-gold/10 dark:hover:bg-tracksy-gold/5 w-full dark:text-white"
+                className="w-full text-tracksy-blue hover:bg-tracksy-gold/10 dark:text-white dark:hover:bg-tracksy-gold/5"
               >
                 <PlusIcon className="mr-2 h-4 w-4" /> Add a card
               </Button>

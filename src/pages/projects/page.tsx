@@ -79,7 +79,7 @@ export function ProjectsPage() {
     queryKey: ["boards"],
     queryFn: getBoards,
   });
-  console.log("boards", boards);
+
   const createBoardMutation = useMutation({
     mutationFn: createBoard,
     onSuccess: () => {

@@ -29,7 +29,7 @@ export async function getBoards(): Promise<Board[]> {
     .select("*")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
-
+  console.log("boards", boards);
   if (error) throw error;
   return boards;
 }

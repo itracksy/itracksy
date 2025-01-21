@@ -48,6 +48,7 @@ export function BoardView({ board }: { board: BoardWithRelations }) {
         <div className="flex h-full min-h-0 w-fit flex-grow items-start gap-4 overflow-x-auto p-6">
           {columns.map((col, index) => (
             <ColumnComponent
+              key={col.id}
               name={col.name}
               columnId={col.id}
               boardId={board.id}

@@ -55,8 +55,6 @@ function App() {
 
   useEffect(() => {
     async function signInAnonymously() {
-      console.log("user", user);
-      console.log("loading", loading);
       if (!loading && !user) {
         const { data, error } = await supabase.auth.signInAnonymously();
         if (localStorage.getItem("supabase.auth.user")) {
@@ -74,11 +72,10 @@ function App() {
     }
     signInAnonymously();
   }, [user]);
-  console.log("user", user);
   return (
     <TooltipProvider>
       <QueryClientProvider client={queryClient}>
-        <AuthenticatedApp />
+        {user && !loading && <AuthenticatedApp />}
       </QueryClientProvider>
     </TooltipProvider>
   );
