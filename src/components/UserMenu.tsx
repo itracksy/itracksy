@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
 import { PersonIcon } from "@radix-ui/react-icons";
-import { ReactNode } from "react";
 
 export function UserMenu() {
   const { user } = useAuth();

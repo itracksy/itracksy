@@ -38,12 +38,16 @@ export function BottomSideBar() {
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-        const durationLocal = hours > 0 
-          ? `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`
-          : `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+        const durationLocal =
+          hours > 0
+            ? `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`
+            : `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+
         setDuration(durationLocal);
+
         const text = activeTimeEntry.items?.title;
         const trayTitle = text.length > 10 ? `${text.slice(0, 7)}...` : text;
+
         window.electronWindow.updateTrayTitle(`${trayTitle}-${durationLocal}`);
       };
 

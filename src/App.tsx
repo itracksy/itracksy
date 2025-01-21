@@ -9,7 +9,7 @@ import { RouterProvider } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "./hooks/useAuth";
-import { supabase } from "./lib/supabase";
+
 import { useTracking } from "./hooks/useTracking";
 
 const queryClient = new QueryClient({
@@ -43,15 +43,10 @@ function AuthenticatedApp() {
   }, [i18n]);
 
   useEffect(() => {
-    if (!hasSynced.current) {
-      window.electronWindow.getActivities().then((activities) => {
-        hasSynced.current = true;
-        // window.electronWindow.clearActivities();
-        console.log("isTracking", isTracking);
-        if (isTracking) {
-          startTracking();
-        }
-      });
+    if (!hasSynced.current && isTracking) {
+      hasSynced.current = true;
+
+      startTracking();
     }
   }, [isTracking, startTracking]);
 

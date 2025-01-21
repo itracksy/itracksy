@@ -78,41 +78,40 @@ export default function SettingsPage() {
   };
 
   const index = itemToDelete?.index;
+  console.log("itemToDelete", itemToDelete);
   return (
     <div className="p-6">
-      {index && (
-        <AlertDialog
-          open={itemToDelete !== null}
-          onOpenChange={(open) => !open && setItemToDelete(null)}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This will remove the {itemToDelete?.type === "domain" ? "domain" : "app"}{" "}
-                {itemToDelete?.type === "domain"
-                  ? blockedDomains[itemToDelete.index]
-                  : blockedApps[index]}{" "}
-                from your blocked list.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => {
-                  if (itemToDelete?.type === "domain") {
-                    handleRemoveDomain(itemToDelete.index);
-                  } else if (itemToDelete?.type === "app") {
-                    handleRemoveApp(itemToDelete.index);
-                  }
-                }}
-              >
-                Remove
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
+      <AlertDialog
+        open={itemToDelete !== null}
+        onOpenChange={(open) => !open && setItemToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove the {itemToDelete?.type === "domain" ? "domain" : "app"}{" "}
+              {itemToDelete?.type === "domain"
+                ? blockedDomains[itemToDelete.index]
+                : blockedApps[index ?? 0]}
+              from your blocked list.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (itemToDelete?.type === "domain") {
+                  handleRemoveDomain(itemToDelete.index);
+                } else if (itemToDelete?.type === "app") {
+                  handleRemoveApp(itemToDelete.index);
+                }
+              }}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <h1 className="text-3xl font-bold text-foreground">Settings</h1>
       <p className="mt-2 text-muted-foreground">Configure your application settings</p>

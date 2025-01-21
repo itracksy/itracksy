@@ -25,12 +25,8 @@ export const useTracking = () => {
         blockedDomains,
         blockedApps,
       });
-      console.log("TrackingProvider: Tracking started)", {
-        accessibilityPermission,
-        screenRecordingPermission,
-        blockedDomains,
-        blockedApps,
-      });
+
+      setIsTracking(true);
 
       toast({
         title: "Tracking Started",
@@ -43,9 +39,8 @@ export const useTracking = () => {
 
   const stopTracking = useCallback(() => {
     // Clear existing interval
-
     // Update tracking state
-    setIsTracking(false);
+    // setIsTracking(false);
   }, [setIsTracking]);
 
   return {
