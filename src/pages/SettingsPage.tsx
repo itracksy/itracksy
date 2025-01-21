@@ -7,6 +7,7 @@ import { ThemeMode } from "@/lib/types/theme-mode";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,13 +18,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { blockedDomainsAtom, blockedAppsAtom } from "@/context/activity";
+import { blockedDomainsAtom, blockedAppsAtom, isFocusModeAtom } from "@/context/activity";
 import { useTracking } from "@/hooks/useTracking";
 
 export default function SettingsPage() {
   const [currentTheme, setCurrentTheme] = useState<ThemeMode>("light");
   const [blockedDomains, setBlockedDomains] = useAtom(blockedDomainsAtom);
   const [blockedApps, setBlockedApps] = useAtom(blockedAppsAtom);
+  const [isFocusMode, setIsFocusMode] = useAtom(isFocusModeAtom);
   const [newDomain, setNewDomain] = useState("");
   const [newApp, setNewApp] = useState("");
   const [itemToDelete, setItemToDelete] = useState<{
@@ -148,6 +150,22 @@ export default function SettingsPage() {
             </div>
           </Button>
         </div>
+      </div>
+
+      <div className="mt-6">
+        <h2 className="text-xl font-semibold text-foreground">Focus Mode</h2>
+        <div className="mt-4 flex items-center space-x-2">
+          <Switch id="focus-mode" checked={isFocusMode} onCheckedChange={setIsFocusMode} />
+          <label
+            htmlFor="focus-mode"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            Enable Focus Mode
+          </label>
+        </div>
+        <p className="mt-2 text-sm text-muted-foreground">
+          When enabled, new time entries will start in focus mode by default
+        </p>
       </div>
 
       <div className="mt-6">

@@ -20,6 +20,9 @@ export function exposeWindowContext() {
     startTracking: async (params: {
       accessibilityPermission: true;
       screenRecordingPermission: true;
+      blockedDomains: string[];
+      blockedApps: string[];
+      isFocusMode: boolean;
     }) => {
       ipcRenderer.invoke(WIN_START_TRACKING_CHANNEL, params);
     },

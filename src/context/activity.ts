@@ -16,6 +16,8 @@ export const screenRecordingPermissionAtom = atomWithStorage(
   false
 );
 
+export const isFocusModeAtom = atomWithStorage(localKey.IS_FOCUS_MODE, true);
+
 const defaultBlockedDomains = [
   "facebook.com",
   "twitter.com",
@@ -51,5 +53,3 @@ export const blockedDomainsAtom = atomWithStorage<string[]>(
 export const blockedAppsAtom = atomWithStorage<string[]>(localKey.BLOCKED_APPS, defaultBlockedApps);
 
 export const isTrackingAtom = atomWithStorage(localKey.IS_TRACKING, false);
-
-export const isFocusModeAtom = atomWithStorage(localKey.IS_FOCUS_MODE, false);

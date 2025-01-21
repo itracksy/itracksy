@@ -8,6 +8,7 @@ import {
   blockedAppsAtom,
 } from "@/context/activity";
 import { useToast } from "./use-toast";
+import { useActiveTimeEntry } from "@/services/hooks/useTimeEntryQueries";
 
 export const useTracking = () => {
   const [isTracking, setIsTracking] = useAtom(isTrackingAtom);
@@ -15,7 +16,7 @@ export const useTracking = () => {
   const blockedApps = useAtomValue(blockedAppsAtom);
   const accessibilityPermission = useAtomValue(accessibilityPermissionAtom);
   const screenRecordingPermission = useAtomValue(screenRecordingPermissionAtom);
-
+  const { data: activeTimeEntry } = useActiveTimeEntry();
   const { toast } = useToast();
   const startTracking = useCallback(async () => {
     try {
@@ -24,6 +25,7 @@ export const useTracking = () => {
         screenRecordingPermission,
         blockedDomains,
         blockedApps,
+        isFocusMode: activeTimeEntry?.is_focus_mode ?? false,
       });
 
       setIsTracking(true);
@@ -40,7 +42,7 @@ export const useTracking = () => {
   const stopTracking = useCallback(() => {
     // Clear existing interval
     // Update tracking state
-    // setIsTracking(false);
+    setIsTracking(false);
   }, [setIsTracking]);
 
   return {

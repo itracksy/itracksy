@@ -15,7 +15,10 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useConfirmationDialog } from "@/components/providers/ConfirmationDialog";
 import { ItemDetailDialog } from "./ItemDetailDialog";
-import type { Item } from "@/types/supabase";
+
+import { useTracking } from "@/hooks/useTracking";
+import { useAtomValue } from "jotai";
+import { isFocusModeAtom } from "@/context/activity";
 
 interface CardProps {
   title: string;
@@ -42,7 +45,8 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
     const { data: timeEntries = [] } = useTimeEntriesForItem(id);
     const { toast } = useToast();
     const { confirm } = useConfirmationDialog();
-
+    const { startTracking } = useTracking();
+    const isFocusMode = useAtomValue(isFocusModeAtom);
     useEffect(() => {
       if (!timeEntries.length) return;
 
@@ -59,7 +63,7 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
       setTotalDuration(formatDuration(total));
     }, [timeEntries, activeTimeEntry?.item_id, id]);
 
-    const handleStartTracking = () => {
+    const handleStartTracking = async () => {
       if (activeTimeEntry) {
         toast({
           variant: "destructive",
@@ -74,7 +78,9 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
         item_id: id,
         board_id,
         start_time: new Date().toISOString(),
+        is_focus_mode: isFocusMode,
       });
+      startTracking();
     };
 
     const handleStopTracking = () => {

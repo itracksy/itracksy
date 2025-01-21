@@ -10,16 +10,16 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { selectedBoardIdAtom } from "@/context/board";
-import { supabase } from "@/lib/supabase";
+
 import { BoardWithRelations } from "@/types/supabase";
-import { getBoard } from "@/services/board";
+import { getBoard, getBoards } from "@/services/board";
 
 interface TimeEntryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedItemId: string;
   setSelectedItemId: (id: string) => void;
-  onCreateTimeEntry: () => Promise<void>;
+  onCreateTimeEntry: (isFocusMode: boolean) => Promise<void>;
 }
 
 export function TimeEntryDialog({
@@ -33,12 +33,7 @@ export function TimeEntryDialog({
 
   const { data: boards } = useQuery({
     queryKey: ["boards"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("boards").select("*").order("name");
-
-      if (error) throw error;
-      return data;
-    },
+    queryFn: getBoards,
   });
 
   const { data: selectedBoard } = useQuery<BoardWithRelations | null>({
@@ -87,14 +82,14 @@ export function TimeEntryDialog({
               </Select>
             </div>
           )}
-
-          <Button
-            onClick={() => void onCreateTimeEntry()}
-            disabled={!selectedItemId || !selectedBoardId}
-            className="w-full"
-          >
-            Start Time Entry
-          </Button>
+          <div className="flex flex-row gap-2">
+            <Button variant="ghost" size="sm" onClick={() => void onCreateTimeEntry(false)}>
+              Normal Mode
+            </Button>
+            <Button onClick={() => void onCreateTimeEntry(true)} className="w-full">
+              Start With Focus Mode
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

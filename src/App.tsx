@@ -13,14 +13,6 @@ import { useAuth } from "./hooks/useAuth";
 import { useTracking } from "./hooks/useTracking";
 
 const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: true,
-      refetchOnMount: "always",
-      refetchOnReconnect: "always",
-    },
-  },
   queryCache: new QueryCache({
     onError: (error) => {
       console.error(error);
@@ -50,13 +42,7 @@ function AuthenticatedApp() {
     }
   }, [isTracking, startTracking]);
 
-  return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <RouterProvider router={router} />
-      </TooltipProvider>
-    </QueryClientProvider>
-  );
+  return <RouterProvider router={router} />;
 }
 
 function App() {
@@ -78,7 +64,13 @@ function App() {
     );
   }
 
-  return <AuthenticatedApp />;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <AuthenticatedApp />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
 }
 
 const root = createRoot(document.getElementById("app")!);

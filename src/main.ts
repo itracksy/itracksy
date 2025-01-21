@@ -153,6 +153,7 @@ interface ElectronWindow {
     screenRecordingPermission: boolean;
     blockedDomains: string[];
     blockedApps: string[];
+    isFocusMode: boolean;
   }) => Promise<void>;
   clearActivities: () => Promise<void>;
   getActivities: () => Promise<ActivityRecord[]>;

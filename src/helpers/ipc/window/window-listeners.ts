@@ -54,6 +54,7 @@ export const addWindowEventListeners = (mainWindow: BrowserWindow, tray: Tray | 
         screenRecordingPermission: boolean;
         blockedDomains: string[];
         blockedApps: string[];
+        isFocusMode: boolean;
       }
     ) => {
       return await startTracking(params);
@@ -83,6 +84,7 @@ const startTracking = async (params: {
   screenRecordingPermission: boolean;
   blockedDomains: string[];
   blockedApps: string[];
+  isFocusMode: boolean;
 }): Promise<void> => {
   console.log("Window: Calling startTracking", params);
 
@@ -109,17 +111,21 @@ const startTracking = async (params: {
       };
 
       await addActivity(transformedActivities);
-      const url = transformedActivities.url;
-      const appName = transformedActivities.ownerName;
-      // Show notification in full-screen window
-      if (
-        ((url && params.blockedDomains.some((domain) => url.includes(domain))) ||
-          (appName &&
-            params.blockedApps.some((app) => appName.toLowerCase().includes(app.toLowerCase())))) &&
-        isNotificationEnabled &&
-        Date.now() - lastNotificationTime >= NOTIFICATION_COOLDOWN
-      ) {
-        showNotification(transformedActivities.title, transformedActivities.ownerPath || "");
+      if (params.isFocusMode) {
+        const url = transformedActivities.url;
+        const appName = transformedActivities.ownerName;
+        // Show notification in full-screen window
+        if (
+          ((url && params.blockedDomains.some((domain) => url.includes(domain))) ||
+            (appName &&
+              params.blockedApps.some((app) =>
+                appName.toLowerCase().includes(app.toLowerCase())
+              ))) &&
+          isNotificationEnabled &&
+          Date.now() - lastNotificationTime >= NOTIFICATION_COOLDOWN
+        ) {
+          showNotification(transformedActivities.title, transformedActivities.ownerPath || "");
+        }
       }
     }
   }, TRACKING_INTERVAL);

@@ -21,7 +21,7 @@ export async function createTimeEntry(timeEntry: Omit<TimeEntryInsert, "user_id"
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error("not authenticated");
-  console.log("creating time entry", timeEntry);
+
   return await supabase
     .from("time_entries")
     .insert({ ...timeEntry, user_id: user.id })

@@ -23,7 +23,7 @@
     "test:e2e": "playwright test",
     "test:all": "jest && playwright test",
     "release": "./scripts/release.sh",
-    "db": "supabase gen types typescript --project-id vvjsycgvzugdktxsjhnl --schema public > lib/schema.ts"
+    "db": "supabase gen types typescript --project-id vvjsycgvzugdktxsjhnl --schema public > src/lib/schema.ts"
   },
   "author": "HungHoang <hth321@gmail.com>",
   "license": "MIT",

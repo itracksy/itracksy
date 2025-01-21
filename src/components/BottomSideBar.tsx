@@ -9,20 +9,21 @@ import { Clock, PlayCircle, StopCircle, Focus } from "lucide-react";
 import { TimeEntryDialog } from "@/components/tracking/TimeEntryDialog";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import { selectedBoardIdAtom } from "@/context/board";
-import { isFocusModeAtom } from "@/context/activity";
+
+import { useTracking } from "@/hooks/useTracking";
 
 export function BottomSideBar() {
   const [open, setOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string>("");
   const [duration, setDuration] = useState<string>("00:00:00");
   const selectedBoardId = useAtomValue(selectedBoardIdAtom);
-  const [isFocusMode, setIsFocusMode] = useAtom(isFocusModeAtom);
 
   const { data: activeTimeEntry, isLoading } = useActiveTimeEntry();
   const updateTimeEntry = useUpdateTimeEntryMutation();
   const createTimeEntry = useCreateTimeEntryMutation();
+  const { startTracking } = useTracking();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -89,12 +90,16 @@ export function BottomSideBar() {
   };
 
   const handleStartTimeEntry = async () => {
-    if (activeTimeEntry) return;
+    if (activeTimeEntry) {
+      return;
+    }
     setOpen(true);
   };
 
-  const handleCreateTimeEntry = async () => {
-    if (!selectedItemId || !selectedBoardId) return;
+  const handleCreateTimeEntry = async (isFocusMode: boolean) => {
+    if (!selectedItemId || !selectedBoardId) {
+      return;
+    }
 
     try {
       await createTimeEntry.mutateAsync({
@@ -102,8 +107,9 @@ export function BottomSideBar() {
         item_id: selectedItemId,
         board_id: selectedBoardId,
         start_time: new Date().toISOString(),
+        is_focus_mode: isFocusMode,
       });
-
+      startTracking();
       toast({
         title: "Time Entry Started",
         description: "New time entry has been started.",
@@ -149,17 +155,6 @@ export function BottomSideBar() {
             <span className="text-sm text-muted-foreground">Start new time entry</span>
           </SidebarMenuButton>
         )}
-
-        <SidebarMenuButton
-          onClick={() => setIsFocusMode(!isFocusMode)}
-          className={isFocusMode ? "text-purple-600" : "hover:text-purple-600"}
-          tooltip={isFocusMode ? "Disable focus mode" : "Enable focus mode"}
-        >
-          <Focus className={`h-5 w-5 ${isFocusMode ? "text-purple-600" : ""}`} />
-          <span className="text-sm text-muted-foreground">
-            {isFocusMode ? "Disable focus mode" : "Enable focus mode"}
-          </span>
-        </SidebarMenuButton>
       </>
 
       <TimeEntryDialog
