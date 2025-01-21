@@ -110,47 +110,51 @@ export function ItemDetailDialog({ open, onOpenChange, item }: ItemDetailDialogP
 
           <div className="space-y-2">
             <Label>Time Entries</Label>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Start Time</TableHead>
-                  <TableHead>End Time</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead className="w-[100px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {timeEntries.map((entry) => (
-                  <TableRow key={entry.id}>
-                    <TableCell>{format(new Date(entry.start_time), "MMM d, yyyy HH:mm")}</TableCell>
-                    <TableCell>
-                      {entry.end_time
-                        ? format(new Date(entry.end_time), "MMM d, yyyy HH:mm")
-                        : "Running"}
-                    </TableCell>
-                    <TableCell>
-                      {entry.end_time
-                        ? formatDuration(
-                            new Date(entry.end_time).getTime() -
-                              new Date(entry.start_time).getTime()
-                          )
-                        : formatDuration(Date.now() - new Date(entry.start_time).getTime())}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteTimeEntry(entry.id)}
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="rounded-md border">
+              <div className="max-h-[300px] overflow-y-auto">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-background">
+                    <TableRow>
+                      <TableHead>Start Time</TableHead>
+                      <TableHead>End Time</TableHead>
+                      <TableHead>Duration</TableHead>
+                      <TableHead className="w-[100px]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {timeEntries.map((entry) => (
+                      <TableRow key={entry.id}>
+                        <TableCell>{format(new Date(entry.start_time), "MMM d, yyyy HH:mm")}</TableCell>
+                        <TableCell>
+                          {entry.end_time
+                            ? format(new Date(entry.end_time), "MMM d, yyyy HH:mm")
+                            : "Running"}
+                        </TableCell>
+                        <TableCell>
+                          {entry.end_time
+                            ? formatDuration(
+                                new Date(entry.end_time).getTime() -
+                                  new Date(entry.start_time).getTime()
+                              )
+                            : formatDuration(Date.now() - new Date(entry.start_time).getTime())}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteTimeEntry(entry.id)}
+                            >
+                              <TrashIcon className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
           </div>
         </div>
       </DialogContent>

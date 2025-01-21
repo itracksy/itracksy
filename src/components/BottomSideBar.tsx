@@ -139,10 +139,14 @@ export function BottomSideBar() {
             className="hover:text-red-600"
             tooltip={`Stop: ${activeTimeEntry?.items?.title}`}
           >
-            <StopCircle className="h-5 w-5 text-red-600" />
-            <span className="flex items-center gap-2 text-sm font-medium">
-              <span>Stop: {activeTimeEntry?.items?.title}</span>
+            <StopCircle className="h-6 w-6 text-red-600" />
+            <span className="flex items-center gap-2 text-base font-medium">
+              <span>{activeTimeEntry?.items?.title}</span>
+
               <span className="text-xs text-muted-foreground">({duration})</span>
+              <span>
+                {activeTimeEntry.is_focus_mode && <Focus className="h-4 w-4 text-red-600" />}
+              </span>
             </span>
           </SidebarMenuButton>
         ) : (
@@ -151,8 +155,8 @@ export function BottomSideBar() {
             className="hover:text-green-600"
             tooltip="Start new time entry"
           >
-            <PlayCircle className="h-5 w-5 text-green-600" />
-            <span className="text-sm text-muted-foreground">Start new time entry</span>
+            <PlayCircle className="h-6 w-6 text-green-600" />
+            <span className="text-base text-muted-foreground">Start new time entry</span>
           </SidebarMenuButton>
         )}
       </>
