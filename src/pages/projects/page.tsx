@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
 import { Loader } from "@/components/Loader";
-import { useQuery, useSuspenseQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { BoardView } from "./components/BoardView.js";
 import { Button } from "@/components/ui/button";
 import {
@@ -58,7 +58,7 @@ export function ProjectsPage() {
   const [selectedBoardId, setSelectedBoardId] = useAtom(selectedBoardIdAtom);
   const [viewMode, setViewMode] = useState<"board" | "list">("board");
   const [open, setOpen] = useState(false);
-
+  const queryClient = useQueryClient();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -97,6 +97,7 @@ export function ProjectsPage() {
       hourly_rate: values.hourlyRate,
       currency: values.currency,
     });
+    await queryClient.invalidateQueries({queryKey: ["boards"]});
   };
 
   useEffect(() => {
