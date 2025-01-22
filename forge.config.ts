@@ -24,26 +24,13 @@ const config: ForgeConfig = {
     ],
   },
   makers: [
-    new MakerSquirrel({
-      iconUrl: 'https://raw.githubusercontent.com/hunght/itracksy/main/resources/icon.ico',
-      setupIcon: 'resources/icon.ico'
-    }),
-    new MakerZIP({}, ['darwin']),
+    new MakerSquirrel({}),
+    new MakerZIP({}, ["darwin"]),
     new MakerDMG({
       appPath: "dist/itracksy-darwin-x64/itracksy.app",
-      icon: 'resources/icon.icns',
-      format: 'ULFO'
     }),
-    new MakerRpm({
-      options: {
-        icon: 'resources/icon.png'
-      }
-    }),
-    new MakerDeb({
-      options: {
-        icon: 'resources/icon.png'
-      }
-    }),
+    new MakerRpm({}),
+    new MakerDeb({}),
   ],
   publishers: [
     new PublisherGithub({
