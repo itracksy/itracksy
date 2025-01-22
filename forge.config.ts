@@ -14,15 +14,36 @@ const config: ForgeConfig = {
     executableName: "itracksy",
     name: "itracksy",
     asar: true,
+    icon: "resources/icon",
+    appBundleId: "com.itracksy.app",
+    protocols: [
+      {
+        name: "iTracksy",
+        schemes: ["itracksy"],
+      },
+    ],
   },
   makers: [
-    new MakerSquirrel({}),
-    new MakerZIP({}, ["darwin"]),
+    new MakerSquirrel({
+      iconUrl: 'https://raw.githubusercontent.com/hunght/itracksy/main/resources/icon.ico',
+      setupIcon: 'resources/icon.ico'
+    }),
+    new MakerZIP({}, ['darwin']),
     new MakerDMG({
       appPath: "dist/itracksy-darwin-x64/itracksy.app",
+      icon: 'resources/icon.icns',
+      format: 'ULFO'
     }),
-    new MakerRpm({}),
-    new MakerDeb({}),
+    new MakerRpm({
+      options: {
+        icon: 'resources/icon.png'
+      }
+    }),
+    new MakerDeb({
+      options: {
+        icon: 'resources/icon.png'
+      }
+    }),
   ],
   publishers: [
     new PublisherGithub({
