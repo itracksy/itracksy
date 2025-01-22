@@ -14,7 +14,7 @@ const config: ForgeConfig = {
     executableName: "itracksy",
     name: "itracksy",
     asar: true,
-    icon: "resources/icon",
+    icon: process.platform === 'darwin' ? 'resources/icon.icns' : process.platform === 'win32' ? './resources/icon.ico' : 'resources/icon.png',
     appBundleId: "com.itracksy.app",
     protocols: [
       {

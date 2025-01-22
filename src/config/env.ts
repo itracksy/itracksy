@@ -12,6 +12,15 @@ function validateEnvVar(value: string | undefined, name: string): string {
   if (!value) {
     throw new Error(`Missing environment variable: ${name}`);
   }
+  // Remove any surrounding quotes that might be present
+  value = value.replace(/^['"](.*)['"]$/, '$1');
+  if (name.includes('URL')) {
+    try {
+      new URL(value); // Validate URL format
+    } catch (e) {
+      throw new Error(`Invalid URL in environment variable ${name}: ${value}`);
+    }
+  }
   return value;
 }
 
