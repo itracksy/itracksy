@@ -1,7 +1,7 @@
 {
   "name": "itracksy",
   "productName": "itracksy",
-  "version": "1.0.25",
+  "version": "1.0.26",
   "description": "A productivity app that tracks time, boosts focus, and provides insights into work habits, helping you manage time effectively and stay productive.",
   "main": ".vite/build/main.js",
   "scripts": {
