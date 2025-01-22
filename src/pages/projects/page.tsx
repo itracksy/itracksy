@@ -136,7 +136,7 @@ export function ProjectsPage() {
               ))}
               <SelectSeparator className="bg-tracksy-gold/20 dark:bg-tracksy-gold/10" />
               <SelectItem value="new" onSelect={() => setOpen(true)}>
-                <div className="flex items-center gap-2 text-tracksy-gold hover:text-tracksy-gold/80 dark:text-white/80">
+                <div className="flex items-center gap-2 text-tracksy-gold hover:text-white dark:text-white/80">
                   <PlusCircle className="h-4 w-4" /> Create Board
                 </div>
               </SelectItem>

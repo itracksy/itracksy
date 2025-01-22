@@ -67,7 +67,7 @@ function App() {
       }
     }
     signInAnonymously();
-  }, [user]);
+  }, [user, loading]);
 
   if (loading) {
     return (
