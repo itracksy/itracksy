@@ -14,6 +14,7 @@ import { ActivityRecord } from "@/types/activity";
 import { safelyRegisterListener } from "../safelyRegisterListener";
 import { addActivity, getActivities, clearActivities } from "../../../services/ActivityStorage";
 import { TRACKING_INTERVAL } from "../../../config/tracking";
+import { extractUrlFromBrowserTitle } from "./helper";
 
 let trackingIntervalId: NodeJS.Timeout | null = null;
 let mainWindowRef: BrowserWindow | null = null;
@@ -95,7 +96,7 @@ const startTracking = async (params: {
   trackingIntervalId = setInterval(async () => {
     const getWindows = await import("get-windows");
     const result = await getWindows.activeWindow(params);
-
+    console.log("Window: getWindows.activeWindow result", result);
     if (result) {
       const transformedActivities: ActivityRecord = {
         platform: result.platform,
@@ -106,21 +107,34 @@ const startTracking = async (params: {
         ownerName: result.owner.name,
         timestamp: Date.now(),
         count: 1,
-        //@ts-ignore
-        url: result.url,
+        url:
+          result.platform === "windows" &&
+          (result.owner.name === "Google Chrome" ||
+            result.owner.name === "Mozilla Firefox" ||
+            result.owner.name === "Microsoft Edge")
+            ? extractUrlFromBrowserTitle(result.title, result.owner.name)
+            : //@ts-ignore
+              result.url,
       };
 
       await addActivity(transformedActivities);
       if (params.isFocusMode) {
         const url = transformedActivities.url;
         const appName = transformedActivities.ownerName;
+        const isBlockedApp =
+          appName &&
+          params.blockedApps.some((app) => appName.toLowerCase().includes(app.toLowerCase()));
+        const isBlockedDomain =
+          url &&
+          url.trim().length > 0 &&
+          params.blockedDomains.some((domain) =>
+            result.platform === "windows"
+              ? domain.includes(url.toLowerCase())
+              : url.includes(domain)
+          );
         // Show notification in full-screen window
         if (
-          ((url && params.blockedDomains.some((domain) => url.includes(domain))) ||
-            (appName &&
-              params.blockedApps.some((app) =>
-                appName.toLowerCase().includes(app.toLowerCase())
-              ))) &&
+          (isBlockedDomain || isBlockedApp) &&
           isNotificationEnabled &&
           Date.now() - lastNotificationTime >= NOTIFICATION_COOLDOWN
         ) {

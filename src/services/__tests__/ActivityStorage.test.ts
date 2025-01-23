@@ -1,5 +1,5 @@
 import { ActivityRecord } from "@/types/activity";
-import { mergeActivityRecord } from "../../utils/ActivityStorage";
+import { mergeActivityRecord } from "../ActivityStorage";
 
 // Mock electron
 jest.mock("electron", () => ({

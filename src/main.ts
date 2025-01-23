@@ -22,21 +22,19 @@ async function createTray() {
     }
   }
 
-  const icon = nativeImage
-    .createFromPath(path.join(__dirname, "../resources/icon.png"))
-    .resize({ width: 18, height: 18 }); // Slightly larger for macOS
-
-  // Set as template image for better dark/light mode support
-  icon.setTemplateImage(true);
+  const iconPath =
+    process.platform === "win32"
+      ? path.join(__dirname, "../resources/icon.ico")
+      : path.join(__dirname, "../resources/icon.png");
+  console.log("Main: Icon path", iconPath);
+  const icon = nativeImage.createFromPath(iconPath);
+  // Remove resize for Windows
+  if (process.platform === "darwin") {
+    icon.resize({ width: 18, height: 18 });
+    icon.setTemplateImage(true);
+  }
 
   tray = new Tray(icon);
-
-  console.log("Main: Tray created");
-
-  // Make sure tray icon is visible on Retina displays
-  if (process.platform === "darwin") {
-    tray.setPressedImage(icon);
-  }
 
   const contextMenu = Menu.buildFromTemplate([
     {
@@ -73,9 +71,11 @@ async function createTray() {
 
 function createWindow(): void {
   const preload = path.join(__dirname, "preload.js");
+  const iconPath = path.join(__dirname, "../resources/icon.ico");
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    icon: iconPath, // Add this line
     webPreferences: {
       devTools: true,
       contextIsolation: true,

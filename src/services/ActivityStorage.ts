@@ -32,7 +32,6 @@ const initializeStorage = (): void => {
   if (!fs.existsSync(currentFilePath)) {
     fs.writeFileSync(currentFilePath, CONFIG.headers.join(",") + "\n");
   }
-  console.log("Storage initialized", CONFIG.baseDir);
 };
 
 const mergeActivityRecord = (prev: ActivityRecord[]): ActivityRecord[] => {

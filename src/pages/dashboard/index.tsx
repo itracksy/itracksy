@@ -33,7 +33,9 @@ export default function DashboardPage() {
   const { data: activityWindow } = useQuery({
     queryKey: ["activityWindow"],
     queryFn: async () => {
-      return window.electronWindow.getActivities();
+      const activities = await window.electronWindow.getActivities();
+      console.log("[DashboardPage] activities", activities);
+      return activities;
     },
     refetchInterval: 10000,
   });
@@ -99,11 +101,11 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="from-tracksy-blue/5 to-tracksy-gold/5 dark:from-tracksy-blue/10 dark:to-tracksy-gold/10 min-h-screen bg-gradient-to-br">
+    <div className="min-h-screen bg-gradient-to-br from-tracksy-blue/5 to-tracksy-gold/5 dark:from-tracksy-blue/10 dark:to-tracksy-gold/10">
       <div className="container mx-auto p-6">
-        <h1 className="text-tracksy-blue mb-8 text-3xl font-bold dark:text-white">
+        <h1 className="mb-8 text-3xl font-bold text-tracksy-blue dark:text-white">
           Activity Dashboard
-          <div className="bg-tracksy-gold dark:bg-tracksy-gold/70 mt-2 h-1 w-20 rounded"></div>
+          <div className="mt-2 h-1 w-20 rounded bg-tracksy-gold dark:bg-tracksy-gold/70"></div>
         </h1>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
@@ -114,7 +116,7 @@ export default function DashboardPage() {
           <TimeBreakdown
             reports={appUsageData}
             title="Application Usage"
-            className="border-tracksy-gold/20 dark:border-tracksy-gold/10 rounded-lg border bg-white/80 shadow-lg backdrop-blur-sm dark:bg-gray-900/80"
+            className="rounded-lg border border-tracksy-gold/20 bg-white/80 shadow-lg backdrop-blur-sm dark:border-tracksy-gold/10 dark:bg-gray-900/80"
           />
           <TimeBreakdown
             reports={domainUsageData}
@@ -123,7 +125,7 @@ export default function DashboardPage() {
             onEnablePermission={async () => {
               setAccessibilityPermission(true);
             }}
-            className="border-tracksy-gold/20 dark:border-tracksy-gold/10 rounded-lg border bg-white/80 shadow-lg backdrop-blur-sm dark:bg-gray-900/80"
+            className="rounded-lg border border-tracksy-gold/20 bg-white/80 shadow-lg backdrop-blur-sm dark:border-tracksy-gold/10 dark:bg-gray-900/80"
           />
           <TimeBreakdown
             reports={titleUsageData}
@@ -132,10 +134,10 @@ export default function DashboardPage() {
             onEnablePermission={async () => {
               setScreenRecordingPermission(true);
             }}
-            className="border-tracksy-gold/20 dark:border-tracksy-gold/10 rounded-lg border bg-white/80 shadow-lg backdrop-blur-sm dark:bg-gray-900/80"
+            className="rounded-lg border border-tracksy-gold/20 bg-white/80 shadow-lg backdrop-blur-sm dark:border-tracksy-gold/10 dark:bg-gray-900/80"
           />
 
-          <div className="border-tracksy-gold/20 dark:border-tracksy-gold/10 rounded-lg border bg-white/80 p-4 shadow-lg backdrop-blur-sm dark:bg-gray-900/80">
+          <div className="rounded-lg border border-tracksy-gold/20 bg-white/80 p-4 shadow-lg backdrop-blur-sm dark:border-tracksy-gold/10 dark:bg-gray-900/80">
             <CategoryTreeView categories={categoryReport} />
           </div>
         </div>

@@ -45,7 +45,7 @@ export function calculateDurationsReport(
 
       // Group by domain if URL exists
       if (record.url) {
-        const domain = extractDomain(record.url);
+        const domain = record.platform === "windows" ? record.url : extractDomain(record.url);
         if (!groupedByDomain.has(domain)) {
           groupedByDomain.set(domain, []);
         }
