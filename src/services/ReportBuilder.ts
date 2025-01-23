@@ -44,7 +44,7 @@ export function calculateDurationsReport(
       groupedByApp.get(appName)!.push(record);
 
       // Group by domain if URL exists
-      if (record.url) {
+      if (record.url && record.url.trim().length > 0) {
         const domain = record.platform === "windows" ? record.url : extractDomain(record.url);
         if (!groupedByDomain.has(domain)) {
           groupedByDomain.set(domain, []);
@@ -110,6 +110,7 @@ export function calculateDurationsReport(
     (sum, report) => sum + report.totalDuration,
     0
   );
+
   applicationReports.forEach((report) => {
     report.percentage = (report.totalDuration / totalAppDuration) * 100;
   });
