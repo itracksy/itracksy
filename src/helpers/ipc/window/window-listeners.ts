@@ -15,7 +15,7 @@ import { safelyRegisterListener } from "../safelyRegisterListener";
 import { addActivity, getActivities, clearActivities } from "../../../services/ActivityStorage";
 import { TRACKING_INTERVAL } from "../../../config/tracking";
 import { extractUrlFromBrowserTitle } from "./helper";
-
+import { logger } from "../../../helpers/logger";
 let trackingIntervalId: NodeJS.Timeout | null = null;
 let mainWindowRef: BrowserWindow | null = null;
 let trayRef: Tray | null = null;
@@ -27,25 +27,38 @@ let isNotificationEnabled: boolean = true;
 const NOTIFICATION_COOLDOWN = 60 * 1000; // 1 minute in milliseconds
 
 export const addWindowEventListeners = (mainWindow: BrowserWindow, tray: Tray | null) => {
-  console.log("WindowListeners: Adding listeners with tray", tray ? "defined" : "undefined");
+  logger.log("WindowListeners: Adding listeners", { hasTray: !!tray });
   mainWindowRef = mainWindow;
   trayRef = tray;
-  console.log("WindowListeners: trayRef set to", trayRef ? "defined" : "undefined");
+
   safelyRegisterListener(WIN_MINIMIZE_CHANNEL, () => {
-    mainWindow.minimize();
+    try {
+      mainWindow.minimize();
+    } catch (error) {
+      logger.error("Failed to minimize window", { error });
+    }
   });
 
   safelyRegisterListener(WIN_MAXIMIZE_CHANNEL, () => {
-    if (mainWindow.isMaximized()) {
-      mainWindow.unmaximize();
-    } else {
-      mainWindow.maximize();
+    try {
+      if (mainWindow.isMaximized()) {
+        mainWindow.unmaximize();
+      } else {
+        mainWindow.maximize();
+      }
+    } catch (error) {
+      logger.error("Failed to maximize/unmaximize window", { error });
     }
   });
 
   safelyRegisterListener(WIN_CLOSE_CHANNEL, () => {
-    mainWindow.close();
+    try {
+      mainWindow.close();
+    } catch (error) {
+      logger.error("Failed to close window", { error });
+    }
   });
+
   safelyRegisterListener(
     WIN_START_TRACKING_CHANNEL,
     async (
@@ -58,24 +71,49 @@ export const addWindowEventListeners = (mainWindow: BrowserWindow, tray: Tray | 
         isFocusMode: boolean;
       }
     ) => {
-      return await startTracking(params);
+      try {
+        return await startTracking(params);
+      } catch (error) {
+        logger.error("Failed to start tracking", { error, params });
+        throw error;
+      }
     }
   );
+
   safelyRegisterListener(WIN_STOP_TRACKING_CHANNEL, () => {
-    stopTracking();
+    try {
+      stopTracking();
+    } catch (error) {
+      logger.error("Failed to stop tracking", { error });
+    }
   });
+
   safelyRegisterListener(WIN_CLEAR_ACTIVITIES_CHANNEL, async () => {
-    return await clearActivities();
+    try {
+      return await clearActivities();
+    } catch (error) {
+      logger.error("Failed to clear activities", { error });
+      throw error;
+    }
   });
+
   safelyRegisterListener(WIN_GET_ACTIVITIES_CHANNEL, async () => {
-    return await getActivities();
+    try {
+      return await getActivities();
+    } catch (error) {
+      logger.error("Failed to get activities", { error });
+      throw error;
+    }
   });
+
   safelyRegisterListener(WIN_UPDATE_TRAY_TITLE_CHANNEL, (_event, title: string) => {
-    console.log("WindowListeners: Updating tray title", title);
-    console.log("WindowListeners: trayRef is", trayRef ? "defined" : "undefined");
-    if (trayRef) {
-      console.log("Window: Updating trayRef title", title);
-      trayRef.setTitle(title);
+    try {
+      logger.log("Updating tray title", { title, hasTray: !!trayRef });
+      if (trayRef) {
+        trayRef.setTitle(title);
+      }
+    } catch (error) {
+      logger.error("Failed to update tray title", { error, title });
     }
   });
 };

@@ -10,6 +10,7 @@ class Logger {
     // It will be different for dev and production
     const userDataPath = app.getPath("userData");
     this.logPath = path.join(userDataPath, "logs.txt");
+    console.log("Logging to", this.logPath);
   }
 
   public log(message: string, ...args: any[]) {
