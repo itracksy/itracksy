@@ -44,13 +44,7 @@ export default function DashboardPage() {
     if (!activityWindow) {
       return;
     }
-    // Calculate durations for the last 24 hours
-    const timeWindow = {
-      start: Date.now() - 24 * 60 * 60 * 1000,
-      end: Date.now(),
-    };
-
-    const durationReports = calculateDurationsReport(activityWindow, timeWindow);
+    const durationReports = calculateDurationsReport(activityWindow);
     setDurationReports(durationReports);
   }, [activityWindow]);
 

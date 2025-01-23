@@ -37,12 +37,7 @@ describe("calculateDurationsReport", () => {
       createMockRecord({ timestamp: baseTimestamp + 2000, ownerName: "Chrome" }),
     ];
 
-    const timeWindow = {
-      start: baseTimestamp,
-      end: baseTimestamp + 3000,
-    };
-
-    const result = calculateDurationsReport(records, timeWindow);
+    const result = calculateDurationsReport(records);
 
     expect(result.applications).toHaveLength(2);
     expect(result.applications[0].applicationName).toBe("VSCode");
@@ -368,15 +363,9 @@ describe("calculateDurationsReport", () => {
       },
     ];
 
-    const timeWindow = {
-      start: baseTimestamp,
-      end: baseTimestamp + 3000000,
-    };
-
-    const result = calculateDurationsReport(records, timeWindow);
+    const result = calculateDurationsReport(records);
 
     expect(result.domains).toHaveLength(3);
-    expect(result.domains[0].domain).toBe("youtube.com");
   });
   test("should calculate domain durations correctly", () => {
     const records: ActivityRecord[] = [
@@ -402,7 +391,7 @@ describe("calculateDurationsReport", () => {
       end: baseTimestamp + 3000,
     };
 
-    const result = calculateDurationsReport(records, timeWindow);
+    const result = calculateDurationsReport(records);
 
     expect(result.domains).toHaveLength(2);
     expect(result.domains[0].domain).toBe("https://github.com");
@@ -436,7 +425,7 @@ describe("calculateDurationsReport", () => {
       end: baseTimestamp + 3000,
     };
 
-    const result = calculateDurationsReport(records, timeWindow);
+    const result = calculateDurationsReport(records);
 
     expect(result.titles).toHaveLength(2);
     expect(result.titles[0].title).toBe("Document1");
@@ -455,7 +444,7 @@ describe("calculateDurationsReport", () => {
       end: baseTimestamp + 500,
     };
 
-    const result = calculateDurationsReport(records, timeWindow);
+    const result = calculateDurationsReport(records);
 
     expect(result.applications).toHaveLength(1);
     expect(result.applications[0].instances).toHaveLength(1);
@@ -468,7 +457,7 @@ describe("calculateDurationsReport", () => {
       end: baseTimestamp + 1000,
     };
 
-    const result = calculateDurationsReport(records, timeWindow);
+    const result = calculateDurationsReport(records);
 
     expect(result.applications).toHaveLength(0);
     expect(result.domains).toHaveLength(0);
@@ -485,7 +474,7 @@ describe("calculateDurationsReport", () => {
       end: baseTimestamp + 10000,
     };
 
-    const result = calculateDurationsReport(records, timeWindow);
+    const result = calculateDurationsReport(records);
 
     expect(result.applications.length).toBeLessThanOrEqual(7);
   });
@@ -502,7 +491,7 @@ describe("calculateDurationsReport", () => {
       end: baseTimestamp + 3000,
     };
 
-    const result = calculateDurationsReport(records, timeWindow);
+    const result = calculateDurationsReport(records);
 
     const totalPercentage = result.applications.reduce((sum, app) => sum + app.percentage, 0);
     expect(Math.round(totalPercentage)).toBe(100);

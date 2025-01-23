@@ -17,10 +17,7 @@ function extractDomain(url: string): string {
   }
 }
 
-export function calculateDurationsReport(
-  records: ActivityRecord[],
-  timeWindow: { start: number; end: number }
-): {
+export function calculateDurationsReport(records: ActivityRecord[]): {
   applications: ApplicationDurationReport[];
   domains: DomainDurationReport[];
   titles: TitleDurationReport[];
@@ -34,32 +31,30 @@ export function calculateDurationsReport(
   const groupedByTitle = new Map<string, ActivityRecord[]>();
 
   sortedRecords.forEach((record) => {
-    if (record.timestamp >= timeWindow.start && record.timestamp <= timeWindow.end) {
-      const appName = record.ownerName;
+    const appName = record.ownerName;
 
-      // Group by application
-      if (!groupedByApp.has(appName)) {
-        groupedByApp.set(appName, []);
-      }
-      groupedByApp.get(appName)!.push(record);
+    // Group by application
+    if (!groupedByApp.has(appName)) {
+      groupedByApp.set(appName, []);
+    }
+    groupedByApp.get(appName)!.push(record);
 
-      // Group by domain if URL exists
-      if (record.url && record.url.trim().length > 0) {
-        const domain = record.platform === "windows" ? record.url : extractDomain(record.url);
-        if (!groupedByDomain.has(domain)) {
-          groupedByDomain.set(domain, []);
-        }
-        groupedByDomain.get(domain)!.push(record);
+    // Group by domain if URL exists
+    if (record.url && record.url.trim().length > 0) {
+      const domain = record.platform === "windows" ? record.url : extractDomain(record.url);
+      if (!groupedByDomain.has(domain)) {
+        groupedByDomain.set(domain, []);
       }
+      groupedByDomain.get(domain)!.push(record);
+    }
 
-      // Group by title if it's not a browser record and title is not empty
-      if (!record.url && record.title.trim()) {
-        const title = record.title;
-        if (!groupedByTitle.has(title)) {
-          groupedByTitle.set(title, []);
-        }
-        groupedByTitle.get(title)!.push(record);
+    // Group by title if it's not a browser record and title is not empty
+    if (!record.url && record.title.trim()) {
+      const title = record.title;
+      if (!groupedByTitle.has(title)) {
+        groupedByTitle.set(title, []);
       }
+      groupedByTitle.get(title)!.push(record);
     }
   });
 
