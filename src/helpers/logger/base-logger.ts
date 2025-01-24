@@ -22,6 +22,7 @@ export abstract class BaseLogger {
     this.lastLogTime[key] = now;
     return false;
   }
+  abstract getFileContent(): Promise<string>;
   abstract setUserInformation({ userId, sessionId }: { userId: string; sessionId: string }): void;
   abstract debug(message: string, ...args: any[]): void;
   abstract info(message: string, ...args: any[]): void;

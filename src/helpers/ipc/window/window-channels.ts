@@ -11,3 +11,4 @@ export const WIN_SET_USER_INFORMATION_CHANNEL = "window:setUserInformation";
 export const WIN_UPDATE_TRAY_TITLE_CHANNEL = "window:update-tray-title";
 export const WIN_GET_APP_VERSION_CHANNEL = "window:getAppVersion";
 export const WIN_CHECK_UPDATES_CHANNEL = "window:checkUpdates";
+export const WIN_GET_LOG_FILE_CONTENT_CHANNEL = "window:getLogFileContent";

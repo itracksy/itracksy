@@ -4,7 +4,7 @@ import { app, BrowserWindow, Tray, Menu, nativeImage, Notification } from "elect
 import registerListeners from "./helpers/ipc/listeners-register";
 
 import { ActivityRecord } from "./types/activity";
-import { logger, initLoggerServer } from "./helpers/logger";
+import { logger } from "./helpers/logger";
 
 // "electron-squirrel-startup" seems broken when packaging with vite
 //import started from "electron-squirrel-startup";
@@ -105,7 +105,6 @@ function createWindow(): void {
 
 // Initialize app when ready
 app.whenReady().then(async () => {
-  await initLoggerServer();
   await createTray();
   createWindow();
 });
@@ -160,8 +159,9 @@ interface ElectronWindow {
   getActivities: () => Promise<ActivityRecord[]>;
   updateTrayTitle: (title: string) => Promise<void>;
   setUserInformation: (params: { userId: string; sessionId?: string }) => Promise<void>;
-  getAppVersion: () => string;
+  getAppVersion: () => Promise<string>;
   checkForUpdates: () => Promise<{ status: "success" | "error"; message: string }>;
+  getLogFileContent: () => Promise<string>;
 }
 
 declare global {

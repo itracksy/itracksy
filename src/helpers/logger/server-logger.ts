@@ -131,4 +131,14 @@ export class ServerLogger extends BaseLogger {
       console.error("FATAL:", message, ...args);
     }
   }
+
+  async getFileContent(): Promise<string> {
+    try {
+      const content = await fs.promises.readFile(this.logPath, "utf8");
+      return content;
+    } catch (error) {
+      console.error("Failed to read log file:", error);
+      return "";
+    }
+  }
 }

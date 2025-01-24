@@ -11,6 +11,7 @@ import {
   WIN_SET_USER_INFORMATION_CHANNEL,
   WIN_GET_APP_VERSION_CHANNEL,
   WIN_CHECK_UPDATES_CHANNEL,
+  WIN_GET_LOG_FILE_CONTENT_CHANNEL,
 } from "./window-channels";
 
 import { ActivityRecord } from "@/types/activity";
@@ -48,6 +49,15 @@ export const addWindowEventListeners = (mainWindow: BrowserWindow, tray: Tray | 
       return { status: "success", message: "Update check completed" };
     } catch (error) {
       logger.error("Failed to check for updates", error);
+      throw error;
+    }
+  });
+  safelyRegisterListener(WIN_GET_LOG_FILE_CONTENT_CHANNEL, async () => {
+    try {
+      const logFileContent = await logger.getFileContent();
+      return logFileContent;
+    } catch (error) {
+      logger.error("Failed to get log file content", error);
       throw error;
     }
   });
@@ -165,18 +175,18 @@ const startTracking = async (params: {
     try {
       const getWindows = await import("get-windows");
       logger.debug("[startTracking] Attempting to get active window");
-      
+
       const result = await getWindows.activeWindow(params);
       if (!result) {
         logger.warn("[startTracking] No active window result returned", { params });
         return;
       }
-      
-      logger.debug("[startTracking] Active window data", { 
+
+      logger.debug("[startTracking] Active window data", {
         platform: result.platform,
         title: result.title,
         ownerName: result?.owner?.name,
-        ownerPath: result?.owner?.path
+        ownerPath: result?.owner?.path,
       });
 
       const transformedActivities: ActivityRecord = {

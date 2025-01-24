@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { blockedDomainsAtom, blockedAppsAtom, isFocusModeAtom } from "@/context/activity";
 import { useTracking } from "@/hooks/useTracking";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 
 export default function SettingsPage() {
   const [currentTheme, setCurrentTheme] = useState<ThemeMode>("light");
@@ -83,7 +84,7 @@ export default function SettingsPage() {
   const index = itemToDelete?.index;
   console.log("itemToDelete", itemToDelete);
   return (
-    <div className="p-6">
+    <div className="space-y-6 p-6">
       <AlertDialog
         open={itemToDelete !== null}
         onOpenChange={(open) => !open && setItemToDelete(null)}
@@ -119,119 +120,97 @@ export default function SettingsPage() {
       <h1 className="text-3xl font-bold text-foreground">Settings</h1>
       <p className="mt-2 text-muted-foreground">Configure your application settings</p>
 
-      <div className="mt-6">
-        <h2 className="text-xl font-semibold text-foreground">Theme</h2>
-        <div className="mt-2 flex gap-2">
+      <Card>
+        <CardHeader>
+          <CardTitle>Theme</CardTitle>
+          <CardDescription>Customize your application appearance</CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center gap-4">
           <Button
-            variant="outline"
-            className={`rounded-md px-4 py-2 transition-colors ${
-              currentTheme === "light"
-                ? "bg-primary text-primary-foreground"
-                : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-            }`}
+            variant={currentTheme === "light" ? "default" : "outline"}
+            size="icon"
             onClick={() => handleThemeChange("light")}
           >
-            <div className="flex items-center gap-2">
-              <SunIcon className="h-4 w-4" />
-              Light
-            </div>
+            <SunIcon className="h-4 w-4" />
           </Button>
           <Button
-            variant="outline"
-            className={`rounded-md px-4 py-2 transition-colors ${
-              currentTheme === "dark"
-                ? "bg-primary text-primary-foreground"
-                : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-            }`}
+            variant={currentTheme === "dark" ? "default" : "outline"}
+            size="icon"
             onClick={() => handleThemeChange("dark")}
           >
-            <div className="flex items-center gap-2">
-              <MoonIcon className="h-4 w-4" />
-              Dark
-            </div>
+            <MoonIcon className="h-4 w-4" />
           </Button>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      <div className="mt-6">
-        <h2 className="text-xl font-semibold text-foreground">Focus Mode</h2>
-        <div className="mt-4 flex items-center space-x-2">
-          <Switch id="focus-mode" checked={isFocusMode} onCheckedChange={setIsFocusMode} />
-          <label
-            htmlFor="focus-mode"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Enable Focus Mode
-          </label>
-        </div>
-        <p className="mt-2 text-sm text-muted-foreground">
-          When enabled, new time entries will start in focus mode by default
-        </p>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Focus Mode</CardTitle>
+          <CardDescription>Control your focus mode settings</CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center gap-4">
+          <Switch checked={isFocusMode} onCheckedChange={setIsFocusMode} id="focus-mode" />
+          <label htmlFor="focus-mode">Enable Focus Mode</label>
+        </CardContent>
+      </Card>
 
-      <div className="mt-6">
-        <h2 className="text-xl font-semibold text-foreground">Focus Mode Blocked Domains</h2>
-        <div className="mt-2 flex gap-2">
-          <Input
-            type="text"
-            value={newDomain}
-            onChange={(e) => setNewDomain(e.target.value)}
-            placeholder="Enter domain to block"
-            className="max-w-sm"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && newDomain.trim()) {
-                handleAddDomain();
-              }
-            }}
-          />
-          <Button onClick={handleAddDomain}>Add</Button>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {blockedDomains.map((domain, index) => (
-            <Badge key={index} variant="secondary" className="flex items-center gap-1 px-3 py-1">
-              {domain}
-              <button
-                onClick={() => setItemToDelete({ type: "domain", index })}
-                className="ml-1 rounded-full p-1 hover:bg-secondary-foreground/10"
-              >
-                <Cross2Icon className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Blocked Domains</CardTitle>
+          <CardDescription>Manage websites you want to block during focus mode</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Enter domain to block"
+              value={newDomain}
+              onChange={(e) => setNewDomain(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleAddDomain()}
+            />
+            <Button onClick={handleAddDomain}>Add</Button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {blockedDomains.map((domain, index) => (
+              <Badge key={domain} variant="secondary" className="text-sm">
+                {domain}
+                <Cross2Icon
+                  className="ml-2 h-3 w-3 cursor-pointer"
+                  onClick={() => setItemToDelete({ type: "domain", index })}
+                />
+              </Badge>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
-      <div className="mt-6">
-        <h2 className="text-xl font-semibold text-foreground">Focus Mode Blocked Apps</h2>
-        <div className="mt-2 flex gap-2">
-          <Input
-            type="text"
-            value={newApp}
-            onChange={(e) => setNewApp(e.target.value)}
-            placeholder="Enter app name to block"
-            className="max-w-sm"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && newApp.trim()) {
-                handleAddApp();
-              }
-            }}
-          />
-          <Button onClick={handleAddApp}>Add</Button>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {blockedApps.map((app, index) => (
-            <Badge key={index} variant="secondary" className="flex items-center gap-1 px-3 py-1">
-              {app}
-              <button
-                onClick={() => setItemToDelete({ type: "app", index })}
-                className="ml-1 rounded-full p-1 hover:bg-secondary-foreground/10"
-              >
-                <Cross2Icon className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Blocked Applications</CardTitle>
+          <CardDescription>Manage applications you want to block during focus mode</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Enter app name to block"
+              value={newApp}
+              onChange={(e) => setNewApp(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleAddApp()}
+            />
+            <Button onClick={handleAddApp}>Add</Button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {blockedApps.map((app, index) => (
+              <Badge key={app} variant="secondary" className="text-sm">
+                {app}
+                <Cross2Icon
+                  className="ml-2 h-3 w-3 cursor-pointer"
+                  onClick={() => setItemToDelete({ type: "app", index })}
+                />
+              </Badge>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       <AboutSection />
     </div>

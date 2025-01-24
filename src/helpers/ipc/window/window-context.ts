@@ -11,8 +11,8 @@ import {
   WIN_SET_USER_INFORMATION_CHANNEL,
   WIN_GET_APP_VERSION_CHANNEL,
   WIN_CHECK_UPDATES_CHANNEL,
+  WIN_GET_LOG_FILE_CONTENT_CHANNEL,
 } from "./window-channels";
-import { logger } from "../../../helpers/logger";
 
 export function exposeWindowContext() {
   contextBridge.exposeInMainWorld("electronWindow", {
@@ -28,7 +28,7 @@ export function exposeWindowContext() {
       blockedApps: string[];
       isFocusMode: boolean;
     }) => {
-      logger.debug("[exposeWindowContext] Window: Calling startTracking", params);
+      console.debug("[exposeWindowContext] Window: Calling startTracking", params);
       ipcRenderer.invoke(WIN_START_TRACKING_CHANNEL, params);
     },
     stopTracking: async () => {
@@ -48,6 +48,9 @@ export function exposeWindowContext() {
     },
     checkForUpdates: async () => {
       return ipcRenderer.invoke(WIN_CHECK_UPDATES_CHANNEL);
+    },
+    getLogFileContent: async () => {
+      return ipcRenderer.invoke(WIN_GET_LOG_FILE_CONTENT_CHANNEL);
     },
   });
 }

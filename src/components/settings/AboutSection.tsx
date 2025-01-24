@@ -1,26 +1,43 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExternalLinkIcon, RefreshCwIcon, ScrollTextIcon } from "lucide-react";
-import { logger } from "@/helpers/logger";
 
 export function AboutSection() {
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
-  const version = window.electronWindow.getAppVersion();
+  const [version, setVersion] = useState<string>("");
+
+  useEffect(() => {
+    const fetchVersion = async () => {
+      const appVersion = await window.electronWindow.getAppVersion();
+      setVersion(appVersion);
+    };
+    fetchVersion();
+  }, []);
 
   const handleCheckUpdate = async () => {
+    setIsCheckingUpdate(true);
     try {
-      setIsCheckingUpdate(true);
       await window.electronWindow.checkForUpdates();
-    } catch (error) {
-      logger.error("Failed to check for updates", error);
     } finally {
       setIsCheckingUpdate(false);
     }
   };
 
-  const handleOpenLogFile = async () => {};
+  const handleOpenLogFile = async () => {
+    const content = await window.electronWindow.getLogFileContent();
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = window.URL.createObjectURL(blob);
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const filename = `itracksy-${timestamp}.log`;
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
 
   return (
     <Card className="mb-6">

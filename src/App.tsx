@@ -16,12 +16,12 @@ import { supabase } from "./lib/supabase";
 const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
-      console.error(error);
+      console.error("[Query]", error);
     },
   }),
   mutationCache: new MutationCache({
     onError: (error) => {
-      console.error(error);
+      console.error("[Mutation]", error);
     },
   }),
 });
