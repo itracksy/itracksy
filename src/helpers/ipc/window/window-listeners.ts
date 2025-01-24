@@ -101,12 +101,7 @@ export const addWindowEventListeners = (mainWindow: BrowserWindow, tray: Tray | 
         isFocusMode: boolean;
       }
     ) => {
-      try {
-        return await startTracking(params);
-      } catch (error) {
-        logger.error("Failed to start tracking", { error, params });
-        throw error;
-      }
+      return await startTracking(params);
     }
   );
 

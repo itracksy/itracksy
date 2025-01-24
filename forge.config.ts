@@ -23,15 +23,7 @@ const config: ForgeConfig = {
       },
     ],
   },
-  makers: [
-    new MakerSquirrel({}),
-    new MakerZIP({}, ["darwin"]),
-    new MakerDMG({
-      appPath: "dist/itracksy-darwin-x64/itracksy.app",
-    }),
-    new MakerRpm({}),
-    new MakerDeb({}),
-  ],
+  makers: [new MakerSquirrel({}), new MakerDMG({}), new MakerRpm({}), new MakerDeb({})],
   publishers: [
     new PublisherGithub({
       repository: {
