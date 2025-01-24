@@ -1,6 +1,7 @@
+import * as path from "path";
+
 import { app, BrowserWindow, Tray, Menu, nativeImage, Notification } from "electron";
 import registerListeners from "./helpers/ipc/listeners-register";
-import * as path from "path";
 import { ActivityRecord } from "./types/activity";
 import { logger } from "./helpers/logger";
 
@@ -8,7 +9,6 @@ import { logger } from "./helpers/logger";
 //import started from "electron-squirrel-startup";
 
 const inDevelopment: boolean = process.env.NODE_ENV === "development";
-
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let isQuiting: boolean = false;
@@ -157,6 +157,7 @@ interface ElectronWindow {
   clearActivities: () => Promise<void>;
   getActivities: () => Promise<ActivityRecord[]>;
   updateTrayTitle: (title: string) => Promise<void>;
+  setUserInformation: (params: { userId: string; sessionId?: string }) => Promise<void>;
 }
 
 declare global {

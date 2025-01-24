@@ -8,6 +8,7 @@ import {
   WIN_START_TRACKING_CHANNEL,
   WIN_STOP_TRACKING_CHANNEL,
   WIN_UPDATE_TRAY_TITLE_CHANNEL,
+  WIN_SET_USER_INFORMATION_CHANNEL,
 } from "./window-channels";
 
 import { ActivityRecord } from "@/types/activity";
@@ -106,6 +107,17 @@ export const addWindowEventListeners = (mainWindow: BrowserWindow, tray: Tray | 
     }
   });
 
+  safelyRegisterListener(
+    WIN_SET_USER_INFORMATION_CHANNEL,
+    (_event, params: { userId: string; sessionId: string }) => {
+      try {
+        return logger.setUserInformation(params);
+      } catch (error) {
+        logger.error("Failed to set user information", { error, params });
+        throw error;
+      }
+    }
+  );
   safelyRegisterListener(WIN_UPDATE_TRAY_TITLE_CHANNEL, (_event, title: string) => {
     try {
       if (trayRef) {

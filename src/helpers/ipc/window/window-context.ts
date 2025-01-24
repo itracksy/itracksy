@@ -8,6 +8,7 @@ import {
   WIN_STOP_TRACKING_CHANNEL,
   WIN_CLEAR_ACTIVITIES_CHANNEL,
   WIN_UPDATE_TRAY_TITLE_CHANNEL,
+  WIN_SET_USER_INFORMATION_CHANNEL,
 } from "./window-channels";
 import { logger } from "../../../helpers/logger";
 
@@ -36,6 +37,9 @@ export function exposeWindowContext() {
     },
     getActivities: async () => {
       return await ipcRenderer.invoke(WIN_GET_ACTIVITIES_CHANNEL);
+    },
+    setUserInformation: async (params: { userId: string; sessionId: string }) => {
+      return await ipcRenderer.invoke(WIN_SET_USER_INFORMATION_CHANNEL, params);
     },
   });
 }
