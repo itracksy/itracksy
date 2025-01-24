@@ -26,7 +26,7 @@ export function exposeWindowContext() {
       blockedApps: string[];
       isFocusMode: boolean;
     }) => {
-      logger.log("[exposeWindowContext] Window: Calling startTracking", params);
+      logger.debug("[exposeWindowContext] Window: Calling startTracking", params);
       ipcRenderer.invoke(WIN_START_TRACKING_CHANNEL, params);
     },
     stopTracking: async () => {

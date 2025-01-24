@@ -7,7 +7,7 @@ export function safelyRegisterListener(channel: string, handler: (...args: any[]
   if (registeredListeners.has(channel)) {
     ipcMain.removeHandler(channel);
   }
-  logger.log(`Registering listener for channel ${channel}`);
+  logger.debug(`Registering listener for channel ${channel}`);
   ipcMain.handle(channel, handler);
   registeredListeners.add(channel);
 }

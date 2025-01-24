@@ -28,7 +28,7 @@ let isNotificationEnabled: boolean = true;
 const NOTIFICATION_COOLDOWN = 60 * 1000; // 1 minute in milliseconds
 
 export const addWindowEventListeners = (mainWindow: BrowserWindow, tray: Tray | null) => {
-  logger.log("WindowListeners: Adding listeners", { hasTray: !!tray });
+  logger.debug("WindowListeners: Adding listeners", { hasTray: !!tray });
   mainWindowRef = mainWindow;
   trayRef = tray;
 
@@ -136,7 +136,7 @@ const startTracking = async (params: {
   blockedApps: string[];
   isFocusMode: boolean;
 }): Promise<void> => {
-  logger.log("[startTracking] Window: Calling startTracking", params);
+  logger.debug("[startTracking] Window: Calling startTracking", params);
 
   // Clear any existing interval
   stopTracking();
@@ -145,7 +145,7 @@ const startTracking = async (params: {
   trackingIntervalId = setInterval(async () => {
     const getWindows = await import("get-windows");
     const result = await getWindows.activeWindow(params);
-    logger.log("[startTracking] Window: getWindows.activeWindow result", result);
+    logger.debug("[startTracking] Window: getWindows.activeWindow result", result);
     if (result) {
       const transformedActivities: ActivityRecord = {
         platform: result.platform,

@@ -18,7 +18,7 @@ async function createTray() {
   if (process.platform === "darwin") {
     await app.whenReady();
     if (!Notification.isSupported()) {
-      logger.log("Notifications not supported");
+      logger.debug("Notifications not supported");
     }
   }
 
@@ -26,7 +26,7 @@ async function createTray() {
     process.platform === "win32"
       ? path.join(__dirname, "../resources/icon.ico")
       : path.join(__dirname, "../resources/icon.png");
-  logger.log("Main: Icon path", iconPath);
+  logger.debug("Main: Icon path", iconPath);
   const icon = nativeImage.createFromPath(iconPath);
   // Remove resize for Windows
   if (process.platform === "darwin") {

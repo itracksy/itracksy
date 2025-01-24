@@ -1,26 +1,52 @@
 import { app } from "electron";
 import * as path from "path";
 import * as fs from "fs";
-import { Client, ContentType, ContentEncoding } from "@axiomhq/axiom-node";
+import { Client } from "@axiomhq/axiom-node";
 import { config } from "../config/env";
 import { v4 as uuidv4 } from "uuid";
 
 const isElectron = typeof app !== "undefined";
+
+// Log levels in order of severity
+export enum LogLevel {
+  DEBUG = "debug",
+  INFO = "info",
+  WARN = "warn",
+  ERROR = "error",
+  FATAL = "fatal"
+}
+
+// Environment-specific configuration
+const LOG_CONFIG = {
+  development: {
+    console: [LogLevel.DEBUG, LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR, LogLevel.FATAL],
+    file: [LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR, LogLevel.FATAL],
+    axiom: [LogLevel.WARN, LogLevel.ERROR, LogLevel.FATAL]
+  },
+  production: {
+    console: [LogLevel.ERROR, LogLevel.FATAL],
+    file: [LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR, LogLevel.FATAL],
+    axiom: [LogLevel.WARN, LogLevel.ERROR, LogLevel.FATAL]
+  }
+};
 
 class Logger {
   private logPath: string | null = null;
   private axiomClient: Client | null = null;
   private userId: string | null = null;
   private sessionId: string | null = null;
+  private environment: "development" | "production";
+  private lastLogTime: { [key: string]: number } = {};
+  private readonly rateLimitMs = 1000; // Rate limit of 1 second
+
   constructor() {
+    this.environment = app?.isPackaged ? "production" : "development";
+    
     if (isElectron) {
-      // Get the user data path (this is where Electron stores app data)
-      // It will be different for dev and production
       const userDataPath = app.getPath("userData");
       this.logPath = path.join(userDataPath, "logs.txt");
-
       this.sessionId = uuidv4();
-      // Initialize Axiom client if credentials are available
+
       const axiomToken = config.axiomToken;
       const axiomOrgId = config.axiomOrgId;
 
@@ -29,6 +55,12 @@ class Logger {
           token: axiomToken,
           orgId: axiomOrgId,
         });
+      }
+
+      // Ensure log directory exists
+      const logDir = path.dirname(this.logPath);
+      if (!fs.existsSync(logDir)) {
+        fs.mkdirSync(logDir, { recursive: true });
       }
     }
   }
@@ -39,11 +71,28 @@ class Logger {
       this.sessionId = sessionId;
     }
   }
-  private async sendToAxiom(level: string, message: string, args: any[]) {
-    if (!this.axiomClient) return;
+
+  private shouldLog(level: LogLevel, target: 'console' | 'file' | 'axiom'): boolean {
+    const config = LOG_CONFIG[this.environment];
+    return config[target].includes(level);
+  }
+
+  private isRateLimited(key: string): boolean {
+    const now = Date.now();
+    if (this.environment === 'production' && this.lastLogTime[key]) {
+      if (now - this.lastLogTime[key] < this.rateLimitMs) {
+        return true;
+      }
+    }
+    this.lastLogTime[key] = now;
+    return false;
+  }
+
+  private async sendToAxiom(level: LogLevel, message: string, args: any[]) {
+    if (!this.axiomClient || !this.shouldLog(level, 'axiom')) return;
 
     try {
-      const event = await this.axiomClient.ingestEvents(config.axiomDataset, {
+      const event = {
         _time: new Date().toISOString(),
         level,
         message,
@@ -51,61 +100,76 @@ class Logger {
         app: "itracksy",
         process: "main",
         version: app.getVersion(),
-        environment: app.isPackaged ? "production" : "development",
+        environment: this.environment,
         platform: process.platform,
         arch: process.arch,
-        sessionId: this.sessionId, // Unique session ID for grouping related logs
-        userId: this.userId, // You can update this with actual user ID when available
-      });
-      console.log("Sent logs to Axiom:", event);
+        sessionId: this.sessionId,
+        userId: this.userId,
+      };
+
+      if (!this.isRateLimited(`axiom-${level}-${message}`)) {
+        await this.axiomClient.ingestEvents(config.axiomDataset, event);
+      }
     } catch (error) {
       console.error("Failed to send logs to Axiom:", error);
     }
   }
 
-  public async log(message: string, ...args: any[]) {
-    const timestamp = new Date().toISOString();
-    const logMessage = `[${timestamp}] ${message} ${args.map((arg) => JSON.stringify(arg)).join(" ")}\n`;
+  private writeToFile(level: LogLevel, message: string, args: any[]) {
+    if (!this.logPath || !this.shouldLog(level, 'file')) return;
 
-    // Write to console
-    console.log(message, ...args);
+    try {
+      const timestamp = new Date().toISOString();
+      const logMessage = `[${timestamp}] [${level.toUpperCase()}] ${message} ${args.map(arg => 
+        typeof arg === 'object' ? JSON.stringify(arg) : arg).join(" ")}\n`;
 
-    // Write to file only in Electron environment
-    if (isElectron && this.logPath) {
-      fs.appendFileSync(this.logPath, logMessage);
-      // Send to Axiom
-      await this.sendToAxiom("info", message, args);
+      if (!this.isRateLimited(`file-${level}-${message}`)) {
+        fs.appendFileSync(this.logPath, logMessage);
+      }
+    } catch (error) {
+      console.error("Failed to write to log file:", error);
     }
   }
 
-  public async error(message: string, ...args: any[]) {
-    const timestamp = new Date().toISOString();
-    const logMessage = `[${timestamp}] ERROR: ${message} ${args.map((arg) => JSON.stringify(arg)).join(" ")}\n`;
+  private logToConsole(level: LogLevel, message: string, args: any[]) {
+    if (!this.shouldLog(level, 'console')) return;
 
-    // Write to console
-    console.error(message, ...args);
+    const consoleMethod = {
+      [LogLevel.DEBUG]: console.debug,
+      [LogLevel.INFO]: console.log,
+      [LogLevel.WARN]: console.warn,
+      [LogLevel.ERROR]: console.error,
+      [LogLevel.FATAL]: console.error
+    }[level];
 
-    // Write to file only in Electron environment
-    if (isElectron && this.logPath) {
-      fs.appendFileSync(this.logPath, logMessage);
-      // Send to Axiom
-      await this.sendToAxiom("error", message, args);
-    }
+    consoleMethod(`[${level.toUpperCase()}]`, message, ...args);
   }
 
-  public async warn(message: string, ...args: any[]) {
-    const timestamp = new Date().toISOString();
-    const logMessage = `[${timestamp}] WARN: ${message} ${args.map((arg) => JSON.stringify(arg)).join(" ")}\n`;
+  public async log(level: LogLevel, message: string, ...args: any[]) {
+    this.logToConsole(level, message, args);
+    this.writeToFile(level, message, args);
+    await this.sendToAxiom(level, message, args);
+  }
 
-    // Write to console
-    console.warn(message, ...args);
+  // Convenience methods
+  public debug(message: string, ...args: any[]) {
+    return this.log(LogLevel.DEBUG, message, ...args);
+  }
 
-    // Write to file only in Electron environment
-    if (isElectron && this.logPath) {
-      fs.appendFileSync(this.logPath, logMessage);
-      // Send to Axiom
-      await this.sendToAxiom("warn", message, args);
-    }
+  public info(message: string, ...args: any[]) {
+    return this.log(LogLevel.INFO, message, ...args);
+  }
+
+  public warn(message: string, ...args: any[]) {
+    return this.log(LogLevel.WARN, message, ...args);
+  }
+
+  public error(message: string, ...args: any[]) {
+    return this.log(LogLevel.ERROR, message, ...args);
+  }
+
+  public fatal(message: string, ...args: any[]) {
+    return this.log(LogLevel.FATAL, message, ...args);
   }
 }
 
