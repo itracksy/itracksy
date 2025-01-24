@@ -178,13 +178,6 @@ const startTracking = async (params: {
         return;
       }
 
-      logger.debug("[startTracking] Active window data", {
-        platform: result.platform,
-        title: result.title,
-        ownerName: result?.owner?.name,
-        ownerPath: result?.owner?.path,
-      });
-
       const transformedActivities: ActivityRecord = {
         platform: result.platform,
         id: result.id,
@@ -203,8 +196,6 @@ const startTracking = async (params: {
             : //@ts-ignore
               result.url,
       };
-
-      logger.debug("[startTracking] Transformed activity data", transformedActivities);
 
       await addActivity(transformedActivities);
       if (params.isFocusMode) {

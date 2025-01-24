@@ -57,7 +57,9 @@ export function AboutSection() {
 
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" onClick={handleCheckUpdate} disabled={isCheckingUpdate}>
-                <RefreshCwIcon className={`mr-2 h-4 w-4 ${isCheckingUpdate ? "animate-spin" : ""}`} />
+                <RefreshCwIcon
+                  className={`mr-2 h-4 w-4 ${isCheckingUpdate ? "animate-spin" : ""}`}
+                />
                 {isCheckingUpdate ? "Checking..." : "Check for Updates"}
               </Button>
 
@@ -78,12 +80,14 @@ export function AboutSection() {
       </Card>
 
       <Dialog open={isLogDialogOpen} onOpenChange={setIsLogDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh]">
+        <DialogContent className="max-h-[90vh] w-full max-w-[95vw]">
           <DialogHeader>
             <DialogTitle>Application Logs</DialogTitle>
           </DialogHeader>
-          <ScrollArea className="h-[60vh] w-full rounded-md border p-4">
-            <pre className="text-xs whitespace-pre-wrap font-mono">{logContent}</pre>
+          <ScrollArea className="h-[75vh] w-full rounded-md border p-4">
+            <div className="w-full">
+              <pre className="font-mono text-xs whitespace-pre-wrap break-words">{logContent}</pre>
+            </div>
           </ScrollArea>
         </DialogContent>
       </Dialog>
