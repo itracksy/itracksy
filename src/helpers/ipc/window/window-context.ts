@@ -9,6 +9,7 @@ import {
   WIN_CLEAR_ACTIVITIES_CHANNEL,
   WIN_UPDATE_TRAY_TITLE_CHANNEL,
 } from "./window-channels";
+import { logger } from "../../../helpers/logger";
 
 export function exposeWindowContext() {
   contextBridge.exposeInMainWorld("electronWindow", {
@@ -24,6 +25,7 @@ export function exposeWindowContext() {
       blockedApps: string[];
       isFocusMode: boolean;
     }) => {
+      logger.log("[exposeWindowContext] Window: Calling startTracking", params);
       ipcRenderer.invoke(WIN_START_TRACKING_CHANNEL, params);
     },
     stopTracking: async () => {

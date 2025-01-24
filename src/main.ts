@@ -2,6 +2,7 @@ import { app, BrowserWindow, Tray, Menu, nativeImage, Notification } from "elect
 import registerListeners from "./helpers/ipc/listeners-register";
 import * as path from "path";
 import { ActivityRecord } from "./types/activity";
+import { logger } from "./helpers/logger";
 
 // "electron-squirrel-startup" seems broken when packaging with vite
 //import started from "electron-squirrel-startup";
@@ -13,12 +14,11 @@ let tray: Tray | null = null;
 let isQuiting: boolean = false;
 
 async function createTray() {
-  console.log("Main: Creating tray");
   // Request notification permission on macOS
   if (process.platform === "darwin") {
     await app.whenReady();
     if (!Notification.isSupported()) {
-      console.log("Notifications not supported");
+      logger.log("Notifications not supported");
     }
   }
 
@@ -26,7 +26,7 @@ async function createTray() {
     process.platform === "win32"
       ? path.join(__dirname, "../resources/icon.ico")
       : path.join(__dirname, "../resources/icon.png");
-  console.log("Main: Icon path", iconPath);
+  logger.log("Main: Icon path", iconPath);
   const icon = nativeImage.createFromPath(iconPath);
   // Remove resize for Windows
   if (process.platform === "darwin") {
@@ -93,7 +93,6 @@ function createWindow(): void {
   }
 
   registerListeners(mainWindow, tray);
-  console.log("Main: Registering listeners with tray", tray ? "defined" : "undefined");
 
   mainWindow.on("close", (event) => {
     if (!isQuiting) {

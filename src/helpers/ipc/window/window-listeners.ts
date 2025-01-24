@@ -125,7 +125,7 @@ const startTracking = async (params: {
   blockedApps: string[];
   isFocusMode: boolean;
 }): Promise<void> => {
-  console.log("Window: Calling startTracking", params);
+  logger.log("[startTracking] Window: Calling startTracking", params);
 
   // Clear any existing interval
   stopTracking();
@@ -134,7 +134,7 @@ const startTracking = async (params: {
   trackingIntervalId = setInterval(async () => {
     const getWindows = await import("get-windows");
     const result = await getWindows.activeWindow(params);
-    console.log("Window: getWindows.activeWindow result", result);
+    logger.log("[startTracking] Window: getWindows.activeWindow result", result);
     if (result) {
       const transformedActivities: ActivityRecord = {
         platform: result.platform,
