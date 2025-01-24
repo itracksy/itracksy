@@ -9,6 +9,8 @@ import {
   WIN_CLEAR_ACTIVITIES_CHANNEL,
   WIN_UPDATE_TRAY_TITLE_CHANNEL,
   WIN_SET_USER_INFORMATION_CHANNEL,
+  WIN_GET_APP_VERSION_CHANNEL,
+  WIN_CHECK_UPDATES_CHANNEL,
 } from "./window-channels";
 import { logger } from "../../../helpers/logger";
 
@@ -40,6 +42,12 @@ export function exposeWindowContext() {
     },
     setUserInformation: async (params: { userId: string; sessionId: string }) => {
       return await ipcRenderer.invoke(WIN_SET_USER_INFORMATION_CHANNEL, params);
+    },
+    getAppVersion: async () => {
+      return ipcRenderer.invoke(WIN_GET_APP_VERSION_CHANNEL);
+    },
+    checkForUpdates: async () => {
+      return ipcRenderer.invoke(WIN_CHECK_UPDATES_CHANNEL);
     },
   });
 }

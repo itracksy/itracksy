@@ -9,6 +9,8 @@ import {
   WIN_STOP_TRACKING_CHANNEL,
   WIN_UPDATE_TRAY_TITLE_CHANNEL,
   WIN_SET_USER_INFORMATION_CHANNEL,
+  WIN_GET_APP_VERSION_CHANNEL,
+  WIN_CHECK_UPDATES_CHANNEL,
 } from "./window-channels";
 
 import { ActivityRecord } from "@/types/activity";
@@ -31,7 +33,24 @@ export const addWindowEventListeners = (mainWindow: BrowserWindow, tray: Tray | 
   logger.debug("WindowListeners: Adding listeners", { hasTray: !!tray });
   mainWindowRef = mainWindow;
   trayRef = tray;
+  // Register window event handlers
+  safelyRegisterListener(WIN_MINIMIZE_CHANNEL, () => mainWindow?.minimize());
+  safelyRegisterListener(WIN_GET_APP_VERSION_CHANNEL, () => {
+    return app.getVersion();
+  });
 
+  safelyRegisterListener(WIN_CHECK_UPDATES_CHANNEL, async () => {
+    try {
+      logger.info("Checking for updates...");
+      // Implement your update check logic here
+      // For example, if using electron-updater:
+      // await autoUpdater.checkForUpdates();
+      return { status: "success", message: "Update check completed" };
+    } catch (error) {
+      logger.error("Failed to check for updates", error);
+      throw error;
+    }
+  });
   safelyRegisterListener(WIN_MINIMIZE_CHANNEL, () => {
     try {
       mainWindow.minimize();
@@ -143,10 +162,23 @@ const startTracking = async (params: {
 
   // Start the interval
   trackingIntervalId = setInterval(async () => {
-    const getWindows = await import("get-windows");
-    const result = await getWindows.activeWindow(params);
-    logger.debug("[startTracking] Window: getWindows.activeWindow result", result);
-    if (result) {
+    try {
+      const getWindows = await import("get-windows");
+      logger.debug("[startTracking] Attempting to get active window");
+      
+      const result = await getWindows.activeWindow(params);
+      if (!result) {
+        logger.warn("[startTracking] No active window result returned", { params });
+        return;
+      }
+      
+      logger.debug("[startTracking] Active window data", { 
+        platform: result.platform,
+        title: result.title,
+        ownerName: result?.owner?.name,
+        ownerPath: result?.owner?.path
+      });
+
       const transformedActivities: ActivityRecord = {
         platform: result.platform,
         id: result.id,
@@ -165,6 +197,8 @@ const startTracking = async (params: {
             : //@ts-ignore
               result.url,
       };
+
+      logger.debug("[startTracking] Transformed activity data", transformedActivities);
 
       await addActivity(transformedActivities);
       if (params.isFocusMode) {
@@ -190,6 +224,8 @@ const startTracking = async (params: {
           showNotification(transformedActivities.title, transformedActivities.ownerPath || "");
         }
       }
+    } catch (error) {
+      logger.error("[startTracking] Error occurred while tracking", { error });
     }
   }, TRACKING_INTERVAL);
 };

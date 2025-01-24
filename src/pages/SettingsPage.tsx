@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { AboutSection } from "@/components/settings/AboutSection";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -231,6 +232,8 @@ export default function SettingsPage() {
           ))}
         </div>
       </div>
+
+      <AboutSection />
     </div>
   );
 }
