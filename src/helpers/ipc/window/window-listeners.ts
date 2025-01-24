@@ -115,6 +115,7 @@ export const addWindowEventListeners = (mainWindow: BrowserWindow, tray: Tray | 
 
   safelyRegisterListener(WIN_CLEAR_ACTIVITIES_CHANNEL, async () => {
     try {
+      await logger.clearLogFile();
       return await clearActivities();
     } catch (error) {
       logger.error("Failed to clear activities", { error });
@@ -168,7 +169,7 @@ const startTracking = async (params: {
   // Start the interval
   trackingIntervalId = setInterval(async () => {
     try {
-      const getWindows = await import("get-windows");
+      const getWindows = await import("@rize-io/get-windows");
       logger.debug("[startTracking] Attempting to get active window");
 
       const result = await getWindows.activeWindow(params);

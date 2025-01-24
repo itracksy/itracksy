@@ -2,19 +2,33 @@ import { app } from "electron";
 import type { Client } from "@axiomhq/axiom-node";
 import { v4 as uuidv4 } from "uuid";
 import { config } from "../../config/env";
-import { BaseLogger } from "./base-logger";
 import { LogLevel } from "./types";
 import * as fs from "fs";
 import * as path from "path";
 
-export class ServerLogger extends BaseLogger {
+// Log levels configuration
+const LOG_CONFIG = {
+  development: {
+    console: [LogLevel.DEBUG, LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR, LogLevel.FATAL],
+    file: [LogLevel.DEBUG, LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR, LogLevel.FATAL],
+    axiom: [LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR, LogLevel.FATAL],
+  },
+  production: {
+    console: [LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR, LogLevel.FATAL],
+    file: [LogLevel.DEBUG, LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR, LogLevel.FATAL],
+    axiom: [LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR, LogLevel.FATAL],
+  },
+};
+
+export class ServerLogger {
   private logPath: string;
   private axiomClient: Client | null = null;
   private userId: string | null = null;
   private sessionId: string;
+  private environment: "development" | "production";
 
   constructor() {
-    super();
+    this.environment = process.env.NODE_ENV === "production" ? "production" : "development";
     this.sessionId = uuidv4();
     const userDataPath = app.getPath("userData");
     this.logPath = path.join(userDataPath, "logs.txt");
@@ -70,6 +84,11 @@ export class ServerLogger extends BaseLogger {
     } catch (error) {
       console.error("Failed to send log to Axiom:", error);
     }
+  }
+
+  private shouldLog(level: LogLevel, target: "console" | "file" | "axiom"): boolean {
+    const config = LOG_CONFIG[this.environment];
+    return config[target].includes(level);
   }
 
   debug(message: string, ...args: any[]) {
@@ -129,6 +148,16 @@ export class ServerLogger extends BaseLogger {
     }
     if (this.shouldLog(LogLevel.FATAL, "console")) {
       console.error("FATAL:", message, ...args);
+    }
+  }
+
+  async clearLogFile(): Promise<void> {
+    try {
+      await fs.promises.writeFile(this.logPath, '', { encoding: 'utf-8' });
+      this.debug('[ServerLogger] Log file cleared successfully');
+    } catch (error) {
+      this.error('[ServerLogger] Failed to clear log file', error);
+      throw error;
     }
   }
 
