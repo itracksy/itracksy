@@ -2,7 +2,7 @@ import { createRoute } from "@tanstack/react-router";
 import { RootRoute } from "./__root";
 import DashboardPage from "@/pages/dashboard/index";
 import { ProjectsPage } from "@/pages/projects/page";
-import SettingsPage from "@/pages/SettingsPage";
+import SettingsPage from "@/pages/settings-page/SettingsPage";
 
 export const DashboardRoute = createRoute({
   getParentRoute: () => RootRoute,

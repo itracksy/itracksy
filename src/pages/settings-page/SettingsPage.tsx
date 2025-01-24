@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import { SunIcon, MoonIcon, Cross2Icon } from "@radix-ui/react-icons";
 import { useAtom } from "jotai";
 
-import { setTheme, getCurrentTheme } from "../helpers/theme_helpers";
+import { setTheme, getCurrentTheme } from "../../helpers/theme_helpers";
 import { ThemeMode } from "@/lib/types/theme-mode";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { AboutSection } from "@/components/settings/AboutSection";
+import { AboutSection } from "@/pages/settings-page/components/AboutSection";
 import {
   AlertDialog,
   AlertDialogAction,

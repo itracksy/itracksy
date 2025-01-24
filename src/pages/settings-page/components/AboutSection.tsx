@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ExternalLinkIcon, RefreshCwIcon, ScrollTextIcon } from "lucide-react";
+import { ExternalLinkIcon, RefreshCwIcon, ScrollTextIcon, Trash2Icon } from "lucide-react";
 
 export function AboutSection() {
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
@@ -38,7 +38,9 @@ export function AboutSection() {
     a.click();
     window.URL.revokeObjectURL(url);
   };
-
+  const handleClearActivities = async () => {
+    await window.electronWindow.clearActivities();
+  };
   return (
     <Card className="mb-6">
       <CardHeader>
@@ -63,13 +65,10 @@ export function AboutSection() {
           </div>
 
           <div className="text-sm text-muted-foreground">
-            Log file location:{" "}
-            <button
-              onClick={handleOpenLogFile}
-              className="inline-flex items-center hover:underline"
-            >
-              <ExternalLinkIcon className="ml-1 h-3 w-3" />
-            </button>
+            <Button variant="outline" onClick={handleClearActivities}>
+              <Trash2Icon className="mr-2 h-4 w-4" />
+              Clear Activities
+            </Button>
           </div>
         </div>
       </CardContent>
