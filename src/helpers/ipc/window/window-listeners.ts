@@ -108,7 +108,6 @@ export const addWindowEventListeners = (mainWindow: BrowserWindow, tray: Tray | 
 
   safelyRegisterListener(WIN_UPDATE_TRAY_TITLE_CHANNEL, (_event, title: string) => {
     try {
-      logger.log("Updating tray title", { title, hasTray: !!trayRef });
       if (trayRef) {
         trayRef.setTitle(title);
       }
