@@ -107,7 +107,6 @@
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "electron-squirrel-startup": "^1.0.1",
-    "get-windows": "^9.2.0",
     "i18next": "^23.16.4",
     "jotai": "^2.11.0",
     "lucide-react": "^0.453.0",

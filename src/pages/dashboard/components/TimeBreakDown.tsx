@@ -91,10 +91,7 @@ export default function TimeBreakdown({
             <div key={report.name} className="flex items-center justify-between space-x-2">
               <span className="flex-1 truncate text-sm font-medium">{report.name}</span>
               <span className="whitespace-nowrap text-sm text-muted-foreground">
-                {report.duration < 60
-                  ? `${report.duration} sec`
-                  : `${Math.round(report.duration / 60)} min`}{" "}
-                ({Math.round(report.percentage)}%)
+                {Math.round(report.duration / 60)} min ({Math.round(report.percentage)}%)
               </span>
             </div>
           ))
