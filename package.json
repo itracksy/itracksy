@@ -12,7 +12,8 @@
     "dev:frontend": "electron-forge start",
     "start": "electron-forge start",
     "package": "electron-forge package",
-    "make": "electron-forge make; open ./out/itracksy-darwin-arm64/itracksy.app",
+    "make": "electron-forge make",
+    "clean:out": "powershell -Command \"Stop-Process -Name itracksy -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 2; Remove-Item -Path out -Force -Recurse -ErrorAction SilentlyContinue\"",
     "publish": "electron-forge publish",
     "prett": "prettier . --write",
     "storybook": "storybook dev -p 6006",
@@ -23,7 +24,8 @@
     "test:e2e": "playwright test",
     "test:all": "jest && playwright test",
     "release": "./scripts/release.sh",
-    "db": "supabase gen types typescript --project-id vvjsycgvzugdktxsjhnl --schema public > src/lib/schema.ts"
+    "db": "supabase gen types typescript --project-id vvjsycgvzugdktxsjhnl --schema public > src/lib/schema.ts",
+    "debug-make": "set DEBUG=electron-forge:* && electron-forge make --verbose"
   },
   "author": "HungHoang <hth321@gmail.com>",
   "license": "MIT",
