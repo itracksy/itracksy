@@ -1,6 +1,8 @@
 import type { ForgeConfig } from "@electron-forge/shared-types";
 import { MakerSquirrel } from "@electron-forge/maker-squirrel";
-import { MakerZIP } from "@electron-forge/maker-zip";
+import path from "path";
+import fs from "fs";
+import { spawn } from "child_process";
 import { MakerDeb } from "@electron-forge/maker-deb";
 import { MakerRpm } from "@electron-forge/maker-rpm";
 import { MakerDMG } from "@electron-forge/maker-dmg";
@@ -34,6 +36,72 @@ const config: ForgeConfig = {
       draft: false,
     }),
   ],
+  hooks: {
+    packageAfterPrune: async (_, buildPath, __, platform) => {
+      const commands = [
+        "install",
+        "--no-package-lock",
+        "--no-save",
+        "rize-io/get-windows",
+      ];
+
+      return new Promise((resolve, reject) => {
+        const oldPckgJson = path.join(buildPath, "package.json");
+        const newPckgJson = path.join(buildPath, "_package.json");
+
+        fs.renameSync(oldPckgJson, newPckgJson);
+
+        const npmInstall = spawn("npm", commands, {
+          cwd: buildPath,
+          stdio: "inherit",
+          shell: true,
+        });
+
+        npmInstall.on("close", (code) => {
+          if (code === 0) {
+            fs.renameSync(newPckgJson, oldPckgJson);
+
+            /**
+             * On windows code signing fails for ARM binaries etc.,
+             * we remove them here
+             */
+            if (platform === "win32") {
+              const problematicPaths = [
+                "android-arm",
+                "android-arm64",
+                "darwin-x64+arm64",
+                "linux-arm",
+                "linux-arm64",
+                "linux-x64",
+              ];
+
+              problematicPaths.forEach((binaryFolder) => {
+                fs.rmSync(
+                  path.join(
+                    buildPath,
+                    "node_modules",
+                    "@rize-io/get-windows",
+                    "bindings-cpp",
+                    "prebuilds",
+                    binaryFolder
+                  ),
+                  { recursive: true, force: true }
+                );
+              });
+            }
+
+            resolve();
+          } else {
+            reject(new Error("process finished with error code " + code));
+          }
+        });
+
+        npmInstall.on("error", (error) => {
+          reject(error);
+        });
+      });
+    },
+  },
   plugins: [
     new VitePlugin({
       // `build` can specify multiple entry builds, which can be Main process, Preload scripts, Worker process, etc.
