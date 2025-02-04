@@ -84,15 +84,8 @@ jobs:
           
           echo "Using KMS key version: $KEY_VERSION"
           
-          # Get the public key certificate from KMS
-          gcloud kms keys versions get-public-key $KEY_VERSION \
-            --key=${{ secrets.GCP_KMS_KEY_NAME }} \
-            --keyring=${{ secrets.GCP_KMS_KEYRING }} \
-            --location=${{ secrets.GCP_KMS_LOCATION }} \
-            --output-file=public_key.pem
-          
-          # Create a self-signed certificate using the public key
-          openssl req -new -x509 -key public_key.pem -out cert.pem -days 365 \
+          # Generate a new self-signed certificate
+          openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes \
             -subj "/C=VN/ST=HCM/L=HCM City/O=iTracksy/CN=itracksy.com"
           
           java -jar jsign.jar \
@@ -103,10 +96,11 @@ jobs:
             --certfile cert.pem \
             --tsmode RFC3161 \
             --tsaurl http://timestamp.digicert.com \
+            --alg SHA-256 \
             $EXE_FILE
           
           # Clean up
-          rm -f public_key.pem cert.pem
+          rm -f key.pem cert.pem
           cd ..
 
       - name: Publish to release
