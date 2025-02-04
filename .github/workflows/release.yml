@@ -38,18 +38,19 @@ jobs:
           cp jsign.jar windows_signing/jsign.jar
 
       - if: runner.os == 'Windows'
-        name: Setup GCloud Auth
+        name: "Authenticate to Google Cloud"
         uses: "google-github-actions/auth@v1"
         with:
           credentials_json: "${{ secrets.GCP_SIGNER_SERVICE_ACCOUNT }}"
+          project_id: "568111713739"
+          create_credentials_file: true
 
       - if: runner.os == 'Windows'
-        name: "Set up GCloud SDK"
+        name: "Set up Google Cloud SDK"
         uses: "google-github-actions/setup-gcloud@v1"
-        env:
-          CLOUDSDK_PYTHON: ${{ env.pythonLocation }}${{ '\python' }}
         with:
           version: ">= 416.0.0"
+          install_components: "beta"
 
       - name: Build and publish
         run: npm run publish
