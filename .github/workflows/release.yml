@@ -42,7 +42,7 @@ jobs:
         uses: "google-github-actions/auth@v1"
         with:
           credentials_json: "${{ secrets.GCP_SIGNER_SERVICE_ACCOUNT }}"
-          project_id: "568111713739"
+          project_id: "${{ secrets.GCP_PROJECT_ID }}"
           create_credentials_file: true
 
       - if: runner.os == 'Windows'
@@ -52,7 +52,49 @@ jobs:
           version: ">= 416.0.0"
           install_components: "beta"
 
-      - name: Build and publish
+      - if: runner.os != 'macOS'
+        name: Build for Linux/Windows
+        run: npm run make
+
+      - if: runner.os == 'Windows'
+        shell: bash
+        name: Get executable into signing folder
+        # we replace empty spaces in the filename with -
+        run: |
+          find out/make -type f -name '*.exe' -exec bash -c 'mv "$1" "${1// /-}"' _ {} \;
+          find out/make -type f -name '*.exe' -exec cp -v {} windows_signing \;
+
+      - if: runner.os == 'Windows'
+        name: Sign executable
+        shell: bash
+        run: |
+          cd windows_signing
+          ls -R .
+          EXE_FILE=$(find . -type f -name '*.exe' -exec basename {} \; 2>/dev/null | head -n 1)
+          echo "Found .exe file:"
+          echo $EXE_FILE
+
+          # Get the KMS key version
+          KEY_VERSION=$(gcloud kms keys versions list \
+            --key=${{ secrets.GCP_KMS_KEY_NAME }} \
+            --keyring=${{ secrets.GCP_KMS_KEYRING }} \
+            --location=${{ secrets.GCP_KMS_LOCATION }} \
+            --filter="state=ENABLED" \
+            --format="value(name)" | tail -n 1)
+
+          echo "Using KMS key version: $KEY_VERSION"
+
+          java -jar jsign.jar \
+            --storetype GOOGLECLOUD \
+            --storepass "$(gcloud auth print-access-token)" \
+            --keystore "projects/${{ secrets.GCP_PROJECT_ID }}/locations/${{ secrets.GCP_KMS_LOCATION }}/keyRings/${{ secrets.GCP_KMS_KEYRING }}/cryptoKeys/${{ secrets.GCP_KMS_KEY_NAME }}/cryptoKeyVersions/$KEY_VERSION" \
+            --alias "1" \
+            --tsmode RFC3161 \
+            --tsaurl http://timestamp.digicert.com \
+            $EXE_FILE
+          cd ..
+
+      - name: Publish to release
         run: npm run publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -62,3 +104,7 @@ jobs:
           VITE_AXIOM_ORG_ID: ${{ secrets.VITE_AXIOM_ORG_ID }}
           VITE_AXIOM_DATASET: ${{ secrets.VITE_AXIOM_DATASET }}
           GCP_SIGNER_SERVICE_ACCOUNT: ${{ secrets.GCP_SIGNER_SERVICE_ACCOUNT }}
+          GCP_KMS_LOCATION: ${{ secrets.GCP_KMS_LOCATION }}
+          GCP_KMS_KEYRING: ${{ secrets.GCP_KMS_KEYRING }}
+          GCP_KMS_KEY_NAME: ${{ secrets.GCP_KMS_KEY_NAME }}
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
