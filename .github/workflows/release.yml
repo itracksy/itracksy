@@ -73,7 +73,7 @@ jobs:
           EXE_FILE=$(find . -type f -name '*.exe' -exec basename {} \; 2>/dev/null | head -n 1)
           echo "Found .exe file:"
           echo $EXE_FILE
-
+          
           # Get the KMS key version
           KEY_VERSION=$(gcloud kms keys versions list \
             --key=${{ secrets.GCP_KMS_KEY_NAME }} \
@@ -81,17 +81,32 @@ jobs:
             --location=${{ secrets.GCP_KMS_LOCATION }} \
             --filter="state=ENABLED" \
             --format="value(name)" | tail -n 1)
-
+          
           echo "Using KMS key version: $KEY_VERSION"
-
+          
+          # Get the public key certificate from KMS
+          gcloud kms keys versions get-public-key $KEY_VERSION \
+            --key=${{ secrets.GCP_KMS_KEY_NAME }} \
+            --keyring=${{ secrets.GCP_KMS_KEYRING }} \
+            --location=${{ secrets.GCP_KMS_LOCATION }} \
+            --output-file=public_key.pem
+          
+          # Create a self-signed certificate using the public key
+          openssl req -new -x509 -key public_key.pem -out cert.pem -days 365 \
+            -subj "/C=VN/ST=HCM/L=HCM City/O=iTracksy/CN=itracksy.com"
+          
           java -jar jsign.jar \
             --storetype GOOGLECLOUD \
             --storepass "$(gcloud auth print-access-token)" \
             --keystore "projects/${{ secrets.GCP_PROJECT_ID }}/locations/${{ secrets.GCP_KMS_LOCATION }}/keyRings/${{ secrets.GCP_KMS_KEYRING }}/cryptoKeys/${{ secrets.GCP_KMS_KEY_NAME }}/cryptoKeyVersions/$KEY_VERSION" \
             --alias "1" \
+            --certfile cert.pem \
             --tsmode RFC3161 \
             --tsaurl http://timestamp.digicert.com \
             $EXE_FILE
+          
+          # Clean up
+          rm -f public_key.pem cert.pem
           cd ..
 
       - name: Publish to release
