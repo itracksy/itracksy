@@ -85,8 +85,8 @@ jobs:
           echo "Using KMS key version: $KEY_VERSION"
           
           # Generate a new self-signed certificate
-          openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes \
-            -subj "/C=VN/ST=HCM/L=HCM City/O=iTracksy/CN=itracksy.com"
+          MSYS_NO_PATHCONV=1 openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes \
+            -subj "//C=VN/ST=HCM/L=HCM City/O=iTracksy/CN=itracksy.com"
           
           java -jar jsign.jar \
             --storetype GOOGLECLOUD \
