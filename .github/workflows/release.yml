@@ -28,6 +28,29 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - if: runner.os == 'Windows'
+        name: Get JSign
+        shell: bash
+        run: |
+          JAR_URL="https://github.com/ebourg/jsign/releases/download/5.0/jsign-5.0.jar"
+          curl -L -o jsign.jar $JAR_URL
+          mkdir windows_signing
+          cp jsign.jar windows_signing/jsign.jar
+
+      - if: runner.os == 'Windows'
+        name: Setup GCloud Auth
+        uses: "google-github-actions/auth@v1"
+        with:
+          credentials_json: "${{ secrets.GCP_SIGNER_SERVICE_ACCOUNT }}"
+
+      - if: runner.os == 'Windows'
+        name: "Set up GCloud SDK"
+        uses: "google-github-actions/setup-gcloud@v1"
+        env:
+          CLOUDSDK_PYTHON: ${{ env.pythonLocation }}${{ '\python' }}
+        with:
+          version: ">= 416.0.0"
+
       - name: Build and publish
         run: npm run publish
         env:
@@ -37,3 +60,4 @@ jobs:
           VITE_AXIOM_TOKEN: ${{ secrets.VITE_AXIOM_TOKEN }}
           VITE_AXIOM_ORG_ID: ${{ secrets.VITE_AXIOM_ORG_ID }}
           VITE_AXIOM_DATASET: ${{ secrets.VITE_AXIOM_DATASET }}
+          GCP_SIGNER_SERVICE_ACCOUNT: ${{ secrets.GCP_SIGNER_SERVICE_ACCOUNT }}
