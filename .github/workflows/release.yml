@@ -97,7 +97,7 @@ jobs:
           java -jar jsign.jar \
             --storetype GOOGLECLOUD \
             --storepass "$(gcloud auth print-access-token)" \
-            --keystore "$FULL_KEY" \
+            --keystore "$KEY_PATH" \
             --alias "1" \
             --certfile cert.pem \
             --tsmode RFC3161 \
