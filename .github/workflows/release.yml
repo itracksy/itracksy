@@ -75,12 +75,12 @@ jobs:
           echo $EXE_FILE
 
           # Get the KMS key version and full path
-          KEY_PATH="projects/${{ secrets.GCP_PROJECT_ID }}/locations/${{ secrets.GCP_KMS_LOCATION }}/keyRings/${{ secrets.GCP_KMS_KEYRING }}/cryptoKeys/${{ secrets.GCP_KMS_KEY_NAME }}"
+          KEY_PATH="projects/buddybeep-7dcf3/locations/asia-southeast1/keyRings/windows-signing/cryptoKeys/code-signing-key"
 
           KEY_VERSION=$(gcloud kms keys versions list \
-            --key=${{ secrets.GCP_KMS_KEY_NAME }} \
-            --keyring=${{ secrets.GCP_KMS_KEYRING }} \
-            --location=${{ secrets.GCP_KMS_LOCATION }} \
+            --key=code-signing-key \
+            --keyring=windows-signing \
+            --location=asia-southeast1 \
             --filter="state=ENABLED" \
             --format="value(name)" | tail -n 1)
           FULL_KEY="$KEY_PATH/cryptoKeyVersions/$KEY_VERSION"
