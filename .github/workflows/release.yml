@@ -73,36 +73,38 @@ jobs:
           EXE_FILE=$(find . -type f -name '*.exe' -exec basename {} \; 2>/dev/null | head -n 1)
           echo "Found .exe file:"
           echo $EXE_FILE
-          
+
           # Get the KMS key version and full path
           KEY_PATH="projects/${{ secrets.GCP_PROJECT_ID }}/locations/${{ secrets.GCP_KMS_LOCATION }}/keyRings/${{ secrets.GCP_KMS_KEYRING }}/cryptoKeys/${{ secrets.GCP_KMS_KEY_NAME }}"
+
           KEY_VERSION=$(gcloud kms keys versions list \
             --key=${{ secrets.GCP_KMS_KEY_NAME }} \
             --keyring=${{ secrets.GCP_KMS_KEYRING }} \
             --location=${{ secrets.GCP_KMS_LOCATION }} \
             --filter="state=ENABLED" \
             --format="value(name)" | tail -n 1)
-          
+          FULL_KEY="$KEY_PATH/cryptoKeyVersions/$KEY_VERSION"
+
           echo "Using KMS key path: $KEY_PATH"
           echo "Using KMS key version: $KEY_VERSION"
-          
+
           # Generate a new self-signed certificate
           MSYS_NO_PATHCONV=1 openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes \
             -subj "/C=VN/ST=HCM/L=HCM City/O=iTracksy/CN=itracksy.com" \
             -addext "keyUsage=digitalSignature" \
             -addext "extendedKeyUsage=codeSigning"
-          
+
           java -jar jsign.jar \
             --storetype GOOGLECLOUD \
             --storepass "$(gcloud auth print-access-token)" \
-            --keystore "$KEY_PATH/cryptoKeyVersions/$KEY_VERSION" \
+            --keystore "$FULL_KEY" \
             --alias "1" \
             --certfile cert.pem \
             --tsmode RFC3161 \
             --tsaurl http://timestamp.digicert.com \
             --alg SHA-256 \
             $EXE_FILE
-          
+
           # Clean up
           rm -f key.pem cert.pem
           cd ..
