@@ -102,6 +102,10 @@ out/
 
 .env.*
 
+# SQLite database
+data/database.sqlite
+*.sqlite-journal
+
 # Editor directories and files
 .vscode/*
 

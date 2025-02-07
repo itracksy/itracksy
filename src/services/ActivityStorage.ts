@@ -3,6 +3,7 @@ import fs from "fs";
 import { app } from "electron";
 import { ActivityRecord } from "@/types/activity";
 import { LIMIT_TIME_APART, MERGING_BATCH_SIZE } from "../config/tracking";
+import mydb from "../lib/db";
 
 const CONFIG = {
   headers: [
@@ -109,21 +110,33 @@ const addActivity = async (activity: ActivityRecord): Promise<void> => {
   if (!fs.existsSync(filePath)) {
     fs.writeFileSync(filePath, CONFIG.headers.join(",") + "\n");
   }
+  console.log("Adding activity:", activity);
 
-  const line = [
-    activity.platform,
-    activity.id,
-    activity.title?.replace(/,/g, ";"),
-    activity.ownerPath?.replace(/,/g, ";"),
-    activity.ownerProcessId,
-    activity.ownerBundleId?.replace(/,/g, ";"),
-    activity.ownerName?.replace(/,/g, ";"),
-    activity.url?.replace(/,/g, ";"),
-    activity.timestamp,
-    activity.count,
-  ].join(",");
+  // Store in SQLite database
+  try {
+    const stmt = mydb.prepare(`
+      INSERT OR REPLACE INTO activities (
+        platform, id, title, owner_path, owner_process_id,
+        owner_bundle_id, owner_name, url, timestamp, count
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
 
-  await fs.promises.appendFile(filePath, line + "\n");
+    stmt.run(
+      activity.platform,
+      activity.id,
+      activity.title,
+      activity.ownerPath,
+      activity.ownerProcessId,
+      activity.ownerBundleId,
+      activity.ownerName,
+      activity.url,
+      activity.timestamp,
+      activity.count
+    );
+  } catch (error) {
+    console.error("Failed to store activity in SQLite:", error);
+  }
+
   count++;
 
   if (count >= MERGING_BATCH_SIZE) {
@@ -151,7 +164,7 @@ const parseCsvLine = (line: string): string[] => {
   return values;
 };
 
-const getActivities = async (date?: string): Promise<ActivityRecord[]> => {
+const _getActivities = async (date?: string): Promise<ActivityRecord[]> => {
   const filePath = getFilePath(date);
   if (!fs.existsSync(filePath)) {
     return [];
@@ -187,6 +200,49 @@ const getActivities = async (date?: string): Promise<ActivityRecord[]> => {
       count: parseInt(count),
     };
   });
+};
+
+const getActivities = async (date?: string): Promise<ActivityRecord[]> => {
+  try {
+    let query = `
+      SELECT 
+        platform,
+        id,
+        title,
+        owner_path as ownerPath,
+        owner_process_id as ownerProcessId,
+        owner_bundle_id as ownerBundleId,
+        owner_name as ownerName,
+        url,
+        timestamp,
+        count
+      FROM activities
+    `;
+
+    const params: any[] = [];
+    if (date) {
+      query += ` WHERE DATE(timestamp / 1000, 'unixepoch') = ?`;
+      params.push(date);
+    }
+
+    query += ` ORDER BY timestamp DESC`;
+
+    const stmt = mydb.prepare(query);
+    const results = date ? stmt.all(...params) : stmt.all();
+    console.log("results", results);
+    return results.map((row: any) => ({
+      ...row,
+      id: Number(row.id),
+      ownerProcessId: Number(row.ownerProcessId),
+      timestamp: Number(row.timestamp),
+      count: Number(row.count),
+      ownerBundleId: row.ownerBundleId || undefined,
+      url: row.url || undefined,
+    }));
+  } catch (error) {
+    console.error("Failed to fetch activities from SQLite:", error);
+    return [];
+  }
 };
 
 const clearActivities = async (date?: string): Promise<void> => {

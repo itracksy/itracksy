@@ -24,6 +24,7 @@ const config: ForgeConfig = {
         schemes: ["itracksy"],
       },
     ],
+    extraResource: ["data"],
   },
   makers: [new MakerSquirrel({}), new MakerDMG({}), new MakerRpm({}), new MakerDeb({})],
   publishers: [
@@ -42,8 +43,16 @@ const config: ForgeConfig = {
         "install",
         "--no-package-lock",
         "--no-save",
-        "rize-io/get-windows",
+        "better-sqlite3",
       ];
+
+      // Get Python path based on platform
+      const getPythonPath = () => {
+        if (process.env.PYTHON_PATH) return process.env.PYTHON_PATH;
+        if (platform === "darwin") return "/usr/bin/python3";
+        if (platform === "win32") return "python";
+        return "python3";
+      };
 
       return new Promise((resolve, reject) => {
         const oldPckgJson = path.join(buildPath, "package.json");
@@ -51,48 +60,87 @@ const config: ForgeConfig = {
 
         fs.renameSync(oldPckgJson, newPckgJson);
 
+        const pythonPath = getPythonPath();
+        console.log(`Using Python path: ${pythonPath}`);
+
         const npmInstall = spawn("npm", commands, {
           cwd: buildPath,
           stdio: "inherit",
           shell: true,
+          env: {
+            ...process.env,
+            npm_config_python: pythonPath
+          }
         });
 
         npmInstall.on("close", (code) => {
           if (code === 0) {
-            fs.renameSync(newPckgJson, oldPckgJson);
+            // Rebuild better-sqlite3 using node-gyp
+            const nodeGyp = spawn(
+              "node-gyp",
+              ["rebuild", "--target=33.2.0", "--arch=" + process.arch, "--dist-url=https://electronjs.org/headers"],
+              {
+                cwd: path.join(buildPath, "node_modules", "better-sqlite3"),
+                stdio: "inherit",
+                shell: true,
+                env: {
+                  ...process.env,
+                  npm_config_target: "33.2.0",
+                  npm_config_arch: process.arch,
+                  npm_config_target_arch: process.arch,
+                  npm_config_disturl: "https://electronjs.org/headers",
+                  npm_config_runtime: "electron",
+                  npm_config_build_from_source: "true",
+                  npm_config_python: pythonPath
+                }
+              }
+            );
 
-            /**
-             * On windows code signing fails for ARM binaries etc.,
-             * we remove them here
-             */
-            if (platform === "win32") {
-              const problematicPaths = [
-                "android-arm",
-                "android-arm64",
-                "darwin-x64+arm64",
-                "linux-arm",
-                "linux-arm64",
-                "linux-x64",
-              ];
+            nodeGyp.on("close", (rebuildCode) => {
+              if (rebuildCode === 0) {
+                fs.renameSync(newPckgJson, oldPckgJson);
 
-              problematicPaths.forEach((binaryFolder) => {
-                fs.rmSync(
-                  path.join(
-                    buildPath,
-                    "node_modules",
-                    "@rize-io/get-windows",
-                    "bindings-cpp",
-                    "prebuilds",
-                    binaryFolder
-                  ),
-                  { recursive: true, force: true }
-                );
-              });
-            }
+                /**
+                 * On windows code signing fails for ARM binaries etc.,
+                 * we remove them here
+                 */
+                if (platform === "win32") {
+                  const problematicPaths = [
+                    "android-arm",
+                    "android-arm64",
+                    "darwin-x64+arm64",
+                    "linux-arm",
+                    "linux-arm64",
+                    "linux-x64",
+                  ];
 
-            resolve();
+                  problematicPaths.forEach((binaryFolder) => {
+                    fs.rmSync(
+                      path.join(
+                        buildPath,
+                        "node_modules",
+                        "@rize-io/get-windows",
+                        "better-sqlite3",
+                        "bindings-cpp",
+                        "prebuilds",
+                        binaryFolder
+                      ),
+                      { recursive: true, force: true }
+                    );
+                  });
+                }
+
+                resolve();
+              } else {
+                reject(new Error(`node-gyp rebuild failed with code ${rebuildCode}`));
+              }
+            });
+
+            nodeGyp.on("error", (error) => {
+              reject(error);
+            });
           } else {
-            reject(new Error("process finished with error code " + code));
+            reject(new Error("npm install process finished with error code " + code));
           }
         });
 

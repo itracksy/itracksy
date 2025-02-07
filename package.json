@@ -5,6 +5,7 @@
   "description": "A productivity app that tracks time, boosts focus, and provides insights into work habits, helping you manage time effectively and stay productive.",
   "main": ".vite/build/main.js",
   "scripts": {
+    "rebuild": "./node_modules/.bin/electron-rebuild; npm rebuild",
     "clear": "rm -rf .vite dist out node_modules",
     "type-check": "tsc --noEmit",
     "dev": "npm-run-all --parallel type-check:watch dev:backend dev:log",
@@ -59,6 +60,7 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
     "@testing-library/user-event": "^14.5.2",
+    "@types/better-sqlite3": "^7.6.12",
     "@types/electron-squirrel-startup": "^1.0.2",
     "@types/jest": "^29.5.13",
     "@types/node": "^22.7.5",
@@ -106,6 +108,7 @@
     "@tanstack/react-router": "^1.82.1",
     "@tanstack/router-devtools": "^1.82.0",
     "@vitejs/plugin-react": "^4.3.3",
+    "better-sqlite3": "^11.8.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",

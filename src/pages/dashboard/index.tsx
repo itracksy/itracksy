@@ -14,7 +14,6 @@ import { BoardReport } from "./components/BoardReport";
 import { useAtom } from "jotai";
 import { accessibilityPermissionAtom, screenRecordingPermissionAtom } from "@/context/activity";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 export default function DashboardPage() {
   const [durationReports, setDurationReports] = useState<{
@@ -34,7 +33,7 @@ export default function DashboardPage() {
     queryKey: ["activityWindow"],
     queryFn: async () => {
       const activities = await window.electronWindow.getActivities();
-      console.log("[DashboardPage] activities", activities);
+
       return activities;
     },
     refetchInterval: 10000,
