@@ -40,83 +40,6 @@ jobs:
         name: Build for Linux/Windows
         run: npm run make
 
-      - if: runner.os == 'Windows'
-        name: Get JSign
-        shell: bash
-        run: |
-          JAR_URL="https://github.com/ebourg/jsign/releases/download/5.0/jsign-5.0.jar"
-          curl -L -o jsign.jar $JAR_URL
-          mkdir windows_signing
-          cp jsign.jar windows_signing/jsign.jar
-
-      - if: runner.os == 'Windows'
-        name: "Authenticate to Google Cloud"
-        uses: "google-github-actions/auth@v1"
-        with:
-          credentials_json: "${{ secrets.GCP_SIGNER_SERVICE_ACCOUNT }}"
-          project_id: "${{ secrets.GCP_PROJECT_ID }}"
-          create_credentials_file: true
-
-      - if: runner.os == 'Windows'
-        name: "Set up Google Cloud SDK"
-        uses: "google-github-actions/setup-gcloud@v1"
-        with:
-          version: ">= 416.0.0"
-          install_components: "beta"
-
-      - if: runner.os == 'Windows'
-        shell: bash
-        name: Get executable into signing folder
-        # we replace empty spaces in the filename with -
-        run: |
-          find out/make -type f -name '*.exe' -exec bash -c 'mv "$1" "${1// /-}"' _ {} \;
-          find out/make -type f -name '*.exe' -exec cp -v {} windows_signing \;
-
-      - if: runner.os == 'Windows'
-        name: Sign executable
-        shell: bash
-        run: |
-          cd windows_signing
-          ls -R .
-          EXE_FILE=$(find . -type f -name '*.exe' -exec basename {} \; 2>/dev/null | head -n 1)
-          echo "Found .exe file:"
-          echo $EXE_FILE
-
-          # Get the KMS key version and full path
-          KEY_PATH="projects/buddybeep-7dcf3/locations/asia-southeast1/keyRings/windows-signing/cryptoKeys/code-signing-key"
-
-          KEY_VERSION=$(gcloud kms keys versions list \
-            --key=code-signing-key \
-            --keyring=windows-signing \
-            --location=asia-southeast1 \
-            --filter="state=ENABLED" \
-            --format="value(name)" | tail -n 1)
-          FULL_KEY="$KEY_PATH/cryptoKeyVersions/$KEY_VERSION"
-
-          echo "Using KMS key path: $KEY_PATH"
-          echo "Using KMS key version: $KEY_VERSION"
-
-          # Generate a new self-signed certificate
-          MSYS_NO_PATHCONV=1 openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes \
-            -subj "/C=VN/ST=HCM/L=HCM City/O=iTracksy/CN=itracksy.com" \
-            -addext "keyUsage=digitalSignature" \
-            -addext "extendedKeyUsage=codeSigning"
-
-          java -jar jsign.jar \
-            --storetype GOOGLECLOUD \
-            --storepass "$(gcloud auth print-access-token)" \
-            --keystore "$KEY_PATH" \
-            --alias "1" \
-            --certfile cert.pem \
-            --tsmode RFC3161 \
-            --tsaurl http://timestamp.digicert.com \
-            --alg SHA-256 \
-            $EXE_FILE
-
-          # Clean up
-          rm -f key.pem cert.pem
-          cd ..
-
       - name: Publish to release
         run: npm run publish
         env:
@@ -126,8 +49,3 @@ jobs:
           VITE_AXIOM_TOKEN: ${{ secrets.VITE_AXIOM_TOKEN }}
           VITE_AXIOM_ORG_ID: ${{ secrets.VITE_AXIOM_ORG_ID }}
           VITE_AXIOM_DATASET: ${{ secrets.VITE_AXIOM_DATASET }}
-          GCP_SIGNER_SERVICE_ACCOUNT: ${{ secrets.GCP_SIGNER_SERVICE_ACCOUNT }}
-          GCP_KMS_LOCATION: ${{ secrets.GCP_KMS_LOCATION }}
-          GCP_KMS_KEYRING: ${{ secrets.GCP_KMS_KEYRING }}
-          GCP_KMS_KEY_NAME: ${{ secrets.GCP_KMS_KEY_NAME }}
-          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
