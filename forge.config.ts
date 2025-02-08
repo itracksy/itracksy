@@ -26,17 +26,18 @@ const packagerConfig: ForgePackagerOptions = {
 };
 if (process.env["NODE_ENV"] !== "development") {
   packagerConfig.osxSign = {
-    optionsForFile: () => ({
-      identity: process.env.APPLE_SIGNING_IDENTITY,
-      entitlements: "entitlements.plist",
-      "gatekeeper-assess": false,
+    identity: "Apple Development: Hung Hoang The (REW8395524)",
+    optionsForFile: (filePath: string) => ({
+      entitlements: path.join(__dirname, "entitlements.plist"),
+      "entitlements-inherit": path.join(__dirname, "entitlements.plist"),
       hardenedRuntime: true,
-    }),
+      signatureFlags: "library"
+    })
   };
   packagerConfig.osxNotarize = {
     appleId: process.env.APPLE_ID || "",
     appleIdPassword: process.env.APPLE_ID_PASSWORD || "",
-    teamId: process.env.APPLE_TEAM_ID || "",
+    teamId: process.env.APPLE_TEAM_ID || ""
   };
 }
 const config: ForgeConfig = {
