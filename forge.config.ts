@@ -1,4 +1,4 @@
-import type { ForgeConfig } from "@electron-forge/shared-types";
+import type { ForgeConfig, ForgePackagerOptions } from "@electron-forge/shared-types";
 import { MakerSquirrel } from "@electron-forge/maker-squirrel";
 import path from "path";
 import fs from "fs";
@@ -10,22 +10,37 @@ import { VitePlugin } from "@electron-forge/plugin-vite";
 import { FusesPlugin } from "@electron-forge/plugin-fuses";
 import { FuseV1Options, FuseVersion } from "@electron/fuses";
 import { PublisherGithub } from "@electron-forge/publisher-github";
-
+const packagerConfig: ForgePackagerOptions = {
+  executableName: "itracksy",
+  name: "itracksy",
+  asar: true,
+  icon: "./resources/icon",
+  appBundleId: "com.itracksy.app",
+  protocols: [
+    {
+      name: "iTracksy",
+      schemes: ["itracksy"],
+    },
+  ],
+  extraResource: ["data"],
+};
+if (process.env["NODE_ENV"] !== "development") {
+  packagerConfig.osxSign = {
+    optionsForFile: () => ({
+      identity: process.env.APPLE_SIGNING_IDENTITY,
+      entitlements: "entitlements.plist",
+      "gatekeeper-assess": false,
+      hardenedRuntime: true,
+    }),
+  };
+  packagerConfig.osxNotarize = {
+    appleId: process.env.APPLE_ID || "",
+    appleIdPassword: process.env.APPLE_ID_PASSWORD || "",
+    teamId: process.env.APPLE_TEAM_ID || "",
+  };
+}
 const config: ForgeConfig = {
-  packagerConfig: {
-    executableName: "itracksy",
-    name: "itracksy",
-    asar: true,
-    icon: "./resources/icon",
-    appBundleId: "com.itracksy.app",
-    protocols: [
-      {
-        name: "iTracksy",
-        schemes: ["itracksy"],
-      },
-    ],
-    extraResource: ["data"],
-  },
+  packagerConfig: packagerConfig,
   makers: [new MakerSquirrel({}), new MakerDMG({}), new MakerRpm({}), new MakerDeb({})],
   publishers: [
     new PublisherGithub({
@@ -39,12 +54,7 @@ const config: ForgeConfig = {
   ],
   hooks: {
     packageAfterPrune: async (_, buildPath, __, platform) => {
-      const commands = [
-        "install",
-        "--no-package-lock",
-        "--no-save",
-        "better-sqlite3",
-      ];
+      const commands = ["install", "--no-package-lock", "--no-save", "better-sqlite3"];
 
       // Get Python path based on platform
       const getPythonPath = () => {
@@ -69,8 +79,8 @@ const config: ForgeConfig = {
           shell: true,
           env: {
             ...process.env,
-            npm_config_python: pythonPath
-          }
+            npm_config_python: pythonPath,
+          },
         });
 
         npmInstall.on("close", (code) => {
@@ -78,7 +88,12 @@ const config: ForgeConfig = {
             // Rebuild better-sqlite3 using node-gyp
             const nodeGyp = spawn(
               "node-gyp",
-              ["rebuild", "--target=33.2.0", "--arch=" + process.arch, "--dist-url=https://electronjs.org/headers"],
+              [
+                "rebuild",
+                "--target=33.2.0",
+                "--arch=" + process.arch,
+                "--dist-url=https://electronjs.org/headers",
+              ],
               {
                 cwd: path.join(buildPath, "node_modules", "better-sqlite3"),
                 stdio: "inherit",
@@ -91,8 +106,8 @@ const config: ForgeConfig = {
                   npm_config_disturl: "https://electronjs.org/headers",
                   npm_config_runtime: "electron",
                   npm_config_build_from_source: "true",
-                  npm_config_python: pythonPath
-                }
+                  npm_config_python: pythonPath,
+                },
               }
             );
 
