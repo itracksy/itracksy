@@ -26,8 +26,8 @@ const packagerConfig: ForgePackagerOptions = {
 };
 if (process.env["NODE_ENV"] !== "development") {
   packagerConfig.osxSign = {
-    identity: "Apple Development: Hung Hoang The (REW8395524)",
     optionsForFile: (filePath: string) => ({
+      app: "com.itracksy.app",
       entitlements: path.join(__dirname, "entitlements.plist"),
       "entitlements-inherit": path.join(__dirname, "entitlements.plist"),
       hardenedRuntime: true,
