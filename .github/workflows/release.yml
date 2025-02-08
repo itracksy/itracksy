@@ -28,8 +28,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Create data directory
-        run: mkdir -p data
+      - name: Create data directories
+        shell: bash
+        run: |
+          mkdir -p data
+          mkdir -p out/make/data
+          mkdir -p release/data
+          mkdir -p dist/data
+
+      - if: runner.os != 'macOS'
+        name: Build for Linux/Windows
+        run: npm run make
 
       - if: runner.os == 'Windows'
         name: Get JSign
@@ -54,10 +63,6 @@ jobs:
         with:
           version: ">= 416.0.0"
           install_components: "beta"
-
-      - if: runner.os != 'macOS'
-        name: Build for Linux/Windows
-        run: npm run make
 
       - if: runner.os == 'Windows'
         shell: bash
