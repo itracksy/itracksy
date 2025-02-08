@@ -32,8 +32,6 @@ if (process.env["NODE_ENV"] !== "development") {
       "entitlements-inherit": path.join(__dirname, "entitlements.plist"),
       hardenedRuntime: true,
       "gatekeeper-assess": false,
-      "strict-verify": true,
-      force: true,
     }),
   };
   packagerConfig.osxNotarize = {
