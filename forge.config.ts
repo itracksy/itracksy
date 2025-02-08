@@ -26,15 +26,15 @@ const packagerConfig: ForgePackagerOptions = {
 };
 if (process.env["NODE_ENV"] !== "development") {
   packagerConfig.osxSign = {
-    optionsForFile: (filePath: string) => ({
-      app: "com.itracksy.app",
-      entitlements: path.join(__dirname, "entitlements.plist"),
-      "entitlements-inherit": path.join(__dirname, "entitlements.plist"),
-      hardenedRuntime: true,
-      "gatekeeper-assess": false,
-    }),
+    identity: process.env.APPLE_SIGNING_IDENTITY,
+    hardenedRuntime: true,
+    entitlements: path.join(__dirname, "entitlements.plist"),
+    "entitlements-inherit": path.join(__dirname, "entitlements.plist"),
+    "gatekeeper-assess": false,
+    type: "distribution"
   };
   packagerConfig.osxNotarize = {
+    tool: "notarytool",
     appleId: process.env.APPLE_ID || "",
     appleIdPassword: process.env.APPLE_ID_PASSWORD || "",
     teamId: process.env.APPLE_TEAM_ID || "",
