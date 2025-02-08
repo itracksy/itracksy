@@ -31,13 +31,15 @@ if (process.env["NODE_ENV"] !== "development") {
       entitlements: path.join(__dirname, "entitlements.plist"),
       "entitlements-inherit": path.join(__dirname, "entitlements.plist"),
       hardenedRuntime: true,
-      signatureFlags: "library"
-    })
+      "gatekeeper-assess": false,
+      "strict-verify": true,
+      force: true,
+    }),
   };
   packagerConfig.osxNotarize = {
     appleId: process.env.APPLE_ID || "",
     appleIdPassword: process.env.APPLE_ID_PASSWORD || "",
-    teamId: process.env.APPLE_TEAM_ID || ""
+    teamId: process.env.APPLE_TEAM_ID || "",
   };
 }
 const config: ForgeConfig = {
