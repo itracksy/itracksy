@@ -35,6 +35,8 @@ if (process.env["NODE_ENV"] !== "development") {
     }),
   };
   packagerConfig.osxNotarize = {
+    //@ts-ignore
+    tool: "notarytool",
     appleId: process.env.APPLE_ID || "",
     appleIdPassword: process.env.APPLE_ID_PASSWORD || "",
     teamId: process.env.APPLE_TEAM_ID || "",

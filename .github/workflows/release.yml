@@ -70,7 +70,12 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: npm run make
+          NODE_ENV: production
+        run: |
+          echo "Setting up notarization environment..."
+          echo "Apple ID: $APPLE_ID"
+          echo "Team ID: $APPLE_TEAM_ID"
+          npm run make
 
       - name: Publish to release
         run: npm run publish
