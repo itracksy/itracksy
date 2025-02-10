@@ -57,7 +57,19 @@ jobs:
 
           # Import certificate to keychain
           security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          security list-keychain -d user -s $KEYCHAIN_PATH
+          
+          # Make the keychain the default
+          security default-keychain -s $KEYCHAIN_PATH
+          
+          # Add keychain to search list
+          security list-keychain -d user -s $KEYCHAIN_PATH $(security list-keychains -d user | tr -d '"')
+          
+          # Verify certificate import
+          echo "Verifying certificate..."
+          security find-identity -v
+          
+          # Allow codesign to access keychain
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
       - if: runner.os != 'macOS'
         name: Build for Linux/Windows
@@ -73,8 +85,18 @@ jobs:
           NODE_ENV: production
         run: |
           echo "Setting up notarization environment..."
+          echo "Checking for entitlements.plist..."
+          if [ ! -f "entitlements.plist" ]; then
+            echo " entitlements.plist not found"
+            exit 1
+          fi
           echo "Apple ID: $APPLE_ID"
           echo "Team ID: $APPLE_TEAM_ID"
+          echo "Signing Identity: $APPLE_SIGNING_IDENTITY"
+          
+          # Verify keychain access
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $RUNNER_TEMP/app-signing.keychain-db
+          
           npm run make
 
       - name: Publish to release
