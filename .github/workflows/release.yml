@@ -57,22 +57,29 @@ jobs:
 
           # Import certificate to keychain
           security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          
+
           # Make the keychain the default
           security default-keychain -s $KEYCHAIN_PATH
-          
+
           # Add keychain to search list
           security list-keychain -d user -s $KEYCHAIN_PATH $(security list-keychains -d user | tr -d '"')
-          
+
           # Verify certificate import
           echo "Verifying certificate..."
           security find-identity -v
-          
+
           # Allow codesign to access keychain
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
       - if: runner.os != 'macOS'
         name: Build for Linux/Windows
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_KEY }}
+          VITE_AXIOM_TOKEN: ${{ secrets.VITE_AXIOM_TOKEN }}
+          VITE_AXIOM_ORG_ID: ${{ secrets.VITE_AXIOM_ORG_ID }}
+          VITE_AXIOM_DATASET: ${{ secrets.VITE_AXIOM_DATASET }}
         run: npm run make
 
       - if: runner.os == 'macOS'
@@ -83,6 +90,12 @@ jobs:
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           NODE_ENV: production
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_KEY }}
+          VITE_AXIOM_TOKEN: ${{ secrets.VITE_AXIOM_TOKEN }}
+          VITE_AXIOM_ORG_ID: ${{ secrets.VITE_AXIOM_ORG_ID }}
+          VITE_AXIOM_DATASET: ${{ secrets.VITE_AXIOM_DATASET }}
         run: |
           echo "Setting up notarization environment..."
           echo "Checking for entitlements.plist..."
@@ -93,21 +106,12 @@ jobs:
           echo "Apple ID: $APPLE_ID"
           echo "Team ID: $APPLE_TEAM_ID"
           echo "Signing Identity: $APPLE_SIGNING_IDENTITY"
-          
+
           # Verify keychain access
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" $RUNNER_TEMP/app-signing.keychain-db
-          
-          npm run make
 
-      - name: Publish to release
-        run: npm run publish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_KEY }}
-          VITE_AXIOM_TOKEN: ${{ secrets.VITE_AXIOM_TOKEN }}
-          VITE_AXIOM_ORG_ID: ${{ secrets.VITE_AXIOM_ORG_ID }}
-          VITE_AXIOM_DATASET: ${{ secrets.VITE_AXIOM_DATASET }}
+          npm run publish
+
       - name: Clean up keychain
         if: runner.os == 'macOS'
         run: |
