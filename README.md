@@ -96,6 +96,29 @@ iTracksy is a powerful desktop application for tracking your activities and mana
   - `style/`: Store global styles
   - `tests/`: Store tests (from Jest and Playwright)
 
+## Development Scripts
+
+### Revert to Tag Script
+
+Located in `scripts/revert-to-tag.sh`, this script allows you to safely revert the main branch to a specific tag's state without rewriting git history.
+
+Usage:
+```bash
+./scripts/revert-to-tag.sh <tag_name>
+```
+
+For example:
+```bash
+./scripts/revert-to-tag.sh v1.0.69
+```
+
+The script will:
+1. Check if the tag exists
+2. Switch to main branch and update it
+3. Revert all changes after the specified tag
+4. Create a commit with the reversion
+5. Push the changes to the remote repository
+
 ## NPM script
 
 To run any of those scripts:
