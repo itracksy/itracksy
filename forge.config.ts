@@ -2,7 +2,7 @@ import type { ForgeConfig, ForgePackagerOptions } from "@electron-forge/shared-t
 import { MakerSquirrel } from "@electron-forge/maker-squirrel";
 import path from "path";
 import fs from "fs";
-import { spawn } from "child_process";
+import { spawn, spawnSync } from "child_process";
 import { MakerDeb } from "@electron-forge/maker-deb";
 import { MakerRpm } from "@electron-forge/maker-rpm";
 import { MakerDMG } from "@electron-forge/maker-dmg";
@@ -10,6 +10,8 @@ import { VitePlugin } from "@electron-forge/plugin-vite";
 import { FusesPlugin } from "@electron-forge/plugin-fuses";
 import { FuseV1Options, FuseVersion } from "@electron/fuses";
 import { PublisherGithub } from "@electron-forge/publisher-github";
+import { globSync } from "glob";
+
 const packagerConfig: ForgePackagerOptions = {
   executableName: "itracksy",
   name: "itracksy",
@@ -57,6 +59,35 @@ const config: ForgeConfig = {
   ],
   hooks: {
     packageAfterPrune: async (_, buildPath, __, platform) => {
+      /**
+       * get-windows are problematic libraries to run in Electron.
+       * When Electron app is been built, these libraries are not included properly in the final executable.
+       * What we do here is to install them explicitly and then remove the files that are not for the platform
+       * we are building for
+       */
+      const packageJson = JSON.parse(
+        fs.readFileSync(path.resolve(buildPath, "package.json")).toString()
+      );
+      packageJson.dependencies = {
+        "get-windows": "^9.2.0",
+      };
+
+      fs.writeFileSync(path.resolve(buildPath, "package.json"), JSON.stringify(packageJson));
+      spawnSync("npm", ["install", "--omit=dev"], {
+        cwd: buildPath,
+        stdio: "inherit",
+        shell: true,
+      });
+
+      const prebuilds = globSync(`${buildPath}/**/prebuilds/*`);
+      prebuilds.forEach(function (path) {
+        if (!path.includes(platform)) {
+          fs.rmSync(path, { recursive: true });
+        }
+      });
+
+      // build better-sqlite3
+
       const commands = ["install", "--no-package-lock", "--no-save", "better-sqlite3"];
 
       // Get Python path based on platform
@@ -137,7 +168,6 @@ const config: ForgeConfig = {
                       path.join(
                         buildPath,
                         "node_modules",
-                        "@rize-io/get-windows",
                         "better-sqlite3",
                         "bindings-cpp",
                         "prebuilds",

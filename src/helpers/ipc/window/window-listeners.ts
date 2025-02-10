@@ -169,7 +169,7 @@ const startTracking = async (params: {
   // Start the interval
   trackingIntervalId = setInterval(async () => {
     try {
-      const getWindows = await import("@rize-io/get-windows");
+      const getWindows = await import("get-windows");
       logger.debug("[startTracking] Attempting to get active window");
 
       const result = await getWindows.activeWindow(params);
