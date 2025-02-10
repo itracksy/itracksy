@@ -57,13 +57,7 @@ const config: ForgeConfig = {
   ],
   hooks: {
     packageAfterPrune: async (_, buildPath, __, platform) => {
-      const commands = [
-        "install",
-        "--no-package-lock",
-        "--no-save",
-        "@rize-io/get-windows",
-        "better-sqlite3",
-      ];
+      const commands = ["install", "--no-package-lock", "--no-save", "better-sqlite3"];
 
       // Get Python path based on platform
       const getPythonPath = () => {
@@ -80,7 +74,6 @@ const config: ForgeConfig = {
         fs.renameSync(oldPckgJson, newPckgJson);
 
         const pythonPath = getPythonPath();
-        console.log(`Using Python path: ${pythonPath}`);
 
         const npmInstall = spawn("npm", commands, {
           cwd: buildPath,
@@ -104,7 +97,7 @@ const config: ForgeConfig = {
                 "--dist-url=https://electronjs.org/headers",
               ],
               {
-                cwd: path.join(buildPath, "node_modules", "@rize-io/get-windows", "better-sqlite3"),
+                cwd: path.join(buildPath, "node_modules", "better-sqlite3"),
                 stdio: "inherit",
                 shell: true,
                 env: {
@@ -143,7 +136,6 @@ const config: ForgeConfig = {
                       path.join(
                         buildPath,
                         "node_modules",
-                        "@rize-io/get-windows",
                         "better-sqlite3",
                         "bindings-cpp",
                         "prebuilds",
