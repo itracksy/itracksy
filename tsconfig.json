@@ -28,7 +28,6 @@
     "skipLibCheck": true
   },
   "include": [
-    "src/**/*",
-    "forge.config.ts"
+    "src/**/*"
   ]
 }

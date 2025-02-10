@@ -250,8 +250,6 @@ const clearActivities = async (date?: string): Promise<void> => {
   if (fs.existsSync(filePath)) {
     await fs.promises.writeFile(filePath, CONFIG.headers.join(",") + "\n");
   }
-
-  mydb.exec(`DELETE FROM activities`);
 };
 
 // Initialize storage on module load
