@@ -6,7 +6,7 @@ import { app } from "electron";
 // Get the correct path for resources
 const getResourcePath = () => {
   if (app.isPackaged) {
-    return path.join(process.resourcesPath, "data");
+    return path.join(app.getPath("userData"), "data");
   }
   return path.join(process.cwd(), "data");
 };
