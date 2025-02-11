@@ -27,7 +27,7 @@
     "test:all": "jest && playwright test",
     "release": "./scripts/release.sh",
     "db": "supabase gen types typescript --project-id vvjsycgvzugdktxsjhnl --schema public > src/lib/schema.ts",
-    "debug-make": "set DEBUG=electron-forge:* && electron-forge make --verbose"
+    "debug-make": "DEBUG=electron-forge:* npm run make"
   },
   "author": "HungHoang <hth321@gmail.com>",
   "license": "MIT",

@@ -59,24 +59,88 @@ const config: ForgeConfig = {
   ],
   hooks: {
     packageAfterPrune: async (_, buildPath, __, platform) => {
-      /**
-       * get-windows are problematic libraries to run in Electron.
-       * When Electron app is been built, these libraries are not included properly in the final executable.
-       * What we do here is to install them explicitly and then remove the files that are not for the platform
-       * we are building for
-       */
-      const commandsGetWindows = ["install", "--no-package-lock", "--no-save", "get-windows"];
+      console.log("=== Starting packageAfterPrune ===");
+      console.log("Build Path:", buildPath);
+      console.log("Platform:", platform);
+
+      // build better-sqlite3
+
+      const commands = [
+        "install",
+        "--no-package-lock",
+        "--no-save",
+        "--verbose",
+        "better-sqlite3@^11.8.1",
+        "get-windows@^9.2.0",
+      ];
+
+      console.log("Running npm command:", commands.join(" "));
+
+      // Get Python path based on platform
+      const getPythonPath = () => {
+        if (process.env.PYTHON_PATH) return process.env.PYTHON_PATH;
+        if (platform === "darwin") return "/usr/bin/python3";
+        if (platform === "win32") return "python";
+        return "python3";
+      };
 
       const oldPckgJson = path.join(buildPath, "package.json");
       const newPckgJson = path.join(buildPath, "_package.json");
 
       fs.renameSync(oldPckgJson, newPckgJson);
 
-      spawnSync("npm", commandsGetWindows, {
+      const pythonPath = getPythonPath();
+      console.log(`Using Python path: ${pythonPath}`);
+
+      // Run npm install synchronously
+      const npmInstall = spawnSync("npm", commands, {
         cwd: buildPath,
         stdio: "inherit",
         shell: true,
+        env: {
+          ...process.env,
+          npm_config_python: pythonPath,
+        },
       });
+
+      console.log("npm install exit code:", npmInstall.status);
+      if (npmInstall.error) {
+        console.error("npm install error:", npmInstall.error);
+      }
+
+      if (npmInstall.status !== 0) {
+        throw new Error("npm install process finished with error code " + npmInstall.status);
+      }
+
+      // Rebuild better-sqlite3 using node-gyp synchronously
+      const nodeGyp = spawnSync(
+        "node-gyp",
+        [
+          "rebuild",
+          "--target=33.2.0",
+          "--arch=" + process.arch,
+          "--dist-url=https://electronjs.org/headers",
+        ],
+        {
+          cwd: path.join(buildPath, "node_modules", "better-sqlite3"),
+          stdio: "inherit",
+          shell: true,
+          env: {
+            ...process.env,
+            npm_config_target: "33.2.0",
+            npm_config_arch: process.arch,
+            npm_config_target_arch: process.arch,
+            npm_config_disturl: "https://electronjs.org/headers",
+            npm_config_runtime: "electron",
+            npm_config_build_from_source: "true",
+            npm_config_python: pythonPath,
+          },
+        }
+      );
+
+      if (nodeGyp.status !== 0) {
+        throw new Error(`node-gyp rebuild failed with code ${nodeGyp.status}`);
+      }
 
       fs.renameSync(newPckgJson, oldPckgJson);
 
@@ -99,7 +163,7 @@ const config: ForgeConfig = {
             path.join(
               buildPath,
               "node_modules",
-              "get-windows",
+              "better-sqlite3",
               "bindings-cpp",
               "prebuilds",
               binaryFolder
@@ -108,117 +172,7 @@ const config: ForgeConfig = {
           );
         });
       }
-
-      // build better-sqlite3
-
-      const commands = ["install", "--no-package-lock", "--no-save", "better-sqlite3"];
-
-      // Get Python path based on platform
-      const getPythonPath = () => {
-        if (process.env.PYTHON_PATH) return process.env.PYTHON_PATH;
-        if (platform === "darwin") return "/usr/bin/python3";
-        if (platform === "win32") return "python";
-        return "python3";
-      };
-
-      return new Promise((resolve, reject) => {
-        const oldPckgJson = path.join(buildPath, "package.json");
-        const newPckgJson = path.join(buildPath, "_package.json");
-
-        fs.renameSync(oldPckgJson, newPckgJson);
-
-        const pythonPath = getPythonPath();
-        console.log(`Using Python path: ${pythonPath}`);
-
-        const npmInstall = spawn("npm", commands, {
-          cwd: buildPath,
-          stdio: "inherit",
-          shell: true,
-          env: {
-            ...process.env,
-            npm_config_python: pythonPath,
-          },
-        });
-
-        npmInstall.on("close", (code) => {
-          if (code === 0) {
-            // Rebuild better-sqlite3 using node-gyp
-            const nodeGyp = spawn(
-              "node-gyp",
-              [
-                "rebuild",
-                "--target=33.2.0",
-                "--arch=" + process.arch,
-                "--dist-url=https://electronjs.org/headers",
-              ],
-              {
-                cwd: path.join(buildPath, "node_modules", "better-sqlite3"),
-                stdio: "inherit",
-                shell: true,
-                env: {
-                  ...process.env,
-                  npm_config_target: "33.2.0",
-                  npm_config_arch: process.arch,
-                  npm_config_target_arch: process.arch,
-                  npm_config_disturl: "https://electronjs.org/headers",
-                  npm_config_runtime: "electron",
-                  npm_config_build_from_source: "true",
-                  npm_config_python: pythonPath,
-                },
-              }
-            );
-
-            nodeGyp.on("close", (rebuildCode) => {
-              if (rebuildCode === 0) {
-                fs.renameSync(newPckgJson, oldPckgJson);
-
-                /**
-                 * On windows code signing fails for ARM binaries etc.,
-                 * we remove them here
-                 */
-                if (platform === "win32") {
-                  const problematicPaths = [
-                    "android-arm",
-                    "android-arm64",
-                    "darwin-x64+arm64",
-                    "linux-arm",
-                    "linux-arm64",
-                    "linux-x64",
-                  ];
-
-                  problematicPaths.forEach((binaryFolder) => {
-                    fs.rmSync(
-                      path.join(
-                        buildPath,
-                        "node_modules",
-                        "better-sqlite3",
-                        "bindings-cpp",
-                        "prebuilds",
-                        binaryFolder
-                      ),
-                      { recursive: true, force: true }
-                    );
-                  });
-                }
-
-                resolve();
-              } else {
-                reject(new Error(`node-gyp rebuild failed with code ${rebuildCode}`));
-              }
-            });
-
-            nodeGyp.on("error", (error) => {
-              reject(error);
-            });
-          } else {
-            reject(new Error("npm install process finished with error code " + code));
-          }
-        });
-
-        npmInstall.on("error", (error) => {
-          reject(error);
-        });
-      });
+      return;
     },
   },
   plugins: [
