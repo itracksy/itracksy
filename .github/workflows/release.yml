@@ -80,7 +80,7 @@ jobs:
           VITE_AXIOM_TOKEN: ${{ secrets.VITE_AXIOM_TOKEN }}
           VITE_AXIOM_ORG_ID: ${{ secrets.VITE_AXIOM_ORG_ID }}
           VITE_AXIOM_DATASET: ${{ secrets.VITE_AXIOM_DATASET }}
-        run: npm run make
+        run: npm run publish
 
       - if: runner.os == 'macOS'
         name: Build for macOS
