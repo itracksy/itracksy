@@ -65,26 +65,49 @@ const config: ForgeConfig = {
        * What we do here is to install them explicitly and then remove the files that are not for the platform
        * we are building for
        */
-      const packageJson = JSON.parse(
-        fs.readFileSync(path.resolve(buildPath, "package.json")).toString()
-      );
-      packageJson.dependencies = {
-        "get-windows": "^9.2.0",
-      };
+      const commandsGetWindows = ["install", "--no-package-lock", "--no-save", "get-windows"];
 
-      fs.writeFileSync(path.resolve(buildPath, "package.json"), JSON.stringify(packageJson));
-      spawnSync("npm", ["install", "--omit=dev"], {
+      const oldPckgJson = path.join(buildPath, "package.json");
+      const newPckgJson = path.join(buildPath, "_package.json");
+
+      fs.renameSync(oldPckgJson, newPckgJson);
+
+      spawnSync("npm", commandsGetWindows, {
         cwd: buildPath,
         stdio: "inherit",
         shell: true,
       });
 
-      const prebuilds = globSync(`${buildPath}/**/prebuilds/*`);
-      prebuilds.forEach(function (path) {
-        if (!path.includes(platform)) {
-          fs.rmSync(path, { recursive: true });
-        }
-      });
+      fs.renameSync(newPckgJson, oldPckgJson);
+
+      /**
+       * On windows code signing fails for ARM binaries etc.,
+       * we remove them here
+       */
+      if (platform === "win32") {
+        const problematicPaths = [
+          "android-arm",
+          "android-arm64",
+          "darwin-x64+arm64",
+          "linux-arm",
+          "linux-arm64",
+          "linux-x64",
+        ];
+
+        problematicPaths.forEach((binaryFolder) => {
+          fs.rmSync(
+            path.join(
+              buildPath,
+              "node_modules",
+              "get-windows",
+              "bindings-cpp",
+              "prebuilds",
+              binaryFolder
+            ),
+            { recursive: true, force: true }
+          );
+        });
+      }
 
       // build better-sqlite3
 
