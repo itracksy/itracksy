@@ -10,7 +10,6 @@ import { VitePlugin } from "@electron-forge/plugin-vite";
 import { FusesPlugin } from "@electron-forge/plugin-fuses";
 import { FuseV1Options, FuseVersion } from "@electron/fuses";
 import { PublisherGithub } from "@electron-forge/publisher-github";
-import { globSync } from "glob";
 
 const packagerConfig: ForgePackagerOptions = {
   executableName: "itracksy",
@@ -71,7 +70,7 @@ const config: ForgeConfig = {
         "--no-save",
         "--verbose",
         "better-sqlite3@^11.8.1",
-        "get-windows@^9.2.0",
+        platform === "win32" ? "get-windows@^9.2.0" : "",
       ];
 
       console.log("Running npm command:", commands.join(" "));
