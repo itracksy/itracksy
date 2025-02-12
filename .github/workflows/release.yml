@@ -83,7 +83,7 @@ jobs:
 
           Write-Host "Signing setup file: $setupFile"
 
-          # Get the certificate thumbprint
+          # Get the certificate
           $certInfo = az trustedsigning certificate-profile show `
             --resource-group itracks `
             --account-name hung `
@@ -92,6 +92,19 @@ jobs:
           $thumbprint = $certInfo.certificates[0].thumbprint
           Write-Host "Certificate thumbprint: $thumbprint"
 
+          # Export certificate to PFX
+          az trustedsigning certificate export `
+            --resource-group itracks `
+            --account-name hung `
+            --certificate-profile-name itracksy-cert `
+            --certificate-thumbprint $thumbprint `
+            --output-file cert.pfx
+
+          # Import certificate to Windows store
+          $certPassword = [System.Guid]::NewGuid().ToString()
+          $securePwd = ConvertTo-SecureString -String $certPassword -Force -AsPlainText
+          Import-PfxCertificate -FilePath cert.pfx -CertStoreLocation Cert:\LocalMachine\My -Password $securePwd
+
           # Sign using signtool
           & 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe' sign `
             /sha1 $thumbprint `
@@ -99,6 +112,9 @@ jobs:
             /td sha256 `
             /fd sha256 `
             $setupFile
+
+          # Clean up
+          Remove-Item cert.pfx
 
       - name: Upload artifacts
         if: runner.os == 'Windows'
