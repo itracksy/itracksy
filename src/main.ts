@@ -6,9 +6,6 @@ import registerListeners from "./helpers/ipc/listeners-register";
 import { ActivityRecord } from "./types/activity";
 import { logger } from "./helpers/logger";
 
-// "electron-squirrel-startup" seems broken when packaging with vite
-//import started from "electron-squirrel-startup";
-
 const inDevelopment: boolean = process.env.NODE_ENV === "development";
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -169,6 +166,10 @@ declare global {
     themeMode: ThemeModeContext;
     electronWindow: ElectronWindow;
   }
+}
+// Handle creating/removing shortcuts on Windows when installing/uninstalling.
+if (require("electron-squirrel-startup")) {
+  app.quit();
 }
 
 export {};
