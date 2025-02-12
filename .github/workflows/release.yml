@@ -28,6 +28,71 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Azure CLI
+        if: runner.os == 'windows-latest'
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+      - name: Azure Login
+        if: runner.os == 'windows-latest'
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        run: |
+          az login --service-principal \
+            --username $AZURE_CLIENT_ID \
+            --password $AZURE_CLIENT_SECRET \
+            --tenant $AZURE_TENANT_ID
+
+      - name: Setup Azure Trusted Signing
+        if: runner.os == 'windows-latest'
+        run: |
+          az trustedsigning certificate-profile show \
+            --resource-group itracks \
+            --account-name hung \
+            --name itracksy-cert
+
+      - name: Build Windows executable
+        if: runner.os == 'windows-latest'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_KEY }}
+          VITE_AXIOM_TOKEN: ${{ secrets.VITE_AXIOM_TOKEN }}
+          VITE_AXIOM_ORG_ID: ${{ secrets.VITE_AXIOM_ORG_ID }}
+          VITE_AXIOM_DATASET: ${{ secrets.VITE_AXIOM_DATASET }}
+        run: npm run make
+
+      - name: Sign Windows executable
+        if: runner.os == 'windows-latest'
+        run: |
+          # Sign the main setup executable
+          az trustedsigning sign \
+            --resource-group itracks \
+            --account-name hung \
+            --certificate-profile-name itracksy-cert \
+            --file "out/make/squirrel.windows/x64/iTracksy Setup.exe" \
+            --output-file "out/make/squirrel.windows/x64/iTracksy Setup.exe"
+
+          # Sign the main application executable
+          az trustedsigning sign \
+            --resource-group itracks \
+            --account-name hung \
+            --certificate-profile-name itracksy-cert \
+            --file "out/make/squirrel.windows/x64/itracksy.exe" \
+            --output-file "out/make/squirrel.windows/x64/itracksy.exe"
+
+      - name: Upload artifacts
+        if: runner.os == 'windows-latest'
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows-installer
+          path: |
+            out/make/squirrel.windows/x64/iTracksy Setup.exe
+            out/make/squirrel.windows/x64/itracksy.exe
+            out/make/squirrel.windows/x64/RELEASES
+
       - name: Create data directories
         shell: bash
         run: |
@@ -70,17 +135,6 @@ jobs:
 
           # Allow codesign to access keychain
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-
-      - if: runner.os != 'macOS'
-        name: Build for Linux/Windows
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_KEY }}
-          VITE_AXIOM_TOKEN: ${{ secrets.VITE_AXIOM_TOKEN }}
-          VITE_AXIOM_ORG_ID: ${{ secrets.VITE_AXIOM_ORG_ID }}
-          VITE_AXIOM_DATASET: ${{ secrets.VITE_AXIOM_DATASET }}
-        run: npm run publish
 
       - if: runner.os == 'macOS'
         name: Build for macOS
