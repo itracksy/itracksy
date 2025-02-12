@@ -28,30 +28,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Azure CLI
+      - name: Install and login to Azure CLI
         if: runner.os == 'Windows'
-        run: |
-          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-
-      - name: Azure Login
-        if: runner.os == 'Windows'
-        env:
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-        run: |
-          az login --service-principal \
-            --username $AZURE_CLIENT_ID \
-            --password $AZURE_CLIENT_SECRET \
-            --tenant $AZURE_TENANT_ID
-
-      - name: Setup Azure Trusted Signing
-        if: runner.os == 'Windows'
-        run: |
-          az trustedsigning certificate-profile show \
-            --resource-group itracks \
-            --account-name hung \
-            --name itracksy-cert
+        uses: azure/cli@v1
+        with:
+          inlineScript: |
+            az login --service-principal \
+              --username ${{ secrets.AZURE_CLIENT_ID }} \
+              --password ${{ secrets.AZURE_CLIENT_SECRET }} \
+              --tenant ${{ secrets.AZURE_TENANT_ID }}
+            
+            az trustedsigning certificate-profile show \
+              --resource-group itracks \
+              --account-name hung \
+              --name itracksy-cert
 
       - name: Build Windows executable
         if: runner.os == 'Windows'
