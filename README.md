@@ -96,6 +96,41 @@ iTracksy is a powerful desktop application for tracking your activities and mana
   - `style/`: Store global styles
   - `tests/`: Store tests (from Jest and Playwright)
 
+## Building from Source
+
+### Prerequisites
+
+- Node.js 18 or later
+- npm 9 or later
+
+### Build Instructions
+
+1. Clone the repository:
+```bash
+git clone https://github.com/hunght/iTracksy.git
+cd iTracksy
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Build the application:
+```bash
+npm run make
+```
+
+### Build Configuration
+
+The application uses Electron Forge for building and packaging. Key build configurations include:
+
+- Native modules (`*.node` files) are automatically unpacked from the asar archive to ensure proper functionality
+- External dependencies like `get-windows` and `better-sqlite3` are handled specially during packaging
+- Resources are included in the final build from the `./resources` directory
+
+For more details about the build configuration, see `forge.config.ts`.
+
 ## Development Scripts
 
 ### Revert to Tag Script

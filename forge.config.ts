@@ -1,4 +1,4 @@
-// forge.config.ts
+// forge.config.ts - Configuration for Electron Forge build process
 
 import type { ForgeConfig, ForgePackagerOptions } from "@electron-forge/shared-types";
 import { readdirSync, rmdirSync, statSync } from "node:fs";
@@ -16,25 +16,38 @@ import FusesPlugin from "@electron-forge/plugin-fuses";
 import { FuseV1Options, FuseVersion } from "@electron/fuses";
 import MakerSquirrel from "@electron-forge/maker-squirrel";
 import PublisherGithub from "@electron-forge/publisher-github";
+
+// Track native module dependencies that need to be packaged
 let nativeModuleDependenciesToPackage: string[] = [];
 
+// List of external dependencies that require special handling during packaging
 export const EXTERNAL_DEPENDENCIES = ["electron-squirrel-startup", "better-sqlite3", "get-windows"];
 
+// Base packager configuration
 const packagerConfig: ForgePackagerOptions = {
+  // The name of the executable
   executableName: "itracksy",
+  // The name of the application
   name: "itracksy",
+  // Path to the application icon
   icon: "./resources/icon",
+  // The bundle ID for the application
   appBundleId: "com.itracksy.app",
+  // Define custom protocols for the application
   protocols: [
     {
       name: "iTracksy",
       schemes: ["itracksy"],
     },
   ],
+  // Include additional resources in the final build
   extraResource: ["./resources"],
 };
+
+// Configure codesigning and notarization for macOS builds
 if (process.env["NODE_ENV"] !== "development") {
   packagerConfig.osxSign = {
+    // Options for codesigning the application
     optionsForFile: (filePath: string) => ({
       app: "com.itracksy.app",
       entitlements: path.join(__dirname, "entitlements.plist"),
@@ -52,8 +65,11 @@ if (process.env["NODE_ENV"] !== "development") {
   };
 }
 
+// Main Electron Forge configuration
 const config: ForgeConfig = {
+  // Hooks for custom build steps
   hooks: {
+    // Pre-package hook to gather native module dependencies
     prePackage: async () => {
       const projectRoot = normalize(__dirname);
       const getExternalNestedDependencies = async (
@@ -86,6 +102,7 @@ const config: ForgeConfig = {
       const nativeModuleDependencies = await getExternalNestedDependencies(EXTERNAL_DEPENDENCIES);
       nativeModuleDependenciesToPackage = Array.from(nativeModuleDependencies);
     },
+    // Post-package hook to remove empty directories
     packageAfterPrune: async (_forgeConfig, buildPath) => {
       function getItemsFromFolder(
         path: string,
@@ -148,10 +165,14 @@ const config: ForgeConfig = {
       }
     },
   },
+  // Packager configuration
   packagerConfig: {
     ...packagerConfig,
+    // Enable pruning of unnecessary files
     prune: true,
+    // Unpack *.node files from the asar archive
     asar: { unpack: "*.node" },
+    // Ignore files that match the following conditions
     ignore: (file) => {
       const filePath = file.toLowerCase();
       const KEEP_FILE = {
@@ -191,6 +212,7 @@ const config: ForgeConfig = {
 
     // if applicable, your other config / options / app info
 
+    // Overwrite existing build files
     overwrite: true,
 
     // osxSign: {
@@ -201,8 +223,11 @@ const config: ForgeConfig = {
     //   // if applicable, your notarization configuration here
     // },
   },
+  // Rebuild configuration
   rebuildConfig: {},
+  // Makers for different platforms
   makers: [new MakerSquirrel({}), new MakerDMG({}), new MakerRpm({}), new MakerDeb({})],
+  // Publishers for different platforms
   publishers: [
     new PublisherGithub({
       repository: {
@@ -213,6 +238,7 @@ const config: ForgeConfig = {
       draft: false,
     }),
   ],
+  // Plugins for custom build steps
   plugins: [
     new VitePlugin({
       // `build` can specify multiple entry builds, which can be Main process, Preload scripts, Worker process, etc.
