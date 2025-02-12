@@ -28,20 +28,29 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install and login to Azure CLI
+      - name: Install Azure CLI
         if: runner.os == 'Windows'
-        uses: azure/cli@v1
-        with:
-          inlineScript: |
-            az login --service-principal \
-              --username ${{ secrets.AZURE_CLIENT_ID }} \
-              --password ${{ secrets.AZURE_CLIENT_SECRET }} \
-              --tenant ${{ secrets.AZURE_TENANT_ID }}
-            
-            az trustedsigning certificate-profile show \
-              --resource-group itracks \
-              --account-name hung \
-              --name itracksy-cert
+        run: |
+          Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile AzureCLI.msi
+          Start-Process msiexec.exe -Wait -ArgumentList '/I AzureCLI.msi /quiet'
+          Remove-Item AzureCLI.msi
+
+      - name: Azure Login
+        if: runner.os == 'Windows'
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        run: |
+          az login --service-principal `
+            --username $env:AZURE_CLIENT_ID `
+            --password $env:AZURE_CLIENT_SECRET `
+            --tenant $env:AZURE_TENANT_ID
+
+          az trustedsigning certificate-profile show `
+            --resource-group itracks `
+            --account-name hung `
+            --name itracksy-cert
 
       - name: Build Windows executable
         if: runner.os == 'Windows'
