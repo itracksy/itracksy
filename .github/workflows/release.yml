@@ -63,6 +63,17 @@ jobs:
           VITE_AXIOM_DATASET: ${{ secrets.VITE_AXIOM_DATASET }}
         run: npm run make
 
+      - name: Install Windows SDK
+        if: runner.os == 'Windows'
+        run: |
+          # Download Windows SDK installer
+          Invoke-WebRequest -Uri https://go.microsoft.com/fwlink/p/?linkid=2196241 -OutFile winsdksetup.exe
+          
+          # Install Windows SDK with signing tools
+          Start-Process -Wait -FilePath .\winsdksetup.exe -ArgumentList "/features OptionId.SigningTools /quiet"
+          
+          Remove-Item winsdksetup.exe
+
       - name: Sign Windows executable
         if: runner.os == 'Windows'
         run: |
@@ -72,13 +83,22 @@ jobs:
 
           Write-Host "Signing setup file: $setupFile"
 
-          # Sign the setup executable
-          az trustedsigning file sign `
+          # Get the certificate thumbprint
+          $certInfo = az trustedsigning certificate-profile show `
             --resource-group itracks `
             --account-name hung `
-            --certificate-profile-name itracksy-cert `
-            --input-file $setupFile `
-            --output-file $setupFile
+            --name itracksy-cert | ConvertFrom-Json
+
+          $thumbprint = $certInfo.certificates[0].thumbprint
+          Write-Host "Certificate thumbprint: $thumbprint"
+
+          # Sign using signtool
+          & 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe' sign `
+            /sha1 $thumbprint `
+            /tr http://timestamp.digicert.com `
+            /td sha256 `
+            /fd sha256 `
+            $setupFile
 
       - name: Upload artifacts
         if: runner.os == 'Windows'
