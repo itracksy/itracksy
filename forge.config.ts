@@ -226,7 +226,19 @@ const config: ForgeConfig = {
   // Rebuild configuration
   rebuildConfig: {},
   // Makers for different platforms
-  makers: [new MakerSquirrel({}), new MakerDMG({}), new MakerRpm({}), new MakerDeb({})],
+  makers: [
+    new MakerSquirrel({
+      name: 'itracksy',
+      setupExe: 'iTracksy Setup.exe',
+      exe: 'itracksy',
+      loadingGif: './resources/install.gif',
+      setupIcon: './resources/icon.ico',
+      iconUrl: 'https://raw.githubusercontent.com/hunght/itracksy/main/resources/icon.ico'
+    }), 
+    new MakerDMG({}), 
+    new MakerRpm({}), 
+    new MakerDeb({})
+  ],
   // Publishers for different platforms
   publishers: [
     new PublisherGithub({
