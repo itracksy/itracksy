@@ -85,7 +85,7 @@ jobs:
 
       - name: Upload artifacts
         if: runner.os == 'windows-latest'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: windows-installer
           path: |
