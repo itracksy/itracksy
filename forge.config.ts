@@ -231,8 +231,6 @@ const config: ForgeConfig = {
       name: "itracksy",
       setupExe: "iTracksy Setup.exe",
       exe: "itracksy",
-      setupIcon: "./resources/icon.ico",
-      iconUrl: "https://raw.githubusercontent.com/hunght/itracksy/main/resources/icon.ico",
     }),
     new MakerDMG({}),
     new MakerRpm({}),
