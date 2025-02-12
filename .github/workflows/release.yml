@@ -29,12 +29,12 @@ jobs:
         run: npm ci
 
       - name: Install Azure CLI
-        if: runner.os == 'windows-latest'
+        if: runner.os == 'Windows'
         run: |
           curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
       - name: Azure Login
-        if: runner.os == 'windows-latest'
+        if: runner.os == 'Windows'
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
@@ -46,7 +46,7 @@ jobs:
             --tenant $AZURE_TENANT_ID
 
       - name: Setup Azure Trusted Signing
-        if: runner.os == 'windows-latest'
+        if: runner.os == 'Windows'
         run: |
           az trustedsigning certificate-profile show \
             --resource-group itracks \
@@ -54,7 +54,7 @@ jobs:
             --name itracksy-cert
 
       - name: Build Windows executable
-        if: runner.os == 'windows-latest'
+        if: runner.os == 'Windows'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
@@ -65,7 +65,7 @@ jobs:
         run: npm run make
 
       - name: Sign Windows executable
-        if: runner.os == 'windows-latest'
+        if: runner.os == 'Windows'
         run: |
           # Sign the main setup executable
           az trustedsigning sign \
@@ -84,7 +84,7 @@ jobs:
             --output-file "out/make/squirrel.windows/x64/itracksy.exe"
 
       - name: Upload artifacts
-        if: runner.os == 'windows-latest'
+        if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
           name: windows-installer
