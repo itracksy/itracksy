@@ -31,47 +31,14 @@ jobs:
           Start-Process msiexec.exe -Wait -ArgumentList '/I AzureCLI.msi /quiet'
           Remove-Item AzureCLI.msi
 
-      - name: Azure Login
-        env:
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-        run: |
-          az login --service-principal `
-            --username $env:AZURE_CLIENT_ID `
-            --password $env:AZURE_CLIENT_SECRET `
-            --tenant $env:AZURE_TENANT_ID
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: "temurin"
 
-          az trustedsigning certificate-profile show `
-            --resource-group itracks `
-            --account-name hung `
-            --name itracksy-cert
-
-      - name: Install Windows SDK
-        run: |
-          # Download Windows SDK installer
-          Invoke-WebRequest -Uri https://go.microsoft.com/fwlink/p/?linkid=2196241 -OutFile winsdksetup.exe
-
-          # Install Windows SDK with signing tools
-          Start-Process -Wait -FilePath .\winsdksetup.exe -ArgumentList "/features OptionId.SigningTools /quiet"
-
-          Remove-Item winsdksetup.exe
-
-      - name: Setup signing tools
-        run: |
-          # Download nuget.exe
-          Invoke-WebRequest -Uri https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile nuget.exe
-
-          # Download Trusted Signing Client
-          .\nuget.exe install Microsoft.Trusted.Signing.Client -Version 1.0.53 -x
-
-          # Create metadata.json
-          $metadata = @{
-            Endpoint = "https://eus.codesigning.azure.net"
-            CodeSigningAccountName = "hung"
-            CertificateProfileName = "itracksy-cert"
-          } | ConvertTo-Json
-          Set-Content -Path "metadata.json" -Value $metadata
+      - name: Download Jsign
+        run: wget https://github.com/ebourg/jsign/releases/download/7.0/jsign-7.0.jar
 
       - name: Create data directories
         shell: bash
@@ -82,7 +49,6 @@ jobs:
           mkdir -p dist/data
 
       - name: Build Windows executable
-        if: runner.os == 'Windows'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
@@ -105,32 +71,26 @@ jobs:
 
           Write-Host "Signing setup file: $setupFile"
 
-          # Login and set Azure context
+          # Login to Azure CLI
           az login --service-principal `
             --username $env:AZURE_CLIENT_ID `
             --password $env:AZURE_CLIENT_SECRET `
             --tenant $env:AZURE_TENANT_ID
 
-          # Set subscription
-          az account set --subscription $env:AZURE_SUBSCRIPTION_ID
+          # Get Azure access token for code signing
+          $accessToken = az account get-access-token --resource "https://codesigning.azure.net" --query accessToken -o tsv
 
-          # Set tenant
-          az account set --tenant $env:AZURE_TENANT_ID
-
-          Write-Host "Azure context set up complete"
-
-          # Sign using signtool with Azure.CodeSigning.Dlib
-          & 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe' sign `
-            /v /debug `
-            /fd SHA256 `
-            /tr "http://timestamp.acs.microsoft.com" `
-            /td SHA256 `
-            /dlib "Microsoft.Trusted.Signing.Client.1.0.53\runtimes\win-x64\native\Azure.CodeSigning.Dlib.dll" `
-            /dmdf "metadata.json" `
+          # Sign using JSign
+          java -jar jsign-7.0.jar `
+            --storetype TRUSTEDSIGNING `
+            --keystore codesigning.azure.net `
+            --storepass $accessToken `
+            --alias hung/itracksy-cert `
             $setupFile
 
+          Write-Host "Signing complete"
+
       - name: Upload artifacts
-        if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
           name: windows-installer

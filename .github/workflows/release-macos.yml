@@ -67,7 +67,7 @@ jobs:
           # Allow codesign to access keychain
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
-      - if: runner.os == 'macOS'
+      - name: Build for macOS
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -97,6 +97,5 @@ jobs:
           npm run publish
 
       - name: Clean up keychain
-        if: runner.os == 'macOS'
         run: |
           security delete-keychain $RUNNER_TEMP/app-signing.keychain-db
