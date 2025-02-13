@@ -74,8 +74,27 @@ jobs:
           
           Remove-Item winsdksetup.exe
 
+      - name: Setup signing tools
+        if: runner.os == 'Windows'
+        run: |
+          # Download Azure.CodeSigning.Dlib
+          Invoke-WebRequest -Uri "https://www.nuget.org/api/v2/package/Azure.CodeSigning.Dlib" -OutFile "Azure.CodeSigning.Dlib.nupkg"
+          Expand-Archive -Path "Azure.CodeSigning.Dlib.nupkg" -DestinationPath "Azure.CodeSigning.Dlib"
+          
+          # Create metadata.json
+          $metadata = @{
+            Endpoint = "https://eus.codesigning.azure.net"
+            CodeSigningAccountName = "hung"
+            CertificateProfileName = "itracksy-cert"
+          } | ConvertTo-Json
+          Set-Content -Path "metadata.json" -Value $metadata
+
       - name: Sign Windows executable
         if: runner.os == 'Windows'
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
         run: |
           # Get the version from package.json
           $version = (Get-Content package.json | ConvertFrom-Json).version
@@ -83,38 +102,21 @@ jobs:
 
           Write-Host "Signing setup file: $setupFile"
 
-          # Get the certificate
-          $certInfo = az trustedsigning certificate-profile show `
-            --resource-group itracks `
-            --account-name hung `
-            --name itracksy-cert | ConvertFrom-Json
+          # Login to Azure
+          az login --service-principal `
+            --username $env:AZURE_CLIENT_ID `
+            --password $env:AZURE_CLIENT_SECRET `
+            --tenant $env:AZURE_TENANT_ID
 
-          $thumbprint = $certInfo.certificates[0].thumbprint
-          Write-Host "Certificate thumbprint: $thumbprint"
-
-          # Export certificate to PFX
-          az trustedsigning certificate export `
-            --resource-group itracks `
-            --account-name hung `
-            --certificate-profile-name itracksy-cert `
-            --certificate-thumbprint $thumbprint `
-            --output-file cert.pfx
-
-          # Import certificate to Windows store
-          $certPassword = [System.Guid]::NewGuid().ToString()
-          $securePwd = ConvertTo-SecureString -String $certPassword -Force -AsPlainText
-          Import-PfxCertificate -FilePath cert.pfx -CertStoreLocation Cert:\LocalMachine\My -Password $securePwd
-
-          # Sign using signtool
+          # Sign using signtool with Azure.CodeSigning.Dlib
           & 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe' sign `
-            /sha1 $thumbprint `
-            /tr http://timestamp.digicert.com `
-            /td sha256 `
-            /fd sha256 `
+            /v /debug `
+            /fd SHA256 `
+            /tr "http://timestamp.acs.microsoft.com" `
+            /td SHA256 `
+            /dlib "Azure.CodeSigning.Dlib\runtimes\win-x64\native\Azure.CodeSigning.Dlib.dll" `
+            /dmdf "metadata.json" `
             $setupFile
-
-          # Clean up
-          Remove-Item cert.pfx
 
       - name: Upload artifacts
         if: runner.os == 'Windows'
