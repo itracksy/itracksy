@@ -245,7 +245,7 @@ iTracksy uses GitHub Actions for automated releases. To publish a new version:
 
 When building the application for production, you might encounter issues with native modules like `serialport`. This is handled in the project using the `packageAfterPrune` configuration in `forge.config.ts`. This configuration ensures that native modules are properly rebuilt for production.
 
-Reference: [SerialPort Issue #2464](https://github.com/serialport/node-serialport/issues/2464)
+Reference: [SerialPort Issue #2464](https://github.com/serialport/node-serialport/issues/2464) [Github issue](https://github.com/electron/forge/issues/3738)
 
 ## License
 
