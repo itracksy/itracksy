@@ -6,11 +6,9 @@ import pkg from "./package.json";
 export const builtins = [
   "electron",
   "zod",
-  "@trpc/server",
-  "@trpc/client",
-  "electron-trpc/main",
-  "electron-trpc/renderer",
-  ...builtinModules.map((m) => [m, `node:${m}`]).flat()
+  "trpc",
+  "electron-trpc",
+  ...builtinModules.map((m) => [m, `node:${m}`]).flat(),
 ];
 
 export const external = [
