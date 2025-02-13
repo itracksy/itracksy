@@ -25,8 +25,6 @@ export const EXTERNAL_DEPENDENCIES = [
   "electron-squirrel-startup",
   "better-sqlite3",
   "get-windows",
-  "zod",
-  "trpc",
   "electron-trpc",
 ];
 
