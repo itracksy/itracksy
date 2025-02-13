@@ -101,7 +101,7 @@ jobs:
             --tenant $env:AZURE_TENANT_ID
 
           # Set subscription
-          az account set --subscription "$env:AZURE_SUBSCRIPTION_ID"
+          az account set --subscription $env:AZURE_SUBSCRIPTION_ID
 
           # Set tenant
           az account set --tenant $env:AZURE_TENANT_ID
