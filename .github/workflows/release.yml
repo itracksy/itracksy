@@ -52,18 +52,6 @@ jobs:
             --account-name hung `
             --name itracksy-cert
 
-      - name: Install .NET 8.0 Runtime
-        if: runner.os == 'Windows'
-        run: |
-          # Download .NET 8.0 Runtime x64
-          Invoke-WebRequest -Uri "https://dotnet.microsoft.com/download/dotnet/thank-you/runtime-8.0.4-windows-x64-installer" -OutFile "dotnet-runtime-8.0.4-win-x64.exe"
-          
-          # Install .NET Runtime
-          Start-Process -Wait -FilePath .\dotnet-runtime-8.0.4-win-x64.exe -ArgumentList "/install /quiet /norestart"
-          
-          # Clean up
-          Remove-Item dotnet-runtime-8.0.4-win-x64.exe
-
       - name: Install Windows SDK
         if: runner.os == 'Windows'
         run: |
