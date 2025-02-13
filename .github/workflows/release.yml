@@ -68,10 +68,10 @@ jobs:
         run: |
           # Download Windows SDK installer
           Invoke-WebRequest -Uri https://go.microsoft.com/fwlink/p/?linkid=2196241 -OutFile winsdksetup.exe
-          
+
           # Install Windows SDK with signing tools
           Start-Process -Wait -FilePath .\winsdksetup.exe -ArgumentList "/features OptionId.SigningTools /quiet"
-          
+
           Remove-Item winsdksetup.exe
 
       - name: Setup signing tools
@@ -97,6 +97,7 @@ jobs:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         run: |
           # Get the version from package.json
           $version = (Get-Content package.json | ConvertFrom-Json).version
@@ -104,11 +105,19 @@ jobs:
 
           Write-Host "Signing setup file: $setupFile"
 
-          # Login to Azure
+          # Login and set Azure context
           az login --service-principal `
             --username $env:AZURE_CLIENT_ID `
             --password $env:AZURE_CLIENT_SECRET `
             --tenant $env:AZURE_TENANT_ID
+
+          # Set subscription
+          az account set --subscription $AZURE_SUBSCRIPTION_ID
+
+          # Set tenant
+          az account set --tenant $env:AZURE_TENANT_ID
+
+          Write-Host "Azure context set up complete"
 
           # Sign using signtool with Azure.CodeSigning.Dlib
           & 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe' sign `
