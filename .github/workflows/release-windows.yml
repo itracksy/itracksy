@@ -38,7 +38,8 @@ jobs:
           distribution: "temurin"
 
       - name: Download Jsign
-        run: wget https://github.com/ebourg/jsign/releases/download/7.0/jsign-7.0.jar
+        run: |
+          Invoke-WebRequest -Uri "https://github.com/ebourg/jsign/releases/download/7.0/jsign-7.0.jar" -OutFile "jsign-7.0.jar"
 
       - name: Create data directories
         shell: bash
