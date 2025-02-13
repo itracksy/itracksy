@@ -84,7 +84,7 @@ jobs:
           # Sign using JSign
           java -jar jsign-7.0.jar `
             --storetype TRUSTEDSIGNING `
-            --keystore codesigning.azure.net `
+            --keystore eus.codesigning.azure.net `
             --storepass $accessToken `
             --alias hung/itracksy-cert `
             $setupFile
