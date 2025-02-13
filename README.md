@@ -45,6 +45,10 @@ iTracksy is a powerful desktop application for tracking your activities and mana
 ### Packing and distribution 📦
 
 - [Electron Forge](https://www.electronforge.io)
+- Squirrel.Windows for auto-updates:
+  - `.nupkg`: NuGet packages containing application versions
+  - Delta packages for efficient updates
+  - Automatic update checking and installation
 
 ### Documentation 📚
 
