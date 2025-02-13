@@ -97,7 +97,7 @@ jobs:
           Write-Host "Signing complete"
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: artifacts
           path: |
