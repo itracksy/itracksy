@@ -14,6 +14,7 @@ import { BoardReport } from "./components/BoardReport";
 import { useAtom } from "jotai";
 import { accessibilityPermissionAtom, screenRecordingPermissionAtom } from "@/context/activity";
 import { useQuery } from "@tanstack/react-query";
+import { trpcClient } from "@/utils/trpc";
 
 export default function DashboardPage() {
   const [durationReports, setDurationReports] = useState<{
@@ -29,32 +30,31 @@ export default function DashboardPage() {
     screenRecordingPermissionAtom
   );
 
-  const { data: activityWindow } = useQuery({
+  const { data: activities, isLoading } = useQuery({
     queryKey: ["activityWindow"],
     queryFn: async () => {
-      const activities = await window.electronWindow.getActivities();
-
+      const activities = await trpcClient.getActivities.query();
       return activities;
     },
     refetchInterval: 10000,
   });
 
   useEffect(() => {
-    if (!activityWindow) {
+    if (!activities) {
       return;
     }
-    const durationReports = calculateDurationsReport(activityWindow);
+    const durationReports = calculateDurationsReport(activities);
     setDurationReports(durationReports);
-  }, [activityWindow]);
+  }, [activities]);
 
   useEffect(() => {
-    if (!activityWindow) {
+    if (!activities) {
       return;
     }
     const categoryMapper = new CategoryMapper();
-    const categories = categoryMapper.buildCategoryTree(activityWindow);
+    const categories = categoryMapper.buildCategoryTree(activities);
     setCategoryReport(categories);
-  }, [activityWindow]);
+  }, [activities]);
 
   const appUsageData = useMemo(
     () =>

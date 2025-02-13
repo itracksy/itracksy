@@ -1,7 +1,9 @@
 import * as path from "path";
 
 import { app, BrowserWindow, Tray, Menu, nativeImage, Notification } from "electron";
+import { createIPCHandler } from "electron-trpc/main";
 import registerListeners from "./helpers/ipc/listeners-register";
+import { router } from "./api";
 
 import { ActivityRecord } from "./types/activity";
 import { logger } from "./helpers/logger";
@@ -73,7 +75,7 @@ function createWindow(): void {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
-    icon: iconPath, // Add this line
+    icon: iconPath,
     webPreferences: {
       devTools: true,
       contextIsolation: true,
@@ -83,6 +85,8 @@ function createWindow(): void {
     },
     titleBarStyle: "hidden",
   });
+
+  createIPCHandler({ router, windows: [mainWindow] });
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);

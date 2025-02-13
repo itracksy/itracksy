@@ -4,7 +4,6 @@ import {
   WIN_MAXIMIZE_CHANNEL,
   WIN_CLOSE_CHANNEL,
   WIN_START_TRACKING_CHANNEL,
-  WIN_GET_ACTIVITIES_CHANNEL,
   WIN_STOP_TRACKING_CHANNEL,
   WIN_CLEAR_ACTIVITIES_CHANNEL,
   WIN_UPDATE_TRAY_TITLE_CHANNEL,
@@ -37,9 +36,7 @@ export function exposeWindowContext() {
     clearActivities: async () => {
       return await ipcRenderer.invoke(WIN_CLEAR_ACTIVITIES_CHANNEL);
     },
-    getActivities: async () => {
-      return await ipcRenderer.invoke(WIN_GET_ACTIVITIES_CHANNEL);
-    },
+
     setUserInformation: async (params: { userId: string; sessionId: string }) => {
       return await ipcRenderer.invoke(WIN_SET_USER_INFORMATION_CHANNEL, params);
     },

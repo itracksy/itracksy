@@ -112,6 +112,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "electron-squirrel-startup": "^1.0.1",
+    "electron-trpc": "^0.7.1",
     "get-windows": "^9.2.0",
     "i18next": "^23.16.4",
     "jotai": "^2.11.0",
@@ -127,6 +128,7 @@
     "recharts": "^2.14.1",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
+    "trpc": "^0.10.4",
     "winston": "^3.17.0",
     "zod": "^3.24.1"
   }

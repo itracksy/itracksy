@@ -2,7 +2,6 @@ import { BrowserWindow, app, dialog, ipcMain, screen, Tray } from "electron";
 import {
   WIN_CLEAR_ACTIVITIES_CHANNEL,
   WIN_CLOSE_CHANNEL,
-  WIN_GET_ACTIVITIES_CHANNEL,
   WIN_MAXIMIZE_CHANNEL,
   WIN_MINIMIZE_CHANNEL,
   WIN_START_TRACKING_CHANNEL,
@@ -16,7 +15,7 @@ import {
 
 import { ActivityRecord } from "@/types/activity";
 import { safelyRegisterListener } from "../safelyRegisterListener";
-import { addActivity, getActivities, clearActivities } from "../../../services/ActivityStorage";
+import { addActivity, clearActivities } from "../../../services/ActivityStorage";
 import { TRACKING_INTERVAL } from "../../../config/tracking";
 import { extractUrlFromBrowserTitle } from "./helper";
 import { logger } from "../../../helpers/logger";
@@ -119,15 +118,6 @@ export const addWindowEventListeners = (mainWindow: BrowserWindow, tray: Tray | 
       return await clearActivities();
     } catch (error) {
       logger.error("Failed to clear activities", { error });
-      throw error;
-    }
-  });
-
-  safelyRegisterListener(WIN_GET_ACTIVITIES_CHANNEL, async () => {
-    try {
-      return await getActivities();
-    } catch (error) {
-      logger.error("Failed to get activities", { error });
       throw error;
     }
   });
