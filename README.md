@@ -53,6 +53,20 @@ iTracksy is a powerful desktop application for tracking your activities and mana
 ### CI/CD 🚀
 
 - Pre-configured [GitHub Actions workflow](https://github.com/hunght/iTracksy/blob/main/.github/workflows/playwright.yml), for test with Playwright
+- Automated release builds for Windows, macOS, and Linux
+- Code signing for Windows executables using Azure Code Signing service
+
+### Code Signing 🔐
+
+The Windows installer is automatically signed using:
+- Azure Code Signing service
+- JSign for Authenticode signing
+- GitHub Actions workflow for automated signing during release
+
+For development, you'll need:
+1. Access to Azure Code Signing service
+2. A valid certificate in your Azure Code Signing account
+3. Proper permissions to access the certificate
 
 ### Project preferences 🎯
 
