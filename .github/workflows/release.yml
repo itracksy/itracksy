@@ -77,10 +77,12 @@ jobs:
       - name: Setup signing tools
         if: runner.os == 'Windows'
         run: |
-          # Download Azure.CodeSigning.Dlib
-          Invoke-WebRequest -Uri "https://www.nuget.org/api/v2/package/Azure.CodeSigning.Dlib" -OutFile "Azure.CodeSigning.Dlib.nupkg"
-          Expand-Archive -Path "Azure.CodeSigning.Dlib.nupkg" -DestinationPath "Azure.CodeSigning.Dlib"
-          
+          # Download nuget.exe
+          Invoke-WebRequest -Uri https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile nuget.exe
+
+          # Download Trusted Signing Client
+          .\nuget.exe install Microsoft.Trusted.Signing.Client -Version 1.0.53 -x
+
           # Create metadata.json
           $metadata = @{
             Endpoint = "https://eus.codesigning.azure.net"
@@ -114,7 +116,7 @@ jobs:
             /fd SHA256 `
             /tr "http://timestamp.acs.microsoft.com" `
             /td SHA256 `
-            /dlib "Azure.CodeSigning.Dlib\runtimes\win-x64\native\Azure.CodeSigning.Dlib.dll" `
+            /dlib "Microsoft.Trusted.Signing.Client.1.0.53\runtimes\win-x64\native\Azure.CodeSigning.Dlib.dll" `
             /dmdf "metadata.json" `
             $setupFile
 
