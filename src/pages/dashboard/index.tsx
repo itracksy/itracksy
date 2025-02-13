@@ -3,7 +3,6 @@ import {
   DomainDurationReport,
   TitleDurationReport,
   CategoryDurationReport,
-  ActivityRecord,
 } from "@/types/activity";
 import { useState, useEffect, useMemo } from "react";
 import { calculateDurationsReport } from "@/services/ReportBuilder";

@@ -19,6 +19,7 @@ iTracksy is a powerful desktop application for tracking your activities and mana
 - [Electron 32](https://www.electronjs.org) - Framework for building cross-platform desktop applications
 - [Vite 5](https://vitejs.dev) - Next generation frontend tooling
 - [SWC](https://swc.rs) - Super-fast TypeScript/JavaScript compiler
+- [tRPC](https://trpc.io) - End-to-end typesafe APIs with [electron-trpc](https://github.com/jsonnull/electron-trpc) for main-renderer communication
 
 ### DX 🛠️
 
@@ -80,6 +81,39 @@ For development, you'll need:
 - Some default styles was applied, check the [`styles`](https://github.com/hunght/iTracksy/tree/main/src/styles) directory
 
 > If you don't know some of these libraries or tools, I recommend you to check their documentation to understand how they work and how to use them.
+
+## Architecture
+
+### IPC Communication with tRPC
+
+iTracksy uses tRPC for type-safe communication between the main and renderer processes. This provides several benefits:
+
+- **Type Safety**: Full end-to-end type safety between the main and renderer processes
+- **Automatic Type Inference**: TypeScript automatically infers the types of your API calls
+- **Better Developer Experience**: Autocomplete and inline errors in your IDE
+- **Simplified API Management**: Centralized API definition and validation
+
+Example usage:
+
+```typescript
+// In main process (src/api/index.ts)
+export const router = t.router({
+  getActivities: t.procedure
+    .query(async () => {
+      return await getActivities();
+    }),
+  startTracking: t.procedure
+    .input(trackingSettingsSchema)
+    .mutation(async ({ input }) => {
+      // Handle tracking start
+    })
+});
+
+// In renderer process
+const activities = await trpcClient.getActivities.query();
+```
+
+For more details about the tRPC integration, see the [electron-trpc documentation](https://github.com/jsonnull/electron-trpc).
 
 ## Directory structure
 
