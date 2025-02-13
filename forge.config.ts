@@ -21,7 +21,14 @@ import PublisherGithub from "@electron-forge/publisher-github";
 let nativeModuleDependenciesToPackage: string[] = [];
 
 // List of external dependencies that require special handling during packaging
-export const EXTERNAL_DEPENDENCIES = ["electron-squirrel-startup", "better-sqlite3", "get-windows"];
+export const EXTERNAL_DEPENDENCIES = [
+  "electron-squirrel-startup",
+  "better-sqlite3",
+  "get-windows",
+  "zod",
+  "trpc",
+  "electron-trpc",
+];
 
 // Base packager configuration
 const packagerConfig: ForgePackagerOptions = {
