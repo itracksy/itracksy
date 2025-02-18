@@ -1,6 +1,7 @@
 import { migrate } from "drizzle-orm/libsql/migrator";
 import fs from "fs";
 import path from "path";
+import { app } from "electron";
 import { getDatabasePath } from "../utils/paths";
 import db from ".";
 import { logger } from "../helpers/logger";
@@ -39,9 +40,11 @@ export const initializeDatabase = async () => {
       logger.error("Failed to check file permissions:", error);
     }
 
-    logger.info("Running database migrations...");
-    // Check if migrations folder exists
-    const migrationsPath = path.resolve("./drizzle");
+    // Get migrations path based on environment
+    const migrationsPath = app.isPackaged
+      ? path.join(process.resourcesPath, "drizzle")
+      : path.join(app.getAppPath(), "drizzle");
+    
     logger.info("Migrations folder path:", migrationsPath);
     if (!fs.existsSync(migrationsPath)) {
       logger.error("Migrations folder not found at:", migrationsPath);
@@ -57,7 +60,7 @@ export const initializeDatabase = async () => {
     }
 
     // Run migrations
-    await migrate(db, { migrationsFolder: "./drizzle" });
+    await migrate(db, { migrationsFolder: migrationsPath });
     logger.info("Database migrations completed successfully");
   } catch (error) {
     logger.error("Failed to initialize database:", error);

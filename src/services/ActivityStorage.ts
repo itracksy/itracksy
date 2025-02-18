@@ -198,8 +198,27 @@ const _getActivities = async (date?: string): Promise<ActivityRecord[]> => {
 
 const getActivities = async (date?: string): Promise<ActivityRecord[]> => {
   try {
+    // First check if table exists
+    try {
+      logger.info("[getActivities] Checking table structure...");
+      const tableInfo = await db.select().from(activities).limit(0).all();
+      logger.info("[getActivities] Table structure OK");
+    } catch (error) {
+      logger.error("[getActivities] Failed to check table structure:", error);
+      if (error instanceof Error) {
+        logger.error("[getActivities] Error details:", {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+        });
+      }
+      throw error;
+    }
+
+    logger.info("[getActivities] Fetching activities...");
     const results = await db.select().from(activities).all();
-    logger.info("[getActivities]Got activities:", results);
+    logger.info("[getActivities] Got activities:", results);
+
     return results.map((row) => ({
       ...row,
       ownerBundleId: row.ownerBundleId || undefined,
@@ -208,6 +227,13 @@ const getActivities = async (date?: string): Promise<ActivityRecord[]> => {
     }));
   } catch (error) {
     logger.error("[getActivities] Failed to get activities:", error);
+    if (error instanceof Error) {
+      logger.error("[getActivities] Error details:", {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      });
+    }
     return [];
   }
 };

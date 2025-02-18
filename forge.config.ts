@@ -178,6 +178,8 @@ const config: ForgeConfig = {
     prune: true,
     // Unpack *.node files from the asar archive
     asar: { unpack: "*.node" },
+    // Add drizzle folder to extraResource
+    extraResource: ["./resources", "drizzle"],
     // Ignore files that match the following conditions
     ignore: (file) => {
       const filePath = file.toLowerCase();
