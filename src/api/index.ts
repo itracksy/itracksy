@@ -1,29 +1,14 @@
 import { initTRPC } from "@trpc/server";
 import { z } from "zod";
 import type {
-  ActivityRecord,
   ApplicationDurationReport,
   DomainDurationReport,
   CategoryDurationReport,
 } from "../types/activity";
-import { getActivities } from "../services/ActivityStorage";
+import { clearActivities, getActivities } from "../services/ActivityStorage";
+import { startTracking, updateActivitySettings, stopTracking } from "./activity";
 
 const t = initTRPC.create();
-
-// Input validation schemas
-const activityRecordSchema = z.object({
-  platform: z.string(),
-  id: z.number(),
-  title: z.string(),
-  ownerPath: z.string(),
-  ownerProcessId: z.number(),
-  ownerBundleId: z.string().optional(),
-  ownerName: z.string(),
-  url: z.string().optional(),
-  timestamp: z.number(),
-  count: z.number(),
-  userId: z.string().optional(),
-});
 
 const trackingSettingsSchema = z.object({
   accessibilityPermission: z.boolean(),
@@ -31,7 +16,10 @@ const trackingSettingsSchema = z.object({
   blockedDomains: z.array(z.string()),
   blockedApps: z.array(z.string()),
   isFocusMode: z.boolean(),
+  taskId: z.string().optional(),
 });
+
+const updateTrackingSettingsSchema = trackingSettingsSchema.partial();
 
 const dateRangeSchema = z.object({
   startDate: z.number(),
@@ -47,32 +35,35 @@ export const router = t.router({
     const activities = await getActivities();
     return activities;
   }),
+  clearActivities: t.procedure.mutation(async () => {
+    await clearActivities();
+    return { success: true };
+  }),
   // Activity Tracking Controls
   startTracking: t.procedure.input(trackingSettingsSchema).mutation(async ({ input }) => {
     try {
       // Here we'll implement the actual tracking logic
+      startTracking(input);
       return { success: true, settings: input };
     } catch (error) {
       throw new Error("Failed to start tracking");
     }
   }),
-
+  updateActivitySettings: t.procedure.input(updateTrackingSettingsSchema).mutation(async ({ input }) => {
+    try {
+      updateActivitySettings(input);
+      return { success: true, settings: input };
+    } catch (error) {
+      throw new Error("Failed to update activity settings");
+    }
+  }),
   stopTracking: t.procedure.mutation(async () => {
     try {
       // Implement stop tracking logic
+      stopTracking();
       return { success: true };
     } catch (error) {
       throw new Error("Failed to stop tracking");
-    }
-  }),
-
-  // Activity Records
-  recordActivity: t.procedure.input(activityRecordSchema).mutation(async ({ input }) => {
-    try {
-      // Here we'll implement the logic to save the activity record
-      return { success: true, record: input };
-    } catch (error) {
-      throw new Error("Failed to record activity");
     }
   }),
 

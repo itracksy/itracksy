@@ -20,8 +20,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { blockedDomainsAtom, blockedAppsAtom, isFocusModeAtom } from "@/context/activity";
-import { useTracking } from "@/hooks/useTracking";
+
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { trpcClient } from "@/utils/trpc";
 
 export default function SettingsPage() {
   const [currentTheme, setCurrentTheme] = useState<ThemeMode>("light");
@@ -34,7 +35,7 @@ export default function SettingsPage() {
     type: "domain" | "app";
     index: number;
   } | null>(null);
-  const { isTracking, startTracking, stopTracking } = useTracking();
+
   useEffect(() => {
     getCurrentTheme().then((theme) => {
       setCurrentTheme(theme.local || theme.system);
@@ -42,11 +43,16 @@ export default function SettingsPage() {
   }, []);
 
   useEffect(() => {
-    if (isTracking) {
-      stopTracking();
-      startTracking();
+    try {
+      trpcClient.updateActivitySettings.mutate({
+        blockedDomains,
+        blockedApps,
+        isFocusMode,
+      });
+    } catch (error) {
+      console.error("SettingsPage: Error updating activity settings", error);
     }
-  }, [blockedDomains, blockedApps, isTracking, startTracking, stopTracking]);
+  }, [blockedDomains, blockedApps, isFocusMode]);
 
   const handleThemeChange = async (theme: ThemeMode) => {
     await setTheme(theme);

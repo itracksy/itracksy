@@ -88,7 +88,7 @@ const mergeRecords = async (): Promise<void> => {
       (activity) =>
         [
           activity.platform,
-          activity.id,
+          activity.activityId,
           activity.title?.replace(/,/g, ";"),
           activity.ownerPath?.replace(/,/g, ";"),
           activity.ownerProcessId,
@@ -117,7 +117,7 @@ const addActivity = async (activity: ActivityRecord): Promise<void> => {
   try {
     await db.insert(activities).values({
       platform: activity.platform,
-      id: activity.id,
+      activityId: activity.activityId,
       title: activity.title,
       ownerPath: activity.ownerPath,
       ownerProcessId: activity.ownerProcessId,
@@ -126,6 +126,9 @@ const addActivity = async (activity: ActivityRecord): Promise<void> => {
       url: activity.url,
       timestamp: activity.timestamp,
       count: activity.count,
+      taskId: activity.taskId,
+      isFocused: activity.isFocused,
+      userId: activity.userId,
     });
   } catch (error) {
     console.error("Failed to store activity in SQLite:", error);
@@ -158,44 +161,6 @@ const parseCsvLine = (line: string): string[] => {
   return values;
 };
 
-const _getActivities = async (date?: string): Promise<ActivityRecord[]> => {
-  const filePath = getFilePath(date);
-  if (!fs.existsSync(filePath)) {
-    return [];
-  }
-
-  const content = await fs.promises.readFile(filePath, "utf-8");
-  const lines = content.split("\n").filter((line) => line.length > 0);
-  lines.shift(); // Remove headers
-
-  return lines.map((line) => {
-    const [
-      platform,
-      id,
-      title,
-      ownerPath,
-      ownerProcessId,
-      ownerBundleId,
-      ownerName,
-      url,
-      timestamp,
-      count,
-    ] = parseCsvLine(line);
-    return {
-      platform,
-      id: parseInt(id),
-      title: title.replace(/^"|"$/g, "").replace(/""/g, '"'),
-      ownerPath: ownerPath.replace(/^"|"$/g, "").replace(/""/g, '"'),
-      ownerProcessId: parseInt(ownerProcessId),
-      ownerBundleId: ownerBundleId || undefined,
-      ownerName: ownerName.replace(/^"|"$/g, "").replace(/""/g, '"'),
-      url: url || undefined,
-      timestamp: parseInt(timestamp),
-      count: parseInt(count),
-    };
-  });
-};
-
 const getActivities = async (date?: string): Promise<ActivityRecord[]> => {
   try {
     // First check if table exists
@@ -217,13 +182,15 @@ const getActivities = async (date?: string): Promise<ActivityRecord[]> => {
 
     logger.info("[getActivities] Fetching activities...");
     const results = await db.select().from(activities).all();
-    logger.info("[getActivities] Got activities:", results);
 
     return results.map((row) => ({
       ...row,
       ownerBundleId: row.ownerBundleId || undefined,
       url: row.url || undefined,
       userId: row.userId || undefined,
+      taskId: row.taskId || undefined,
+      isFocused: row.isFocused || undefined,
+      activityId: row.activityId,
     }));
   } catch (error) {
     logger.error("[getActivities] Failed to get activities:", error);
@@ -239,6 +206,7 @@ const getActivities = async (date?: string): Promise<ActivityRecord[]> => {
 };
 
 const clearActivities = async (date?: string): Promise<void> => {
+  await db.delete(activities).all();
   const filePath = getFilePath(date);
   if (fs.existsSync(filePath)) {
     await fs.promises.writeFile(filePath, CONFIG.headers.join(",") + "\n");

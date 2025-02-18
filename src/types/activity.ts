@@ -1,6 +1,6 @@
 export interface ActivityRecord {
   platform: string;
-  id: number;
+  activityId: number;
   title: string;
   ownerPath: string;
   ownerProcessId: number;
@@ -10,7 +10,17 @@ export interface ActivityRecord {
   timestamp: number; // timestamp: Date.now() in milliseconds
   count: number;
   userId?: string;
+  taskId?: string;
+  isFocused?: boolean;
 }
+export type ActivitySetting = {
+  accessibilityPermission: boolean;
+  screenRecordingPermission: boolean;
+  blockedDomains: string[];
+  blockedApps: string[];
+  isFocusMode: boolean;
+  taskId?: string;
+};
 
 export interface ApplicationDurationReport {
   applicationName: string;

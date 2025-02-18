@@ -15,10 +15,9 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useConfirmationDialog } from "@/components/providers/ConfirmationDialog";
 import { ItemDetailDialog } from "./ItemDetailDialog";
-
-import { useTracking } from "@/hooks/useTracking";
 import { useAtomValue } from "jotai";
 import { isFocusModeAtom } from "@/context/activity";
+import { trpcClient } from "@/utils/trpc";
 
 interface CardProps {
   title: string;
@@ -45,7 +44,7 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
     const { data: timeEntries = [] } = useTimeEntriesForItem(id);
     const { toast } = useToast();
     const { confirm } = useConfirmationDialog();
-    const { startTracking } = useTracking();
+
     const isFocusMode = useAtomValue(isFocusModeAtom);
     useEffect(() => {
       if (!timeEntries.length) return;
@@ -80,7 +79,10 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
         start_time: new Date().toISOString(),
         is_focus_mode: isFocusMode,
       });
-      startTracking();
+      trpcClient.updateActivitySettings.mutate({
+        taskId: id,
+        isFocusMode,
+      });
     };
 
     const handleStopTracking = () => {

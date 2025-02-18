@@ -11,8 +11,7 @@ import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { useAtomValue } from "jotai";
 import { selectedBoardIdAtom } from "@/context/board";
-
-import { useTracking } from "@/hooks/useTracking";
+import { trpcClient } from "@/utils/trpc";
 
 export function BottomSideBar() {
   const [open, setOpen] = useState(false);
@@ -23,7 +22,7 @@ export function BottomSideBar() {
   const { data: activeTimeEntry, isLoading } = useActiveTimeEntry();
   const updateTimeEntry = useUpdateTimeEntryMutation();
   const createTimeEntry = useCreateTimeEntryMutation();
-  const { startTracking } = useTracking();
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -109,7 +108,10 @@ export function BottomSideBar() {
         start_time: new Date().toISOString(),
         is_focus_mode: isFocusMode,
       });
-      startTracking();
+      trpcClient.updateActivitySettings.mutate({
+        taskId: selectedItemId,
+        isFocusMode,
+      });
       toast({
         title: "Time Entry Started",
         description: "New time entry has been started.",

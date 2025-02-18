@@ -19,7 +19,7 @@ describe("calculateDurationsReport", () => {
     platform?: string;
     count?: number;
   }): ActivityRecord => ({
-    id: timestamp,
+    activityId: timestamp,
     ownerPath: `/path/to/${ownerName}`,
     ownerProcessId: Math.floor(Math.random() * 1000),
     timestamp,
@@ -49,7 +49,7 @@ describe("calculateDurationsReport", () => {
     const records: ActivityRecord[] = [
       {
         platform: "windows",
-        id: 66440,
+        activityId: 66440,
         title: "Windows Default Lock Screen",
         ownerPath: "C:\\Windows\\SystemApps\\Microsoft.LockApp_cw5n1h2txyewy\\LockApp.exe",
         ownerProcessId: 9848,
@@ -59,7 +59,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 394852,
+        activityId: 394852,
         title: "ReportBuilder.ts - itracksy - Visual Studio Code",
         ownerPath: "C:\\Users\\hung\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
         ownerProcessId: 9548,
@@ -69,7 +69,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 394852,
+        activityId: 394852,
         title: "ActivityStorage.test.ts - itracksy - Visual Studio Code",
         ownerPath: "C:\\Users\\hung\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
         ownerProcessId: 9548,
@@ -79,7 +79,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 394852,
+        activityId: 394852,
         title: "ActivityStorage.ts - itracksy - Visual Studio Code",
         ownerPath: "C:\\Users\\hung\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
         ownerProcessId: 9548,
@@ -89,7 +89,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 1114292,
+        activityId: 1114292,
         title: "Google Chrome",
         ownerPath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
         ownerProcessId: 8100,
@@ -99,7 +99,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 1312250,
+        activityId: 1312250,
         title: "iTracksy",
         ownerPath: "C:\\Users\\hung\\itracksy\\node_modules\\electron\\dist\\electron.exe",
         ownerProcessId: 9264,
@@ -109,7 +109,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 1181454,
+        activityId: 1181454,
         title: "Developer Tools - http://localhost:5173/",
         ownerPath: "C:\\Users\\hung\\itracksy\\node_modules\\electron\\dist\\electron.exe",
         ownerProcessId: 9264,
@@ -119,7 +119,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 852966,
+        activityId: 852966,
         title: "youtube.com/feed/subscriptions - Google Chrome",
         ownerPath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
         ownerProcessId: 8100,
@@ -129,7 +129,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 852966,
+        activityId: 852966,
         title: "Subscriptions - YouTube - Google Chrome",
         ownerPath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
         ownerProcessId: 8100,
@@ -140,7 +140,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 394852,
+        activityId: 394852,
         title: "window-listeners.ts - itracksy - Visual Studio Code",
         ownerPath: "C:\\Users\\hung\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
         ownerProcessId: 9548,
@@ -150,7 +150,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 852966,
+        activityId: 852966,
         title: "New Tab - Google Chrome",
         ownerPath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
         ownerProcessId: 8100,
@@ -160,7 +160,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 852966,
+        activityId: 852966,
         title: "Sign up | Miro | The Visual Workspace for Innovation - Google Chrome",
         ownerPath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
         ownerProcessId: 8100,
@@ -170,7 +170,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 394852,
+        activityId: 394852,
         title: "helper.ts - itracksy - Visual Studio Code",
         ownerPath: "C:\\Users\\hung\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
         ownerProcessId: 9548,
@@ -180,7 +180,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 394852,
+        activityId: 394852,
         title: "window-listerners.test.ts - itracksy - Visual Studio Code",
         ownerPath: "C:\\Users\\hung\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
         ownerProcessId: 9548,
@@ -190,7 +190,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 852966,
+        activityId: 852966,
         title: "(80) Subscriptions - YouTube - Google Chrome",
         ownerPath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
         ownerProcessId: 8100,
@@ -201,7 +201,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 852966,
+        activityId: 852966,
         title: "GitHub - Google Chrome",
         ownerPath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
         ownerProcessId: 8100,
@@ -211,7 +211,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 852966,
+        activityId: 852966,
         title: "Sign up | Miro | The Visual Workspace for Innovation - Google Chrome",
         ownerPath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
         ownerProcessId: 8100,
@@ -222,7 +222,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 394852,
+        activityId: 394852,
         title: "● helper.ts - itracksy - Visual Studio Code",
         ownerPath: "C:\\Users\\hung\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
         ownerProcessId: 9548,
@@ -232,7 +232,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 2164350,
+        activityId: 2164350,
         title: "iTracksy",
         ownerPath: "C:\\Users\\hung\\itracksy\\node_modules\\electron\\dist\\electron.exe",
         ownerProcessId: 2932,
@@ -242,7 +242,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 1574328,
+        activityId: 1574328,
         title: "Developer Tools - http://localhost:5173/",
         ownerPath: "C:\\Users\\hung\\itracksy\\node_modules\\electron\\dist\\electron.exe",
         ownerProcessId: 2932,
@@ -252,7 +252,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 65906,
+        activityId: 65906,
         title: "Program Manager",
         ownerPath: "C:\\Windows\\explorer.exe",
         ownerProcessId: 6292,
@@ -262,7 +262,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 394852,
+        activityId: 394852,
         title:
           "window-listerners.test.ts (Untracked) (window-listerners.test.ts) - itracksy - Visual Studio Code",
         ownerPath: "C:\\Users\\hung\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
@@ -273,7 +273,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 394852,
+        activityId: 394852,
         title: "ActivityStorage.test.ts - itracksy - Visual Studio Code",
         ownerPath: "C:\\Users\\hung\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
         ownerProcessId: 9548,
@@ -283,7 +283,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 394852,
+        activityId: 394852,
         title: "jest.config.ts - itracksy - Visual Studio Code",
         ownerPath: "C:\\Users\\hung\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
         ownerProcessId: 9548,
@@ -293,7 +293,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 394852,
+        activityId: 394852,
         title: "window-listeners.ts - itracksy - Visual Studio Code",
         ownerPath: "C:\\Users\\hung\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
         ownerProcessId: 9548,
@@ -303,7 +303,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 394852,
+        activityId: 394852,
         title: "helper.ts - itracksy - Visual Studio Code",
         ownerPath: "C:\\Users\\hung\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
         ownerProcessId: 9548,
@@ -313,7 +313,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 394852,
+        activityId: 394852,
         title: "ReportBuilder.ts - itracksy - Visual Studio Code",
         ownerPath: "C:\\Users\\hung\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
         ownerProcessId: 9548,
@@ -323,7 +323,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 394852,
+        activityId: 394852,
         title: "● ReportBuilder.ts - itracksy - Visual Studio Code",
         ownerPath: "C:\\Users\\hung\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
         ownerProcessId: 9548,
@@ -333,7 +333,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 394852,
+        activityId: 394852,
         title: "ReportBuilder.test.ts - itracksy - Visual Studio Code",
         ownerPath: "C:\\Users\\hung\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
         ownerProcessId: 9548,
@@ -343,7 +343,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 394852,
+        activityId: 394852,
         title: "● ReportBuilder.test.ts - itracksy - Visual Studio Code",
         ownerPath: "C:\\Users\\hung\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
         ownerProcessId: 9548,
@@ -353,7 +353,7 @@ describe("calculateDurationsReport", () => {
       },
       {
         platform: "windows",
-        id: 394852,
+        activityId: 394852,
         title: "ReportBuilder.test.ts - itracksy - Visual Studio Code",
         ownerPath: "C:\\Users\\hung\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
         ownerProcessId: 9548,

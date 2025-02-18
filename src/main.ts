@@ -157,15 +157,6 @@ interface ElectronWindow {
   minimize: () => Promise<void>;
   maximize: () => Promise<void>;
   close: () => Promise<void>;
-  startTracking: (params: {
-    accessibilityPermission: boolean;
-    screenRecordingPermission: boolean;
-    blockedDomains: string[];
-    blockedApps: string[];
-    isFocusMode: boolean;
-  }) => Promise<void>;
-  clearActivities: () => Promise<void>;
-  getActivities: () => Promise<ActivityRecord[]>;
   updateTrayTitle: (title: string) => Promise<void>;
   setUserInformation: (params: { userId: string; sessionId?: string }) => Promise<void>;
   getAppVersion: () => Promise<string>;

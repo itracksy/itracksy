@@ -20,7 +20,7 @@ describe("mergeActivityRecord", () => {
     const activities: ActivityRecord[] = [
       {
         platform: "darwin",
-        id: 1,
+        activityId: 1,
         title: "Test Window",
         ownerPath: "/test/path",
         ownerProcessId: 123,
@@ -30,7 +30,7 @@ describe("mergeActivityRecord", () => {
       },
       {
         platform: "darwin",
-        id: 1,
+        activityId: 1,
         title: "Test Window",
         ownerPath: "/test/path",
         ownerProcessId: 123,
@@ -40,7 +40,7 @@ describe("mergeActivityRecord", () => {
       },
       {
         platform: "darwin",
-        id: 2, // Different ID
+        activityId: 2, // Different ID
         title: "Another Window",
         ownerPath: "/test/path2",
         ownerProcessId: 456,
@@ -54,7 +54,7 @@ describe("mergeActivityRecord", () => {
 
     expect(result).toHaveLength(2);
     expect(result[0].count).toBe(2); // First two records should be merged
-    expect(result[1].id).toBe(2); // Last record should remain separate
+    expect(result[1].activityId).toBe(2); // Last record should remain separate
   });
 
   it("should not merge records more than 15 minutes apart", () => {
@@ -62,7 +62,7 @@ describe("mergeActivityRecord", () => {
     const activities: ActivityRecord[] = [
       {
         platform: "darwin",
-        id: 1,
+        activityId: 1,
         title: "Test Window",
         ownerPath: "/test/path",
         ownerProcessId: 123,
@@ -72,7 +72,7 @@ describe("mergeActivityRecord", () => {
       },
       {
         platform: "darwin",
-        id: 1,
+        activityId: 1,
         title: "Test Window",
         ownerPath: "/test/path",
         ownerProcessId: 123,
@@ -93,7 +93,7 @@ describe("mergeActivityRecord", () => {
     const activities = [
       {
         platform: "macos",
-        id: 8657,
+        activityId: 8657,
         title: "itracksy — ActivityStorage.ts",
         ownerPath: "/Applications/Windsurf.app",
         ownerProcessId: 56949,
@@ -105,7 +105,7 @@ describe("mergeActivityRecord", () => {
       },
       {
         platform: "macos",
-        id: 8657,
+        activityId: 8657,
         title: "itracksy — ActivityStorage.test.ts",
         ownerPath: "/Applications/Windsurf.app",
         ownerProcessId: 56949,
@@ -117,7 +117,7 @@ describe("mergeActivityRecord", () => {
       },
       {
         platform: "macos",
-        id: 18795,
+        activityId: 18795,
         title:
           "itracksy — npm start — Electron Helper (Renderer) ◂ npm start TERM_PROGRAM=Apple_Terminal SHELL=/bin/zsh — 80×24",
         ownerPath: "/System/Applications/Utilities/Terminal.app",
@@ -130,7 +130,7 @@ describe("mergeActivityRecord", () => {
       },
       {
         platform: "macos",
-        id: 18743,
+        activityId: 18743,
         title: "itracksy — ActivityStorage.ts",
         ownerPath: "/Applications/Windsurf.app",
         ownerProcessId: 60395,
@@ -142,7 +142,7 @@ describe("mergeActivityRecord", () => {
       },
       {
         platform: "macos",
-        id: 18795,
+        activityId: 18795,
         title:
           "itracksy — npm start — Electron Helper (Renderer) ◂ npm start TERM_PROGRAM=Apple_Terminal SHELL=/bin/zsh — 80×24",
         ownerPath: "/System/Applications/Utilities/Terminal.app",
@@ -155,7 +155,7 @@ describe("mergeActivityRecord", () => {
       },
       {
         platform: "macos",
-        id: 18795,
+        activityId: 18795,
         title:
           "itracksy — npm start — Electron Helper (Renderer) ◂ npm start TERM_PROGRAM=Apple_Terminal SHELL=/bin/zsh — 80×24",
         ownerPath: "/System/Applications/Utilities/Terminal.app",
@@ -168,7 +168,7 @@ describe("mergeActivityRecord", () => {
       },
       {
         platform: "macos",
-        id: 18795,
+        activityId: 18795,
         title:
           "itracksy — npm start — main ◂ npm start TERM_PROGRAM=Apple_Terminal SHELL=/bin/zsh — 80×24",
         ownerPath: "/System/Applications/Utilities/Terminal.app",
@@ -181,7 +181,7 @@ describe("mergeActivityRecord", () => {
       },
       {
         platform: "macos",
-        id: 18795,
+        activityId: 18795,
         title:
           "itracksy — npm start — Electron Helper (Renderer) ◂ npm start TERM_PROGRAM=Apple_Terminal SHELL=/bin/zsh — 80×24",
         ownerPath: "/System/Applications/Utilities/Terminal.app",
@@ -194,7 +194,7 @@ describe("mergeActivityRecord", () => {
       },
       {
         platform: "macos",
-        id: 18795,
+        activityId: 18795,
         title:
           "itracksy — npm start — main ◂ npm start TERM_PROGRAM=Apple_Terminal SHELL=/bin/zsh — 80×24",
         ownerPath: "/System/Applications/Utilities/Terminal.app",
@@ -207,7 +207,7 @@ describe("mergeActivityRecord", () => {
       },
       {
         platform: "macos",
-        id: 18795,
+        activityId: 18795,
         title:
           "itracksy — npm start — Electron Helper (Renderer) ◂ npm start TERM_PROGRAM=Apple_Terminal SHELL=/bin/zsh — 80×24",
         ownerPath: "/System/Applications/Utilities/Terminal.app",
@@ -220,7 +220,7 @@ describe("mergeActivityRecord", () => {
       },
       {
         platform: "macos",
-        id: 18795,
+        activityId: 18795,
         title:
           "itracksy — npm start — Electron Helper (Renderer) ◂ npm start TERM_PROGRAM=Apple_Terminal SHELL=/bin/zsh — 80×24",
         ownerPath: "/System/Applications/Utilities/Terminal.app",
@@ -233,7 +233,7 @@ describe("mergeActivityRecord", () => {
       },
       {
         platform: "macos",
-        id: 18795,
+        activityId: 18795,
         title:
           "itracksy — npm start — Electron Helper (Renderer) ◂ npm start TERM_PROGRAM=Apple_Terminal SHELL=/bin/zsh — 80×24",
         ownerPath: "/System/Applications/Utilities/Terminal.app",
@@ -246,7 +246,7 @@ describe("mergeActivityRecord", () => {
       },
       {
         platform: "macos",
-        id: 18795,
+        activityId: 18795,
         title:
           "itracksy — npm start — Electron Helper (Renderer) ◂ npm start TERM_PROGRAM=Apple_Terminal SHELL=/bin/zsh — 80×24",
         ownerPath: "/System/Applications/Utilities/Terminal.app",
@@ -268,7 +268,7 @@ describe("mergeActivityRecord", () => {
     const activities = [
       {
         count: 21,
-        id: 8657,
+        activityId: 8657,
         ownerBundleId: undefined,
         ownerName: "Windsurf",
         ownerPath: "/Applications/Windsurf.app",
@@ -280,7 +280,7 @@ describe("mergeActivityRecord", () => {
       },
       {
         count: 2,
-        id: 8657,
+        activityId: 8657,
         ownerBundleId: undefined,
         ownerName: "Windsurf",
         ownerPath: "/Applications/Windsurf.app",
@@ -292,7 +292,7 @@ describe("mergeActivityRecord", () => {
       },
       {
         count: 4,
-        id: 18795,
+        activityId: 18795,
         ownerBundleId: undefined,
         ownerName: "Terminal",
         ownerPath: "/System/Applications/Utilities/Terminal.app",
@@ -305,7 +305,7 @@ describe("mergeActivityRecord", () => {
       },
       {
         count: 1,
-        id: 18743,
+        activityId: 18743,
         ownerBundleId: undefined,
         ownerName: "Windsurf",
         ownerPath: "/Applications/Windsurf.app",
@@ -317,7 +317,7 @@ describe("mergeActivityRecord", () => {
       },
       {
         count: 18,
-        id: 18795,
+        activityId: 18795,
         ownerBundleId: undefined,
         ownerName: "Terminal",
         ownerPath: "/System/Applications/Utilities/Terminal.app",
@@ -330,7 +330,7 @@ describe("mergeActivityRecord", () => {
       },
       {
         count: 1,
-        id: 18795,
+        activityId: 18795,
         ownerBundleId: undefined,
         ownerName: "Terminal",
         ownerPath: "/System/Applications/Utilities/Terminal.app",
@@ -343,7 +343,7 @@ describe("mergeActivityRecord", () => {
       },
       {
         count: 1,
-        id: 18795,
+        activityId: 18795,
         ownerBundleId: undefined,
         ownerName: "Terminal",
         ownerPath: "/System/Applications/Utilities/Terminal.app",
@@ -356,7 +356,7 @@ describe("mergeActivityRecord", () => {
       },
       {
         count: 1,
-        id: 18795,
+        activityId: 18795,
         ownerBundleId: undefined,
         ownerName: "Terminal",
         ownerPath: "/System/Applications/Utilities/Terminal.app",
@@ -369,7 +369,7 @@ describe("mergeActivityRecord", () => {
       },
       {
         count: 7,
-        id: 18795,
+        activityId: 18795,
         ownerBundleId: undefined,
         ownerName: "Terminal",
         ownerPath: "/System/Applications/Utilities/Terminal.app",

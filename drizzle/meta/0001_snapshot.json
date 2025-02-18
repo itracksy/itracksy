@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "78c60b45-33c9-4d49-bbfe-d0aba7fc62e3",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "67bf27c6-1b68-4817-bd3f-1a4c3f6518da",
+  "prevId": "78c60b45-33c9-4d49-bbfe-d0aba7fc62e3",
   "tables": {
     "activities": {
       "name": "activities",
@@ -80,7 +80,7 @@
         },
         "task_id": {
           "name": "task_id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false

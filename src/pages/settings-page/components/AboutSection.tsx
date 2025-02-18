@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ExternalLinkIcon, RefreshCwIcon, ScrollTextIcon, Trash2Icon } from "lucide-react";
+import { trpcClient } from "@/utils/trpc";
 
 export function AboutSection() {
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
@@ -40,7 +41,7 @@ export function AboutSection() {
   };
 
   const handleClearActivities = async () => {
-    await window.electronWindow.clearActivities();
+    await trpcClient.clearActivities.mutate();
   };
 
   return (
@@ -86,7 +87,7 @@ export function AboutSection() {
           </DialogHeader>
           <ScrollArea className="h-[75vh] w-full rounded-md border p-4">
             <div className="w-full">
-              <pre className="font-mono text-xs whitespace-pre-wrap break-words">{logContent}</pre>
+              <pre className="whitespace-pre-wrap break-words font-mono text-xs">{logContent}</pre>
             </div>
           </ScrollArea>
         </DialogContent>

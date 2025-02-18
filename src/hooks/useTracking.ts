@@ -9,7 +9,7 @@ import {
 } from "@/context/activity";
 import { useToast } from "./use-toast";
 import { useActiveTimeEntry } from "@/services/hooks/useTimeEntryQueries";
-
+import { trpcClient } from "@/utils/trpc";
 export const useTracking = () => {
   const [isTracking, setIsTracking] = useAtom(isTrackingAtom);
   const blockedDomains = useAtomValue(blockedDomainsAtom);
@@ -20,12 +20,13 @@ export const useTracking = () => {
   const { toast } = useToast();
   const startTracking = useCallback(async () => {
     try {
-      window.electronWindow.startTracking({
+      trpcClient.startTracking.mutate({
         accessibilityPermission,
         screenRecordingPermission,
         blockedDomains,
         blockedApps,
         isFocusMode: activeTimeEntry?.is_focus_mode ?? false,
+        taskId: activeTimeEntry?.item_id,
       });
 
       setIsTracking(true);
@@ -42,6 +43,7 @@ export const useTracking = () => {
   const stopTracking = useCallback(() => {
     // Clear existing interval
     // Update tracking state
+    trpcClient.stopTracking.mutate();
     setIsTracking(false);
   }, [setIsTracking]);
 
