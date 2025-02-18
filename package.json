@@ -29,8 +29,7 @@
     "db": "supabase gen types typescript --project-id vvjsycgvzugdktxsjhnl --schema public > src/lib/schema.ts",
     "debug-make": "DEBUG=electron-forge:* npm run make",
     "db:generate": "drizzle-kit generate",
-    "db:studio": "drizzle-kit studio",
-    "db:migrate": "tsx src/db/migrate.ts"
+    "db:studio": "drizzle-kit studio"
   },
   "author": "HungHoang <hth321@gmail.com>",
   "license": "MIT",
