@@ -32,7 +32,7 @@ export class ServerLogger {
     this.sessionId = uuidv4();
     const userDataPath = app.getPath("userData");
     this.logPath = path.join(userDataPath, "logs.txt");
-
+    console.log("Log path:", this.logPath);
     // Initialize Axiom client if tokens are available
     if (config.axiomToken && config.axiomOrgId) {
       import("@axiomhq/axiom-node").then(({ Client }) => {
@@ -153,10 +153,10 @@ export class ServerLogger {
 
   async clearLogFile(): Promise<void> {
     try {
-      await fs.promises.writeFile(this.logPath, '', { encoding: 'utf-8' });
-      this.debug('[ServerLogger] Log file cleared successfully');
+      await fs.promises.writeFile(this.logPath, "", { encoding: "utf-8" });
+      this.debug("[ServerLogger] Log file cleared successfully");
     } catch (error) {
-      this.error('[ServerLogger] Failed to clear log file', error);
+      this.error("[ServerLogger] Failed to clear log file", error);
       throw error;
     }
   }

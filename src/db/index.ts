@@ -1,8 +1,9 @@
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
+import { getDatabasePath } from "../utils/paths";
 
 const client = createClient({
-  url: "file:local.db",
+  url: getDatabasePath(),
 });
 const db = drizzle(client);
 

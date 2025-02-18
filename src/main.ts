@@ -113,7 +113,7 @@ app.whenReady().then(async () => {
   } catch (error) {
     logger.error("Failed to initialize database:", error);
   }
-  
+
   await createTray();
   createWindow();
 });
