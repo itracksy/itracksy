@@ -44,7 +44,7 @@ export const initializeDatabase = async () => {
     const migrationsPath = app.isPackaged
       ? path.join(process.resourcesPath, "drizzle")
       : path.join(app.getAppPath(), "drizzle");
-    
+
     logger.info("Migrations folder path:", migrationsPath);
     if (!fs.existsSync(migrationsPath)) {
       logger.error("Migrations folder not found at:", migrationsPath);

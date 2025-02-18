@@ -21,6 +21,11 @@ iTracksy is a powerful desktop application for tracking your activities and mana
 - [SWC](https://swc.rs) - Super-fast TypeScript/JavaScript compiler
 - [tRPC](https://trpc.io) - End-to-end typesafe APIs with [electron-trpc](https://github.com/jsonnull/electron-trpc) for main-renderer communication
 
+### Database 🗄️
+
+- [Drizzle ORM](https://orm.drizzle.team) - TypeScript ORM with a focus on type safety and developer experience
+- [libSQL](https://github.com/libsql/libsql-client-ts) - TypeScript client for SQLite-compatible databases
+
 ### DX 🛠️
 
 - [TypeScript 5](https://www.typescriptlang.org) - JavaScript with syntax for types
@@ -178,10 +183,27 @@ npm run make
 The application uses Electron Forge for building and packaging. Key build configurations include:
 
 - Native modules (`*.node` files) are automatically unpacked from the asar archive to ensure proper functionality
-- External dependencies like `get-windows` and `better-sqlite3` are handled specially during packaging
+- External dependencies like `get-windows` and `libsql` are handled specially during packaging
 - Resources are included in the final build from the `./resources` directory
 
 For more details about the build configuration, see `forge.config.ts`.
+
+## Database Migrations
+
+The application uses Drizzle ORM for database management and handles migrations in both development and production environments:
+
+- Migration files are bundled with the app in the `drizzle` directory
+- The app automatically runs migrations on startup through `initializeDatabase`
+- Migrations are executed from the app's resources directory in production builds
+- The database file is stored in the user's application data directory
+
+```bash
+# Generate new migrations
+npm run db:generate
+
+# View and manage database with Drizzle Studio
+npm run db:studio
+```
 
 ## Development Scripts
 

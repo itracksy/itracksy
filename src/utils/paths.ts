@@ -3,7 +3,7 @@ import path from "path";
 
 export const getDatabasePath = () => {
   // In development
-  if (app.isPackaged) {
+  if (app && app.isPackaged) {
     // In production, store in user data directory
     return `file:${path.join(app.getPath("userData"), "local.db")}`;
   }
