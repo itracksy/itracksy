@@ -24,9 +24,9 @@ let nativeModuleDependenciesToPackage: string[] = [];
 // base on this solution https://github.com/electron/forge/issues/3738
 export const EXTERNAL_DEPENDENCIES = [
   "electron-squirrel-startup",
-  "better-sqlite3",
   "get-windows",
   "zod",
+  "@libsql/client",
 ];
 
 // Base packager configuration

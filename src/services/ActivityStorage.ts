@@ -3,7 +3,8 @@ import fs from "fs";
 import { app } from "electron";
 import { ActivityRecord } from "@/types/activity";
 import { LIMIT_TIME_APART, MERGING_BATCH_SIZE } from "../config/tracking";
-import mydb from "../lib/db";
+import db from "../db";
+import { activities } from "../db/schema";
 
 const CONFIG = {
   headers: [
@@ -114,25 +115,18 @@ const addActivity = async (activity: ActivityRecord): Promise<void> => {
 
   // Store in SQLite database
   try {
-    const stmt = mydb.prepare(`
-      INSERT OR REPLACE INTO activities (
-        platform, id, title, owner_path, owner_process_id,
-        owner_bundle_id, owner_name, url, timestamp, count
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    stmt.run(
-      activity.platform,
-      activity.id,
-      activity.title,
-      activity.ownerPath,
-      activity.ownerProcessId,
-      activity.ownerBundleId,
-      activity.ownerName,
-      activity.url,
-      activity.timestamp,
-      activity.count
-    );
+    await db.insert(activities).values({
+      platform: activity.platform,
+      id: activity.id,
+      title: activity.title,
+      ownerPath: activity.ownerPath,
+      ownerProcessId: activity.ownerProcessId,
+      ownerBundleId: activity.ownerBundleId,
+      ownerName: activity.ownerName,
+      url: activity.url,
+      timestamp: activity.timestamp,
+      count: activity.count,
+    });
   } catch (error) {
     console.error("Failed to store activity in SQLite:", error);
   }
@@ -204,43 +198,16 @@ const _getActivities = async (date?: string): Promise<ActivityRecord[]> => {
 
 const getActivities = async (date?: string): Promise<ActivityRecord[]> => {
   try {
-    let query = `
-      SELECT 
-        platform,
-        id,
-        title,
-        owner_path as ownerPath,
-        owner_process_id as ownerProcessId,
-        owner_bundle_id as ownerBundleId,
-        owner_name as ownerName,
-        url,
-        timestamp,
-        count
-      FROM activities
-    `;
+    const results = await db.select().from(activities).all();
 
-    const params: any[] = [];
-    if (date) {
-      query += ` WHERE DATE(timestamp / 1000, 'unixepoch') = ?`;
-      params.push(date);
-    }
-
-    query += ` ORDER BY timestamp DESC`;
-
-    const stmt = mydb.prepare(query);
-    const results = date ? stmt.all(...params) : stmt.all();
-    console.log("results", results);
-    return results.map((row: any) => ({
+    return results.map((row) => ({
       ...row,
-      id: Number(row.id),
-      ownerProcessId: Number(row.ownerProcessId),
-      timestamp: Number(row.timestamp),
-      count: Number(row.count),
       ownerBundleId: row.ownerBundleId || undefined,
       url: row.url || undefined,
+      userId: row.userId || undefined,
     }));
   } catch (error) {
-    console.error("Failed to fetch activities from SQLite:", error);
+    console.error("Failed to get activities:", error);
     return [];
   }
 };
