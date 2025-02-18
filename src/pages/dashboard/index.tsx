@@ -29,7 +29,11 @@ export default function DashboardPage() {
     screenRecordingPermissionAtom
   );
 
-  const { data: activities, isLoading } = useQuery({
+  const {
+    data: activities,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["activityWindow"],
     queryFn: async () => {
       const activities = await trpcClient.getActivities.query();
@@ -37,6 +41,9 @@ export default function DashboardPage() {
     },
     refetchInterval: 10000,
   });
+  console.log("activities", activities);
+  console.log("isLoading", isLoading);
+  console.log("error", error);
 
   useEffect(() => {
     if (!activities) {

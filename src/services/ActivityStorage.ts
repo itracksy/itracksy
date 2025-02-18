@@ -5,6 +5,7 @@ import { ActivityRecord } from "@/types/activity";
 import { LIMIT_TIME_APART, MERGING_BATCH_SIZE } from "../config/tracking";
 import db from "../db";
 import { activities } from "../db/schema";
+import { logger } from "../helpers/logger";
 
 const CONFIG = {
   headers: [
@@ -111,7 +112,6 @@ const addActivity = async (activity: ActivityRecord): Promise<void> => {
   if (!fs.existsSync(filePath)) {
     fs.writeFileSync(filePath, CONFIG.headers.join(",") + "\n");
   }
-  console.log("Adding activity:", activity);
 
   // Store in SQLite database
   try {
@@ -199,7 +199,7 @@ const _getActivities = async (date?: string): Promise<ActivityRecord[]> => {
 const getActivities = async (date?: string): Promise<ActivityRecord[]> => {
   try {
     const results = await db.select().from(activities).all();
-
+    logger.info("[getActivities]Got activities:", results);
     return results.map((row) => ({
       ...row,
       ownerBundleId: row.ownerBundleId || undefined,
@@ -207,7 +207,7 @@ const getActivities = async (date?: string): Promise<ActivityRecord[]> => {
       userId: row.userId || undefined,
     }));
   } catch (error) {
-    console.error("Failed to get activities:", error);
+    logger.error("[getActivities] Failed to get activities:", error);
     return [];
   }
 };
