@@ -104,6 +104,8 @@ out/
 
 # SQLite database
 data/database.sqlite
+local.db
+*.db
 *.sqlite-journal
 
 # Editor directories and files

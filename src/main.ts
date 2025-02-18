@@ -4,6 +4,7 @@ import { app, BrowserWindow, Tray, Menu, nativeImage, Notification } from "elect
 import { createIPCHandler } from "electron-trpc/main";
 import registerListeners from "./helpers/ipc/listeners-register";
 import { router } from "./api";
+import { initializeDatabase } from "./db/init";
 
 import { ActivityRecord } from "./types/activity";
 import { logger } from "./helpers/logger";
@@ -106,6 +107,13 @@ function createWindow(): void {
 
 // Initialize app when ready
 app.whenReady().then(async () => {
+  try {
+    await initializeDatabase();
+    logger.info("Database initialized successfully");
+  } catch (error) {
+    logger.error("Failed to initialize database:", error);
+  }
+  
   await createTray();
   createWindow();
 });
