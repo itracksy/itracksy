@@ -2,6 +2,7 @@
 
 iTracksy is a powerful desktop application for tracking your activities and managing projects efficiently. It provides real-time window activity tracking, project management with boards, and detailed time analytics to help you understand how you spend your time.
 
+// Todo: Add screenshot
 ![Demo GIF](https://github.com/hunght/iTracksy/blob/main/images/demo.gif)
 
 ## Features
@@ -120,63 +121,11 @@ const activities = await trpcClient.getActivities.query();
 
 For more details about the tRPC integration, see the [electron-trpc documentation](https://github.com/jsonnull/electron-trpc).
 
-## Directory structure
-
-```plaintext
-.
-└── ./src/
-    ├── ./src/assets/
-    │   └── ./src/assets/fonts/
-    ├── ./src/components/
-    │   └── ./src/components/ui/
-    ├── ./src/helpers/
-    │   └── ./src/helpers/ipc/
-    ├── ./src/layout/
-    ├── ./src/lib/
-    ├── ./src/pages/
-    ├── ./src/stories/
-    ├── ./src/style/
-    └── ./src/tests/
-```
-
-- `src/`: Main directory
-  - `assets/`: Store assets like images, fonts, etc.
-  - `components/`: Store UI components
-    - `ui/`: Store Shadcn UI components (this is the default direcotry used by Shadcn UI)
-  - `helpers/`: Store IPC related functions to be called in the renderer process
-    - `ipc/`: Directory to store IPC context and listener functions
-      - Some implementations are already done, like `theme` and `window` for the custom title bar
-  - `layout/`: Directory to store layout components
-  - `lib/`: Store libraries and other utilities
-  - `pages/`: Store app's pages
-  - `stories/`: Store Storybook stories
-  - `style/`: Store global styles
-  - `tests/`: Store tests (from Jest and Playwright)
-
-## Building from Source
-
 ### Prerequisites
 
 - Node.js 18 or later
 - npm 9 or later
 
-### Build Instructions
-
-1. Clone the repository:
-```bash
-git clone https://github.com/hunght/iTracksy.git
-cd iTracksy
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Build the application:
-```bash
-npm run make
-```
 
 ### Build Configuration
 
