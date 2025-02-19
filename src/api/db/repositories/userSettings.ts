@@ -1,9 +1,9 @@
 import db from "..";
 import { blockedDomains, blockedApps } from "../schema";
 import { eq } from "drizzle-orm";
-import { defaultBlockedApps, defaultBlockedDomains } from "../../config/tracking";
+import { defaultBlockedApps, defaultBlockedDomains } from "../../../config/tracking";
 import { getValue, setValue, setMultipleValues } from "./localStorage";
-import { logger } from "../../helpers/logger";
+import { logger } from "../../../helpers/logger";
 
 const USER_SETTINGS_KEYS = {
   accessibilityPermission: "user.accessibilityPermission",
@@ -12,31 +12,34 @@ const USER_SETTINGS_KEYS = {
   currentTaskId: "user.currentTaskId",
   lastUpdateActivity: "user.lastUpdateActivity",
   currentUserId: "user.currentUserId",
+  isTracking: "user.isTracking",
 };
 
-export async function getUserSettings(userId: string) {
+export async function getUserSettings() {
   const [
     accessibilityPermission,
     screenRecordingPermission,
     isFocusMode,
     currentTaskId,
     lastUpdateActivity,
+    isTracking,
   ] = await Promise.all([
     getValue(USER_SETTINGS_KEYS.accessibilityPermission),
     getValue(USER_SETTINGS_KEYS.screenRecordingPermission),
     getValue(USER_SETTINGS_KEYS.isFocusMode),
     getValue(USER_SETTINGS_KEYS.currentTaskId),
     getValue(USER_SETTINGS_KEYS.lastUpdateActivity),
+    getValue(USER_SETTINGS_KEYS.isTracking),
   ]);
 
   return {
-    userId,
+    userId: getCurrentUserId(),
     accessibilityPermission: accessibilityPermission === "true",
     screenRecordingPermission: screenRecordingPermission === "true",
     isFocusMode: isFocusMode === "true",
     currentTaskId: currentTaskId || null,
     lastUpdateActivity: lastUpdateActivity ? parseInt(lastUpdateActivity) : null,
-    updatedAt: Date.now(),
+    isTracking: isTracking === "true",
   };
 }
 
@@ -66,7 +69,7 @@ export async function setCurrentUserId(supabaseUserId: string): Promise<string> 
       [USER_SETTINGS_KEYS.accessibilityPermission]: "false",
       [USER_SETTINGS_KEYS.screenRecordingPermission]: "false",
       [USER_SETTINGS_KEYS.isFocusMode]: "true",
-      [USER_SETTINGS_KEYS.lastUpdateActivity]: Date.now().toString(),
+      [USER_SETTINGS_KEYS.isTracking]: "false",
     };
 
     await setMultipleValues(defaultSettings);
@@ -93,16 +96,14 @@ export async function setCurrentUserId(supabaseUserId: string): Promise<string> 
   return existingUserId;
 }
 
-export async function updateUserSettings(
-  userId: string,
-  settings: {
-    accessibilityPermission?: boolean;
-    screenRecordingPermission?: boolean;
-    isFocusMode?: boolean;
-    currentTaskId?: string | null;
-    lastUpdateActivity?: number | null;
-  }
-) {
+export async function updateUserSettings(settings: {
+  accessibilityPermission?: boolean;
+  screenRecordingPermission?: boolean;
+  isFocusMode?: boolean;
+  currentTaskId?: string | null;
+  lastUpdateActivity?: number | null;
+  isTracking?: boolean;
+}) {
   const updates: Record<string, string> = {};
 
   if (settings.accessibilityPermission !== undefined) {
@@ -122,42 +123,26 @@ export async function updateUserSettings(
   if (settings.lastUpdateActivity !== undefined) {
     updates[USER_SETTINGS_KEYS.lastUpdateActivity] = settings.lastUpdateActivity?.toString() || "";
   }
-
+  if (settings.isTracking !== undefined) {
+    updates[USER_SETTINGS_KEYS.isTracking] = settings.isTracking.toString();
+  }
   if (Object.keys(updates).length > 0) {
     await setMultipleValues(updates);
   }
 }
 
-// Blocked Domains functions
-export async function getBlockedDomains(userId: string) {
-  return db.select().from(blockedDomains).where(eq(blockedDomains.userId, userId));
-}
+export const getUserBlockedApps = async () => {
+  const result = await db
+    .select()
+    .from(blockedApps)
+    .where(eq(blockedApps.userId, getCurrentUserId()));
+  return result;
+};
 
-export async function addBlockedDomain(userId: string, domain: string) {
-  await db.insert(blockedDomains).values({
-    userId,
-    domain,
-    updatedAt: Date.now(),
-  });
-}
-
-export async function removeBlockedDomain(userId: string, domain: string) {
-  await db.delete(blockedDomains).where(eq(blockedDomains.domain, domain));
-}
-
-// Blocked Apps functions
-export async function getBlockedApps(userId: string) {
-  return db.select().from(blockedApps).where(eq(blockedApps.userId, userId));
-}
-
-export async function addBlockedApp(userId: string, appName: string) {
-  await db.insert(blockedApps).values({
-    userId,
-    appName,
-    updatedAt: Date.now(),
-  });
-}
-
-export async function removeBlockedApp(userId: string, appName: string) {
-  await db.delete(blockedApps).where(eq(blockedApps.appName, appName));
-}
+export const getUserBlockedDomains = async () => {
+  const result = await db
+    .select()
+    .from(blockedDomains)
+    .where(eq(blockedDomains.userId, getCurrentUserId()));
+  return result;
+};

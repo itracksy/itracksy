@@ -1,6 +1,6 @@
 import invariant from "tiny-invariant";
 import { forwardRef, useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+
 import { CONTENT_TYPES } from "@/types";
 import { TrashIcon, PlayIcon, StopIcon, TimerIcon } from "@radix-ui/react-icons";
 import { useDeleteItemMutation, useUpdateItemMutation } from "@/services/hooks/useBoardQueries";
@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useConfirmationDialog } from "@/components/providers/ConfirmationDialog";
 import { ItemDetailDialog } from "./ItemDetailDialog";
 import { useAtomValue } from "jotai";
-import { isFocusModeAtom } from "@/context/activity";
+
 import { trpcClient } from "@/utils/trpc";
 
 interface CardProps {

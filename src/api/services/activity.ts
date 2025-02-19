@@ -1,31 +1,24 @@
 import { ActivityRecord, ActivitySetting } from "@/types/activity";
 import { BrowserWindow, dialog, screen } from "electron";
-import { addActivity } from "../../db/repositories/activities";
+import { addActivity } from "../db/repositories/activities";
 import { TRACKING_INTERVAL } from "../../config/tracking";
 import { extractUrlFromBrowserTitle } from "../../helpers/extractUrlFromBrowserTitle";
 import { logger } from "../../helpers/logger";
+import {
+  getUserBlockedApps,
+  getUserBlockedDomains,
+  getUserSettings,
+} from "@/api/db/repositories/userSettings";
 
 let trackingIntervalId: NodeJS.Timeout | null = null;
 let notificationWindow: BrowserWindow | null = null;
 let breakTimer: NodeJS.Timeout | null = null;
 let lastNotificationTime: number = 0;
 let isNotificationEnabled: boolean = true;
-let activitySettings: ActivitySetting | null = null;
+
 const NOTIFICATION_COOLDOWN = 60 * 1000; // 1 minute in milliseconds
 
-export const updateActivitySettings = (settings: Partial<ActivitySetting>): void => {
-  if (!activitySettings) {
-    return;
-  }
-  activitySettings = { ...activitySettings, ...settings };
-};
-
-export const startTracking = async (params?: ActivitySetting): Promise<void> => {
-  if (params) {
-    activitySettings = params;
-  }
-  logger.debug("[startTracking] Window: Calling startTracking", activitySettings);
-
+export const startTracking = async (): Promise<void> => {
   // Clear any existing interval
   stopTracking();
 
@@ -34,7 +27,9 @@ export const startTracking = async (params?: ActivitySetting): Promise<void> => 
     try {
       const getWindows = await import("get-windows");
       logger.debug("[startTracking] Attempting to get active window");
-
+      const activitySettings = await getUserSettings();
+      const blockedApps = await getUserBlockedApps();
+      const blockedDomains = await getUserBlockedDomains();
       const result = await getWindows.activeWindow(activitySettings ?? undefined);
       if (!result) {
         logger.warn("[startTracking] No active window result returned", { activitySettings });
@@ -44,7 +39,7 @@ export const startTracking = async (params?: ActivitySetting): Promise<void> => 
       const transformedActivities: ActivityRecord = {
         platform: result.platform,
         activityId: result.id,
-        taskId: activitySettings?.currentTaskId,
+        taskId: activitySettings.currentTaskId ?? undefined,
         title: result.title,
         ownerPath: result.owner.path,
         ownerProcessId: result.owner.processId,
@@ -68,13 +63,11 @@ export const startTracking = async (params?: ActivitySetting): Promise<void> => 
         const appName = transformedActivities.ownerName;
         const isBlockedApp =
           appName &&
-          activitySettings.blockedApps.some((app) =>
-            appName.toLowerCase().includes(app.toLowerCase())
-          );
+          blockedApps.some((app) => appName.toLowerCase().includes(app.appName.toLowerCase()));
         const isBlockedDomain =
           url &&
           url.trim().length > 0 &&
-          activitySettings.blockedDomains.some((domain) =>
+          blockedDomains.some(({ domain }) =>
             result.platform === "windows"
               ? domain.includes(url.toLowerCase())
               : url.includes(domain)

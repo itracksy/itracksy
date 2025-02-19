@@ -2,9 +2,9 @@ import { migrate } from "drizzle-orm/libsql/migrator";
 import fs from "fs";
 import path from "path";
 import { app } from "electron";
-import { getDatabasePath } from "../utils/paths";
+import { getDatabasePath } from "../../utils/paths";
 import db from ".";
-import { logger } from "../helpers/logger";
+import { logger } from "../../helpers/logger";
 
 export const initializeDatabase = async () => {
   try {

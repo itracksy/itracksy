@@ -19,16 +19,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { blockedDomainsAtom, blockedAppsAtom, isFocusModeAtom } from "@/context/activity";
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { trpcClient } from "@/utils/trpc";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 export default function SettingsPage() {
   const [currentTheme, setCurrentTheme] = useState<ThemeMode>("light");
-  const [blockedDomains, setBlockedDomains] = useAtom(blockedDomainsAtom);
-  const [blockedApps, setBlockedApps] = useAtom(blockedAppsAtom);
-  const [isFocusMode, setIsFocusMode] = useAtom(isFocusModeAtom);
+
   const [newDomain, setNewDomain] = useState("");
   const [newApp, setNewApp] = useState("");
   const [itemToDelete, setItemToDelete] = useState<{
@@ -36,23 +34,33 @@ export default function SettingsPage() {
     index: number;
   } | null>(null);
 
+  const { data: blockedDomains = [] } = useQuery({
+    queryKey: ["blocked-domains"],
+    queryFn: async () => {
+      const data = await trpcClient.user.getBlockedDomains.query();
+      return data;
+    },
+  });
+  const { data: blockedApps = [] } = useQuery({
+    queryKey: ["blocked-apps"],
+    queryFn: async () => {
+      const data = await trpcClient.user.getBlockedApps.query();
+      return data;
+    },
+  });
+  const { data: activitySettings = null } = useQuery({
+    queryKey: ["activity-settings"],
+    queryFn: async () => {
+      const data = await trpcClient.user.getActivitySettings.query();
+      return data;
+    },
+  });
+
   useEffect(() => {
     getCurrentTheme().then((theme) => {
       setCurrentTheme(theme.local || theme.system);
     });
   }, []);
-
-  useEffect(() => {
-    try {
-      trpcClient.user.updateActivitySettings.mutate({
-        blockedDomains,
-        blockedApps,
-        isFocusMode,
-      });
-    } catch (error) {
-      console.error("SettingsPage: Error updating activity settings", error);
-    }
-  }, [blockedDomains, blockedApps, isFocusMode]);
 
   const handleThemeChange = async (theme: ThemeMode) => {
     await setTheme(theme);
@@ -61,29 +69,25 @@ export default function SettingsPage() {
 
   const handleAddDomain = () => {
     if (newDomain.trim()) {
-      setBlockedDomains([...blockedDomains, newDomain.trim()]);
+      trpcClient.user.addBlockedDomain.mutate(newDomain.trim());
       setNewDomain("");
     }
   };
 
   const handleRemoveDomain = (index: number) => {
-    const updated = [...blockedDomains];
-    updated.splice(index, 1);
-    setBlockedDomains(updated);
+    trpcClient.user.removeBlockedDomain.mutate(blockedDomains[index].domain);
     setItemToDelete(null);
   };
 
   const handleAddApp = () => {
     if (newApp.trim()) {
-      setBlockedApps([...blockedApps, newApp.trim()]);
+      trpcClient.user.addBlockedApp.mutate(newApp.trim());
       setNewApp("");
     }
   };
 
   const handleRemoveApp = (index: number) => {
-    const updated = [...blockedApps];
-    updated.splice(index, 1);
-    setBlockedApps(updated);
+    trpcClient.user.removeBlockedApp.mutate(blockedApps[index].appName);
     setItemToDelete(null);
   };
 
@@ -101,8 +105,8 @@ export default function SettingsPage() {
             <AlertDialogDescription>
               This will remove the {itemToDelete?.type === "domain" ? "domain" : "app"}{" "}
               {itemToDelete?.type === "domain"
-                ? blockedDomains[itemToDelete.index]
-                : blockedApps[index ?? 0]}
+                ? blockedDomains[itemToDelete.index].domain
+                : blockedApps[index ?? 0].appName}
               from your blocked list.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -155,7 +159,15 @@ export default function SettingsPage() {
           <CardDescription>Control your focus mode settings</CardDescription>
         </CardHeader>
         <CardContent className="flex items-center gap-4">
-          <Switch checked={isFocusMode} onCheckedChange={setIsFocusMode} id="focus-mode" />
+          <Switch
+            checked={activitySettings?.isFocusMode}
+            onCheckedChange={() =>
+              trpcClient.user.updateActivitySettings.mutate({
+                isFocusMode: !activitySettings?.isFocusMode,
+              })
+            }
+            id="focus-mode"
+          />
           <label htmlFor="focus-mode">Enable Focus Mode</label>
         </CardContent>
       </Card>
@@ -176,7 +188,7 @@ export default function SettingsPage() {
             <Button onClick={handleAddDomain}>Add</Button>
           </div>
           <div className="flex flex-wrap gap-2">
-            {blockedDomains.map((domain, index) => (
+            {blockedDomains.map(({ domain }, index) => (
               <Badge key={domain} variant="secondary" className="text-sm">
                 {domain}
                 <Cross2Icon
@@ -205,9 +217,9 @@ export default function SettingsPage() {
             <Button onClick={handleAddApp}>Add</Button>
           </div>
           <div className="flex flex-wrap gap-2">
-            {blockedApps.map((app, index) => (
-              <Badge key={app} variant="secondary" className="text-sm">
-                {app}
+            {blockedApps.map(({ appName }, index) => (
+              <Badge key={appName} variant="secondary" className="text-sm">
+                {appName}
                 <Cross2Icon
                   className="ml-2 h-3 w-3 cursor-pointer"
                   onClick={() => setItemToDelete({ type: "app", index })}

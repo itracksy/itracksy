@@ -1,10 +1,10 @@
 import { ActivityRecord } from "@/types/activity";
-import { MERGING_BATCH_SIZE } from "../../config/tracking";
+import { MERGING_BATCH_SIZE } from "../../../config/tracking";
 import db from "..";
 import { activities } from "../schema";
 
 import { gte, desc } from "drizzle-orm";
-import { mergeActivityRecord } from "../../helpers/mergeActivitiRecord";
+import { mergeActivityRecord } from "../../../helpers/mergeActivitiRecord";
 import { getCurrentUserId } from "./userSettings";
 
 const mergeRecords = async (): Promise<void> => {

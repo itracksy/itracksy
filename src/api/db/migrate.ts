@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/libsql";
 import { migrate } from "drizzle-orm/libsql/migrator";
 import { createClient } from "@libsql/client";
-import { getDatabasePath } from "../utils/paths";
+import { getDatabasePath } from "../../utils/paths";
 
 async function main() {
   const client = createClient({
@@ -11,13 +11,13 @@ async function main() {
   const db = drizzle(client);
 
   console.log("Running migrations...");
-  
+
   await migrate(db, {
     migrationsFolder: "drizzle",
   });
 
   console.log("Migrations completed!");
-  
+
   await client.close();
 }
 

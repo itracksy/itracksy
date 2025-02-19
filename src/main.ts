@@ -4,7 +4,7 @@ import { app, BrowserWindow, Tray, Menu, nativeImage, Notification } from "elect
 import { createIPCHandler } from "electron-trpc/main";
 import registerListeners from "./helpers/ipc/listeners-register";
 import { router } from "./api";
-import { initializeDatabase } from "./db/init";
+import { initializeDatabase } from "./api/db/init";
 
 import { logger } from "./helpers/logger";
 

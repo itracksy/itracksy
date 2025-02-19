@@ -1,18 +1,8 @@
 import { z } from "zod";
 import { t } from "../trpc";
-import { clearActivities, getActivities } from "../../db/repositories/activities";
-import { startTracking, updateActivitySettings, stopTracking } from "../services/activity";
-
-const trackingSettingsSchema = z.object({
-  accessibilityPermission: z.boolean(),
-  screenRecordingPermission: z.boolean(),
-  blockedDomains: z.array(z.string()),
-  blockedApps: z.array(z.string()),
-  isFocusMode: z.boolean(),
-  currentTaskId: z.string().optional(),
-});
-
-const updateTrackingSettingsSchema = trackingSettingsSchema.partial();
+import { clearActivities, getActivities } from "../db/repositories/activities";
+import { startTracking, stopTracking } from "../services/activity";
+import { updateUserSettings } from "../db/repositories/userSettings";
 
 export const activityRouter = t.router({
   getActivities: t.procedure.query(async () => {
@@ -25,10 +15,11 @@ export const activityRouter = t.router({
     return { success: true };
   }),
 
-  startTracking: t.procedure.input(trackingSettingsSchema).mutation(async ({ input }) => {
+  startTracking: t.procedure.mutation(async () => {
     try {
-      startTracking(input);
-      return { success: true, settings: input };
+      await startTracking();
+      updateUserSettings({ isTracking: true });
+      return { success: true };
     } catch (error) {
       throw new Error("Failed to start tracking");
     }
@@ -37,18 +28,10 @@ export const activityRouter = t.router({
   stopTracking: t.procedure.mutation(async () => {
     try {
       stopTracking();
+      updateUserSettings({ isTracking: false });
       return { success: true };
     } catch (error) {
       throw new Error("Failed to stop tracking");
-    }
-  }),
-
-  updateSettings: t.procedure.input(updateTrackingSettingsSchema).mutation(async ({ input }) => {
-    try {
-      updateActivitySettings(input);
-      return { success: true, settings: input };
-    } catch (error) {
-      throw new Error("Failed to update tracking settings");
     }
   }),
 });

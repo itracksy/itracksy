@@ -1,3 +1,4 @@
-import { atom } from "jotai";
+import { atomWithStorage } from "jotai/utils";
+import { localKey } from "./localKey";
 
-export const selectedBoardIdAtom = atom<string | null>(null);
+export const selectedBoardIdAtom = atomWithStorage(localKey.BOARD_STORAGE_KEY, "");

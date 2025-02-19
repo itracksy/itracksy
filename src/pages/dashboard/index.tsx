@@ -10,8 +10,7 @@ import TimeBreakdown from "./components/TimeBreakDown";
 import { CategoryMapper } from "@/services/CategoryMapper";
 import { CategoryTreeView } from "./components/CategoryTreeView";
 import { BoardReport } from "./components/BoardReport";
-import { useAtom } from "jotai";
-import { accessibilityPermissionAtom, screenRecordingPermissionAtom } from "@/context/activity";
+
 import { useQuery } from "@tanstack/react-query";
 import { trpcClient } from "@/utils/trpc";
 
@@ -22,12 +21,6 @@ export default function DashboardPage() {
     titles: TitleDurationReport[];
   }>({ applications: [], domains: [], titles: [] });
   const [categoryReport, setCategoryReport] = useState<CategoryDurationReport[]>([]);
-  const [accessibilityPermission, setAccessibilityPermission] = useAtom(
-    accessibilityPermissionAtom
-  );
-  const [screenRecordingPermission, setScreenRecordingPermission] = useAtom(
-    screenRecordingPermissionAtom
-  );
 
   const {
     data: activities,
@@ -36,14 +29,11 @@ export default function DashboardPage() {
   } = useQuery({
     queryKey: ["activityWindow"],
     queryFn: async () => {
-      const activities = await trpcClient.getActivities.query();
+      const activities = await trpcClient.activity.getActivities.query();
       return activities;
     },
     refetchInterval: 10000,
   });
-  console.log("activities", activities);
-  console.log("isLoading", isLoading);
-  console.log("error", error);
 
   useEffect(() => {
     if (!activities) {
