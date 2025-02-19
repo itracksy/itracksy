@@ -15,9 +15,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useConfirmationDialog } from "@/components/providers/ConfirmationDialog";
 import { ItemDetailDialog } from "./ItemDetailDialog";
-import { useAtomValue } from "jotai";
-
 import { trpcClient } from "@/utils/trpc";
+import { useQuery } from "@tanstack/react-query";
 
 interface CardProps {
   title: string;
@@ -45,7 +44,14 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
     const { toast } = useToast();
     const { confirm } = useConfirmationDialog();
 
-    const isFocusMode = useAtomValue(isFocusModeAtom);
+    const { data: activitySettings, isLoading } = useQuery({
+      queryKey: ["user.getActivitySettings"],
+      queryFn: async () => {
+        const data = await trpcClient.user.getActivitySettings.query();
+        return data;
+      },
+    });
+
     useEffect(() => {
       if (!timeEntries.length) return;
 
@@ -77,11 +83,10 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
         item_id: id,
         board_id,
         start_time: new Date().toISOString(),
-        is_focus_mode: isFocusMode,
+        is_focus_mode: activitySettings?.isFocusMode,
       });
       trpcClient.user.updateActivitySettings.mutate({
         currentTaskId: id,
-        isFocusMode,
       });
     };
 

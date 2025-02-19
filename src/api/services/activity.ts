@@ -1,4 +1,4 @@
-import { ActivityRecord, ActivitySetting } from "@/types/activity";
+import { ActivityRecord } from "@/types/activity";
 import { BrowserWindow, dialog, screen } from "electron";
 import { addActivity } from "../db/repositories/activities";
 import { TRACKING_INTERVAL } from "../../config/tracking";
@@ -8,7 +8,7 @@ import {
   getUserBlockedApps,
   getUserBlockedDomains,
   getUserSettings,
-} from "@/api/db/repositories/userSettings";
+} from "../../api/db/repositories/userSettings";
 
 let trackingIntervalId: NodeJS.Timeout | null = null;
 let notificationWindow: BrowserWindow | null = null;

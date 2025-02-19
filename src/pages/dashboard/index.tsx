@@ -21,6 +21,13 @@ export default function DashboardPage() {
     titles: TitleDurationReport[];
   }>({ applications: [], domains: [], titles: [] });
   const [categoryReport, setCategoryReport] = useState<CategoryDurationReport[]>([]);
+  const { data: activitySettings } = useQuery({
+    queryKey: ["user.getActivitySettings"],
+    queryFn: async () => {
+      const data = await trpcClient.user.getActivitySettings.query();
+      return data;
+    },
+  });
 
   const {
     data: activities,
@@ -110,18 +117,22 @@ export default function DashboardPage() {
           <TimeBreakdown
             reports={domainUsageData}
             title="Domain Usage"
-            permissionDisabled={!accessibilityPermission}
+            permissionDisabled={!activitySettings?.accessibilityPermission}
             onEnablePermission={async () => {
-              setAccessibilityPermission(true);
+              trpcClient.user.updateActivitySettings.mutate({
+                accessibilityPermission: true,
+              });
             }}
             className="rounded-lg border border-tracksy-gold/20 bg-white/80 shadow-lg backdrop-blur-sm dark:border-tracksy-gold/10 dark:bg-gray-900/80"
           />
           <TimeBreakdown
             reports={titleUsageData}
             title="Title Usage"
-            permissionDisabled={!screenRecordingPermission}
+            permissionDisabled={!activitySettings?.screenRecordingPermission}
             onEnablePermission={async () => {
-              setScreenRecordingPermission(true);
+              trpcClient.user.updateActivitySettings.mutate({
+                screenRecordingPermission: true,
+              });
             }}
             className="rounded-lg border border-tracksy-gold/20 bg-white/80 shadow-lg backdrop-blur-sm dark:border-tracksy-gold/10 dark:bg-gray-900/80"
           />

@@ -22,11 +22,11 @@ import {
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { trpcClient } from "@/utils/trpc";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function SettingsPage() {
   const [currentTheme, setCurrentTheme] = useState<ThemeMode>("light");
-
+  const queryClient = useQueryClient();
   const [newDomain, setNewDomain] = useState("");
   const [newApp, setNewApp] = useState("");
   const [itemToDelete, setItemToDelete] = useState<{
@@ -35,21 +35,21 @@ export default function SettingsPage() {
   } | null>(null);
 
   const { data: blockedDomains = [] } = useQuery({
-    queryKey: ["blocked-domains"],
+    queryKey: ["user.getBlockedDomains"],
     queryFn: async () => {
       const data = await trpcClient.user.getBlockedDomains.query();
       return data;
     },
   });
   const { data: blockedApps = [] } = useQuery({
-    queryKey: ["blocked-apps"],
+    queryKey: ["user.getBlockedApps"],
     queryFn: async () => {
       const data = await trpcClient.user.getBlockedApps.query();
       return data;
     },
   });
   const { data: activitySettings = null } = useQuery({
-    queryKey: ["activity-settings"],
+    queryKey: ["user.getActivitySettings"],
     queryFn: async () => {
       const data = await trpcClient.user.getActivitySettings.query();
       return data;
@@ -67,65 +67,75 @@ export default function SettingsPage() {
     setCurrentTheme(theme);
   };
 
-  const handleAddDomain = () => {
+  const handleAddDomain = async () => {
     if (newDomain.trim()) {
-      trpcClient.user.addBlockedDomain.mutate(newDomain.trim());
+      await trpcClient.user.addBlockedDomain.mutate(newDomain.trim());
+      queryClient.invalidateQueries({ queryKey: ["user.getBlockedDomains"] });
       setNewDomain("");
     }
   };
 
-  const handleRemoveDomain = (index: number) => {
-    trpcClient.user.removeBlockedDomain.mutate(blockedDomains[index].domain);
+  const handleRemoveDomain = async (index: number) => {
+    await trpcClient.user.removeBlockedDomain.mutate(blockedDomains[index].domain);
+    queryClient.invalidateQueries({ queryKey: ["user.getBlockedDomains"] });
     setItemToDelete(null);
   };
 
-  const handleAddApp = () => {
+  const handleAddApp = async () => {
     if (newApp.trim()) {
-      trpcClient.user.addBlockedApp.mutate(newApp.trim());
+      await trpcClient.user.addBlockedApp.mutate(newApp.trim());
+      queryClient.invalidateQueries({ queryKey: ["user.getBlockedApps"] });
       setNewApp("");
     }
   };
 
-  const handleRemoveApp = (index: number) => {
-    trpcClient.user.removeBlockedApp.mutate(blockedApps[index].appName);
+  const handleRemoveApp = async (index: number) => {
+    await trpcClient.user.removeBlockedApp.mutate(blockedApps[index].appName);
+    queryClient.invalidateQueries({ queryKey: ["user.getBlockedApps"] });
     setItemToDelete(null);
   };
 
-  const index = itemToDelete?.index;
-  console.log("itemToDelete", itemToDelete);
+  const onFocusChange = async () => {
+    await trpcClient.user.updateActivitySettings.mutate({
+      isFocusMode: !activitySettings?.isFocusMode,
+    });
+    queryClient.invalidateQueries({ queryKey: ["user.getActivitySettings"] });
+  };
   return (
     <div className="space-y-6 p-6">
-      <AlertDialog
-        open={itemToDelete !== null}
-        onOpenChange={(open) => !open && setItemToDelete(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will remove the {itemToDelete?.type === "domain" ? "domain" : "app"}{" "}
-              {itemToDelete?.type === "domain"
-                ? blockedDomains[itemToDelete.index].domain
-                : blockedApps[index ?? 0].appName}
-              from your blocked list.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (itemToDelete?.type === "domain") {
-                  handleRemoveDomain(itemToDelete.index);
-                } else if (itemToDelete?.type === "app") {
-                  handleRemoveApp(itemToDelete.index);
-                }
-              }}
-            >
-              Remove
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {itemToDelete && (
+        <AlertDialog
+          open={itemToDelete !== null}
+          onOpenChange={(open) => !open && setItemToDelete(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will remove the {itemToDelete.type === "domain" ? "domain" : "app"}:{" "}
+                {itemToDelete.type === "domain"
+                  ? blockedDomains[itemToDelete.index].domain
+                  : blockedApps[itemToDelete.index].appName}{" "}
+                from your blocked list.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  if (itemToDelete.type === "domain") {
+                    handleRemoveDomain(itemToDelete.index);
+                  } else if (itemToDelete?.type === "app") {
+                    handleRemoveApp(itemToDelete.index);
+                  }
+                }}
+              >
+                Remove
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
 
       <h1 className="text-3xl font-bold text-foreground">Settings</h1>
       <p className="mt-2 text-muted-foreground">Configure your application settings</p>
@@ -161,11 +171,7 @@ export default function SettingsPage() {
         <CardContent className="flex items-center gap-4">
           <Switch
             checked={activitySettings?.isFocusMode}
-            onCheckedChange={() =>
-              trpcClient.user.updateActivitySettings.mutate({
-                isFocusMode: !activitySettings?.isFocusMode,
-              })
-            }
+            onCheckedChange={onFocusChange}
             id="focus-mode"
           />
           <label htmlFor="focus-mode">Enable Focus Mode</label>

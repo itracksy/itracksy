@@ -13,14 +13,6 @@ export interface ActivityRecord {
   taskId?: string;
   isFocused?: boolean;
 }
-export type ActivitySetting = {
-  accessibilityPermission: boolean;
-  screenRecordingPermission: boolean;
-  blockedDomains: string[];
-  blockedApps: string[];
-  isFocusMode: boolean;
-  currentTaskId?: string;
-};
 
 export interface ApplicationDurationReport {
   applicationName: string;
