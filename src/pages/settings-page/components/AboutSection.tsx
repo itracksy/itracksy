@@ -41,7 +41,7 @@ export function AboutSection() {
   };
 
   const handleClearActivities = async () => {
-    await trpcClient.clearActivities.mutate();
+    await trpcClient.activity.clearActivities.mutate();
   };
 
   return (

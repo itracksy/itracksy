@@ -5,6 +5,7 @@ import { activities } from "../schema";
 
 import { gte, desc } from "drizzle-orm";
 import { mergeActivityRecord } from "../../helpers/mergeActivitiRecord";
+import { getCurrentUserId } from "./userSettings";
 
 const mergeRecords = async (): Promise<void> => {
   const activities = await getActivities();
@@ -15,7 +16,8 @@ const mergeRecords = async (): Promise<void> => {
 
 let count = 0;
 export const addActivity = async (activity: ActivityRecord): Promise<void> => {
-  const date = new Date(activity.timestamp).toISOString().split("T")[0];
+  const isFocused = activity.isFocused ?? false;
+  const userId = await getCurrentUserId();
 
   // Store in SQLite database
   try {
@@ -31,8 +33,8 @@ export const addActivity = async (activity: ActivityRecord): Promise<void> => {
       timestamp: activity.timestamp,
       duration: activity.duration,
       taskId: activity.taskId,
-      isFocused: activity.isFocused,
-      userId: activity.userId,
+      isFocused,
+      userId,
     });
   } catch (error) {
     console.error("Failed to store activity in SQLite:", error);

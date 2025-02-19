@@ -6,7 +6,6 @@ import registerListeners from "./helpers/ipc/listeners-register";
 import { router } from "./api";
 import { initializeDatabase } from "./db/init";
 
-import { ActivityRecord } from "./types/activity";
 import { logger } from "./helpers/logger";
 
 const inDevelopment: boolean = process.env.NODE_ENV === "development";
@@ -109,6 +108,7 @@ function createWindow(): void {
 app.whenReady().then(async () => {
   try {
     await initializeDatabase();
+    logger.clearLogFile();
     logger.info("Database initialized successfully");
   } catch (error) {
     logger.error("Failed to initialize database:", error);

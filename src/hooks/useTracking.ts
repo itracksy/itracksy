@@ -20,7 +20,7 @@ export const useTracking = () => {
   const { toast } = useToast();
   const startTracking = useCallback(async () => {
     try {
-      trpcClient.startTracking.mutate({
+      trpcClient.activity.startTracking.mutate({
         accessibilityPermission,
         screenRecordingPermission,
         blockedDomains,
@@ -43,7 +43,7 @@ export const useTracking = () => {
   const stopTracking = useCallback(() => {
     // Clear existing interval
     // Update tracking state
-    trpcClient.stopTracking.mutate();
+    trpcClient.activity.stopTracking.mutate();
     setIsTracking(false);
   }, [setIsTracking]);
 

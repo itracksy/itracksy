@@ -10,8 +10,8 @@ import * as path from "path";
 const LOG_CONFIG = {
   development: {
     console: [LogLevel.DEBUG, LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR, LogLevel.FATAL],
-    file: [LogLevel.DEBUG, LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR, LogLevel.FATAL],
-    axiom: [LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR, LogLevel.FATAL],
+    file: [LogLevel.WARN, LogLevel.ERROR, LogLevel.FATAL],
+    axiom: [LogLevel.ERROR, LogLevel.FATAL],
   },
   production: {
     console: [LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR, LogLevel.FATAL],
@@ -71,7 +71,7 @@ export class ServerLogger {
     if (!this.axiomClient) return;
 
     try {
-      await this.axiomClient.ingestEvents(config.axiomDataset, [
+      this.axiomClient.ingestEvents(config.axiomDataset, [
         {
           timestamp: new Date(),
           level,

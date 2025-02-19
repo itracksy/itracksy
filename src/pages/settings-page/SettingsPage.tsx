@@ -44,7 +44,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     try {
-      trpcClient.updateActivitySettings.mutate({
+      trpcClient.user.updateActivitySettings.mutate({
         blockedDomains,
         blockedApps,
         isFocusMode,

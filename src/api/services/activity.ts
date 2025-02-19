@@ -1,9 +1,9 @@
 import { ActivityRecord, ActivitySetting } from "@/types/activity";
 import { BrowserWindow, dialog, screen } from "electron";
-import { addActivity } from "../db/repositories/activities";
-import { TRACKING_INTERVAL } from "../config/tracking";
-import { extractUrlFromBrowserTitle } from "../helpers/extractUrlFromBrowserTitle";
-import { logger } from "../helpers/logger";
+import { addActivity } from "../../db/repositories/activities";
+import { TRACKING_INTERVAL } from "../../config/tracking";
+import { extractUrlFromBrowserTitle } from "../../helpers/extractUrlFromBrowserTitle";
+import { logger } from "../../helpers/logger";
 
 let trackingIntervalId: NodeJS.Timeout | null = null;
 let notificationWindow: BrowserWindow | null = null;

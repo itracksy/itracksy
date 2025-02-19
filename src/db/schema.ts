@@ -15,7 +15,7 @@ export const activities = sqliteTable(
     duration: integer().notNull().default(0),
     taskId: text("task_id"),
     isFocused: integer("is_focused", { mode: "boolean" }).default(false),
-    userId: text("user_id"),
+    userId: text("user_id").notNull(),
   },
   (table) => [
     index("isFocused_idx").on(table.isFocused),
@@ -24,26 +24,10 @@ export const activities = sqliteTable(
   ]
 );
 
-export const userSettings = sqliteTable("user_settings", {
-  userId: text("user_id").primaryKey(),
-  accessibilityPermission: integer("accessibility_permission", { mode: "boolean" })
-    .notNull()
-    .default(false),
-  screenRecordingPermission: integer("screen_recording_permission", { mode: "boolean" })
-    .notNull()
-    .default(false),
-  isFocusMode: integer("is_focus_mode", { mode: "boolean" }).notNull().default(true),
-  currentTaskId: text("current_task_id"),
-  lastUpdateActivity: integer(),
-  updatedAt: integer("updated_at").notNull(),
-});
-
 export const blockedDomains = sqliteTable(
   "blocked_domains",
   {
-    userId: text("user_id")
-      .notNull()
-      .references(() => userSettings.userId),
+    userId: text("user_id").notNull(),
     domain: text("domain").primaryKey(),
     active: integer("active", { mode: "boolean" }).notNull().default(true),
     updatedAt: integer("updated_at").notNull(),
@@ -54,12 +38,19 @@ export const blockedDomains = sqliteTable(
 export const blockedApps = sqliteTable(
   "blocked_apps",
   {
-    userId: text("user_id")
-      .notNull()
-      .references(() => userSettings.userId),
+    userId: text("user_id").notNull(),
     appName: text("app_name").primaryKey(),
     active: integer("active", { mode: "boolean" }).notNull().default(true),
     updatedAt: integer("updated_at").notNull(),
   },
   (table) => [index("blocked_apps_user_idx").on(table.userId)]
+);
+
+export const localStorage = sqliteTable(
+  "local_storage",
+  {
+    key: text("key").primaryKey(),
+    value: text("value").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  }
 );

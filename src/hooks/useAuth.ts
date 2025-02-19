@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { User, Session } from "@supabase/supabase-js";
+import { trpcClient } from "@/utils/trpc";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -13,9 +14,7 @@ export function useAuth() {
       .then(({ data: { session } }) => {
         setUser(session?.user ?? null);
         if (session?.user?.id) {
-          window.electronWindow.setUserInformation({
-            userId: session.user.id,
-          });
+          trpcClient.user.setCurrrentUserId.mutate(session.user?.id);
         }
       })
       .finally(() => {
@@ -28,9 +27,7 @@ export function useAuth() {
     } = supabase.auth.onAuthStateChange((_event, session: Session | null) => {
       setUser(session?.user ?? null);
       if (session?.user?.id) {
-        window.electronWindow.setUserInformation({
-          userId: session.user.id,
-        });
+        trpcClient.user.setCurrrentUserId.mutate(session.user?.id);
       }
       setLoading(false);
     });

@@ -15,12 +15,12 @@ export function useActiveTimeEntry() {
     queryFn: getActiveTimeEntry,
     select: (data) => {
       if (data) {
-        trpcClient.updateActivitySettings.mutate({
+        trpcClient.user.updateActivitySettings.mutate({
           isFocusMode: data.is_focus_mode ?? false,
           currentTaskId: data.item_id,
         });
       } else {
-        trpcClient.updateActivitySettings.mutate({
+        trpcClient.user.updateActivitySettings.mutate({
           isFocusMode: false,
           currentTaskId: undefined,
         });

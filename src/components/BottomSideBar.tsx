@@ -108,7 +108,7 @@ export function BottomSideBar() {
         start_time: new Date().toISOString(),
         is_focus_mode: isFocusMode,
       });
-      trpcClient.updateActivitySettings.mutate({
+      trpcClient.user.updateActivitySettings.mutate({
         currentTaskId: selectedItemId,
         isFocusMode,
       });

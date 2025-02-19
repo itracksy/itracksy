@@ -12,6 +12,7 @@ import { useAuth } from "./hooks/useAuth";
 
 import { useTracking } from "./hooks/useTracking";
 import { supabase } from "./lib/supabase";
+import { trpcClient } from "./utils/trpc";
 
 const queryClient = new QueryClient({
   queryCache: new QueryCache({
@@ -53,13 +54,9 @@ function App() {
     async function signInAnonymously() {
       if (!loading && !user) {
         const { data, error } = await supabase.auth.signInAnonymously();
-        if (localStorage.getItem("supabase.auth.user")) {
-          console.error(
-            `already signed in as ${localStorage.getItem("supabase.auth.user")} new user: ${data.user?.id}`
-          );
-        }
+
         if (data.user?.id) {
-          localStorage.setItem("supabase.auth.user", data.user.id);
+          trpcClient.user.setCurrrentUserId.mutate(data.user?.id);
         }
         if (error) {
           console.error("Error signing in anonymously:", error.message);
