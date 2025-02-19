@@ -16,7 +16,7 @@ const trackingSettingsSchema = z.object({
   blockedDomains: z.array(z.string()),
   blockedApps: z.array(z.string()),
   isFocusMode: z.boolean(),
-  taskId: z.string().optional(),
+  currentTaskId: z.string().optional(),
 });
 
 const updateTrackingSettingsSchema = trackingSettingsSchema.partial();

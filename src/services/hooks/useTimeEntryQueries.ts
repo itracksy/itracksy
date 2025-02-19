@@ -17,12 +17,12 @@ export function useActiveTimeEntry() {
       if (data) {
         trpcClient.updateActivitySettings.mutate({
           isFocusMode: data.is_focus_mode ?? false,
-          taskId: data.item_id,
+          currentTaskId: data.item_id,
         });
       } else {
         trpcClient.updateActivitySettings.mutate({
           isFocusMode: false,
-          taskId: undefined,
+          currentTaskId: undefined,
         });
       }
       return data;

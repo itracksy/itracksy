@@ -109,7 +109,7 @@ export function BottomSideBar() {
         is_focus_mode: isFocusMode,
       });
       trpcClient.updateActivitySettings.mutate({
-        taskId: selectedItemId,
+        currentTaskId: selectedItemId,
         isFocusMode,
       });
       toast({

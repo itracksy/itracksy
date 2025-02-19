@@ -8,6 +8,13 @@
       "when": 1739931624706,
       "tag": "0000_nifty_purifiers",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1739934643321,
+      "tag": "0001_aromatic_kree",
+      "breakpoints": true
     }
   ]
 }

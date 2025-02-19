@@ -1,4 +1,4 @@
-import { extractUrlFromBrowserTitle } from "./helper";
+import { extractUrlFromBrowserTitle } from "./extractUrlFromBrowserTitle";
 
 describe("extractUrlFromBrowserTitle", () => {
   it("extracts domain from basic title format", () => {

@@ -2,7 +2,7 @@ import { ActivityRecord, ActivitySetting } from "@/types/activity";
 import { BrowserWindow, dialog, screen } from "electron";
 import { addActivity } from "../db/repositories/activities";
 import { TRACKING_INTERVAL } from "../config/tracking";
-import { extractUrlFromBrowserTitle } from "./helper";
+import { extractUrlFromBrowserTitle } from "../helpers/extractUrlFromBrowserTitle";
 import { logger } from "../helpers/logger";
 
 let trackingIntervalId: NodeJS.Timeout | null = null;
@@ -44,7 +44,7 @@ export const startTracking = async (params?: ActivitySetting): Promise<void> => 
       const transformedActivities: ActivityRecord = {
         platform: result.platform,
         activityId: result.id,
-        taskId: activitySettings?.taskId,
+        taskId: activitySettings?.currentTaskId,
         title: result.title,
         ownerPath: result.owner.path,
         ownerProcessId: result.owner.processId,

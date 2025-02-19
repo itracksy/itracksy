@@ -23,3 +23,43 @@ export const activities = sqliteTable(
     index("taskId_idx").on(table.taskId),
   ]
 );
+
+export const userSettings = sqliteTable("user_settings", {
+  userId: text("user_id").primaryKey(),
+  accessibilityPermission: integer("accessibility_permission", { mode: "boolean" })
+    .notNull()
+    .default(false),
+  screenRecordingPermission: integer("screen_recording_permission", { mode: "boolean" })
+    .notNull()
+    .default(false),
+  isFocusMode: integer("is_focus_mode", { mode: "boolean" }).notNull().default(true),
+  currentTaskId: text("current_task_id"),
+  lastUpdateActivity: integer(),
+  updatedAt: integer("updated_at").notNull(),
+});
+
+export const blockedDomains = sqliteTable(
+  "blocked_domains",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => userSettings.userId),
+    domain: text("domain").primaryKey(),
+    active: integer("active", { mode: "boolean" }).notNull().default(true),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [index("blocked_domains_user_idx").on(table.userId)]
+);
+
+export const blockedApps = sqliteTable(
+  "blocked_apps",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => userSettings.userId),
+    appName: text("app_name").primaryKey(),
+    active: integer("active", { mode: "boolean" }).notNull().default(true),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [index("blocked_apps_user_idx").on(table.userId)]
+);

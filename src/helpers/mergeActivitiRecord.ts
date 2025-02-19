@@ -1,4 +1,4 @@
-import { LIMIT_TIME_APART } from "../../../config/tracking";
+import { LIMIT_TIME_APART } from "../config/tracking";
 import { ActivityRecord } from "@/types/activity";
 
 export const mergeActivityRecord = (prev: ActivityRecord[]): ActivityRecord[] => {

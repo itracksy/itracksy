@@ -19,7 +19,7 @@ export type ActivitySetting = {
   blockedDomains: string[];
   blockedApps: string[];
   isFocusMode: boolean;
-  taskId?: string;
+  currentTaskId?: string;
 };
 
 export interface ApplicationDurationReport {

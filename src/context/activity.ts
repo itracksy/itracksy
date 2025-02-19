@@ -1,8 +1,5 @@
 import { atomWithStorage } from "jotai/utils";
 import { localKey } from "./localKey";
-import { ActivityRecord } from "@/types/activity";
-
-export const activityWindowAtom = atomWithStorage<ActivityRecord[]>(localKey.ACTIVITY_WINDOW, []);
 
 export const accessibilityPermissionAtom = atomWithStorage(
   localKey.ACCESSIBILITY_PERMISSION,

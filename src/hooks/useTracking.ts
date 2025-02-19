@@ -26,7 +26,7 @@ export const useTracking = () => {
         blockedDomains,
         blockedApps,
         isFocusMode: activeTimeEntry?.is_focus_mode ?? false,
-        taskId: activeTimeEntry?.item_id,
+        currentTaskId: activeTimeEntry?.item_id,
       });
 
       setIsTracking(true);

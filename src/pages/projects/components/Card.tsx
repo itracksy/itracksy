@@ -80,7 +80,7 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
         is_focus_mode: isFocusMode,
       });
       trpcClient.updateActivitySettings.mutate({
-        taskId: id,
+        currentTaskId: id,
         isFocusMode,
       });
     };

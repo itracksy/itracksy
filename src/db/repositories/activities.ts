@@ -2,9 +2,9 @@ import { ActivityRecord } from "@/types/activity";
 import { MERGING_BATCH_SIZE } from "../../config/tracking";
 import db from "..";
 import { activities } from "../schema";
-import { logger } from "../../helpers/logger";
+
 import { gte, desc } from "drizzle-orm";
-import { mergeActivityRecord } from "./helper/mergeActivitiRecord";
+import { mergeActivityRecord } from "../../helpers/mergeActivitiRecord";
 
 const mergeRecords = async (): Promise<void> => {
   const activities = await getActivities();
