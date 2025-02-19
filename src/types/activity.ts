@@ -8,7 +8,7 @@ export interface ActivityRecord {
   ownerName: string;
   url?: string;
   timestamp: number; // timestamp: Date.now() in milliseconds
-  count: number;
+  duration: number;
   userId?: string;
   taskId?: string;
   isFocused?: boolean;

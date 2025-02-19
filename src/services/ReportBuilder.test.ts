@@ -27,7 +27,7 @@ describe("calculateDurationsReport", () => {
     url,
     title,
     platform,
-    count,
+    duration: count,
   });
 
   test("should calculate application durations correctly", () => {
@@ -55,7 +55,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 9848,
         ownerName: "LockApp.exe",
         timestamp: 1737594549687,
-        count: 3,
+        duration: 3,
       },
       {
         platform: "windows",
@@ -65,7 +65,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 9548,
         ownerName: "Visual Studio Code",
         timestamp: 1737594557548,
-        count: 5,
+        duration: 5,
       },
       {
         platform: "windows",
@@ -75,7 +75,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 9548,
         ownerName: "Visual Studio Code",
         timestamp: 1737594574449,
-        count: 1,
+        duration: 1,
       },
       {
         platform: "windows",
@@ -85,7 +85,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 9548,
         ownerName: "Visual Studio Code",
         timestamp: 1737594577452,
-        count: 12,
+        duration: 12,
       },
       {
         platform: "windows",
@@ -95,7 +95,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 8100,
         ownerName: "Google Chrome",
         timestamp: 1737595590043,
-        count: 2,
+        duration: 2,
       },
       {
         platform: "windows",
@@ -105,7 +105,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 9264,
         ownerName: "Electron",
         timestamp: 1737595593063,
-        count: 5,
+        duration: 5,
       },
       {
         platform: "windows",
@@ -115,7 +115,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 9264,
         ownerName: "Electron",
         timestamp: 1737595596094,
-        count: 32,
+        duration: 32,
       },
       {
         platform: "windows",
@@ -125,7 +125,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 8100,
         ownerName: "Google Chrome",
         timestamp: 1737595602093,
-        count: 1,
+        duration: 1,
       },
       {
         platform: "windows",
@@ -136,7 +136,7 @@ describe("calculateDurationsReport", () => {
         ownerName: "Google Chrome",
         url: "YouTube",
         timestamp: 1737595605101,
-        count: 1,
+        duration: 1,
       },
       {
         platform: "windows",
@@ -146,7 +146,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 9548,
         ownerName: "Visual Studio Code",
         timestamp: 1737595611103,
-        count: 2,
+        duration: 2,
       },
       {
         platform: "windows",
@@ -156,7 +156,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 8100,
         ownerName: "Google Chrome",
         timestamp: 1737595617120,
-        count: 3,
+        duration: 3,
       },
       {
         platform: "windows",
@@ -166,7 +166,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 8100,
         ownerName: "Google Chrome",
         timestamp: 1737595623137,
-        count: 12,
+        duration: 12,
       },
       {
         platform: "windows",
@@ -176,7 +176,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 9548,
         ownerName: "Visual Studio Code",
         timestamp: 1737595731448,
-        count: 17,
+        duration: 17,
       },
       {
         platform: "windows",
@@ -186,7 +186,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 9548,
         ownerName: "Visual Studio Code",
         timestamp: 1737595773558,
-        count: 14,
+        duration: 14,
       },
       {
         platform: "windows",
@@ -197,7 +197,7 @@ describe("calculateDurationsReport", () => {
         ownerName: "Google Chrome",
         url: "youtube.com",
         timestamp: 1737596488761,
-        count: 3,
+        duration: 3,
       },
       {
         platform: "windows",
@@ -207,7 +207,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 8100,
         ownerName: "Google Chrome",
         timestamp: 1737596512793,
-        count: 6,
+        duration: 6,
       },
       {
         platform: "windows",
@@ -218,7 +218,7 @@ describe("calculateDurationsReport", () => {
         ownerName: "Google Chrome",
         url: "miro.com",
         timestamp: 1737596524836,
-        count: 8,
+        duration: 8,
       },
       {
         platform: "windows",
@@ -228,7 +228,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 9548,
         ownerName: "Visual Studio Code",
         timestamp: 1737596551896,
-        count: 2,
+        duration: 2,
       },
       {
         platform: "windows",
@@ -238,7 +238,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 2932,
         ownerName: "Electron",
         timestamp: 1737596583014,
-        count: 6,
+        duration: 6,
       },
       {
         platform: "windows",
@@ -248,7 +248,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 2932,
         ownerName: "Electron",
         timestamp: 1737596606931,
-        count: 7,
+        duration: 7,
       },
       {
         platform: "windows",
@@ -258,7 +258,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 6292,
         ownerName: "Windows Explorer",
         timestamp: 1737596637034,
-        count: 1,
+        duration: 1,
       },
       {
         platform: "windows",
@@ -269,7 +269,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 9548,
         ownerName: "Visual Studio Code",
         timestamp: 1737596643042,
-        count: 5,
+        duration: 5,
       },
       {
         platform: "windows",
@@ -279,7 +279,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 9548,
         ownerName: "Visual Studio Code",
         timestamp: 1737596664098,
-        count: 2,
+        duration: 2,
       },
       {
         platform: "windows",
@@ -289,7 +289,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 9548,
         ownerName: "Visual Studio Code",
         timestamp: 1737596673134,
-        count: 1,
+        duration: 1,
       },
       {
         platform: "windows",
@@ -299,7 +299,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 9548,
         ownerName: "Visual Studio Code",
         timestamp: 1737596676144,
-        count: 1,
+        duration: 1,
       },
       {
         platform: "windows",
@@ -309,7 +309,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 9548,
         ownerName: "Visual Studio Code",
         timestamp: 1737596679144,
-        count: 3,
+        duration: 3,
       },
       {
         platform: "windows",
@@ -319,7 +319,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 9548,
         ownerName: "Visual Studio Code",
         timestamp: 1737596688171,
-        count: 53,
+        duration: 53,
       },
       {
         platform: "windows",
@@ -329,7 +329,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 9548,
         ownerName: "Visual Studio Code",
         timestamp: 1737596748386,
-        count: 3,
+        duration: 3,
       },
       {
         platform: "windows",
@@ -339,7 +339,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 9548,
         ownerName: "Visual Studio Code",
         timestamp: 1737596856712,
-        count: 61,
+        duration: 61,
       },
       {
         platform: "windows",
@@ -349,7 +349,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 9548,
         ownerName: "Visual Studio Code",
         timestamp: 1737596913910,
-        count: 7,
+        duration: 7,
       },
       {
         platform: "windows",
@@ -359,7 +359,7 @@ describe("calculateDurationsReport", () => {
         ownerProcessId: 9548,
         ownerName: "Visual Studio Code",
         timestamp: 1737597564261,
-        count: 1,
+        duration: 1,
       },
     ];
 

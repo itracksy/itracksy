@@ -64,7 +64,7 @@ export function calculateDurationsReport(records: ActivityRecord[]): {
     let currentInstance = {
       startTime: records[0].timestamp,
       endTime: records[0].timestamp,
-      duration: records[0].count * TRACKING_INTERVAL,
+      duration: records[0].duration * TRACKING_INTERVAL,
     };
 
     const GAP_THRESHOLD = 5000;
@@ -77,11 +77,11 @@ export function calculateDurationsReport(records: ActivityRecord[]): {
         currentInstance = {
           startTime: records[i].timestamp,
           endTime: records[i].timestamp,
-          duration: records[i].count * TRACKING_INTERVAL,
+          duration: records[i].duration * TRACKING_INTERVAL,
         };
       } else {
         currentInstance.endTime = records[i].timestamp;
-        currentInstance.duration += records[i].count * TRACKING_INTERVAL;
+        currentInstance.duration += records[i].duration * TRACKING_INTERVAL;
       }
     }
 

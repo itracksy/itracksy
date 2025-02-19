@@ -1,12 +1,19 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "78c60b45-33c9-4d49-bbfe-d0aba7fc62e3",
+  "id": "7182dd01-95c4-4496-bded-9fe1b176ccd2",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "activities": {
       "name": "activities",
       "columns": {
+        "timestamp": {
+          "name": "timestamp",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
         "activity_id": {
           "name": "activity_id",
           "type": "integer",
@@ -63,24 +70,17 @@
           "notNull": false,
           "autoincrement": false
         },
-        "timestamp": {
-          "name": "timestamp",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "count": {
-          "name": "count",
+        "duration": {
+          "name": "duration",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": 1
+          "default": 0
         },
         "task_id": {
           "name": "task_id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -101,7 +101,29 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "isFocused_idx": {
+          "name": "isFocused_idx",
+          "columns": [
+            "is_focused"
+          ],
+          "isUnique": false
+        },
+        "userId_idx": {
+          "name": "userId_idx",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        },
+        "taskId_idx": {
+          "name": "taskId_idx",
+          "columns": [
+            "task_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},

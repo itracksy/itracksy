@@ -5,7 +5,7 @@ import type {
   DomainDurationReport,
   CategoryDurationReport,
 } from "../types/activity";
-import { clearActivities, getActivities } from "../services/ActivityStorage";
+import { clearActivities, getActivities } from "../db/repositories/activities";
 import { startTracking, updateActivitySettings, stopTracking } from "./activity";
 
 const t = initTRPC.create();
@@ -49,14 +49,16 @@ export const router = t.router({
       throw new Error("Failed to start tracking");
     }
   }),
-  updateActivitySettings: t.procedure.input(updateTrackingSettingsSchema).mutation(async ({ input }) => {
-    try {
-      updateActivitySettings(input);
-      return { success: true, settings: input };
-    } catch (error) {
-      throw new Error("Failed to update activity settings");
-    }
-  }),
+  updateActivitySettings: t.procedure
+    .input(updateTrackingSettingsSchema)
+    .mutation(async ({ input }) => {
+      try {
+        updateActivitySettings(input);
+        return { success: true, settings: input };
+      } catch (error) {
+        throw new Error("Failed to update activity settings");
+      }
+    }),
   stopTracking: t.procedure.mutation(async () => {
     try {
       // Implement stop tracking logic

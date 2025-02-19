@@ -1,18 +1,5 @@
 import { ActivityRecord } from "@/types/activity";
-import { mergeActivityRecord } from "../ActivityStorage";
-
-// Mock electron
-jest.mock("electron", () => ({
-  app: {
-    getPath: jest.fn().mockReturnValue("/mock/user/data"),
-  },
-}));
-
-// Mock fs
-jest.mock("fs", () => ({
-  existsSync: jest.fn().mockReturnValue(true),
-  writeFileSync: jest.fn(),
-}));
+import { mergeActivityRecord } from "./mergeActivitiRecord";
 
 describe("mergeActivityRecord", () => {
   it("should merge consecutive matching records and update count", () => {
@@ -26,7 +13,7 @@ describe("mergeActivityRecord", () => {
         ownerProcessId: 123,
         ownerName: "Test App",
         timestamp: now,
-        count: 1,
+        duration: 1,
       },
       {
         platform: "darwin",
@@ -36,7 +23,7 @@ describe("mergeActivityRecord", () => {
         ownerProcessId: 123,
         ownerName: "Test App",
         timestamp: now + 5 * 60 * 1000, // 5 minutes later
-        count: 1,
+        duration: 1,
       },
       {
         platform: "darwin",
@@ -46,14 +33,14 @@ describe("mergeActivityRecord", () => {
         ownerProcessId: 456,
         ownerName: "Another App",
         timestamp: now + 10 * 60 * 1000, // 10 minutes later
-        count: 1,
+        duration: 1,
       },
     ];
 
     const result = mergeActivityRecord(activities);
 
     expect(result).toHaveLength(2);
-    expect(result[0].count).toBe(2); // First two records should be merged
+    expect(result[0].duration).toBe(2); // First two records should be merged
     expect(result[1].activityId).toBe(2); // Last record should remain separate
   });
 
@@ -68,7 +55,7 @@ describe("mergeActivityRecord", () => {
         ownerProcessId: 123,
         ownerName: "Test App",
         timestamp: now,
-        count: 1,
+        duration: 1,
       },
       {
         platform: "darwin",
@@ -78,15 +65,15 @@ describe("mergeActivityRecord", () => {
         ownerProcessId: 123,
         ownerName: "Test App",
         timestamp: now + 16 * 60 * 1000, // 16 minutes later
-        count: 1,
+        duration: 1,
       },
     ];
 
     const result = mergeActivityRecord(activities);
 
     expect(result).toHaveLength(2); // Should not merge due to time difference
-    expect(result[0].count).toBe(1);
-    expect(result[1].count).toBe(1);
+    expect(result[0].duration).toBe(1);
+    expect(result[1].duration).toBe(1);
   });
 
   it("should handle long array", () => {
@@ -101,7 +88,7 @@ describe("mergeActivityRecord", () => {
         ownerName: "Windsurf",
         url: undefined,
         timestamp: 1735808205440,
-        count: 21,
+        duration: 21,
       },
       {
         platform: "macos",
@@ -113,7 +100,7 @@ describe("mergeActivityRecord", () => {
         ownerName: "Windsurf",
         url: undefined,
         timestamp: 1735808268555,
-        count: 2,
+        duration: 2,
       },
       {
         platform: "macos",
@@ -126,7 +113,7 @@ describe("mergeActivityRecord", () => {
         ownerName: "Terminal",
         url: undefined,
         timestamp: 1735867449986,
-        count: 4,
+        duration: 4,
       },
       {
         platform: "macos",
@@ -138,7 +125,7 @@ describe("mergeActivityRecord", () => {
         ownerName: "Windsurf",
         url: undefined,
         timestamp: 1735867461984,
-        count: 1,
+        duration: 1,
       },
       {
         platform: "macos",
@@ -151,7 +138,7 @@ describe("mergeActivityRecord", () => {
         ownerName: "Terminal",
         url: undefined,
         timestamp: 1735867464978,
-        count: 14,
+        duration: 14,
       },
       {
         platform: "macos",
@@ -164,7 +151,7 @@ describe("mergeActivityRecord", () => {
         ownerName: "Terminal",
         url: undefined,
         timestamp: 1735867504024,
-        count: 4,
+        duration: 4,
       },
       {
         platform: "macos",
@@ -177,7 +164,7 @@ describe("mergeActivityRecord", () => {
         ownerName: "Terminal",
         url: undefined,
         timestamp: 1735867513089,
-        count: 1,
+        duration: 1,
       },
       {
         platform: "macos",
@@ -190,7 +177,7 @@ describe("mergeActivityRecord", () => {
         ownerName: "Terminal",
         url: undefined,
         timestamp: 1735867516084,
-        count: 1,
+        duration: 1,
       },
       {
         platform: "macos",
@@ -203,7 +190,7 @@ describe("mergeActivityRecord", () => {
         ownerName: "Terminal",
         url: undefined,
         timestamp: 1735867519096,
-        count: 1,
+        duration: 1,
       },
       {
         platform: "macos",
@@ -216,7 +203,7 @@ describe("mergeActivityRecord", () => {
         ownerName: "Terminal",
         url: undefined,
         timestamp: 1735867522075,
-        count: 2,
+        duration: 2,
       },
       {
         platform: "macos",
@@ -229,7 +216,7 @@ describe("mergeActivityRecord", () => {
         ownerName: "Terminal",
         url: undefined,
         timestamp: 1735867528107,
-        count: 2,
+        duration: 2,
       },
       {
         platform: "macos",
@@ -242,7 +229,7 @@ describe("mergeActivityRecord", () => {
         ownerName: "Terminal",
         url: undefined,
         timestamp: 1735867534101,
-        count: 2,
+        duration: 2,
       },
       {
         platform: "macos",
@@ -255,19 +242,19 @@ describe("mergeActivityRecord", () => {
         ownerName: "Terminal",
         url: undefined,
         timestamp: 1735867537104,
-        count: 1,
+        duration: 1,
       },
     ];
-    const count = activities.reduce((acc, activity) => acc + activity.count, 0);
+    const count = activities.reduce((acc, activity) => acc + activity.duration, 0);
     const result = mergeActivityRecord(activities);
-    const countResult = result.reduce((acc, activity) => acc + activity.count, 0);
+    const countResult = result.reduce((acc, activity) => acc + activity.duration, 0);
     expect(countResult).toBe(count);
     expect(result).toHaveLength(5);
   });
   it("should handle complex array", () => {
     const activities = [
       {
-        count: 21,
+        duration: 21,
         activityId: 8657,
         ownerBundleId: undefined,
         ownerName: "Windsurf",
@@ -279,7 +266,7 @@ describe("mergeActivityRecord", () => {
         url: undefined,
       },
       {
-        count: 2,
+        duration: 2,
         activityId: 8657,
         ownerBundleId: undefined,
         ownerName: "Windsurf",
@@ -291,7 +278,7 @@ describe("mergeActivityRecord", () => {
         url: undefined,
       },
       {
-        count: 4,
+        duration: 4,
         activityId: 18795,
         ownerBundleId: undefined,
         ownerName: "Terminal",
@@ -304,7 +291,7 @@ describe("mergeActivityRecord", () => {
         url: undefined,
       },
       {
-        count: 1,
+        duration: 1,
         activityId: 18743,
         ownerBundleId: undefined,
         ownerName: "Windsurf",
@@ -316,7 +303,7 @@ describe("mergeActivityRecord", () => {
         url: undefined,
       },
       {
-        count: 18,
+        duration: 18,
         activityId: 18795,
         ownerBundleId: undefined,
         ownerName: "Terminal",
@@ -329,7 +316,7 @@ describe("mergeActivityRecord", () => {
         url: undefined,
       },
       {
-        count: 1,
+        duration: 1,
         activityId: 18795,
         ownerBundleId: undefined,
         ownerName: "Terminal",
@@ -342,7 +329,7 @@ describe("mergeActivityRecord", () => {
         url: undefined,
       },
       {
-        count: 1,
+        duration: 1,
         activityId: 18795,
         ownerBundleId: undefined,
         ownerName: "Terminal",
@@ -355,7 +342,7 @@ describe("mergeActivityRecord", () => {
         url: undefined,
       },
       {
-        count: 1,
+        duration: 1,
         activityId: 18795,
         ownerBundleId: undefined,
         ownerName: "Terminal",
@@ -368,7 +355,7 @@ describe("mergeActivityRecord", () => {
         url: undefined,
       },
       {
-        count: 7,
+        duration: 7,
         activityId: 18795,
         ownerBundleId: undefined,
         ownerName: "Terminal",
@@ -382,9 +369,9 @@ describe("mergeActivityRecord", () => {
       },
     ];
     const result = mergeActivityRecord(activities);
-    const count = activities.reduce((acc, activity) => acc + activity.count, 0);
+    const count = activities.reduce((acc, activity) => acc + activity.duration, 0);
 
-    const countResult = result.reduce((acc, activity) => acc + activity.count, 0);
+    const countResult = result.reduce((acc, activity) => acc + activity.duration, 0);
     expect(countResult).toBe(count);
     expect(result).toHaveLength(5);
   });

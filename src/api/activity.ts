@@ -1,6 +1,6 @@
 import { ActivityRecord, ActivitySetting } from "@/types/activity";
 import { BrowserWindow, dialog, screen } from "electron";
-import { addActivity } from "../services/ActivityStorage";
+import { addActivity } from "../db/repositories/activities";
 import { TRACKING_INTERVAL } from "../config/tracking";
 import { extractUrlFromBrowserTitle } from "./helper";
 import { logger } from "../helpers/logger";
@@ -50,7 +50,7 @@ export const startTracking = async (params?: ActivitySetting): Promise<void> => 
         ownerProcessId: result.owner.processId,
         ownerName: result.owner.name,
         timestamp: Date.now(),
-        count: 1,
+        duration: TRACKING_INTERVAL,
         url:
           result.platform === "windows" &&
           (result.owner.name === "Google Chrome" ||
