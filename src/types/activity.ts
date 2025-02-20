@@ -1,18 +1,6 @@
-export interface ActivityRecord {
-  platform: string;
-  activityId: number;
-  title: string;
-  ownerPath: string;
-  ownerProcessId: number;
-  ownerBundleId?: string;
-  ownerName: string;
-  url?: string;
-  timestamp: number; // timestamp: Date.now() in milliseconds
-  duration: number;
-  userId?: string;
-  taskId?: string;
-  isFocused?: boolean;
-}
+import { activities } from "@/api/db/schema";
+
+export type ActivityRecord = typeof activities.$inferInsert;
 
 export interface ApplicationDurationReport {
   applicationName: string;

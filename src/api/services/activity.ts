@@ -1,7 +1,7 @@
 import { ActivityRecord } from "@/types/activity";
 import { BrowserWindow, dialog, screen } from "electron";
-import { addActivity } from "../db/repositories/activities";
-import { TRACKING_INTERVAL } from "../../config/tracking";
+import { upsertActivity } from "../db/repositories/activities";
+import { LIMIT_TIME_APART, TRACKING_INTERVAL } from "../../config/tracking";
 import { extractUrlFromBrowserTitle } from "../../helpers/extractUrlFromBrowserTitle";
 import { logger } from "../../helpers/logger";
 import {
@@ -54,9 +54,10 @@ export const startTracking = async (userId: string): Promise<void> => {
             ? extractUrlFromBrowserTitle(result.title, result.owner.name)
             : //@ts-ignore
               result.url,
+        userId,
       };
 
-      await addActivity({ activity: transformedActivities, userId });
+      await upsertActivity(transformedActivities);
       if (activitySettings?.isFocusMode) {
         const url = transformedActivities.url;
         const appName = transformedActivities.ownerName;
@@ -204,16 +205,13 @@ function showNotification(title: string, detail: string) {
         }
 
         // Set a new break timer
-        breakTimer = setTimeout(
-          () => {
-            showNotification(
-              "Time for a Break",
-              "It's been 15 minutes since you requested a break. Would you like to take it now?"
-            );
-            breakTimer = null;
-          },
-          15 * 60 * 1000
-        ); // 15 minutes in milliseconds
+        breakTimer = setTimeout(() => {
+          showNotification(
+            "Time for a Break",
+            "It's been 15 minutes since you requested a break. Would you like to take it now?"
+          );
+          breakTimer = null;
+        }, LIMIT_TIME_APART); // 15 minutes in milliseconds
         break;
     }
 

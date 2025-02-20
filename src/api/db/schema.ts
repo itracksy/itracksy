@@ -3,7 +3,7 @@ import { sqliteTable, text, integer, index, primaryKey } from "drizzle-orm/sqlit
 export const activities = sqliteTable(
   "activities",
   {
-    timestamp: integer("timestamp").primaryKey(),
+    timestamp: integer().notNull(),
     activityId: integer("activity_id").notNull(),
     platform: text("platform").notNull(),
     title: text("title").notNull(),
@@ -12,15 +12,24 @@ export const activities = sqliteTable(
     ownerBundleId: text("owner_bundle_id"),
     ownerName: text("owner_name").notNull(),
     url: text("url"),
-    duration: integer().notNull().default(0),
+    duration: integer().notNull(),
     taskId: text("task_id"),
     isFocused: integer("is_focused", { mode: "boolean" }).default(false),
     userId: text("user_id").notNull(),
   },
   (table) => [
+    primaryKey({ columns: [table.timestamp] }),
     index("isFocused_idx").on(table.isFocused),
     index("userId_idx").on(table.userId),
     index("taskId_idx").on(table.taskId),
+    index("activity_match_idx").on(
+      table.title,
+      table.ownerBundleId,
+      table.ownerName,
+      table.ownerPath,
+      table.platform,
+      table.taskId
+    ),
   ]
 );
 
@@ -32,11 +41,11 @@ export const blockedDomains = sqliteTable(
     active: integer("active", { mode: "boolean" }).notNull().default(true),
     updatedAt: integer("updated_at").notNull(),
   },
-  (table) => ({
-    pk: primaryKey({ columns: [table.userId, table.domain] }),
-    userIdx: index("blocked_domains_user_idx").on(table.userId),
-    domainIdx: index("blocked_domains_domain_idx").on(table.domain),
-  })
+  (table) => [
+    primaryKey({ columns: [table.userId, table.domain] }),
+    index("blocked_domains_user_idx").on(table.userId),
+    index("blocked_domains_domain_idx").on(table.domain),
+  ]
 );
 
 export const blockedApps = sqliteTable(
@@ -47,11 +56,11 @@ export const blockedApps = sqliteTable(
     active: integer("active", { mode: "boolean" }).notNull().default(true),
     updatedAt: integer("updated_at").notNull(),
   },
-  (table) => ({
-    pk: primaryKey({ columns: [table.userId, table.appName] }),
-    userIdx: index("blocked_apps_user_idx").on(table.userId),
-    appNameIdx: index("blocked_apps_name_idx").on(table.appName),
-  })
+  (table) => [
+    primaryKey({ columns: [table.userId, table.appName] }),
+    index("blocked_apps_user_idx").on(table.userId),
+    index("blocked_apps_name_idx").on(table.appName),
+  ]
 );
 
 export const localStorage = sqliteTable("local_storage", {

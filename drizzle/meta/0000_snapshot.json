@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "e2ea1664-7cd6-4838-8cf9-6d3dde845b5f",
+  "id": "aa41888b-3732-409f-b16d-e9c6b69a8e76",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "activities": {
@@ -122,6 +122,18 @@
             "task_id"
           ],
           "isUnique": false
+        },
+        "activity_match_idx": {
+          "name": "activity_match_idx",
+          "columns": [
+            "title",
+            "owner_bundle_id",
+            "owner_name",
+            "owner_path",
+            "platform",
+            "task_id"
+          ],
+          "isUnique": false
         }
       },
       "foreignKeys": {},
@@ -142,7 +154,7 @@
         "app_name": {
           "name": "app_name",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
@@ -169,10 +181,25 @@
             "user_id"
           ],
           "isUnique": false
+        },
+        "blocked_apps_name_idx": {
+          "name": "blocked_apps_name_idx",
+          "columns": [
+            "app_name"
+          ],
+          "isUnique": false
         }
       },
       "foreignKeys": {},
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "blocked_apps_user_id_app_name_pk": {
+          "columns": [
+            "user_id",
+            "app_name"
+          ],
+          "name": "blocked_apps_user_id_app_name_pk"
+        }
+      },
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
@@ -189,7 +216,7 @@
         "domain": {
           "name": "domain",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
@@ -216,10 +243,25 @@
             "user_id"
           ],
           "isUnique": false
+        },
+        "blocked_domains_domain_idx": {
+          "name": "blocked_domains_domain_idx",
+          "columns": [
+            "domain"
+          ],
+          "isUnique": false
         }
       },
       "foreignKeys": {},
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "blocked_domains_user_id_domain_pk": {
+          "columns": [
+            "user_id",
+            "domain"
+          ],
+          "name": "blocked_domains_user_id_domain_pk"
+        }
+      },
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
