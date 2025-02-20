@@ -17,7 +17,7 @@ const mergeRecords = async (): Promise<void> => {
 let count = 0;
 export const addActivity = async (activity: ActivityRecord): Promise<void> => {
   const isFocused = activity.isFocused ?? false;
-  const userId = await getCurrentUserId();
+  const userId = getCurrentUserId();
 
   // Store in SQLite database
   try {

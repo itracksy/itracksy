@@ -11,7 +11,7 @@ import { CategoryMapper } from "@/services/CategoryMapper";
 import { CategoryTreeView } from "./components/CategoryTreeView";
 import { BoardReport } from "./components/BoardReport";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcClient } from "@/utils/trpc";
 
 export default function DashboardPage() {
@@ -28,7 +28,7 @@ export default function DashboardPage() {
       return data;
     },
   });
-
+  const queryClient = useQueryClient();
   const {
     data: activities,
     isLoading,
@@ -119,9 +119,10 @@ export default function DashboardPage() {
             title="Domain Usage"
             permissionDisabled={!activitySettings?.accessibilityPermission}
             onEnablePermission={async () => {
-              trpcClient.user.updateActivitySettings.mutate({
+              await trpcClient.user.updateActivitySettings.mutate({
                 accessibilityPermission: true,
               });
+              queryClient.invalidateQueries({ queryKey: ["user.getActivitySettings"] });
             }}
             className="rounded-lg border border-tracksy-gold/20 bg-white/80 shadow-lg backdrop-blur-sm dark:border-tracksy-gold/10 dark:bg-gray-900/80"
           />
@@ -130,9 +131,10 @@ export default function DashboardPage() {
             title="Title Usage"
             permissionDisabled={!activitySettings?.screenRecordingPermission}
             onEnablePermission={async () => {
-              trpcClient.user.updateActivitySettings.mutate({
+              await trpcClient.user.updateActivitySettings.mutate({
                 screenRecordingPermission: true,
               });
+              queryClient.invalidateQueries({ queryKey: ["user.getActivitySettings"] });
             }}
             className="rounded-lg border border-tracksy-gold/20 bg-white/80 shadow-lg backdrop-blur-sm dark:border-tracksy-gold/10 dark:bg-gray-900/80"
           />

@@ -55,8 +55,7 @@ export const startTracking = async (): Promise<void> => {
             : //@ts-ignore
               result.url,
       };
-      console.log("transformedActivities", transformedActivities);
-      console.log("activitySettings", activitySettings);
+
       await addActivity(transformedActivities);
       if (activitySettings?.isFocusMode) {
         const url = transformedActivities.url;

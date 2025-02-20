@@ -1,19 +1,19 @@
 import { z } from "zod";
-import { t } from "../trpc";
+import { t, protectedProcedure } from "../trpc";
 import { blockedDomains, blockedApps } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import db from "../db";
 import {
   getCurrentUserId,
   setCurrentUserId,
   getUserSettings,
   updateUserSettings,
+  getCurrentUserIdLocalStorage,
 } from "../db/repositories/userSettings";
 
 const trackingSettingsSchema = z.object({
   accessibilityPermission: z.boolean(),
   screenRecordingPermission: z.boolean(),
-
   isFocusMode: z.boolean(),
   currentTaskId: z.string().optional(),
 });
@@ -22,95 +22,79 @@ const updateTrackingSettingsSchema = trackingSettingsSchema.partial();
 
 // Create the router
 export const userRouter = t.router({
-  getActivitySettings: t.procedure.query(async () => {
+  getActivitySettings: protectedProcedure.query(async () => {
     return getUserSettings();
   }),
-  updateActivitySettings: t.procedure
+
+  updateActivitySettings: protectedProcedure
     .input(updateTrackingSettingsSchema)
     .mutation(async ({ input }) => {
       return updateUserSettings(input);
     }),
-  setCurrrentUserId: t.procedure.input(z.string()).mutation(async ({ input }) => {
-    try {
-      setCurrentUserId(input);
-    } catch (error) {
-      throw new Error("Failed to set current user id");
-    }
+
+  getCurrrentUserId: protectedProcedure.query(async ({ ctx }) => {
+    return ctx.userId;
   }),
+
   // Settings Management
-  getBlockedDomains: t.procedure.query(async () => {
-    try {
-      return db.select().from(blockedDomains).where(eq(blockedDomains.userId, getCurrentUserId()));
-    } catch (error) {
-      throw new Error("Failed to get blocked domains");
-    }
+  getBlockedDomains: protectedProcedure.query(async ({ ctx }) => {
+    return db.select().from(blockedDomains).where(eq(blockedDomains.userId, ctx.userId));
   }),
 
-  addBlockedDomain: t.procedure.input(z.string()).mutation(async ({ ctx, input }) => {
-    try {
-      await db
-        .insert(blockedDomains)
-        .values({
-          userId: getCurrentUserId(),
-          domain: input,
+  addBlockedDomain: protectedProcedure.input(z.string()).mutation(async ({ ctx, input }) => {
+    await db
+      .insert(blockedDomains)
+      .values({
+        userId: ctx.userId,
+        domain: input,
+        active: true,
+        updatedAt: Date.now(),
+      })
+      .onConflictDoUpdate({
+        target: [blockedDomains.userId, blockedDomains.domain],
+        set: {
+          active: true,
           updatedAt: Date.now(),
-        })
-        .onConflictDoUpdate({
-          target: blockedDomains.domain,
-          set: {
-            updatedAt: Date.now(),
-          },
-        });
-      return { success: true };
-    } catch (error) {
-      throw new Error("Failed to add blocked domain");
-    }
+        },
+      });
+    return { success: true };
   }),
 
-  removeBlockedDomain: t.procedure.input(z.string()).mutation(async ({ ctx, input }) => {
-    try {
-      await db.delete(blockedDomains).where(eq(blockedDomains.domain, input));
-      return { success: true };
-    } catch (error) {
-      throw new Error("Failed to remove blocked domain");
-    }
+  removeBlockedDomain: protectedProcedure.input(z.string()).mutation(async ({ ctx, input }) => {
+    await db
+      .delete(blockedDomains)
+      .where(and(eq(blockedDomains.domain, input), eq(blockedDomains.userId, ctx.userId)));
+    return { success: true };
   }),
 
-  getBlockedApps: t.procedure.query(async ({ ctx }) => {
-    try {
-      return db.select().from(blockedApps).where(eq(blockedApps.userId, getCurrentUserId()));
-    } catch (error) {
-      throw new Error("Failed to get blocked apps");
-    }
+  getBlockedApps: protectedProcedure.query(async ({ ctx }) => {
+    return db.select().from(blockedApps).where(eq(blockedApps.userId, ctx.userId));
   }),
 
-  addBlockedApp: t.procedure.input(z.string()).mutation(async ({ ctx, input }) => {
-    try {
-      await db
-        .insert(blockedApps)
-        .values({
-          userId: getCurrentUserId(),
-          appName: input,
+  addBlockedApp: protectedProcedure.input(z.string()).mutation(async ({ ctx, input }) => {
+    await db
+      .insert(blockedApps)
+      .values({
+        userId: ctx.userId,
+        appName: input,
+        active: true,
+        updatedAt: Date.now(),
+      })
+      .onConflictDoUpdate({
+        target: [blockedApps.userId, blockedApps.appName],
+        set: {
+          active: true,
           updatedAt: Date.now(),
-        })
-        .onConflictDoUpdate({
-          target: blockedApps.appName,
-          set: {
-            updatedAt: Date.now(),
-          },
-        });
-      return { success: true };
-    } catch (error) {
-      throw new Error("Failed to add blocked app");
-    }
+        },
+      });
+    return { success: true };
   }),
 
-  removeBlockedApp: t.procedure.input(z.string()).mutation(async ({ ctx, input }) => {
-    try {
-      await db.delete(blockedApps).where(eq(blockedApps.appName, input));
-      return { success: true };
-    } catch (error) {
-      throw new Error("Failed to remove blocked app");
-    }
+  removeBlockedApp: protectedProcedure.input(z.string()).mutation(async ({ ctx, input }) => {
+    await db
+      .delete(blockedApps)
+      .where(and(eq(blockedApps.appName, input), eq(blockedApps.userId, ctx.userId)));
+
+    return { success: true };
   }),
 });

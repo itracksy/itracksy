@@ -50,48 +50,70 @@ export const getCurrentUserId = () => {
   }
   return existingUserId;
 };
-export async function setCurrentUserId(supabaseUserId: string): Promise<string> {
-  if (existingUserId) {
-    if (supabaseUserId && existingUserId !== supabaseUserId) {
-      logger.error("[setCurrentUserId] Current user id mismatch", {
-        existingUserId,
-        supabaseUserId,
-      });
-    }
-    return existingUserId;
-  }
-  existingUserId = await getValue(USER_SETTINGS_KEYS.currentUserId);
 
+export const getCurrentUserIdLocalStorage = async () => {
   if (!existingUserId) {
-    existingUserId = supabaseUserId;
-    await setValue(USER_SETTINGS_KEYS.currentUserId, existingUserId);
-    const defaultSettings = {
-      [USER_SETTINGS_KEYS.accessibilityPermission]: "false",
-      [USER_SETTINGS_KEYS.screenRecordingPermission]: "false",
-      [USER_SETTINGS_KEYS.isFocusMode]: "true",
-      [USER_SETTINGS_KEYS.isTracking]: "false",
-    };
+    existingUserId = await getValue(USER_SETTINGS_KEYS.currentUserId);
+  }
 
-    await setMultipleValues(defaultSettings);
+  return existingUserId;
+};
 
-    // Insert default blocked domains
-    for (const domain of defaultBlockedDomains) {
-      await db.insert(blockedDomains).values({
+export async function setCurrentUserId(supabaseUserId: string): Promise<string> {
+  if (existingUserId && existingUserId !== supabaseUserId) {
+    logger.fatal("[setCurrentUserId] Current user id mismatch", {
+      existingUserId,
+      supabaseUserId,
+    });
+  }
+
+  await setValue(USER_SETTINGS_KEYS.currentUserId, supabaseUserId);
+  existingUserId = supabaseUserId;
+  const defaultSettings = {
+    [USER_SETTINGS_KEYS.accessibilityPermission]: "false",
+    [USER_SETTINGS_KEYS.screenRecordingPermission]: "false",
+    [USER_SETTINGS_KEYS.isFocusMode]: "true",
+    [USER_SETTINGS_KEYS.isTracking]: "false",
+  };
+
+  await setMultipleValues(defaultSettings);
+
+  // Insert default blocked domains
+  for (const domain of defaultBlockedDomains) {
+    await db
+      .insert(blockedDomains)
+      .values({
         userId: existingUserId,
         domain,
+        active: true,
         updatedAt: Date.now(),
+      })
+      .onConflictDoUpdate({
+        target: [blockedDomains.userId, blockedDomains.domain],
+        set: {
+          active: true,
+          updatedAt: Date.now(),
+        },
       });
-    }
+  }
 
-    // Insert default blocked apps
-    for (const appName of defaultBlockedApps) {
-      await db.insert(blockedApps).values({
+  // Insert default blocked apps
+  for (const appName of defaultBlockedApps) {
+    await db
+      .insert(blockedApps)
+      .values({
         userId: existingUserId,
         appName,
+        active: true,
         updatedAt: Date.now(),
+      })
+      .onConflictDoUpdate({
+        target: [blockedApps.userId, blockedApps.appName],
+        set: {
+          active: true,
+          updatedAt: Date.now(),
+        },
       });
-    }
-    return existingUserId;
   }
   return existingUserId;
 }

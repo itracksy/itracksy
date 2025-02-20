@@ -5,6 +5,7 @@ import { createIPCHandler } from "electron-trpc/main";
 import registerListeners from "./helpers/ipc/listeners-register";
 import { router } from "./api";
 import { initializeDatabase } from "./api/db/init";
+import { createContext } from "./api/trpc";
 
 import { logger } from "./helpers/logger";
 
@@ -86,7 +87,11 @@ function createWindow(): void {
     titleBarStyle: "hidden",
   });
 
-  createIPCHandler({ router, windows: [mainWindow] });
+  createIPCHandler({
+    router,
+    windows: [mainWindow],
+    createContext,
+  });
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);

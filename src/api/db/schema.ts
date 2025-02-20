@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, index, primaryKey } from "drizzle-orm/sqlite-core";
 
 export const activities = sqliteTable(
   "activities",
@@ -28,29 +28,34 @@ export const blockedDomains = sqliteTable(
   "blocked_domains",
   {
     userId: text("user_id").notNull(),
-    domain: text("domain").primaryKey(),
+    domain: text("domain").notNull(),
     active: integer("active", { mode: "boolean" }).notNull().default(true),
     updatedAt: integer("updated_at").notNull(),
   },
-  (table) => [index("blocked_domains_user_idx").on(table.userId)]
+  (table) => ({
+    pk: primaryKey({ columns: [table.userId, table.domain] }),
+    userIdx: index("blocked_domains_user_idx").on(table.userId),
+    domainIdx: index("blocked_domains_domain_idx").on(table.domain),
+  })
 );
 
 export const blockedApps = sqliteTable(
   "blocked_apps",
   {
     userId: text("user_id").notNull(),
-    appName: text("app_name").primaryKey(),
+    appName: text("app_name").notNull(),
     active: integer("active", { mode: "boolean" }).notNull().default(true),
     updatedAt: integer("updated_at").notNull(),
   },
-  (table) => [index("blocked_apps_user_idx").on(table.userId)]
+  (table) => ({
+    pk: primaryKey({ columns: [table.userId, table.appName] }),
+    userIdx: index("blocked_apps_user_idx").on(table.userId),
+    appNameIdx: index("blocked_apps_name_idx").on(table.appName),
+  })
 );
 
-export const localStorage = sqliteTable(
-  "local_storage",
-  {
-    key: text("key").primaryKey(),
-    value: text("value").notNull(),
-    updatedAt: integer("updated_at").notNull(),
-  }
-);
+export const localStorage = sqliteTable("local_storage", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: integer("updated_at").notNull(),
+});

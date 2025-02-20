@@ -14,7 +14,7 @@ export function useAuth() {
       .then(({ data: { session } }) => {
         setUser(session?.user ?? null);
         if (session?.user?.id) {
-          trpcClient.user.setCurrrentUserId.mutate(session.user?.id);
+          trpcClient.auth.signInAnonymously.mutate(session.user?.id);
         }
       })
       .finally(() => {
@@ -27,7 +27,7 @@ export function useAuth() {
     } = supabase.auth.onAuthStateChange((_event, session: Session | null) => {
       setUser(session?.user ?? null);
       if (session?.user?.id) {
-        trpcClient.user.setCurrrentUserId.mutate(session.user?.id);
+        trpcClient.auth.signInAnonymously.mutate(session.user?.id);
       }
       setLoading(false);
     });

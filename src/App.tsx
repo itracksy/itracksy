@@ -53,13 +53,24 @@ function App() {
   useEffect(() => {
     async function signInAnonymously() {
       if (!loading && !user) {
-        const { data, error } = await supabase.auth.signInAnonymously();
-
-        if (data.user?.id) {
-          trpcClient.user.setCurrrentUserId.mutate(data.user?.id);
-        }
-        if (error) {
-          console.error("Error signing in anonymously:", error.message);
+        // Try to restore session for existing anonymous user
+        const authResult = await supabase.auth.getSession();
+        
+        if (!authResult.data.session) {
+          // If no session, try to refresh the token first
+          const refreshResult = await supabase.auth.refreshSession();
+          
+          // If refresh fails, create new anonymous user
+          if (!refreshResult.data.session) {
+            const anonResult = await supabase.auth.signInAnonymously();
+            if (anonResult.error) {
+              console.error("Error signing in anonymously:", anonResult.error.message);
+              return;
+            }
+            if (anonResult.data.user?.id) {
+              await trpcClient.auth.signInAnonymously.mutate(anonResult.data.user.id);
+            }
+          }
         }
       }
     }
