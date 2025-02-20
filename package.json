@@ -30,7 +30,7 @@
     "debug-make": "DEBUG=electron-forge:* npm run make",
     "db:generate": "drizzle-kit generate",
     "db:studio": "drizzle-kit studio",
-    "db:migrate": "tsx src/db/migrate.ts"
+    "db:migrate": "tsx src/api/db/migrate.ts"
   },
   "author": "HungHoang <hth321@gmail.com>",
   "license": "MIT",

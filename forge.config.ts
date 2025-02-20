@@ -27,6 +27,7 @@ export const EXTERNAL_DEPENDENCIES = [
   "get-windows",
   "zod",
   "@libsql/client",
+  "drizzle-orm",
 ];
 
 // Base packager configuration

@@ -107,11 +107,10 @@ function createWindow(): void {
 // Initialize app when ready
 app.whenReady().then(async () => {
   try {
-    await initializeDatabase();
     logger.clearLogFile();
-    logger.info("Database initialized successfully");
+    await initializeDatabase();
   } catch (error) {
-    logger.error("Failed to initialize database:", error);
+    logger.error("[app.whenReady] Failed to initialize database:", error);
   }
 
   await createTray();

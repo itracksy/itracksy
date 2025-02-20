@@ -10,7 +10,7 @@ import * as path from "path";
 const LOG_CONFIG = {
   development: {
     console: [LogLevel.DEBUG, LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR, LogLevel.FATAL],
-    file: [LogLevel.WARN, LogLevel.ERROR, LogLevel.FATAL],
+    file: [LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR, LogLevel.FATAL],
     axiom: [LogLevel.ERROR, LogLevel.FATAL],
   },
   production: {
@@ -157,7 +157,6 @@ export class ServerLogger {
       this.debug("[ServerLogger] Log file cleared successfully");
     } catch (error) {
       this.error("[ServerLogger] Failed to clear log file", error);
-      throw error;
     }
   }
 
