@@ -41,7 +41,7 @@ export const initializeDatabase = async () => {
   try {
     await initDb();
   } catch (error) {
-    logger.error("Failed to initialize database:", error);
+    logger.fatal("Failed to initialize database:", error);
     // Log additional error details if available
     if (error instanceof Error) {
       logger.error("Error details:", {
@@ -68,7 +68,7 @@ export const initializeDatabase = async () => {
         throw new Error("Database file not found for backup");
       }
     } catch (recoveryError) {
-      logger.error("Failed to recover database:", recoveryError);
+      logger.fatal("Failed to recover database:", recoveryError);
       throw recoveryError;
     }
   }

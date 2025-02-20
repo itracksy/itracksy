@@ -78,6 +78,8 @@ export class ServerLogger {
           message,
           sessionId: this.sessionId,
           userId: this.userId,
+          appversion: app.getVersion(),
+          platform: process.platform,
           args,
         },
       ]);

@@ -16,22 +16,14 @@ export const activityRouter = t.router({
   }),
 
   startTracking: t.procedure.mutation(async () => {
-    try {
-      await startTracking();
-      updateUserSettings({ isTracking: true });
-      return { success: true };
-    } catch (error) {
-      throw new Error("Failed to start tracking");
-    }
+    await startTracking();
+    updateUserSettings({ isTracking: true });
+    return { success: true };
   }),
 
   stopTracking: t.procedure.mutation(async () => {
-    try {
-      stopTracking();
-      updateUserSettings({ isTracking: false });
-      return { success: true };
-    } catch (error) {
-      throw new Error("Failed to stop tracking");
-    }
+    stopTracking();
+    updateUserSettings({ isTracking: false });
+    return { success: true };
   }),
 });
