@@ -18,7 +18,7 @@ let isNotificationEnabled: boolean = true;
 
 const NOTIFICATION_COOLDOWN = 60 * 1000; // 1 minute in milliseconds
 
-export const startTracking = async (): Promise<void> => {
+export const startTracking = async (userId: string): Promise<void> => {
   // Clear any existing interval
   stopTracking();
 
@@ -27,9 +27,9 @@ export const startTracking = async (): Promise<void> => {
     try {
       const getWindows = await import("get-windows");
       logger.debug("[startTracking] Attempting to get active window");
-      const activitySettings = await getUserSettings();
-      const blockedApps = await getUserBlockedApps();
-      const blockedDomains = await getUserBlockedDomains();
+      const activitySettings = await getUserSettings({ userId });
+      const blockedApps = await getUserBlockedApps(userId);
+      const blockedDomains = await getUserBlockedDomains(userId);
       const result = await getWindows.activeWindow(activitySettings ?? undefined);
       if (!result) {
         logger.warn("[startTracking] No active window result returned", { activitySettings });
@@ -56,7 +56,7 @@ export const startTracking = async (): Promise<void> => {
               result.url,
       };
 
-      await addActivity(transformedActivities);
+      await addActivity({ activity: transformedActivities, userId });
       if (activitySettings?.isFocusMode) {
         const url = transformedActivities.url;
         const appName = transformedActivities.ownerName;

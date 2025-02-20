@@ -5,7 +5,6 @@ import { activities } from "../schema";
 
 import { gte, desc } from "drizzle-orm";
 import { mergeActivityRecord } from "../../../helpers/mergeActivitiRecord";
-import { getCurrentUserId } from "./userSettings";
 
 const mergeRecords = async (): Promise<void> => {
   const activities = await getActivities();
@@ -15,9 +14,14 @@ const mergeRecords = async (): Promise<void> => {
 };
 
 let count = 0;
-export const addActivity = async (activity: ActivityRecord): Promise<void> => {
+export const addActivity = async ({
+  activity,
+  userId,
+}: {
+  activity: ActivityRecord;
+  userId: string;
+}): Promise<void> => {
   const isFocused = activity.isFocused ?? false;
-  const userId = getCurrentUserId();
 
   // Store in SQLite database
   try {

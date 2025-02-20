@@ -15,7 +15,7 @@ const USER_SETTINGS_KEYS = {
   isTracking: "user.isTracking",
 };
 
-export async function getUserSettings() {
+export async function getUserSettings({ userId }: { userId: string }) {
   const [
     accessibilityPermission,
     screenRecordingPermission,
@@ -33,7 +33,7 @@ export async function getUserSettings() {
   ]);
 
   return {
-    userId: getCurrentUserId(),
+    userId,
     accessibilityPermission: accessibilityPermission === "true",
     screenRecordingPermission: screenRecordingPermission === "true",
     isFocusMode: isFocusMode === "true",
@@ -153,18 +153,12 @@ export async function updateUserSettings(settings: {
   }
 }
 
-export const getUserBlockedApps = async () => {
-  const result = await db
-    .select()
-    .from(blockedApps)
-    .where(eq(blockedApps.userId, getCurrentUserId()));
+export const getUserBlockedApps = async (userId: string) => {
+  const result = await db.select().from(blockedApps).where(eq(blockedApps.userId, userId));
   return result;
 };
 
-export const getUserBlockedDomains = async () => {
-  const result = await db
-    .select()
-    .from(blockedDomains)
-    .where(eq(blockedDomains.userId, getCurrentUserId()));
+export const getUserBlockedDomains = async (userId: string) => {
+  const result = await db.select().from(blockedDomains).where(eq(blockedDomains.userId, userId));
   return result;
 };

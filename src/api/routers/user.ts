@@ -3,13 +3,7 @@ import { t, protectedProcedure } from "../trpc";
 import { blockedDomains, blockedApps } from "../db/schema";
 import { and, eq } from "drizzle-orm";
 import db from "../db";
-import {
-  getCurrentUserId,
-  setCurrentUserId,
-  getUserSettings,
-  updateUserSettings,
-  getCurrentUserIdLocalStorage,
-} from "../db/repositories/userSettings";
+import { getUserSettings, updateUserSettings } from "../db/repositories/userSettings";
 
 const trackingSettingsSchema = z.object({
   accessibilityPermission: z.boolean(),
@@ -22,8 +16,8 @@ const updateTrackingSettingsSchema = trackingSettingsSchema.partial();
 
 // Create the router
 export const userRouter = t.router({
-  getActivitySettings: protectedProcedure.query(async () => {
-    return getUserSettings();
+  getActivitySettings: protectedProcedure.query(async ({ ctx }) => {
+    return getUserSettings({ userId: ctx.userId });
   }),
 
   updateActivitySettings: protectedProcedure
