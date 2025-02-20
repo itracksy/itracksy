@@ -4,7 +4,6 @@ import { ActivityRecord } from "@/types/activity";
 export const mergeActivityRecord = (prev: ActivityRecord[]): ActivityRecord[] => {
   if (prev.length === 0) return [];
 
-  console.log("prev.length:", prev.length);
   // Helper function to check if records match
   const recordsMatch = (a: ActivityRecord, b: ActivityRecord): boolean => {
     const matches =

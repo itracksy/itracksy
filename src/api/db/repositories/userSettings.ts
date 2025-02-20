@@ -68,7 +68,11 @@ export async function setCurrentUserId(supabaseUserId: string): Promise<string> 
   }
 
   await setValue(USER_SETTINGS_KEYS.currentUserId, supabaseUserId);
+  if (existingUserId == supabaseUserId) {
+    return existingUserId;
+  }
   existingUserId = supabaseUserId;
+
   const defaultSettings = {
     [USER_SETTINGS_KEYS.accessibilityPermission]: "false",
     [USER_SETTINGS_KEYS.screenRecordingPermission]: "false",

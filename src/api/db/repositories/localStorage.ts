@@ -30,13 +30,11 @@ export const deleteValue = async (key: string): Promise<void> => {
 
 export const getAllValues = async (): Promise<Record<string, string>> => {
   const results = await db.select().from(localStorage);
-  return results.reduce(
-    (acc, { key, value }) => {
-      acc[key] = value;
-      return acc;
-    },
-    {} as Record<string, string>
-  );
+  const init: Record<string, string> = {};
+  return results.reduce((acc, { key, value }) => {
+    acc[key] = value;
+    return acc;
+  }, init);
 };
 
 export const setMultipleValues = async (values: Record<string, string>): Promise<void> => {
