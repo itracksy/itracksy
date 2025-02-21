@@ -1,25 +1,20 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  createColumn,
-  createItem,
-  deleteColumn,
-  deleteItem,
-  updateColumn,
-  updateItem,
-} from "../api/services/board";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Board, BoardWithRelations } from "@/types/supabase";
 import { ColumnInsert, ItemInsert } from "@/types/supabase";
+import { trpcClient } from "@/utils/trpc.js";
 
 export const boardQueries = {
-  list: () => {}, // TO DO: implement list query
-  detail: (id: string) => {}, // TO DO: implement detail query
+  list: () => ["boards"],
+  detail: (id: string) => ["board", id],
 };
 
 export function useCreateColumnMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: createColumn,
+    mutationFn: async (newColumn: Omit<ColumnInsert, "id">) => {
+      return await trpcClient.board.createColumn.mutate(newColumn);
+    },
     onMutate: async (newColumn) => {
       const boardKey = ["board", newColumn.boardId];
       await queryClient.cancelQueries({ queryKey: boardKey });
@@ -58,7 +53,9 @@ export function useCreateItemMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: createItem,
+    mutationFn: async (newItem: ItemInsert) => {
+      return await trpcClient.board.createItem.mutate(newItem);
+    },
     onMutate: async (newItem) => {
       const boardKey = ["board", newItem.boardId];
       await queryClient.cancelQueries({ queryKey: boardKey });
@@ -98,10 +95,10 @@ export function useUpdateItemMutation() {
 
   return useMutation({
     mutationFn: async ({ id, ...item }: { id: string } & Partial<ItemInsert>) => {
-      await updateItem(id, item);
+      return await trpcClient.board.updateItem.mutate({ id, ...item });
     },
-    onMutate: async (newItem) => {
-      const boardKey = ["board", newItem.boardId];
+    onMutate: async ({ id, ...item }) => {
+      const boardKey = ["board", item.boardId];
       await queryClient.cancelQueries({ queryKey: boardKey });
 
       const previousBoard = queryClient.getQueryData<BoardWithRelations>(boardKey);
@@ -109,23 +106,19 @@ export function useUpdateItemMutation() {
       if (previousBoard) {
         queryClient.setQueryData<BoardWithRelations>(boardKey, {
           ...previousBoard,
-          items: previousBoard.items?.map((item) =>
-            item.id === newItem.id
-              ? { ...item, ...newItem, content: newItem.content ?? null }
-              : item
-          ),
+          items: previousBoard.items.map((i) => (i.id === id ? { ...i, ...item } : i)),
         });
       }
 
       return { previousBoard };
     },
-    onError: (err, { boardId }, context) => {
+    onError: (err, { id, ...item }, context) => {
       if (context?.previousBoard) {
-        queryClient.setQueryData(["board", boardId], context.previousBoard);
+        queryClient.setQueryData(["board", item.boardId], context.previousBoard);
       }
     },
-    onSettled: (data, error, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["board", variables.boardId] });
+    onSettled: (data, error, { id, ...item }) => {
+      queryClient.invalidateQueries({ queryKey: ["board", item.boardId] });
     },
   });
 }
@@ -134,11 +127,17 @@ export function useDeleteItemMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, boardId }: { id: string; boardId: string }) => {
-      await deleteItem(id);
+    mutationFn: async (id: string) => {
+      return await trpcClient.board.deleteItem.mutate(id);
     },
-    onMutate: async ({ id, boardId }) => {
-      const boardKey = ["board", boardId];
+    onMutate: async (id) => {
+      // We need to get the board ID from the current board data
+      const boards = queryClient.getQueriesData<BoardWithRelations>({ queryKey: ["board"] });
+      const board = boards.find(([_, data]) => data?.items.some((item) => item.id === id))?.[1];
+      
+      if (!board) return;
+
+      const boardKey = ["board", board.id];
       await queryClient.cancelQueries({ queryKey: boardKey });
 
       const previousBoard = queryClient.getQueryData<BoardWithRelations>(boardKey);
@@ -146,19 +145,21 @@ export function useDeleteItemMutation() {
       if (previousBoard) {
         queryClient.setQueryData<BoardWithRelations>(boardKey, {
           ...previousBoard,
-          items: previousBoard.items?.filter((item) => item.id !== id),
+          items: previousBoard.items.filter((i) => i.id !== id),
         });
       }
 
-      return { previousBoard };
+      return { previousBoard, boardId: board.id };
     },
-    onError: (err, { boardId }, context) => {
-      if (context?.previousBoard) {
-        queryClient.setQueryData(["board", boardId], context.previousBoard);
+    onError: (err, id, context) => {
+      if (context?.previousBoard && context.boardId) {
+        queryClient.setQueryData(["board", context.boardId], context.previousBoard);
       }
     },
-    onSettled: (data, error, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["board", variables.boardId] });
+    onSettled: (data, error, id, context) => {
+      if (context?.boardId) {
+        queryClient.invalidateQueries({ queryKey: ["board", context.boardId] });
+      }
     },
   });
 }
@@ -167,11 +168,17 @@ export function useDeleteColumnMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id }: { id: string; boardId: string }) => {
-      await deleteColumn(id);
+    mutationFn: async (id: string) => {
+      return await trpcClient.board.deleteColumn.mutate(id);
     },
-    onMutate: async ({ id, boardId }) => {
-      const boardKey = ["board", boardId];
+    onMutate: async (id) => {
+      // We need to get the board ID from the current board data
+      const boards = queryClient.getQueriesData<BoardWithRelations>({ queryKey: ["board"] });
+      const board = boards.find(([_, data]) => data?.columns.some((col) => col.id === id))?.[1];
+      
+      if (!board) return;
+
+      const boardKey = ["board", board.id];
       await queryClient.cancelQueries({ queryKey: boardKey });
 
       const previousBoard = queryClient.getQueryData<BoardWithRelations>(boardKey);
@@ -179,20 +186,22 @@ export function useDeleteColumnMutation() {
       if (previousBoard) {
         queryClient.setQueryData<BoardWithRelations>(boardKey, {
           ...previousBoard,
-          columns: previousBoard.columns?.filter((col) => col.id !== id),
-          items: previousBoard.items?.filter((item) => item.columnId !== id),
+          columns: previousBoard.columns.filter((c) => c.id !== id),
+          items: previousBoard.items.filter((i) => i.columnId !== id),
         });
       }
 
-      return { previousBoard };
+      return { previousBoard, boardId: board.id };
     },
-    onError: (err, { boardId }, context) => {
-      if (context?.previousBoard) {
-        queryClient.setQueryData(["board", boardId], context.previousBoard);
+    onError: (err, id, context) => {
+      if (context?.previousBoard && context.boardId) {
+        queryClient.setQueryData(["board", context.boardId], context.previousBoard);
       }
     },
-    onSettled: (data, error, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["board", variables.boardId] });
+    onSettled: (data, error, id, context) => {
+      if (context?.boardId) {
+        queryClient.invalidateQueries({ queryKey: ["board", context.boardId] });
+      }
     },
   });
 }
@@ -202,10 +211,10 @@ export function useUpdateColumnMutation() {
 
   return useMutation({
     mutationFn: async ({ id, ...column }: { id: string } & Partial<ColumnInsert>) => {
-      await updateColumn(id, column);
+      return await trpcClient.board.updateColumn.mutate({ id, ...column });
     },
-    onMutate: async ({ id, boardId, ...newColumn }) => {
-      const boardKey = ["board", boardId];
+    onMutate: async ({ id, ...column }) => {
+      const boardKey = ["board", column.boardId];
       await queryClient.cancelQueries({ queryKey: boardKey });
 
       const previousBoard = queryClient.getQueryData<BoardWithRelations>(boardKey);
@@ -213,21 +222,19 @@ export function useUpdateColumnMutation() {
       if (previousBoard) {
         queryClient.setQueryData<BoardWithRelations>(boardKey, {
           ...previousBoard,
-          columns: previousBoard.columns?.map((col) =>
-            col.id === id ? { ...col, ...newColumn } : col
-          ),
+          columns: previousBoard.columns.map((c) => (c.id === id ? { ...c, ...column } : c)),
         });
       }
 
       return { previousBoard };
     },
-    onError: (err, { boardId }, context) => {
+    onError: (err, { id, ...column }, context) => {
       if (context?.previousBoard) {
-        queryClient.setQueryData(["board", boardId], context.previousBoard);
+        queryClient.setQueryData(["board", column.boardId], context.previousBoard);
       }
     },
-    onSettled: (data, error, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["board", variables.boardId] });
+    onSettled: (data, error, { id, ...column }) => {
+      queryClient.invalidateQueries({ queryKey: ["board", column.boardId] });
     },
   });
 }

@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { TimeEntry, TimeEntryInsert } from "@/types/supabase";
 
-import { useAuth } from "@/hooks/useAuth";
 import { trpcClient } from "@/utils/trpc";
 
 export function useActiveTimeEntry() {

@@ -15,6 +15,13 @@
       "when": 1740106825731,
       "tag": "0001_military_lady_deathstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1740126822504,
+      "tag": "0002_complete_star_brand",
+      "breakpoints": true
     }
   ]
 }
