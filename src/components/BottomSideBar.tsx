@@ -45,7 +45,7 @@ export function BottomSideBar() {
 
         setDuration(durationLocal);
 
-        const text = activeTimeEntry.items?.title ?? "";
+        const text = activeTimeEntry.item.title ?? "";
         const trayTitle = text.length > 10 ? `${text.slice(0, 7)}...` : text;
 
         window.electronWindow.updateTrayTitle(`${trayTitle}-${durationLocal}`);
@@ -139,11 +139,11 @@ export function BottomSideBar() {
           <SidebarMenuButton
             onClick={handleStopTimeEntry}
             className="hover:text-red-600"
-            tooltip={`Stop: ${activeTimeEntry?.items?.title}`}
+            tooltip={`Stop: ${activeTimeEntry?.item?.title}`}
           >
             <StopCircle className="h-6 w-6 text-red-600" />
             <span className="flex items-center gap-2 text-base font-medium">
-              <span>{activeTimeEntry?.items?.title}</span>
+              <span>{activeTimeEntry?.item?.title}</span>
 
               <span className="text-xs text-muted-foreground">({duration})</span>
               <span>

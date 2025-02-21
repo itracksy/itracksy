@@ -7,11 +7,11 @@ export type TimeEntry = typeof timeEntries.$inferSelect;
 export type TimeEntryInsert = typeof timeEntries.$inferInsert;
 export type Item = typeof items.$inferSelect;
 
-export async function getActiveTimeEntry(): Promise<(TimeEntry & { items: Item | null }) | null> {
+export async function getActiveTimeEntry() {
   const entry = await db.query.timeEntries.findFirst({
     where: isNull(timeEntries.endTime),
     with: {
-      items: true,
+      item: true,
     },
   });
 
@@ -66,13 +66,11 @@ export async function getTimeEntriesForItem(itemId: string): Promise<TimeEntry[]
     .orderBy(desc(timeEntries.startTime));
 }
 
-export async function getTimeEntriesForBoard(
-  boardId: string
-): Promise<(TimeEntry & { items: Item | null })[]> {
+export async function getTimeEntriesForBoard(boardId: string) {
   return await db.query.timeEntries.findMany({
     where: eq(timeEntries.boardId, boardId),
     with: {
-      items: true,
+      item: true,
     },
     orderBy: desc(timeEntries.startTime),
   });

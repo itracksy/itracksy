@@ -71,10 +71,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
       if (!confirmed) return;
 
       try {
-        await deleteColumnMutation.mutateAsync({
-          id: columnId,
-          boardId,
-        });
+        await deleteColumnMutation.mutateAsync(columnId);
       } catch (error) {
         // toast({
         //   variant: "destructive",

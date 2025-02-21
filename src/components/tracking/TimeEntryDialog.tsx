@@ -12,8 +12,6 @@ import { useAtom } from "jotai";
 import { selectedBoardIdAtom } from "@/context/board";
 import { trpcClient } from "@/utils/trpc.js";
 
-import { BoardWithRelations } from "@/types/supabase";
-
 interface TimeEntryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;

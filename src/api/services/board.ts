@@ -11,10 +11,7 @@ export type ColumnInsert = typeof columns.$inferInsert;
 export type Item = typeof items.$inferSelect;
 export type ItemInsert = typeof items.$inferInsert;
 
-export async function getBoard(
-  id: string,
-  userId: string
-): Promise<Board & { columns: Column[]; items: Item[] }> {
+export async function getBoard(id: string, userId: string) {
   const board = await db.query.boards.findFirst({
     where: and(eq(boards.id, id), eq(boards.userId, userId)),
     with: {
@@ -23,7 +20,6 @@ export async function getBoard(
     },
   });
 
-  if (!board) throw new Error("Board not found");
   return board;
 }
 

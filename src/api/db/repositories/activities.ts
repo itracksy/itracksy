@@ -59,8 +59,7 @@ export const findMatchingActivity = async (
 // Upsert activity with conflict detection using the composite index
 export const upsertActivity = async (activity: ActivityRecord): Promise<void> => {
   const existingActivity = await findMatchingActivity(activity);
-  console.log("[upsertActivity] Existing activity:", existingActivity);
-  console.log("[upsertActivity] Activity to upsert:", activity);
+
   if (existingActivity) {
     await db
       .update(activities)
@@ -109,11 +108,11 @@ export const getFocusedTimeByHour = async (
 
   // Get timezone offset in minutes
   const timezoneOffset = new Date().getTimezoneOffset();
-  
+
   // Create reusable hour calculation
   const hourExpr = sql`strftime('%H', datetime(${activities.timestamp} / 1000 + ${-timezoneOffset * 60}, 'unixepoch'))`;
   const hourCast = sql<number>`cast(${hourExpr} as integer)`;
-  
+
   // First get hourly summaries
   const hourSummaries = await db
     .select({
