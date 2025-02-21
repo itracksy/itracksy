@@ -44,12 +44,6 @@ export async function getUserSettings({ userId }: { userId: string }) {
 }
 
 let existingUserId: string | null = null;
-export const getCurrentUserId = () => {
-  if (!existingUserId) {
-    throw new Error("[getCurrentUserId] User not logged in");
-  }
-  return existingUserId;
-};
 
 export const getCurrentUserIdLocalStorage = async () => {
   if (!existingUserId) {
@@ -68,16 +62,14 @@ export async function setCurrentUserId(userId: string): Promise<string> {
   }
 
   await setValue(USER_SETTINGS_KEYS.currentUserId, userId);
-  if (existingUserId == userId) {
-    return existingUserId;
-  }
+
   existingUserId = userId;
 
   const defaultSettings = {
     [USER_SETTINGS_KEYS.accessibilityPermission]: "false",
     [USER_SETTINGS_KEYS.screenRecordingPermission]: "false",
     [USER_SETTINGS_KEYS.isFocusMode]: "true",
-    [USER_SETTINGS_KEYS.isTracking]: "false",
+    [USER_SETTINGS_KEYS.isTracking]: "true",
   };
 
   await setMultipleValues(defaultSettings);

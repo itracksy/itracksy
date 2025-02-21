@@ -28,6 +28,7 @@ export const EXTERNAL_DEPENDENCIES = [
   "zod",
   "@libsql/client",
   "drizzle-orm",
+  "drizzle-zod",
 ];
 
 // Base packager configuration
