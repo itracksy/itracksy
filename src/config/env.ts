@@ -1,7 +1,6 @@
 interface ImportMetaEnv {
   // Add other env variables here as needed
-  VITE_SUPABASE_URL: string | undefined;
-  VITE_SUPABASE_KEY: string | undefined;
+
   VITE_AXIOM_TOKEN: string | undefined;
   VITE_AXIOM_ORG_ID: string | undefined;
   VITE_AXIOM_DATASET: string | undefined;
@@ -28,10 +27,6 @@ function validateEnvVar(value: string | undefined, name: string): string {
 }
 
 export const config = {
-  // @ts-ignore
-  supabaseUrl: validateEnvVar(import.meta.env.VITE_SUPABASE_URL, "VITE_SUPABASE_URL"),
-  // @ts-ignore
-  supabaseKey: validateEnvVar(import.meta.env.VITE_SUPABASE_KEY, "VITE_SUPABASE_KEY"),
   // @ts-ignore
   axiomToken: validateEnvVar(import.meta.env.VITE_AXIOM_TOKEN, "VITE_AXIOM_TOKEN"),
   // @ts-ignore

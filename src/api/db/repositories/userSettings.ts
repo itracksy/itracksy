@@ -59,19 +59,19 @@ export const getCurrentUserIdLocalStorage = async () => {
   return existingUserId;
 };
 
-export async function setCurrentUserId(supabaseUserId: string): Promise<string> {
-  if (existingUserId && existingUserId !== supabaseUserId) {
+export async function setCurrentUserId(userId: string): Promise<string> {
+  if (existingUserId && existingUserId !== userId) {
     logger.fatal("[setCurrentUserId] Current user id mismatch", {
       existingUserId,
-      supabaseUserId,
+      userId,
     });
   }
 
-  await setValue(USER_SETTINGS_KEYS.currentUserId, supabaseUserId);
-  if (existingUserId == supabaseUserId) {
+  await setValue(USER_SETTINGS_KEYS.currentUserId, userId);
+  if (existingUserId == userId) {
     return existingUserId;
   }
-  existingUserId = supabaseUserId;
+  existingUserId = userId;
 
   const defaultSettings = {
     [USER_SETTINGS_KEYS.accessibilityPermission]: "false",

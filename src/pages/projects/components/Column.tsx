@@ -17,7 +17,7 @@ import { Card } from "./Card";
 import { PlusIcon, TrashIcon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Item } from "@/types/supabase";
+import { Item } from "@/types/projects";
 
 interface ColumnProps {
   name: string;

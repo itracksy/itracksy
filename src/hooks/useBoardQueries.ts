@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Board, BoardWithRelations } from "@/types/supabase";
-import { ColumnInsert, ItemInsert } from "@/types/supabase";
+import { Board, BoardWithRelations } from "@/types/projects";
+import { ColumnInsert, ItemInsert } from "@/types/projects";
 import { trpcClient } from "@/utils/trpc.js";
 
 export const boardQueries = {
@@ -134,7 +134,7 @@ export function useDeleteItemMutation() {
       // We need to get the board ID from the current board data
       const boards = queryClient.getQueriesData<BoardWithRelations>({ queryKey: ["board"] });
       const board = boards.find(([_, data]) => data?.items.some((item) => item.id === id))?.[1];
-      
+
       if (!board) return;
 
       const boardKey = ["board", board.id];
@@ -175,7 +175,7 @@ export function useDeleteColumnMutation() {
       // We need to get the board ID from the current board data
       const boards = queryClient.getQueriesData<BoardWithRelations>({ queryKey: ["board"] });
       const board = boards.find(([_, data]) => data?.columns.some((col) => col.id === id))?.[1];
-      
+
       if (!board) return;
 
       const boardKey = ["board", board.id];

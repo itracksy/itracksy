@@ -18,7 +18,7 @@ import { useConfirmationDialog } from "@/components/providers/ConfirmationDialog
 import { useUpdateItemMutation } from "@/hooks/useBoardQueries";
 import { useDeleteTimeEntryMutation, useTimeEntriesForItem } from "@/hooks/useTimeEntryQueries";
 import { formatDuration } from "@/utils/timeUtils";
-import type { Item, TimeEntry } from "@/types/supabase";
+import type { Item, TimeEntry } from "@/types/projects";
 
 interface ItemDetailDialogProps {
   open: boolean;

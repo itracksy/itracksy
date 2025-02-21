@@ -3,7 +3,7 @@ import invariant from "tiny-invariant";
 
 import { NewColumn } from "./NewColumn";
 import { Column as ColumnComponent } from "./Column";
-import { BoardWithRelations, Column, Item } from "@/types/supabase";
+import { BoardWithRelations, Column, Item } from "@/types/projects";
 
 export function BoardView({ board }: { board: BoardWithRelations }) {
   const newColumnAddedRef = useRef(false);

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { TimeEntry, TimeEntryInsert } from "@/types/supabase";
+import type { TimeEntry, TimeEntryInsert } from "@/types/projects";
 
 import { trpcClient } from "@/utils/trpc";
 
