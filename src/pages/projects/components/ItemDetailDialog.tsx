@@ -40,7 +40,7 @@ export function ItemDetailDialog({ open, onOpenChange, item }: ItemDetailDialogP
   const handleSave = () => {
     updateCardMutation.mutate({
       id: item.id,
-      board_id: item.board_id,
+      boardId: item.boardId,
       title,
       content: content || null,
     });
@@ -122,20 +122,20 @@ export function ItemDetailDialog({ open, onOpenChange, item }: ItemDetailDialogP
                     {timeEntries.map((entry) => (
                       <TableRow key={entry.id}>
                         <TableCell>
-                          {format(new Date(entry.start_time), "MMM d, yyyy HH:mm")}
+                          {format(new Date(entry.startTime), "MMM d, yyyy HH:mm")}
                         </TableCell>
                         <TableCell>
-                          {entry.end_time
-                            ? format(new Date(entry.end_time), "MMM d, yyyy HH:mm")
+                          {entry.endTime
+                            ? format(new Date(entry.endTime), "MMM d, yyyy HH:mm")
                             : "Running"}
                         </TableCell>
                         <TableCell>
-                          {entry.end_time
+                          {entry.endTime
                             ? formatDuration(
-                                new Date(entry.end_time).getTime() -
-                                  new Date(entry.start_time).getTime()
+                                new Date(entry.endTime).getTime() -
+                                  new Date(entry.startTime).getTime()
                               )
-                            : formatDuration(Date.now() - new Date(entry.start_time).getTime())}
+                            : formatDuration(Date.now() - new Date(entry.startTime).getTime())}
                         </TableCell>
                         <TableCell>
                           <div className="flex justify-end gap-2">

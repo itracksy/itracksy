@@ -12,8 +12,6 @@ import { useAuth } from "./hooks/useAuth";
 
 import { useTracking } from "./hooks/useTracking";
 
-import { trpcClient } from "./utils/trpc";
-
 const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
@@ -49,33 +47,6 @@ function AuthenticatedApp() {
 
 function App() {
   const { user, loading } = useAuth();
-
-  useEffect(() => {
-    async function signInAnonymously() {
-      if (!loading && !user) {
-        // Try to restore session for existing anonymous user
-        const authResult = await supabase.auth.getSession();
-
-        if (!authResult.data.session) {
-          // If no session, try to refresh the token first
-          const refreshResult = await supabase.auth.refreshSession();
-
-          // If refresh fails, create new anonymous user
-          if (!refreshResult.data.session) {
-            const anonResult = await supabase.auth.signInAnonymously();
-            if (anonResult.error) {
-              console.error("Error signing in anonymously:", anonResult.error.message);
-              return;
-            }
-            if (anonResult.data.user?.id) {
-              await trpcClient.auth.signInAnonymously.mutate(anonResult.data.user.id);
-            }
-          }
-        }
-      }
-    }
-    signInAnonymously();
-  }, [user, loading]);
 
   if (loading) {
     return (

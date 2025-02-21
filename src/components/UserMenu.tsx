@@ -14,7 +14,6 @@ import { PersonIcon } from "@radix-ui/react-icons";
 
 export function UserMenu() {
   const { user } = useAuth();
-  const email = user?.email;
 
   return (
     <div className="flex items-center gap-2 text-sm font-medium">
@@ -26,12 +25,6 @@ export function UserMenu() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          {email && (
-            <>
-              <DropdownMenuLabel>{email}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-            </>
-          )}
           <DropdownMenuLabel className="flex items-center gap-2 py-0 font-normal">
             Theme
             <ToggleTheme />

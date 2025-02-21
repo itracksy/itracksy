@@ -11,19 +11,12 @@ export function useAuth() {
 
   useEffect(() => {
     // Get or create anonymous user ID from local storage
-    const storedUserId = localStorage.getItem("userId");
-    if (storedUserId) {
-      handleSignIn(storedUserId);
-    } else {
-      const newUserId = crypto.randomUUID();
-      localStorage.setItem("userId", newUserId);
-      handleSignIn(newUserId);
-    }
+    handleSignIn();
   }, []);
 
-  const handleSignIn = async (userId: string) => {
+  const handleSignIn = async () => {
     try {
-      await trpcClient.auth.signInAnonymously.mutate(userId);
+      const { userId } = await trpcClient.auth.signInAnonymously.mutate();
       setUser({ id: userId });
     } catch (error) {
       console.error("Error signing in:", error);

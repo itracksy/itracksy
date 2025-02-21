@@ -28,10 +28,15 @@ function validateEnvVar(value: string | undefined, name: string): string {
 }
 
 export const config = {
+  // @ts-ignore
   supabaseUrl: validateEnvVar(import.meta.env.VITE_SUPABASE_URL, "VITE_SUPABASE_URL"),
+  // @ts-ignore
   supabaseKey: validateEnvVar(import.meta.env.VITE_SUPABASE_KEY, "VITE_SUPABASE_KEY"),
+  // @ts-ignore
   axiomToken: validateEnvVar(import.meta.env.VITE_AXIOM_TOKEN, "VITE_AXIOM_TOKEN"),
+  // @ts-ignore
   axiomOrgId: validateEnvVar(import.meta.env.VITE_AXIOM_ORG_ID, "VITE_AXIOM_ORG_ID"),
+  // @ts-ignore
   axiomDataset: validateEnvVar(import.meta.env.VITE_AXIOM_DATASET, "VITE_AXIOM_DATASET"),
 } as const;
 

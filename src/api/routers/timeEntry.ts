@@ -7,7 +7,7 @@ import {
   getTimeEntriesForBoard,
   getTimeEntriesForItem,
   updateTimeEntry,
-} from "@/api/services/timeEntry";
+} from "../../api/services/timeEntry";
 import { timeEntries } from "../db/schema";
 import { createInsertSchema } from "drizzle-zod";
 const timeEntryInsertSchema = createInsertSchema(timeEntries);

@@ -1,18 +1,23 @@
-import { z } from "zod";
 import { t, publicProcedure } from "../trpc";
-import { setCurrentUserId } from "../db/repositories/userSettings";
+import { getCurrentUserIdLocalStorage, setCurrentUserId } from "../db/repositories/userSettings";
 import { logger } from "../../helpers/logger";
 
 export const authRouter = t.router({
-  signInAnonymously: publicProcedure.input(z.string()).mutation(async ({ input }) => {
+  signInAnonymously: publicProcedure.mutation(async ({ input }) => {
     try {
-      logger.info("[auth.signInAnonymously] Signing in anonymously", {
-        userId: input,
-      });
-      await setCurrentUserId(input);
-      return { success: true };
+      const existingUserId = await getCurrentUserIdLocalStorage();
+      if (!existingUserId) {
+        const newUserId = crypto.randomUUID();
+        await setCurrentUserId(newUserId);
+        logger.info("[auth.signInAnonymously] User id set", {
+          userId: newUserId,
+        });
+        return { userId: newUserId, success: true };
+      }
+
+      return { success: true, userId: existingUserId };
     } catch (error) {
-      logger.error("[auth.signInAnonymously] Failed to set user id", {
+      logger.fatal("[auth.signInAnonymously] Failed to set user id", {
         userId: input,
         error,
       });

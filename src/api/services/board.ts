@@ -73,7 +73,7 @@ export async function deleteColumn(id: string): Promise<void> {
   await db.delete(columns).where(eq(columns.id, id));
 }
 
-export async function createItem(item: Omit<ItemInsert, "id">): Promise<Item> {
+export async function createItem(item: ItemInsert): Promise<Item> {
   const newItem = await db
     .insert(items)
     .values({

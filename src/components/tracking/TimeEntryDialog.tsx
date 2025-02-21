@@ -10,9 +10,9 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { selectedBoardIdAtom } from "@/context/board";
+import { trpcClient } from "@/utils/trpc.js";
 
 import { BoardWithRelations } from "@/types/supabase";
-import { getBoard, getBoards } from "@/api/services/board";
 
 interface TimeEntryDialogProps {
   open: boolean;
@@ -33,12 +33,17 @@ export function TimeEntryDialog({
 
   const { data: boards } = useQuery({
     queryKey: ["boards"],
-    queryFn: getBoards,
+    queryFn: async () => {
+      return await trpcClient.board.list.query();
+    },
   });
 
-  const { data: selectedBoard } = useQuery<BoardWithRelations | null>({
+  const { data: selectedBoard } = useQuery({
     queryKey: ["board", selectedBoardId],
-    queryFn: async () => getBoard(selectedBoardId ?? ""),
+    queryFn: async () => {
+      if (!selectedBoardId) return null;
+      return await trpcClient.board.get.query(selectedBoardId);
+    },
     enabled: !!selectedBoardId,
   });
 

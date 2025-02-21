@@ -33,7 +33,7 @@ export function BoardView({ board }: { board: BoardWithRelations }) {
 
     // add items to their columns
     for (const item of itemsById.values()) {
-      const columnId = item.column_id;
+      const columnId = item.columnId;
       const column = columnsMap.get(columnId);
       invariant(column, `missing column: ${columnId} from ${[...columnsMap.keys()]}`);
       column.items.push(item);
@@ -56,7 +56,7 @@ export function BoardView({ board }: { board: BoardWithRelations }) {
               order={col.order}
               previousOrder={columns[index - 1] ? columns[index - 1].order : 0}
               nextOrder={columns[index + 1] ? columns[index + 1].order : col.order + 1}
-              className="border-tracksy-gold/20 dark:border-tracksy-gold/10 min-w-[300px] rounded-lg border bg-white/80 dark:bg-gray-900/80 shadow-lg backdrop-blur-sm"
+              className="min-w-[300px] rounded-lg border border-tracksy-gold/20 bg-white/80 shadow-lg backdrop-blur-sm dark:border-tracksy-gold/10 dark:bg-gray-900/80"
             />
           ))}
           <NewColumn
@@ -66,7 +66,7 @@ export function BoardView({ board }: { board: BoardWithRelations }) {
             onNewColumnAdded={() => {
               newColumnAddedRef.current = true;
             }}
-            className="border-tracksy-gold/20 dark:border-tracksy-gold/10 hover:border-tracksy-gold/40 dark:hover:border-tracksy-gold/20 min-w-[300px] rounded-lg border bg-white/80 dark:bg-gray-900/80 p-4 shadow-lg backdrop-blur-sm hover:bg-white dark:hover:bg-gray-800"
+            className="min-w-[300px] rounded-lg border border-tracksy-gold/20 bg-white/80 p-4 shadow-lg backdrop-blur-sm hover:border-tracksy-gold/40 hover:bg-white dark:border-tracksy-gold/10 dark:bg-gray-900/80 dark:hover:border-tracksy-gold/20 dark:hover:bg-gray-800"
           />
         </div>
       </div>

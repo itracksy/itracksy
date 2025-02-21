@@ -28,9 +28,9 @@ export function BottomSideBar() {
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
 
-    if (activeTimeEntry?.start_time) {
+    if (activeTimeEntry?.startTime) {
       const updateDuration = () => {
-        const start = new Date(activeTimeEntry.start_time).getTime();
+        const start = new Date(activeTimeEntry.startTime).getTime();
         const now = new Date().getTime();
         const diff = now - start;
 
@@ -45,7 +45,7 @@ export function BottomSideBar() {
 
         setDuration(durationLocal);
 
-        const text = activeTimeEntry.items?.title;
+        const text = activeTimeEntry.items?.title ?? "";
         const trayTitle = text.length > 10 ? `${text.slice(0, 7)}...` : text;
 
         window.electronWindow.updateTrayTitle(`${trayTitle}-${durationLocal}`);
@@ -64,7 +64,7 @@ export function BottomSideBar() {
         clearInterval(intervalId);
       }
     };
-  }, [activeTimeEntry?.start_time]);
+  }, [activeTimeEntry?.startTime]);
 
   const handleStopTimeEntry = async () => {
     if (!activeTimeEntry) return;
@@ -72,7 +72,7 @@ export function BottomSideBar() {
     try {
       await updateTimeEntry.mutateAsync({
         id: activeTimeEntry.id,
-        end_time: new Date().toISOString(),
+        endTime: new Date().toISOString(),
       });
 
       toast({
@@ -103,10 +103,10 @@ export function BottomSideBar() {
     try {
       await createTimeEntry.mutateAsync({
         id: crypto.randomUUID(),
-        item_id: selectedItemId,
-        board_id: selectedBoardId,
-        start_time: new Date().toISOString(),
-        is_focus_mode: isFocusMode,
+        itemId: selectedItemId,
+        boardId: selectedBoardId,
+        startTime: new Date().toISOString(),
+        isFocusMode: isFocusMode,
       });
       trpcClient.user.updateActivitySettings.mutate({
         currentTaskId: selectedItemId,
@@ -147,7 +147,7 @@ export function BottomSideBar() {
 
               <span className="text-xs text-muted-foreground">({duration})</span>
               <span>
-                {activeTimeEntry.is_focus_mode && <Focus className="h-4 w-4 text-red-600" />}
+                {activeTimeEntry.isFocusMode && <Focus className="h-4 w-4 text-red-600" />}
               </span>
             </span>
           </SidebarMenuButton>

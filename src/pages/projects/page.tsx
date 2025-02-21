@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
 import { Loader } from "@/components/Loader";
-import { useQuery, useSuspenseQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { BoardView } from "./components/BoardView.js";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,7 +45,7 @@ import {
 } from "@/components/ui/table";
 import { useAtom } from "jotai";
 import { selectedBoardIdAtom } from "@/context/board";
-import { getBoard, getBoards, createBoard } from "@/api/services/board.js";
+import { trpcClient } from "@/utils/trpc.js";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -71,33 +71,38 @@ export function ProjectsPage() {
 
   const { data: board, isLoading: boardLoading } = useQuery({
     queryKey: ["board", selectedBoardId],
-    queryFn: () => getBoard(selectedBoardId ?? ""),
+    queryFn: async () => {
+      if (!selectedBoardId) return null;
+      return await trpcClient.board.get.query(selectedBoardId);
+    },
     enabled: !!selectedBoardId,
   });
 
   const { data: boards, isLoading: boardsLoading } = useQuery({
     queryKey: ["boards"],
-    queryFn: getBoards,
-  });
-
-  const createBoardMutation = useMutation({
-    mutationFn: createBoard,
-    onSuccess: () => {
-      form.reset();
-      setOpen(false);
+    queryFn: async () => {
+      return await trpcClient.board.list.query();
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const boardId = crypto.randomUUID();
-    await createBoardMutation.mutateAsync({
-      id: boardId,
-      name: values.name.trim(),
-      color: values.color,
-      hourly_rate: values.hourlyRate,
-      currency: values.currency,
-    });
-    await queryClient.invalidateQueries({ queryKey: ["boards"] });
+  const createBoardMutation = useMutation({
+    mutationFn: async (values: z.infer<typeof formSchema>) => {
+      return await trpcClient.board.create.mutate({
+        name: values.name.trim(),
+        color: values.color,
+        hourlyRate: values.hourlyRate,
+        currency: values.currency,
+      });
+    },
+    onSuccess: () => {
+      form.reset();
+      setOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
+    },
+  });
+
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
+    createBoardMutation.mutate(values);
   };
 
   useEffect(() => {
@@ -180,7 +185,7 @@ export function ProjectsPage() {
               </TableHeader>
               <TableBody>
                 {board.items.map((item) => {
-                  const column = board.columns.find((col) => col.id === item.column_id);
+                  const column = board.columns.find((col) => col.id === item.columnId);
 
                   return (
                     <TableRow key={item.id} className="hover:bg-tracksy-gold/5">

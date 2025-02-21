@@ -32,7 +32,7 @@ export function NewColumn({
         invariant(inputRef.current, "missing input ref");
 
         newColumnMutation.mutate({
-          board_id: boardId,
+          boardId: boardId,
           name: inputRef.current.value,
           order,
         });

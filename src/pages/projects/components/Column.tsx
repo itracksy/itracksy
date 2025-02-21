@@ -106,8 +106,8 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
 
         updateCardMutation.mutate({
           order: (sortedItems[sortedItems.length - 1]?.order ?? 0) + 1,
-          column_id: columnId,
-          board_id: boardId,
+          columnId,
+          boardId,
           id: transfer.id,
           title: transfer.title,
         });
@@ -144,7 +144,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
           const moveOrder = (droppedOrder + order) / 2;
 
           updateColumnMutation.mutate({
-            board_id: boardId,
+            boardId,
             id: transfer.id,
             order: moveOrder,
           });
@@ -191,7 +191,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
               buttonClassName="block rounded-lg text-left w-full border border-transparent py-1 px-2 font-medium text-tracksy-blue dark:text-white hover:bg-tracksy-gold/10 dark:hover:bg-tracksy-gold/5"
               onChange={(value) => {
                 updateColumnMutation.mutate({
-                  board_id: boardId,
+                  boardId,
                   id: columnId,
                   name: value,
                 });
@@ -207,9 +207,9 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
                 title={item.title}
                 content={item.content ?? ""}
                 id={item.id}
-                board_id={boardId}
+                boardId={boardId}
                 order={item.order}
-                column_id={columnId}
+                columnId={columnId}
                 previousOrder={items[index - 1] ? items[index - 1].order : 0}
                 nextOrder={items[index + 1] ? items[index + 1].order : item.order + 1}
               />
