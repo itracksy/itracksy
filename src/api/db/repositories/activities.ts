@@ -90,50 +90,34 @@ export const upsertActivity = async (activity: ActivityRecord): Promise<void> =>
 
 export const getFocusedTimeByHour = async (
   date: number
-): Promise<{ hour: number; totalFocusedTime: number }[]> => {
+): Promise<
+  {
+    hour: number;
+    totalFocusedTime: number;
+    activities: {
+      title: string;
+      ownerName: string;
+      duration: number;
+    }[];
+  }[]
+> => {
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
 
   const endOfDay = new Date(date);
   endOfDay.setHours(23, 59, 59, 999);
 
-  console.log("[getFocusedTimeByHour] Query params:", {
-    startOfDay: startOfDay.toISOString(),
-    endOfDay: endOfDay.toISOString(),
-    startTimestamp: startOfDay.getTime(),
-    endTimestamp: endOfDay.getTime(),
-  });
-
-  // First check if we have any activities in this time range
-  const activityCount = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(activities)
-    .where(
-      and(
-        gte(activities.timestamp, startOfDay.getTime()),
-        lte(activities.timestamp, endOfDay.getTime())
-      )
-    );
-
-  console.log("[getFocusedTimeByHour] Activity count in range:", activityCount[0].count);
-
-  // Check focused activities specifically
-  const focusedCount = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(activities)
-    .where(
-      and(
-        gte(activities.timestamp, startOfDay.getTime()),
-        lte(activities.timestamp, endOfDay.getTime()),
-        eq(activities.isFocused, true)
-      )
-    );
-
-  console.log("[getFocusedTimeByHour] Focused activity count:", focusedCount[0].count);
-
-  const results = await db
+  // Get timezone offset in minutes
+  const timezoneOffset = new Date().getTimezoneOffset();
+  
+  // Create reusable hour calculation
+  const hourExpr = sql`strftime('%H', datetime(${activities.timestamp} / 1000 + ${-timezoneOffset * 60}, 'unixepoch'))`;
+  const hourCast = sql<number>`cast(${hourExpr} as integer)`;
+  
+  // First get hourly summaries
+  const hourSummaries = await db
     .select({
-      hour: sql<number>`cast(strftime('%H', datetime(${activities.timestamp} / 1000, 'unixepoch')) as integer)`,
+      hour: hourCast,
       totalFocusedTime: sql<number>`sum(CASE WHEN ${activities.isFocused} = 1 THEN ${activities.duration} ELSE 0 END)`,
     })
     .from(activities)
@@ -143,15 +127,42 @@ export const getFocusedTimeByHour = async (
         lte(activities.timestamp, endOfDay.getTime())
       )
     )
-    .groupBy(sql`strftime('%H', datetime(${activities.timestamp} / 1000, 'unixepoch'))`)
-    .orderBy(
-      sql`cast(strftime('%H', datetime(${activities.timestamp} / 1000, 'unixepoch')) as integer)`
-    );
+    .groupBy(hourExpr)
+    .orderBy(hourCast);
 
-  console.log("[getFocusedTimeByHour] Results:", {
-    hourlyData: results,
-    sampleTimestamp: results[0]?.hour ? new Date(date).setHours(results[0].hour) : null,
+  // Then get detailed activities for each hour
+  const detailedActivities = await db
+    .select({
+      hour: hourCast,
+      title: activities.title,
+      ownerName: activities.ownerName,
+      duration: activities.duration,
+    })
+    .from(activities)
+    .where(
+      and(
+        gte(activities.timestamp, startOfDay.getTime()),
+        lte(activities.timestamp, endOfDay.getTime()),
+        eq(activities.isFocused, true)
+      )
+    )
+    .orderBy(desc(activities.duration))
+    .limit(15);
+
+  // Combine the summaries with detailed activities
+  return hourSummaries.map((summary) => {
+    const hourActivities = detailedActivities
+      .filter((activity) => activity.hour === summary.hour)
+      .map(({ title, ownerName, duration }) => ({
+        title,
+        ownerName,
+        duration,
+      }));
+
+    return {
+      hour: summary.hour,
+      totalFocusedTime: summary.totalFocusedTime ?? 0,
+      activities: hourActivities,
+    };
   });
-
-  return results;
 };
