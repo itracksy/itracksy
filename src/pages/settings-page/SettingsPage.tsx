@@ -23,6 +23,8 @@ import {
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { trpcClient } from "@/utils/trpc";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTracking } from "@/hooks/useTracking";
+import { PlayCircle, StopCircle } from "lucide-react";
 
 export default function SettingsPage() {
   const [currentTheme, setCurrentTheme] = useState<ThemeMode>("light");
@@ -33,7 +35,7 @@ export default function SettingsPage() {
     type: "domain" | "app";
     index: number;
   } | null>(null);
-
+  const { isTracking, startTracking, stopTracking } = useTracking();
   const { data: blockedDomains = [] } = useQuery({
     queryKey: ["user.getBlockedDomains"],
     queryFn: async () => {
@@ -175,6 +177,15 @@ export default function SettingsPage() {
             id="focus-mode"
           />
           <label htmlFor="focus-mode">Enable Focus Mode</label>
+
+          <Button
+            variant={isTracking ? "destructive" : "default"}
+            size="icon"
+            onClick={isTracking ? stopTracking : startTracking}
+            className="h-6 w-6"
+          >
+            {isTracking ? <StopCircle className="h-5 w-5" /> : <PlayCircle className="h-5 w-5" />}
+          </Button>
         </CardContent>
       </Card>
 

@@ -7,26 +7,11 @@ import {
   updateTimeEntry,
 } from "../timeEntry";
 import type { TimeEntry, TimeEntryInsert } from "@/types/supabase";
-import { trpcClient } from "@/utils/trpc";
 
 export function useActiveTimeEntry() {
   return useQuery({
     queryKey: ["timeEntries", "active"],
     queryFn: getActiveTimeEntry,
-    select: (data) => {
-      if (data) {
-        trpcClient.user.updateActivitySettings.mutate({
-          isFocusMode: data.is_focus_mode ?? false,
-          currentTaskId: data.item_id,
-        });
-      } else {
-        trpcClient.user.updateActivitySettings.mutate({
-          isFocusMode: false,
-          currentTaskId: undefined,
-        });
-      }
-      return data;
-    },
   });
 }
 

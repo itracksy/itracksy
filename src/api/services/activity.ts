@@ -55,6 +55,7 @@ export const startTracking = async (userId: string): Promise<void> => {
             : //@ts-ignore
               result.url,
         userId,
+        isFocused: activitySettings?.isFocusMode,
       };
 
       await upsertActivity(transformedActivities);
@@ -88,7 +89,7 @@ export const startTracking = async (userId: string): Promise<void> => {
         typeof error === "object" &&
         "stdout" in error &&
         typeof error.stdout === "string" &&
-        error.stdout.includes("requires the accessibility permission");
+        error.stdout.includes("permission");
 
       if (isAccessibilityError) {
         const { response } = await dialog.showMessageBox({

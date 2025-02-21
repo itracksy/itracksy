@@ -8,6 +8,13 @@
       "when": 1740038550673,
       "tag": "0000_orange_justice",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1740106825731,
+      "tag": "0001_military_lady_deathstrike",
+      "breakpoints": true
     }
   ]
 }

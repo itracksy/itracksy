@@ -14,7 +14,7 @@ export const activities = sqliteTable(
     url: text("url"),
     duration: integer().notNull(),
     taskId: text("task_id"),
-    isFocused: integer("is_focused", { mode: "boolean" }).default(false),
+    isFocused: integer("is_focused", { mode: "boolean" }).default(false).notNull(),
     userId: text("user_id").notNull(),
   },
   (table) => [
@@ -28,7 +28,8 @@ export const activities = sqliteTable(
       table.ownerName,
       table.ownerPath,
       table.platform,
-      table.taskId
+      table.taskId,
+      table.isFocused
     ),
   ]
 );
