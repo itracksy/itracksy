@@ -15,11 +15,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useConfirmationDialog } from "@/components/providers/ConfirmationDialog";
-import { useUpdateItemMutation } from "@/services/hooks/useBoardQueries";
-import {
-  useDeleteTimeEntryMutation,
-  useTimeEntriesForItem,
-} from "@/services/hooks/useTimeEntryQueries";
+import { useUpdateItemMutation } from "@/hooks/useBoardQueries";
+import { useDeleteTimeEntryMutation, useTimeEntriesForItem } from "@/hooks/useTimeEntryQueries";
 import { formatDuration } from "@/utils/timeUtils";
 import type { Item, TimeEntry } from "@/types/supabase";
 
@@ -124,7 +121,9 @@ export function ItemDetailDialog({ open, onOpenChange, item }: ItemDetailDialogP
                   <TableBody>
                     {timeEntries.map((entry) => (
                       <TableRow key={entry.id}>
-                        <TableCell>{format(new Date(entry.start_time), "MMM d, yyyy HH:mm")}</TableCell>
+                        <TableCell>
+                          {format(new Date(entry.start_time), "MMM d, yyyy HH:mm")}
+                        </TableCell>
                         <TableCell>
                           {entry.end_time
                             ? format(new Date(entry.end_time), "MMM d, yyyy HH:mm")

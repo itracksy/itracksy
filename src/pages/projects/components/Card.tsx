@@ -3,14 +3,14 @@ import { forwardRef, useState, useEffect } from "react";
 
 import { CONTENT_TYPES } from "@/types";
 import { TrashIcon, PlayIcon, StopIcon, TimerIcon } from "@radix-ui/react-icons";
-import { useDeleteItemMutation, useUpdateItemMutation } from "@/services/hooks/useBoardQueries";
+import { useDeleteItemMutation, useUpdateItemMutation } from "@/hooks/useBoardQueries";
 import { formatDuration } from "@/utils/timeUtils";
 import {
   useCreateTimeEntryMutation,
   useUpdateTimeEntryMutation,
   useActiveTimeEntry,
   useTimeEntriesForItem,
-} from "@/services/hooks/useTimeEntryQueries";
+} from "@/hooks/useTimeEntryQueries";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useConfirmationDialog } from "@/components/providers/ConfirmationDialog";
@@ -22,15 +22,15 @@ interface CardProps {
   title: string;
   content: string | null;
   id: string;
-  column_id: string;
-  board_id: string;
+  columnId: string;
+  boardId: string;
   order: number;
   nextOrder: number;
   previousOrder: number;
 }
 
 export const Card = forwardRef<HTMLLIElement, CardProps>(
-  ({ title, content, id, column_id, board_id, order, nextOrder, previousOrder }, ref) => {
+  ({ title, content, id, columnId, boardId, order, nextOrder, previousOrder }, ref) => {
     const [acceptDrop, setAcceptDrop] = useState<"none" | "top" | "bottom">("none");
     const [totalDuration, setTotalDuration] = useState<string>("00:00:00");
     const [showDetailDialog, setShowDetailDialog] = useState(false);
@@ -56,17 +56,17 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
       if (!timeEntries.length) return;
 
       const total = timeEntries.reduce((acc, entry) => {
-        const start = new Date(entry.start_time).getTime();
-        const end = entry.end_time
-          ? new Date(entry.end_time).getTime()
-          : activeTimeEntry?.item_id === id
+        const start = new Date(entry.startTime).getTime();
+        const end = entry.endTime
+          ? new Date(entry.endTime).getTime()
+          : activeTimeEntry?.itemId === id
             ? new Date().getTime()
             : start;
         return acc + (end - start);
       }, 0);
 
       setTotalDuration(formatDuration(total));
-    }, [timeEntries, activeTimeEntry?.item_id, id]);
+    }, [timeEntries, activeTimeEntry?.itemId, id]);
 
     const handleStartTracking = async () => {
       if (activeTimeEntry) {
@@ -80,10 +80,10 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
 
       createTimeEntry.mutate({
         id: crypto.randomUUID(),
-        item_id: id,
-        board_id,
-        start_time: new Date().toISOString(),
-        is_focus_mode: activitySettings?.isFocusMode,
+        itemId: id,
+        boardId,
+        startTime: new Date().toISOString(),
+        isFocusMode: activitySettings?.isFocusMode,
       });
       trpcClient.user.updateActivitySettings.mutate({
         currentTaskId: id,
@@ -91,13 +91,13 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
     };
 
     const handleStopTracking = () => {
-      if (!activeTimeEntry || activeTimeEntry.item_id !== id) {
+      if (!activeTimeEntry || activeTimeEntry.itemId !== id) {
         return;
       }
 
       updateTimeEntry.mutate({
         id: activeTimeEntry.id,
-        end_time: new Date().toISOString(),
+        endTime: new Date().toISOString(),
       });
     };
 
@@ -114,7 +114,7 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
       try {
         await deleteItem.mutateAsync({
           id,
-          boardId: board_id,
+          boardId: boardId,
         });
       } catch (error) {
         toast({
@@ -157,8 +157,8 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
 
           moveItem.mutate({
             order: moveOrder,
-            column_id,
-            board_id,
+            columnId,
+            boardId,
             id: transfer.id,
             title: transfer.title,
           });
@@ -188,7 +188,7 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
           <div className="mt-2 text-muted-foreground">{content || <>&nbsp;</>}</div>
           <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
             <TimerIcon className="h-4 w-4" />
-            {activeTimeEntry?.item_id === id ? (
+            {activeTimeEntry?.itemId === id ? (
               <span className="font-medium text-green-500">Recording...</span>
             ) : (
               <span>{totalDuration}</span>
@@ -196,13 +196,13 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
             <Button
               onClick={(e) => {
                 e.stopPropagation();
-                activeTimeEntry?.item_id === id ? handleStopTracking() : handleStartTracking();
+                activeTimeEntry?.itemId === id ? handleStopTracking() : handleStartTracking();
               }}
               variant="ghost"
               size="sm"
               className="ml-auto"
             >
-              {activeTimeEntry?.item_id === id ? (
+              {activeTimeEntry?.itemId === id ? (
                 <>
                   <StopIcon className="mr-1 h-3 w-3" />
                   Stop
@@ -235,10 +235,10 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
             id,
             title,
             content,
-            board_id,
-            column_id,
+            boardId,
+            columnId,
             order,
-            created_at: null,
+            createdAt: null,
           }}
         />
       </li>

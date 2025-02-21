@@ -12,7 +12,7 @@ import { useAtom } from "jotai";
 import { selectedBoardIdAtom } from "@/context/board";
 
 import { BoardWithRelations } from "@/types/supabase";
-import { getBoard, getBoards } from "@/services/board";
+import { getBoard, getBoards } from "@/api/services/board";
 
 interface TimeEntryDialogProps {
   open: boolean;

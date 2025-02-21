@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, index, primaryKey } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, index, primaryKey, real } from "drizzle-orm/sqlite-core";
 
 export const activities = sqliteTable(
   "activities",
@@ -68,4 +68,56 @@ export const localStorage = sqliteTable("local_storage", {
   key: text("key").primaryKey(),
   value: text("value").notNull(),
   updatedAt: integer("updated_at").notNull(),
+});
+
+export const boards = sqliteTable("boards", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  color: text("color"),
+  createdAt: text("created_at"),
+  currency: text("currency"),
+  hourlyRate: real("hourly_rate"),
+  userId: text("user_id").notNull(),
+});
+
+export const columns = sqliteTable("columns", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  boardId: text("board_id")
+    .notNull()
+    .references(() => boards.id),
+  order: integer("order").notNull(),
+  createdAt: text("created_at"),
+});
+
+export const items = sqliteTable("items", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  content: text("content"),
+  boardId: text("board_id")
+    .notNull()
+    .references(() => boards.id),
+  columnId: text("column_id")
+    .notNull()
+    .references(() => columns.id),
+  order: integer("order").notNull(),
+  createdAt: text("created_at"),
+});
+
+export const timeEntries = sqliteTable("time_entries", {
+  id: text("id").primaryKey(),
+  startTime: text("start_time").notNull(),
+  endTime: text("end_time"),
+  duration: integer("duration"),
+  description: text("description"),
+  isFocusMode: integer("is_focus_mode", { mode: "boolean" }),
+  boardId: text("board_id")
+    .notNull()
+    .references(() => boards.id),
+  itemId: text("item_id")
+    .notNull()
+    .references(() => items.id),
+  userId: text("user_id").notNull(),
+  invoiceId: text("invoice_id"),
+  createdAt: text("created_at"),
 });

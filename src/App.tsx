@@ -11,7 +11,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "./hooks/useAuth";
 
 import { useTracking } from "./hooks/useTracking";
-import { supabase } from "./lib/supabase";
+
 import { trpcClient } from "./utils/trpc";
 
 const queryClient = new QueryClient({
@@ -55,11 +55,11 @@ function App() {
       if (!loading && !user) {
         // Try to restore session for existing anonymous user
         const authResult = await supabase.auth.getSession();
-        
+
         if (!authResult.data.session) {
           // If no session, try to refresh the token first
           const refreshResult = await supabase.auth.refreshSession();
-          
+
           // If refresh fails, create new anonymous user
           if (!refreshResult.data.session) {
             const anonResult = await supabase.auth.signInAnonymously();

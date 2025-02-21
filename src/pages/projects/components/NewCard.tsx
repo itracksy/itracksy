@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { ItemMutationFields } from "@/types";
-import { useCreateItemMutation } from "@/services/hooks/useBoardQueries";
+import { useCreateItemMutation } from "@/hooks/useBoardQueries";
 
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";

@@ -1,38 +1,32 @@
-import { Database } from '@/lib/schema'
-import { SupabaseClient } from '@supabase/supabase-js'
+import { activities, boards, columns, items, timeEntries } from "../api/db/schema";
 
-export type Tables = Database['public']['Tables']
-export type TypedSupabaseClient = SupabaseClient<Database>
+// Base table types
+export type Board = typeof boards.$inferSelect;
+export type Column = typeof columns.$inferSelect;
+export type Item = typeof items.$inferSelect;
+export type TimeEntry = typeof timeEntries.$inferSelect;
+export type Activity = typeof activities.$inferSelect;
 
-// Base table row types
-export type Board = Tables['boards']['Row']
-export type Column = Tables['columns']['Row']
-export type Item = Tables['items']['Row']
-export type Client = Tables['clients']['Row']
-export type Invoice = Tables['invoices']['Row']
-export type TimeEntry = Tables['time_entries']['Row']
-export type WindowTracking = Tables['window_tracking']['Row']
+// Insert types
+export type BoardInsert = typeof boards.$inferInsert;
+export type ColumnInsert = typeof columns.$inferInsert;
+export type ItemInsert = typeof items.$inferInsert;
+export type TimeEntryInsert = typeof timeEntries.$inferInsert;
+export type ActivityInsert = typeof activities.$inferInsert;
 
 // Extended types for nested relationships
 export type BoardWithRelations = Board & {
-  columns: Column[]
-  items: Item[]
-}
+  columns: Column[];
+  items: Item[];
+};
 
-// Table insert types
-export type BoardInsert = Tables['boards']['Insert']
-export type ColumnInsert = Tables['columns']['Insert']
-export type ItemInsert = Tables['items']['Insert']
-export type ClientInsert = Tables['clients']['Insert']
-export type InvoiceInsert = Tables['invoices']['Insert']
-export type TimeEntryInsert = Tables['time_entries']['Insert']
-export type WindowTrackingInsert = Tables['window_tracking']['Insert']
+export type TimeEntryWithRelations = TimeEntry & {
+  items: Item | null;
+};
 
 // Table update types
-export type BoardUpdate = Tables['boards']['Update']
-export type ColumnUpdate = Tables['columns']['Update']
-export type ItemUpdate = Tables['items']['Update']
-export type ClientUpdate = Tables['clients']['Update']
-export type InvoiceUpdate = Tables['invoices']['Update']
-export type TimeEntryUpdate = Tables['time_entries']['Update']
-export type WindowTrackingUpdate = Tables['window_tracking']['Update']
+export type BoardUpdate = Partial<BoardInsert>;
+export type ColumnUpdate = Partial<ColumnInsert>;
+export type ItemUpdate = Partial<ItemInsert>;
+export type TimeEntryUpdate = Partial<TimeEntryInsert>;
+export type ActivityUpdate = Partial<ActivityInsert>;

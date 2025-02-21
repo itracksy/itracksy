@@ -115,6 +115,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "drizzle-orm": "^0.39.3",
+    "drizzle-zod": "^0.7.0",
     "electron-squirrel-startup": "^1.0.1",
     "electron-trpc": "^0.7.1",
     "get-windows": "^9.2.0",

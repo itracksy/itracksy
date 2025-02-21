@@ -1,44 +1,44 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
-import type { User, Session } from "@supabase/supabase-js";
 import { trpcClient } from "@/utils/trpc";
+
+export type User = {
+  id: string;
+};
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth
-      .getSession()
-      .then(({ data: { session } }) => {
-        setUser(session?.user ?? null);
-        if (session?.user?.id) {
-          trpcClient.auth.signInAnonymously.mutate(session.user?.id);
-        }
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session: Session | null) => {
-      setUser(session?.user ?? null);
-      if (session?.user?.id) {
-        trpcClient.auth.signInAnonymously.mutate(session.user?.id);
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    // Get or create anonymous user ID from local storage
+    const storedUserId = localStorage.getItem("userId");
+    if (storedUserId) {
+      handleSignIn(storedUserId);
+    } else {
+      const newUserId = crypto.randomUUID();
+      localStorage.setItem("userId", newUserId);
+      handleSignIn(newUserId);
+    }
   }, []);
 
+  const handleSignIn = async (userId: string) => {
+    try {
+      await trpcClient.auth.signInAnonymously.mutate(userId);
+      setUser({ id: userId });
+    } catch (error) {
+      console.error("Error signing in:", error);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error("Error signing out:", error.message);
+    try {
+      localStorage.removeItem("userId");
+      setUser(null);
+    } catch (error) {
+      console.error("Error signing out:", error);
     }
   };
 

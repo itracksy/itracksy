@@ -45,7 +45,7 @@ import {
 } from "@/components/ui/table";
 import { useAtom } from "jotai";
 import { selectedBoardIdAtom } from "@/context/board";
-import { getBoard, getBoards, createBoard } from "@/services/board";
+import { getBoard, getBoards, createBoard } from "@/api/services/board.js";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -97,7 +97,7 @@ export function ProjectsPage() {
       hourly_rate: values.hourlyRate,
       currency: values.currency,
     });
-    await queryClient.invalidateQueries({queryKey: ["boards"]});
+    await queryClient.invalidateQueries({ queryKey: ["boards"] });
   };
 
   useEffect(() => {

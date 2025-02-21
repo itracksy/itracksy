@@ -9,7 +9,7 @@ import {
   useDeleteColumnMutation,
   useUpdateItemMutation,
   useUpdateColumnMutation,
-} from "@/services/hooks/useBoardQueries";
+} from "@/hooks/useBoardQueries";
 import { EditableText } from "./EditableText";
 import { NewCard } from "./NewCard";
 import { Card } from "./Card";

@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import invariant from "tiny-invariant";
 import { PlusIcon } from "@radix-ui/react-icons";
-import { useCreateColumnMutation } from "@/services/hooks/useBoardQueries";
+import { useCreateColumnMutation } from "@/hooks/useBoardQueries";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -55,19 +55,19 @@ export function NewColumn({
         name="columnName"
         autoComplete="off"
         placeholder="Enter column name..."
-        className="border-tracksy-gold/30 dark:border-tracksy-gold/20 text-tracksy-blue placeholder:text-tracksy-blue/50 dark:placeholder:text-tracksy-gold/50 focus:border-tracksy-gold dark:focus:border-tracksy-gold/70 focus:ring-tracksy-gold/20 dark:focus:ring-tracksy-gold/10 w-full rounded-lg border bg-white px-2 py-1 font-medium dark:bg-gray-800 dark:text-white"
+        className="w-full rounded-lg border border-tracksy-gold/30 bg-white px-2 py-1 font-medium text-tracksy-blue placeholder:text-tracksy-blue/50 focus:border-tracksy-gold focus:ring-tracksy-gold/20 dark:border-tracksy-gold/20 dark:bg-gray-800 dark:text-white dark:placeholder:text-tracksy-gold/50 dark:focus:border-tracksy-gold/70 dark:focus:ring-tracksy-gold/10"
       />
       <div className="flex justify-between">
         <Button
           type="submit"
-          className="bg-tracksy-gold hover:bg-tracksy-gold/90 dark:bg-tracksy-gold/80 dark:hover:bg-tracksy-gold/70 text-white"
+          className="bg-tracksy-gold text-white hover:bg-tracksy-gold/90 dark:bg-tracksy-gold/80 dark:hover:bg-tracksy-gold/70"
         >
           Save Column
         </Button>
         <Button
           variant="ghost"
           onClick={() => setEditing(false)}
-          className="text-tracksy-blue hover:bg-tracksy-gold/10 dark:hover:bg-tracksy-gold/5 dark:text-white"
+          className="text-tracksy-blue hover:bg-tracksy-gold/10 dark:text-white dark:hover:bg-tracksy-gold/5"
         >
           Cancel
         </Button>
@@ -79,7 +79,7 @@ export function NewColumn({
         setEditing(true);
       }}
       aria-label="Add new column"
-      className="border-tracksy-gold/30 dark:border-tracksy-gold/20 text-tracksy-blue hover:bg-tracksy-gold/10 dark:hover:bg-tracksy-gold/5 ml-2 flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-lg border bg-white/80 shadow-sm backdrop-blur-sm dark:bg-gray-900/80 dark:text-white"
+      className="ml-2 flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-lg border border-tracksy-gold/30 bg-white/80 text-tracksy-blue shadow-sm backdrop-blur-sm hover:bg-tracksy-gold/10 dark:border-tracksy-gold/20 dark:bg-gray-900/80 dark:text-white dark:hover:bg-tracksy-gold/5"
     >
       <PlusIcon className="h-6 w-6" />
     </button>

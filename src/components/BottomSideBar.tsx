@@ -3,7 +3,7 @@ import {
   useActiveTimeEntry,
   useUpdateTimeEntryMutation,
   useCreateTimeEntryMutation,
-} from "@/services/hooks/useTimeEntryQueries";
+} from "@/hooks/useTimeEntryQueries";
 import { Clock, PlayCircle, StopCircle, Focus } from "lucide-react";
 
 import { TimeEntryDialog } from "@/components/tracking/TimeEntryDialog";

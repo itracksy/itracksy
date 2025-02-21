@@ -6,7 +6,7 @@ import {
   deleteItem,
   updateColumn,
   updateItem,
-} from "../board";
+} from "../api/services/board";
 import { Board, BoardWithRelations } from "@/types/supabase";
 import { ColumnInsert, ItemInsert } from "@/types/supabase";
 
@@ -21,7 +21,7 @@ export function useCreateColumnMutation() {
   return useMutation({
     mutationFn: createColumn,
     onMutate: async (newColumn) => {
-      const boardKey = ["board", newColumn.board_id];
+      const boardKey = ["board", newColumn.boardId];
       await queryClient.cancelQueries({ queryKey: boardKey });
 
       const previousBoard = queryClient.getQueryData<BoardWithRelations>(boardKey);
@@ -34,7 +34,7 @@ export function useCreateColumnMutation() {
             {
               ...newColumn,
               id: crypto.randomUUID(),
-              created_at: new Date().toISOString(),
+              createdAt: new Date().toISOString(),
               order: previousBoard.columns?.length + 1,
             },
           ],
@@ -45,11 +45,11 @@ export function useCreateColumnMutation() {
     },
     onError: (err, newColumn, context) => {
       if (context?.previousBoard) {
-        queryClient.setQueryData(["board", newColumn.board_id], context.previousBoard);
+        queryClient.setQueryData(["board", newColumn.boardId], context.previousBoard);
       }
     },
     onSettled: (data, error, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["board", variables.board_id] });
+      queryClient.invalidateQueries({ queryKey: ["board", variables.boardId] });
     },
   });
 }
@@ -60,7 +60,7 @@ export function useCreateItemMutation() {
   return useMutation({
     mutationFn: createItem,
     onMutate: async (newItem) => {
-      const boardKey = ["board", newItem.board_id];
+      const boardKey = ["board", newItem.boardId];
       await queryClient.cancelQueries({ queryKey: boardKey });
 
       const previousBoard = queryClient.getQueryData<BoardWithRelations>(boardKey);
@@ -74,7 +74,7 @@ export function useCreateItemMutation() {
               ...newItem,
               content: newItem.content ?? null,
               id: crypto.randomUUID(),
-              created_at: new Date().toISOString(),
+              createdAt: new Date().toISOString(),
             },
           ],
         });
@@ -84,11 +84,11 @@ export function useCreateItemMutation() {
     },
     onError: (err, newItem, context) => {
       if (context?.previousBoard) {
-        queryClient.setQueryData(["board", newItem.board_id], context.previousBoard);
+        queryClient.setQueryData(["board", newItem.boardId], context.previousBoard);
       }
     },
     onSettled: (data, error, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["board", variables.board_id] });
+      queryClient.invalidateQueries({ queryKey: ["board", variables.boardId] });
     },
   });
 }
@@ -101,7 +101,7 @@ export function useUpdateItemMutation() {
       await updateItem(id, item);
     },
     onMutate: async (newItem) => {
-      const boardKey = ["board", newItem.board_id];
+      const boardKey = ["board", newItem.boardId];
       await queryClient.cancelQueries({ queryKey: boardKey });
 
       const previousBoard = queryClient.getQueryData<BoardWithRelations>(boardKey);
@@ -119,13 +119,13 @@ export function useUpdateItemMutation() {
 
       return { previousBoard };
     },
-    onError: (err, { board_id }, context) => {
+    onError: (err, { boardId }, context) => {
       if (context?.previousBoard) {
-        queryClient.setQueryData(["board", board_id], context.previousBoard);
+        queryClient.setQueryData(["board", boardId], context.previousBoard);
       }
     },
     onSettled: (data, error, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["board", variables.board_id] });
+      queryClient.invalidateQueries({ queryKey: ["board", variables.boardId] });
     },
   });
 }
@@ -180,7 +180,7 @@ export function useDeleteColumnMutation() {
         queryClient.setQueryData<BoardWithRelations>(boardKey, {
           ...previousBoard,
           columns: previousBoard.columns?.filter((col) => col.id !== id),
-          items: previousBoard.items?.filter((item) => item.column_id !== id),
+          items: previousBoard.items?.filter((item) => item.columnId !== id),
         });
       }
 
@@ -204,8 +204,8 @@ export function useUpdateColumnMutation() {
     mutationFn: async ({ id, ...column }: { id: string } & Partial<ColumnInsert>) => {
       await updateColumn(id, column);
     },
-    onMutate: async ({ id, board_id, ...newColumn }) => {
-      const boardKey = ["board", board_id];
+    onMutate: async ({ id, boardId, ...newColumn }) => {
+      const boardKey = ["board", boardId];
       await queryClient.cancelQueries({ queryKey: boardKey });
 
       const previousBoard = queryClient.getQueryData<BoardWithRelations>(boardKey);
@@ -221,13 +221,13 @@ export function useUpdateColumnMutation() {
 
       return { previousBoard };
     },
-    onError: (err, { board_id }, context) => {
+    onError: (err, { boardId }, context) => {
       if (context?.previousBoard) {
-        queryClient.setQueryData(["board", board_id], context.previousBoard);
+        queryClient.setQueryData(["board", boardId], context.previousBoard);
       }
     },
     onSettled: (data, error, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["board", variables.board_id] });
+      queryClient.invalidateQueries({ queryKey: ["board", variables.boardId] });
     },
   });
 }
