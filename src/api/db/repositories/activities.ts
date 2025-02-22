@@ -1,4 +1,5 @@
 import { ActivityRecord } from "@/types/activity";
+import { isNullOrUndefined } from "@/utils/value-checks";
 
 import db from "..";
 import { activities } from "../schema";
@@ -24,7 +25,7 @@ export const clearActivities = async (date?: string): Promise<void> => {
 };
 
 // Find matching activities using the composite index
-export const findMatchingActivity = async (
+const findMatchingActivity = async (
   activity: ActivityRecord
 ): Promise<ActivityRecord | undefined> => {
   const query = db
@@ -34,25 +35,25 @@ export const findMatchingActivity = async (
       and(
         // Use composite index for matching fields
         eq(activities.title, activity.title),
-        !activity.ownerBundleId
+        isNullOrUndefined(activity.ownerBundleId)
           ? sql`${activities.ownerBundleId} is null`
           : eq(activities.ownerBundleId, activity.ownerBundleId),
         eq(activities.ownerName, activity.ownerName),
         eq(activities.ownerPath, activity.ownerPath),
         eq(activities.platform, activity.platform),
-        !activity.taskId
+        isNullOrUndefined(activity.taskId)
           ? sql`${activities.taskId} is null`
           : eq(activities.taskId, activity.taskId),
-        !activity.isFocused
-          ? sql`1=1` // If isFocused is undefined, don't filter on it
+        isNullOrUndefined(activity.isFocused)
+          ? sql`${activities.isFocused} is null`
           : eq(activities.isFocused, activity.isFocused),
         gte(activities.timestamp, activity.timestamp - LIMIT_TIME_APART)
       )
     )
     .orderBy(desc(activities.timestamp))
-    .prepare();
+    .limit(1);
 
-  const result = await query.execute();
+  const result = await query;
   return result[0];
 };
 

@@ -22,7 +22,7 @@ import {
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { trpcClient } from "@/utils/trpc";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTracking } from "@/hooks/useTracking";
 import { PlayCircle, StopCircle } from "lucide-react";
 
