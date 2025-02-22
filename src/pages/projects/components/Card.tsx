@@ -112,10 +112,7 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
       if (!confirmed) return;
 
       try {
-        await deleteItem.mutateAsync({
-          id,
-          boardId: boardId,
-        });
+        await deleteItem.mutateAsync(id);
       } catch (error) {
         toast({
           variant: "destructive",

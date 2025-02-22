@@ -4,7 +4,6 @@ import {
   WIN_MAXIMIZE_CHANNEL,
   WIN_MINIMIZE_CHANNEL,
   WIN_UPDATE_TRAY_TITLE_CHANNEL,
-  WIN_SET_USER_INFORMATION_CHANNEL,
   WIN_GET_APP_VERSION_CHANNEL,
   WIN_CHECK_UPDATES_CHANNEL,
   WIN_GET_LOG_FILE_CONTENT_CHANNEL,
@@ -76,17 +75,6 @@ export const addWindowEventListeners = (mainWindow: BrowserWindow, tray: Tray | 
     }
   });
 
-  safelyRegisterListener(
-    WIN_SET_USER_INFORMATION_CHANNEL,
-    (_event, params: { userId: string; sessionId: string }) => {
-      try {
-        return logger.setUserInformation(params);
-      } catch (error) {
-        logger.error("Failed to set user information", { error, params });
-        throw error;
-      }
-    }
-  );
   safelyRegisterListener(WIN_UPDATE_TRAY_TITLE_CHANNEL, (_event, title: string) => {
     try {
       if (trayRef) {

@@ -62,7 +62,9 @@ export async function setCurrentUserId(userId: string): Promise<string> {
   }
 
   await setValue(USER_SETTINGS_KEYS.currentUserId, userId);
-
+  if (existingUserId == userId) {
+    return existingUserId;
+  }
   existingUserId = userId;
 
   const defaultSettings = {
