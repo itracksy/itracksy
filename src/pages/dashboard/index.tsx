@@ -1,4 +1,5 @@
 import HourlyFocusChart from "./components/HourlyFocusChart";
+import ProjectTimeChart from "./components/ProjectTimeChart";
 
 export default function DashboardPage() {
   return (
@@ -9,7 +10,8 @@ export default function DashboardPage() {
           <div className="mt-2 h-1 w-20 rounded bg-tracksy-gold dark:bg-tracksy-gold/70"></div>
         </h1>
 
-        <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <ProjectTimeChart />
           <HourlyFocusChart />
         </div>
       </div>

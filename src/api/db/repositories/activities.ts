@@ -1,5 +1,5 @@
 import { ActivityRecord } from "@/types/activity";
-import { isNullOrUndefined } from "@/utils/value-checks";
+import { isNullOrUndefined } from "../../../utils/value-checks";
 
 import db from "..";
 import { activities } from "../schema";
@@ -85,84 +85,5 @@ export const upsertActivity = async (activity: ActivityRecord): Promise<void> =>
     taskId: activity.taskId,
     isFocused: activity.isFocused,
     userId: activity.userId,
-  });
-};
-
-export const getFocusedTimeByHour = async (
-  date: number
-): Promise<
-  {
-    hour: number;
-    totalFocusedTime: number;
-    activities: {
-      title: string;
-      ownerName: string;
-      duration: number;
-    }[];
-  }[]
-> => {
-  const startOfDay = new Date(date);
-  startOfDay.setHours(0, 0, 0, 0);
-
-  const endOfDay = new Date(date);
-  endOfDay.setHours(23, 59, 59, 999);
-
-  // Get timezone offset in minutes
-  const timezoneOffset = new Date().getTimezoneOffset();
-
-  // Create reusable hour calculation
-  const hourExpr = sql`strftime('%H', datetime(${activities.timestamp} / 1000 + ${-timezoneOffset * 60}, 'unixepoch'))`;
-  const hourCast = sql<number>`cast(${hourExpr} as integer)`;
-
-  // First get hourly summaries
-  const hourSummaries = await db
-    .select({
-      hour: hourCast,
-      totalFocusedTime: sql<number>`sum(CASE WHEN ${activities.isFocused} = 1 THEN ${activities.duration} ELSE 0 END)`,
-    })
-    .from(activities)
-    .where(
-      and(
-        gte(activities.timestamp, startOfDay.getTime()),
-        lte(activities.timestamp, endOfDay.getTime())
-      )
-    )
-    .groupBy(hourExpr)
-    .orderBy(hourCast);
-
-  // Then get detailed activities for each hour
-  const detailedActivities = await db
-    .select({
-      hour: hourCast,
-      title: activities.title,
-      ownerName: activities.ownerName,
-      duration: activities.duration,
-    })
-    .from(activities)
-    .where(
-      and(
-        gte(activities.timestamp, startOfDay.getTime()),
-        lte(activities.timestamp, endOfDay.getTime()),
-        eq(activities.isFocused, true)
-      )
-    )
-    .orderBy(desc(activities.duration))
-    .limit(15);
-
-  // Combine the summaries with detailed activities
-  return hourSummaries.map((summary) => {
-    const hourActivities = detailedActivities
-      .filter((activity) => activity.hour === summary.hour)
-      .map(({ title, ownerName, duration }) => ({
-        title,
-        ownerName,
-        duration,
-      }));
-
-    return {
-      hour: summary.hour,
-      totalFocusedTime: summary.totalFocusedTime ?? 0,
-      activities: hourActivities,
-    };
   });
 };

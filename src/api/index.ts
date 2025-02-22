@@ -4,6 +4,7 @@ import { userRouter } from "./routers/user";
 import { authRouter } from "./routers/auth";
 import { timeEntryRouter } from "./routers/timeEntry";
 import { boardRouter } from "./routers/board";
+import { dashboardRouter } from "./routers/dashboard";
 
 // Create the root router
 export const router = t.router({
@@ -12,6 +13,7 @@ export const router = t.router({
   auth: authRouter,
   timeEntry: timeEntryRouter,
   board: boardRouter,
+  dashboard: dashboardRouter,
 });
 
 // Export type router type signature
