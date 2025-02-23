@@ -4,9 +4,14 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recha
 import { useQuery } from "@tanstack/react-query";
 import { trpcClient } from "@/utils/trpc";
 import { TimeRange } from "./TimeRangeSelector";
+import { Button } from "@/components/ui/button";
+import { PlayCircle } from "lucide-react";
+import { useTimeEntryDialog } from "@/hooks/useTimeEntryDialog";
+
 interface HourlyFocusChartProps {
   timeRange: TimeRange;
 }
+
 export default function HourlyFocusChart({ timeRange }: HourlyFocusChartProps) {
   const { data: hourlyData, isLoading } = useQuery({
     queryKey: ["activityWindow"],
@@ -19,6 +24,8 @@ export default function HourlyFocusChart({ timeRange }: HourlyFocusChartProps) {
     },
     refetchInterval: 10000,
   });
+
+  const { openDialog } = useTimeEntryDialog();
 
   type FormatedData = {
     hour: string;
@@ -37,6 +44,8 @@ export default function HourlyFocusChart({ timeRange }: HourlyFocusChartProps) {
       activities: item.activities,
     })) ?? [];
 
+  const hasData = formattedData && formattedData.some((item) => item.focusedTime > 0);
+
   return (
     <Card className="col-span-3">
       <CardHeader>
@@ -49,6 +58,19 @@ export default function HourlyFocusChart({ timeRange }: HourlyFocusChartProps) {
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
               <p className="text-sm text-muted-foreground">Loading chart data...</p>
             </div>
+          </div>
+        ) : !hasData ? (
+          <div className="flex h-[300px] flex-col items-center justify-center gap-4">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold">No Focus Time Recorded</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Ready to boost your productivity? Start tracking your work time!
+              </p>
+            </div>
+            <Button onClick={openDialog} className="gap-2">
+              <PlayCircle className="h-4 w-4" />
+              Start Working
+            </Button>
           </div>
         ) : (
           <div className="h-[300px]">
