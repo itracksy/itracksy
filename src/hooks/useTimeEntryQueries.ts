@@ -22,9 +22,7 @@ export function useCreateTimeEntryMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (timeEntry: Omit<TimeEntryInsert, "userId">) => {
-      return trpcClient.timeEntry.create.mutate(timeEntry);
-    },
+    mutationFn: trpcClient.timeEntry.create.mutate,
     onSuccess: ({ boardId }) => {
       queryClient.invalidateQueries({ queryKey: ["timeEntries"] });
       queryClient.invalidateQueries({ queryKey: ["board", boardId] });
@@ -36,9 +34,7 @@ export function useUpdateTimeEntryMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, ...data }: { id: string } & Partial<TimeEntryInsert>) => {
-      return trpcClient.timeEntry.update.mutate({ id, ...data });
-    },
+    mutationFn: trpcClient.timeEntry.update.mutate,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["timeEntries"] });
       if (data.endTime) {
@@ -54,32 +50,19 @@ export function useDeleteTimeEntryMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (input: { id: string; itemId: string }) => {
-      return trpcClient.timeEntry.delete.mutate(input.id);
-    },
-    onMutate: async ({ id, itemId }) => {
-      const timeEntriesKey = ["timeEntries", "item", itemId];
-      await queryClient.cancelQueries({ queryKey: timeEntriesKey });
+    mutationFn: trpcClient.timeEntry.delete.mutate,
 
-      const previousTimeEntries = queryClient.getQueryData<TimeEntry[]>(timeEntriesKey);
-
-      if (previousTimeEntries) {
-        queryClient.setQueryData<TimeEntry[]>(timeEntriesKey, (old) =>
-          old?.filter((entry) => entry.id !== id)
-        );
-      }
-
-      return { previousTimeEntries };
-    },
-    onError: (err, { itemId }, context) => {
-      if (context?.previousTimeEntries) {
-        queryClient.setQueryData(["timeEntries", "item", itemId], context.previousTimeEntries);
-      }
-    },
-    onSettled: (data, error, { itemId }) => {
+    onSettled: (data, error, itemId) => {
       queryClient.invalidateQueries({
         queryKey: ["timeEntries", "item", itemId],
       });
     },
+  });
+}
+
+export function useLastTimeEntry() {
+  return useQuery({
+    queryKey: ["timeEntries", "last"],
+    queryFn: () => trpcClient.timeEntry.getLast.query(),
   });
 }

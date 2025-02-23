@@ -79,7 +79,6 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
       }
 
       createTimeEntry.mutate({
-        id: crypto.randomUUID(),
         itemId: id,
         boardId,
         startTime: new Date().toISOString(),

@@ -27,11 +27,4 @@ export const activityRouter = t.router({
     updateUserSettings({ isTracking: false });
     return { success: true };
   }),
-
-  getFocusedTimeByHour: protectedProcedure
-    .input(z.object({ date: z.number() }))
-    .query(async ({ input }) => {
-      const focusedTime = await getFocusedTimeByHour(input.date);
-      return focusedTime;
-    }),
 });

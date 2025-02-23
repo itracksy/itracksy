@@ -7,6 +7,7 @@ import {
   getTimeEntriesForBoard,
   getTimeEntriesForItem,
   updateTimeEntry,
+  getLastTimeEntry,
 } from "../../api/services/timeEntry";
 import { timeEntries } from "../db/schema";
 import { createInsertSchema } from "drizzle-zod";
@@ -25,15 +26,29 @@ export const timeEntryRouter = t.router({
     return getTimeEntriesForBoard(input);
   }),
 
+  getLast: protectedProcedure.query(async ({ ctx }) => {
+    return getLastTimeEntry(ctx.userId!);
+  }),
+
   create: protectedProcedure
-    .input(timeEntryInsertSchema.omit({ userId: true }))
-    .mutation(async ({ ctx, input }) => {
-      return createTimeEntry(input, ctx.userId);
+    .input(timeEntryInsertSchema.omit({ id: true, userId: true }))
+    .mutation(async ({ input, ctx }) => {
+      return createTimeEntry(input, ctx.userId!);
     }),
 
   update: protectedProcedure
-    .input(timeEntryInsertSchema.partial().extend({ id: z.string() }))
-    .mutation(async ({ input: { id, ...data } }) => {
+    .input(
+      z.object({
+        id: z.string(),
+        boardId: z.string().optional(),
+        itemId: z.string().optional(),
+        startTime: z.string().optional(),
+        endTime: z.string().optional(),
+        duration: z.number().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { id, ...data } = input;
       return updateTimeEntry(id, data);
     }),
 

@@ -10,10 +10,7 @@ export const useTracking = () => {
   const queryClient = useQueryClient();
   const { data } = useQuery({
     queryKey: ["user.getActivitySettings"],
-    queryFn: async () => {
-      const data = await trpcClient.user.getActivitySettings.query();
-      return data;
-    },
+    queryFn: () => trpcClient.user.getActivitySettings.query(),
   });
 
   const startTracking = useCallback(async () => {

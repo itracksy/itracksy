@@ -3,8 +3,9 @@ import {
   useActiveTimeEntry,
   useUpdateTimeEntryMutation,
   useCreateTimeEntryMutation,
+  useLastTimeEntry,
 } from "@/hooks/useTimeEntryQueries";
-import { Clock, PlayCircle, StopCircle, Focus } from "lucide-react";
+import { Clock, PlayCircle, StopCircle, Focus, History } from "lucide-react";
 
 import { TimeEntryDialog } from "@/components/tracking/TimeEntryDialog";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
@@ -20,6 +21,7 @@ export function BottomSideBar() {
   const selectedBoardId = useAtomValue(selectedBoardIdAtom);
 
   const { data: activeTimeEntry, isLoading } = useActiveTimeEntry();
+  const { data: lastTimeEntry } = useLastTimeEntry();
   const updateTimeEntry = useUpdateTimeEntryMutation();
   const createTimeEntry = useCreateTimeEntryMutation();
 
@@ -88,11 +90,42 @@ export function BottomSideBar() {
     }
   };
 
-  const handleStartTimeEntry = async () => {
-    if (activeTimeEntry) {
+  const handleStartTimeEntry = () => {
+    setOpen(true);
+  };
+
+  const handleResumeLastTask = () => {
+    if (!lastTimeEntry?.item) {
+      toast({
+        title: "No previous task found",
+        description: "Start a new time entry to track your work!",
+      });
       return;
     }
-    setOpen(true);
+
+    createTimeEntry.mutate(
+      {
+        boardId: lastTimeEntry.boardId,
+        itemId: lastTimeEntry.itemId,
+        startTime: new Date().toISOString(),
+        isFocusMode: false,
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Resumed task",
+            description: `Now tracking: ${lastTimeEntry.item.title}`,
+          });
+        },
+        onError: (error) => {
+          toast({
+            title: "Failed to resume task",
+            description: error.message,
+            variant: "destructive",
+          });
+        },
+      }
+    );
   };
 
   const handleCreateTimeEntry = async (isFocusMode: boolean) => {
@@ -102,7 +135,6 @@ export function BottomSideBar() {
 
     try {
       await createTimeEntry.mutateAsync({
-        id: crypto.randomUUID(),
         itemId: selectedItemId,
         boardId: selectedBoardId,
         startTime: new Date().toISOString(),
@@ -152,14 +184,29 @@ export function BottomSideBar() {
             </span>
           </SidebarMenuButton>
         ) : (
-          <SidebarMenuButton
-            onClick={handleStartTimeEntry}
-            className="hover:text-green-600"
-            tooltip="Start new time entry"
-          >
-            <PlayCircle className="h-6 w-6 text-green-600" />
-            <span className="text-base text-muted-foreground">Start new time entry</span>
-          </SidebarMenuButton>
+          <>
+            <SidebarMenuButton
+              onClick={handleStartTimeEntry}
+              className="hover:text-green-600"
+              tooltip="Let's get shit done! 🚀"
+            >
+              <PlayCircle className="h-6 w-6 text-green-600" />
+              <span className="text-base text-muted-foreground">Let's get shit done! 🚀</span>
+            </SidebarMenuButton>
+
+            {lastTimeEntry && (
+              <SidebarMenuButton
+                onClick={handleResumeLastTask}
+                className="hover:text-blue-600"
+                tooltip={`Resume: ${lastTimeEntry.item?.title || "last task"}`}
+              >
+                <History className="h-5 w-5 text-blue-600" />
+                <span className="text-base text-muted-foreground">
+                  Resume: {lastTimeEntry.item?.title}
+                </span>
+              </SidebarMenuButton>
+            )}
+          </>
         )}
       </>
 

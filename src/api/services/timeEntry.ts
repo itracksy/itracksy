@@ -76,7 +76,7 @@ export async function updateTimeEntry(
       timeEntry.duration = duration;
     }
   }
-  
+
   const updated = await db
     .update(timeEntries)
     .set(timeEntry)
@@ -106,4 +106,16 @@ export async function getTimeEntriesForBoard(boardId: string) {
     },
     orderBy: desc(timeEntries.startTime),
   });
+}
+
+export async function getLastTimeEntry(userId: string) {
+  const entry = await db.query.timeEntries.findFirst({
+    where: eq(timeEntries.userId, userId),
+    orderBy: desc(timeEntries.startTime),
+    with: {
+      item: true,
+    },
+  });
+
+  return entry;
 }

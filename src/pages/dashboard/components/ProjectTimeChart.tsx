@@ -3,6 +3,7 @@ import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recha
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpcClient } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
+import type { TimeRange } from "./TimeRangeSelector";
 
 function formatDuration(seconds: number) {
   const hours = Math.floor(seconds / 3600);
@@ -32,12 +33,18 @@ const COLORS = [
   "#8338EC", // Violet
 ];
 
-export default function ProjectTimeChart() {
-  const today = new Date().getTime();
+interface ProjectTimeChartProps {
+  timeRange: TimeRange;
+}
+
+export default function ProjectTimeChart({ timeRange }: ProjectTimeChartProps) {
   const { data: report } = useQuery({
-    queryKey: ["dashboard.reportProjectByDay", today],
+    queryKey: ["dashboard.reportProjectByDay", timeRange.start, timeRange.end],
     queryFn: async () => {
-      const data = await trpcClient.dashboard.reportProjectByDay.query({ date: today });
+      const data = await trpcClient.dashboard.reportProjectByDay.query({
+        startDate: timeRange.start.getTime(),
+        endDate: timeRange.end.getTime(),
+      });
       return data;
     },
   });
@@ -66,7 +73,7 @@ export default function ProjectTimeChart() {
     <Card className="col-span-full">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>Today's Project Time</span>
+          <span>Project Time ({timeRange.start.toLocaleDateString()} - {timeRange.end.toLocaleDateString()})</span>
           <span className="text-sm font-normal text-muted-foreground">{totalDuration} total</span>
         </CardTitle>
       </CardHeader>

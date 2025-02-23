@@ -4,7 +4,9 @@ import { activities, timeEntries, items, boards } from "../schema";
 import { gte, desc, and, eq, sql, lte, isNull, isNotNull } from "drizzle-orm";
 
 export const getFocusedTimeByHour = async (
-  date: number
+  startDate: number,
+  endDate: number,
+  userId: string
 ): Promise<
   {
     hour: number;
@@ -16,10 +18,10 @@ export const getFocusedTimeByHour = async (
     }[];
   }[]
 > => {
-  const startOfDay = new Date(date);
+  const startOfDay = new Date(startDate);
   startOfDay.setHours(0, 0, 0, 0);
 
-  const endOfDay = new Date(date);
+  const endOfDay = new Date(endDate);
   endOfDay.setHours(23, 59, 59, 999);
 
   // Get timezone offset in minutes
@@ -39,7 +41,8 @@ export const getFocusedTimeByHour = async (
     .where(
       and(
         gte(activities.timestamp, startOfDay.getTime()),
-        lte(activities.timestamp, endOfDay.getTime())
+        lte(activities.timestamp, endOfDay.getTime()),
+        eq(activities.userId, userId)
       )
     )
     .groupBy(hourExpr)
@@ -58,7 +61,8 @@ export const getFocusedTimeByHour = async (
       and(
         gte(activities.timestamp, startOfDay.getTime()),
         lte(activities.timestamp, endOfDay.getTime()),
-        eq(activities.isFocused, true)
+        eq(activities.isFocused, true),
+        eq(activities.userId, userId)
       )
     )
     .orderBy(desc(activities.duration))
@@ -82,11 +86,11 @@ export const getFocusedTimeByHour = async (
   });
 };
 
-export const reportProjectByDay = async (date: number, userId: string) => {
-  const startDateTime = new Date(date);
+export const reportProjectByDay = async (startDate: number, endDate: number, userId: string) => {
+  const startDateTime = new Date(startDate);
   startDateTime.setHours(0, 0, 0, 0);
 
-  const endDateTime = new Date(date);
+  const endDateTime = new Date(endDate);
   endDateTime.setHours(23, 59, 59, 999);
 
   // Update entries with null duration
@@ -170,7 +174,8 @@ export const reportProjectByDay = async (date: number, userId: string) => {
     }));
 
   return {
-    date: startDateTime.toISOString().split("T")[0],
+    startDate: startDateTime.toISOString().split("T")[0],
+    endDate: endDateTime.toISOString().split("T")[0],
     totalDuration,
     projects,
   };
