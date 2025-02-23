@@ -147,8 +147,8 @@ export async function setCurrentUserId(userId: string): Promise<string> {
   }
 
   const defaultSettings = {
-    [USER_SETTINGS_KEYS.accessibilityPermission]: "false",
-    [USER_SETTINGS_KEYS.screenRecordingPermission]: "false",
+    [USER_SETTINGS_KEYS.accessibilityPermission]: "true",
+    [USER_SETTINGS_KEYS.screenRecordingPermission]: "true",
     [USER_SETTINGS_KEYS.isFocusMode]: "true",
     [USER_SETTINGS_KEYS.isTracking]: "true",
   };

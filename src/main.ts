@@ -77,8 +77,8 @@ function createWindow(): void {
   const preload = path.join(__dirname, "preload.js");
   const iconPath = path.join(__dirname, "../resources/icon.ico");
   mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: 1400,
+    height: 1000,
     icon: iconPath,
     webPreferences: {
       devTools: true,

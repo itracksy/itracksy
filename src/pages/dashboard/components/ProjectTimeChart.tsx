@@ -81,16 +81,13 @@ export default function ProjectTimeChart({ timeRange }: ProjectTimeChartProps) {
       <Card className="col-span-full">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>
-              Project Time ({timeRange.start.toLocaleDateString()} -{" "}
-              {timeRange.end.toLocaleDateString()})
-            </span>
+            <span>Project Time</span>
             <span className="text-sm font-normal text-muted-foreground">{totalDuration} total</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           {hasData ? (
-            <div className="flex h-[400px]">
+            <div className="flex h-[300px]">
               <ResponsiveContainer width="60%" height="100%">
                 <PieChart>
                   <Pie

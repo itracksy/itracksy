@@ -25,6 +25,7 @@ import { trpcClient } from "@/utils/trpc";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTracking } from "@/hooks/useTracking";
 import { PlayCircle, StopCircle } from "lucide-react";
+import { Label } from "@/components/ui/label";
 
 export default function SettingsPage() {
   const [currentTheme, setCurrentTheme] = useState<ThemeMode>("light");
@@ -103,6 +104,7 @@ export default function SettingsPage() {
     });
     queryClient.invalidateQueries({ queryKey: ["user.getActivitySettings"] });
   };
+
   return (
     <div className="space-y-6 p-6">
       {itemToDelete && (
@@ -186,6 +188,47 @@ export default function SettingsPage() {
           >
             {isTracking ? <StopCircle className="h-5 w-5" /> : <PlayCircle className="h-5 w-5" />}
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>System Permissions</CardTitle>
+          <CardDescription>
+            Manage system access permissions required for time tracking
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Accessibility Permission</Label>
+              <p className="text-sm text-muted-foreground">Required to track active applications</p>
+            </div>
+            <Switch
+              checked={activitySettings?.accessibilityPermission}
+              onCheckedChange={async (checked) => {
+                await trpcClient.user.updateActivitySettings.mutate({
+                  accessibilityPermission: checked,
+                });
+                queryClient.invalidateQueries({ queryKey: ["user.getActivitySettings"] });
+              }}
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Screen Recording Permission</Label>
+              <p className="text-sm text-muted-foreground">Required to track browser activity</p>
+            </div>
+            <Switch
+              checked={activitySettings?.screenRecordingPermission}
+              onCheckedChange={async (checked) => {
+                await trpcClient.user.updateActivitySettings.mutate({
+                  screenRecordingPermission: checked,
+                });
+                queryClient.invalidateQueries({ queryKey: ["user.getActivitySettings"] });
+              }}
+            />
+          </div>
         </CardContent>
       </Card>
 

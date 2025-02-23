@@ -26,7 +26,7 @@ export const startTracking = async (userId: string): Promise<void> => {
   trackingIntervalId = setInterval(async () => {
     try {
       const getWindows = await import("get-windows");
-      logger.debug("[startTracking] Attempting to get active window");
+
       const activitySettings = await getUserSettings({ userId });
       const blockedApps = await getUserBlockedApps(userId);
       const blockedDomains = await getUserBlockedDomains(userId);
@@ -34,6 +34,7 @@ export const startTracking = async (userId: string): Promise<void> => {
         accessibilityPermission: activitySettings.accessibilityPermission,
         screenRecordingPermission: activitySettings.screenRecordingPermission,
       });
+      logger.debug("[startTracking] Attempting to get active window", activitySettings);
       if (!result) {
         logger.warn("[startTracking] No active window result returned", { activitySettings });
         return;
@@ -64,6 +65,7 @@ export const startTracking = async (userId: string): Promise<void> => {
       await upsertActivity(transformedActivities);
       if (activitySettings.isFocusMode) {
         const url = transformedActivities.url;
+        console.log("[startTracking] url", url);
         const appName = transformedActivities.ownerName;
         const isBlockedApp =
           appName &&
@@ -126,7 +128,10 @@ export const stopTracking = (): void => {
 };
 
 function createNotificationWindow() {
-  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+  // Get the current mouse position to determine active screen
+  const mousePoint = screen.getCursorScreenPoint();
+  const currentDisplay = screen.getDisplayNearestPoint(mousePoint);
+  const { width, height } = currentDisplay.workAreaSize;
 
   notificationWindow = new BrowserWindow({
     width,
@@ -139,6 +144,7 @@ function createNotificationWindow() {
     type: "panel",
     skipTaskbar: true,
     show: false,
+    movable: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -150,20 +156,20 @@ function createNotificationWindow() {
   notificationWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   notificationWindow.moveTop();
 
-  // Set window bounds to cover all displays
-  const displays = screen.getAllDisplays();
-  const totalBounds = displays.reduce(
-    (bounds, display) => {
-      bounds.x = Math.min(bounds.x, display.bounds.x);
-      bounds.y = Math.min(bounds.y, display.bounds.y);
-      bounds.width = Math.max(bounds.width, display.bounds.x + display.bounds.width);
-      bounds.height = Math.max(bounds.height, display.bounds.y + display.bounds.height);
-      return bounds;
-    },
-    { x: 0, y: 0, width: 0, height: 0 }
-  );
+  // Make window draggable from any point
+  notificationWindow.webContents.on("did-finish-load", () => {
+    notificationWindow?.webContents.insertCSS(`
+      body {
+        -webkit-app-region: drag;
+      }
+      button, input, a {
+        -webkit-app-region: no-drag;
+      }
+    `);
+  });
 
-  notificationWindow.setBounds(totalBounds);
+  // Set window bounds to cover current display
+  notificationWindow.setBounds(currentDisplay.bounds);
 
   return notificationWindow;
 }
