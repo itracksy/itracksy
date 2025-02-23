@@ -20,7 +20,7 @@ export async function getBoard(id: string, userId: string) {
     },
   });
 
-  return board;
+  return board ?? null;
 }
 
 export async function getBoards(userId: string): Promise<Board[]> {

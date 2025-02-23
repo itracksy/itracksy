@@ -30,7 +30,10 @@ export const startTracking = async (userId: string): Promise<void> => {
       const activitySettings = await getUserSettings({ userId });
       const blockedApps = await getUserBlockedApps(userId);
       const blockedDomains = await getUserBlockedDomains(userId);
-      const result = await getWindows.activeWindow(activitySettings ?? undefined);
+      const result = await getWindows.activeWindow({
+        accessibilityPermission: activitySettings.accessibilityPermission,
+        screenRecordingPermission: activitySettings.screenRecordingPermission,
+      });
       if (!result) {
         logger.warn("[startTracking] No active window result returned", { activitySettings });
         return;
@@ -59,7 +62,7 @@ export const startTracking = async (userId: string): Promise<void> => {
       };
 
       await upsertActivity(transformedActivities);
-      if (activitySettings?.isFocusMode) {
+      if (activitySettings.isFocusMode) {
         const url = transformedActivities.url;
         const appName = transformedActivities.ownerName;
         const isBlockedApp =

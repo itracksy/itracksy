@@ -63,6 +63,9 @@ export function useDeleteTimeEntryMutation() {
 export function useLastTimeEntry() {
   return useQuery({
     queryKey: ["timeEntries", "last"],
-    queryFn: () => trpcClient.timeEntry.getLast.query(),
+    queryFn: async () => {
+      const result = await trpcClient.timeEntry.getLast.query();
+      return result ?? null; // Ensure we always return null instead of undefined
+    },
   });
 }

@@ -4,7 +4,9 @@ import { eq } from "drizzle-orm";
 import { defaultBlockedApps, defaultBlockedDomains } from "../../../config/tracking";
 import { getValue, setValue, setMultipleValues } from "./localStorage";
 import { logger } from "../../../helpers/logger";
-
+import { boards } from "../../db/schema";
+import { createBoard, createColumn, createItem } from "../../services/board";
+import { nanoid } from "nanoid";
 const USER_SETTINGS_KEYS = {
   accessibilityPermission: "user.accessibilityPermission",
   screenRecordingPermission: "user.screenRecordingPermission",
@@ -54,6 +56,7 @@ export const getCurrentUserIdLocalStorage = async () => {
 };
 
 export async function setCurrentUserId(userId: string): Promise<string> {
+  existingUserId = await getCurrentUserIdLocalStorage();
   if (existingUserId && existingUserId !== userId) {
     logger.fatal("[setCurrentUserId] Current user id mismatch", {
       existingUserId,
@@ -61,11 +64,87 @@ export async function setCurrentUserId(userId: string): Promise<string> {
     });
   }
 
-  await setValue(USER_SETTINGS_KEYS.currentUserId, userId);
   if (existingUserId == userId) {
     return existingUserId;
   }
+
+  await setValue(USER_SETTINGS_KEYS.currentUserId, userId);
   existingUserId = userId;
+
+  // Check if there are any boards
+  const existingBoards = await db.select().from(boards);
+  if (existingBoards.length === 0) {
+    // Create default introduction board
+    const board = await createBoard(
+      {
+        name: "Getting Started",
+        color: "#4CAF50", // A nice green color
+        currency: "USD",
+        hourlyRate: 0,
+      },
+      userId
+    );
+
+    // Create default columns
+    const todoColumn = await createColumn({
+      name: "To Do",
+      boardId: board.id,
+      order: 0,
+    });
+
+    const inProgressColumn = await createColumn({
+      name: "In Progress",
+      boardId: board.id,
+      order: 1,
+    });
+
+    const doneColumn = await createColumn({
+      name: "Done",
+      boardId: board.id,
+      order: 2,
+    });
+
+    // Create introduction items
+    await createItem({
+      id: nanoid(),
+      title: "👋 Welcome to iTracksy!",
+      content:
+        "iTracksy is your personal time tracking and task management companion. This board helps you get started with the basics.",
+      boardId: board.id,
+      columnId: todoColumn.id,
+      order: 0,
+    });
+
+    await createItem({
+      id: nanoid(),
+      title: "⏱️ Track Your Time",
+      content:
+        "Click the play button on any task to start tracking time. You can also use focus mode to minimize distractions.",
+      boardId: board.id,
+      columnId: todoColumn.id,
+      order: 1,
+    });
+
+    await createItem({
+      id: nanoid(),
+      title: "📊 View Reports",
+      content:
+        "Check out the dashboard to see insights about your time usage and productivity patterns.",
+      boardId: board.id,
+      columnId: todoColumn.id,
+      order: 2,
+    });
+
+    await createItem({
+      id: nanoid(),
+      title: "🎯 Create Your First Task",
+      content:
+        "Click the + button in any column to create a new task. Try moving this task to 'In Progress' when you start!",
+      boardId: board.id,
+      columnId: todoColumn.id,
+      order: 3,
+    });
+  }
 
   const defaultSettings = {
     [USER_SETTINGS_KEYS.accessibilityPermission]: "false",

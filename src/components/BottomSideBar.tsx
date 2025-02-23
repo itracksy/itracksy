@@ -18,7 +18,7 @@ export function BottomSideBar() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const { data: activeTimeEntry, isLoading } = useActiveTimeEntry();
-  const { data: lastTimeEntry } = useLastTimeEntry();
+  const { data: lastTimeEntry = null } = useLastTimeEntry();
   const updateTimeEntry = useUpdateTimeEntryMutation();
   const createTimeEntry = useCreateTimeEntryMutation();
   const { toast } = useToast();

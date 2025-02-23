@@ -12,18 +12,7 @@ import { useAuth } from "./hooks/useAuth";
 
 import { useTracking } from "./hooks/useTracking";
 
-const queryClient = new QueryClient({
-  queryCache: new QueryCache({
-    onError: (error) => {
-      console.error("[Query]", error);
-    },
-  }),
-  mutationCache: new MutationCache({
-    onError: (error) => {
-      console.error("[Mutation]", error);
-    },
-  }),
-});
+const queryClient = new QueryClient({});
 
 function AuthenticatedApp() {
   const { i18n } = useTranslation();

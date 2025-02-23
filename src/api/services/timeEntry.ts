@@ -117,5 +117,5 @@ export async function getLastTimeEntry(userId: string) {
     },
   });
 
-  return entry;
+  return entry ?? null; // Ensure we always return null instead of undefined
 }
