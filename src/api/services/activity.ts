@@ -189,7 +189,7 @@ function showNotification(title: string, detail: string) {
 
   const options = {
     type: "question" as const,
-    title: "Activity Update",
+    title: "iTracksy-Activity Update",
     message: title,
     detail: detail,
     buttons: ["Yes", "No", "Break in 15 min"],
