@@ -41,7 +41,7 @@ export async function getUserSettings({ userId }: { userId: string }) {
     userId,
     accessibilityPermission: accessibilityPermission === "true",
     screenRecordingPermission: screenRecordingPermission === "true",
-    isFocusMode: isFocusMode === "true",
+    isBlockingOnFocusMode: isFocusMode === "true",
     currentTaskId: currentTaskId || null,
     timeEntryId: timeEntryId || null,
     lastUpdateActivity: lastUpdateActivity ? parseInt(lastUpdateActivity) : null,

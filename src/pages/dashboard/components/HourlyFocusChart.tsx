@@ -15,7 +15,7 @@ interface HourlyFocusChartProps {
 export default function HourlyFocusChart({ timeRange }: HourlyFocusChartProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { data: hourlyData, isLoading } = useQuery({
-    queryKey: ["activityWindow"],
+    queryKey: ["dashboard.getFocusedTimeByHour"],
     queryFn: async () => {
       const data = await trpcClient.dashboard.getFocusedTimeByHour.query({
         startDate: timeRange.start.getTime(),

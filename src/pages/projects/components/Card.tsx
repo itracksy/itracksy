@@ -82,7 +82,7 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
         itemId: id,
         boardId,
         startTime: Date.now(),
-        isFocusMode: activitySettings?.isFocusMode,
+        isFocusMode: activitySettings?.isBlockingOnFocusMode,
       });
       trpcClient.user.updateActivitySettings.mutate({
         currentTaskId: id,

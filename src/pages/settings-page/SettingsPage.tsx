@@ -99,7 +99,7 @@ export default function SettingsPage() {
 
   const onFocusChange = async () => {
     await trpcClient.user.updateActivitySettings.mutate({
-      isFocusMode: !activitySettings?.isFocusMode,
+      isFocusMode: !activitySettings?.isBlockingOnFocusMode,
     });
     queryClient.invalidateQueries({ queryKey: ["user.getActivitySettings"] });
   };
@@ -173,7 +173,7 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="flex items-center gap-4">
           <Switch
-            checked={activitySettings?.isFocusMode}
+            checked={activitySettings?.isBlockingOnFocusMode}
             onCheckedChange={onFocusChange}
             id="focus-mode"
           />

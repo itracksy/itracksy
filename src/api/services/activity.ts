@@ -33,7 +33,7 @@ export const startTracking = async (): Promise<void> => {
         return;
       }
       const activitySettings = await getUserSettings({ userId });
-      if (!activitySettings.isFocusMode) {
+      if (!activitySettings.isBlockingOnFocusMode) {
         return;
       }
       const activeEntry = await getActiveTimeEntry(userId);
@@ -80,9 +80,13 @@ export const startTracking = async (): Promise<void> => {
               result.url,
         userId,
       };
+      if (!activeEntry.isFocusMode) {
+        // it is break entry time, need to handle blockingOnBreakMode
+        return;
+      }
 
       await upsertActivity(transformedActivities);
-      if (activitySettings.isFocusMode) {
+      if (activitySettings.isBlockingOnFocusMode) {
         const url = transformedActivities.url;
         console.log("[startTracking] url", url);
         const appName = transformedActivities.ownerName;

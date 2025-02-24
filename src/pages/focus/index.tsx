@@ -165,9 +165,9 @@ export default function FocusPage() {
     if (!activeTimeEntry) return "";
     return `${new Date(activeTimeEntry.startTime).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })} → ${new Date(activeTimeEntry.endTime ?? "").toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })}`;
   };
-  console.log(activeTimeEntry);
+
   return (
-    <div className="flex min-h-screen flex-col items-center bg-gradient-to-b from-white via-red-50/30 to-red-100/20 p-8 dark:from-gray-900 dark:via-red-900/10 dark:to-red-900/5">
+    <div className="flex min-h-screen flex-col items-center bg-transparent">
       <div className="w-full max-w-md space-y-8">
         {activeTimeEntry ? (
           <>

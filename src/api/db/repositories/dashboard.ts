@@ -104,7 +104,7 @@ export const reportProjectByDay = async (startDate: number, endDate: number, use
     })
     .where(and(isNull(timeEntries.duration), isNotNull(timeEntries.startTime)));
 
-  // Get entries grouped by board and item, requiring both boardId and itemId
+  // Get entries grouped by board and item
   const entries = await db
     .select({
       boardId: boards.id,
@@ -112,11 +112,11 @@ export const reportProjectByDay = async (startDate: number, endDate: number, use
       boardColor: boards.color,
       itemId: items.id,
       itemTitle: items.title,
-      totalDuration: sql<number>`sum(${timeEntries.duration})`,
+      totalDuration: sql<number>`COALESCE(sum(${timeEntries.duration}), 0)`,
     })
     .from(timeEntries)
-    .innerJoin(boards, eq(timeEntries.boardId, boards.id)) // Changed to innerJoin to require boardId
-    .innerJoin(items, eq(timeEntries.itemId, items.id))    // Changed to innerJoin to require itemId
+    .leftJoin(boards, eq(timeEntries.boardId, boards.id))
+    .leftJoin(items, eq(timeEntries.itemId, items.id))
     .where(
       and(
         gte(timeEntries.startTime, startDateTime.getTime()),
@@ -129,29 +129,32 @@ export const reportProjectByDay = async (startDate: number, endDate: number, use
     .groupBy(boards.id, items.id)
     .orderBy(desc(sql<number>`sum(${timeEntries.duration})`));
 
-  // Calculate total duration for the day (only from entries with both board and item)
+  // Calculate total duration for the day
   const totalDuration = entries.reduce((sum, entry) => sum + entry.totalDuration, 0);
 
+  type TaskType = {
+    id: string;
+    title: string;
+    duration: number;
+  };
+
+  type BoardType = {
+    id: string;
+    name: string;
+    color: string | null;
+    totalDuration: number;
+    tasks: TaskType[];
+  };
+
   // Group entries by board
-  const boardMap = new Map<
-    string,
-    {
-      id: string;
-      name: string;
-      color: string | null;
-      totalDuration: number;
-      tasks: {
-        id: string;
-        title: string;
-        duration: number;
-      }[];
-    }
-  >();
+  const boardMap = new Map<string, BoardType>();
 
   entries.forEach((entry) => {
+    if (!entry.boardId || !entry.itemId) return; // Skip entries without board or item
+
     const board = boardMap.get(entry.boardId) || {
       id: entry.boardId,
-      name: entry.boardName,
+      name: entry.boardName || "Untitled Board",
       color: entry.boardColor,
       totalDuration: 0,
       tasks: [],
@@ -160,7 +163,7 @@ export const reportProjectByDay = async (startDate: number, endDate: number, use
     board.totalDuration += entry.totalDuration;
     board.tasks.push({
       id: entry.itemId,
-      title: entry.itemTitle || "Untitled",
+      title: entry.itemTitle || "Untitled Task",
       duration: entry.totalDuration,
     });
 
