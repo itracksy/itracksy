@@ -5,30 +5,23 @@ import {
   useCreateTimeEntryMutation,
   useLastTimeEntry,
 } from "@/hooks/useTimeEntryQueries";
-import { PlayCircle, StopCircle, Focus, History, Coffee, CheckCircle2, X } from "lucide-react";
-import { TimeEntryDialog } from "@/components/tracking/TimeEntryDialog";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { useToast } from "@/hooks/use-toast";
 import { trpcClient } from "@/utils/trpc";
 import { useAtom } from "jotai";
-import { breakDurationAtom, selectedBoardIdAtom } from "@/context/board";
-import { NotificationOptions } from "@/types/notification";
-import { cn } from "@/lib/utils";
+import { breakDurationAtom, selectedBoardIdAtom, targetMinutesAtom } from "@/context/board";
+
 import { BoardSelector } from "@/components/tracking/BoardSelector";
 import { Slider } from "@/components/ui/slider";
 
 export default function FocusPage() {
-  const [duration, setDuration] = useState<string>("25:00");
-  const [focusType, setFocusType] = useState("General");
   const [intention, setIntention] = useState("");
-  const [isActive, setIsActive] = useState(false);
-  const [startTime, setStartTime] = useState<Date | null>(null);
-  const [endTime, setEndTime] = useState<Date | null>(null);
+
   const [selectedItemId, setSelectedItemId] = useState("");
   const [selectedBoardId] = useAtom(selectedBoardIdAtom);
-  const [targetMinutes, setTargetMinutes] = useState<number>(25);
 
+  const [targetMinutes, setTargetMinutes] = useAtom(targetMinutesAtom);
+  const [duration, setDuration] = useState<string>(`${targetMinutes}:00`);
   const { data: activeTimeEntry, isLoading } = useActiveTimeEntry();
   const updateTimeEntry = useUpdateTimeEntryMutation();
   const createTimeEntry = useCreateTimeEntryMutation();
@@ -37,13 +30,14 @@ export default function FocusPage() {
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
 
-    if (isActive && startTime) {
+    if (activeTimeEntry) {
       const updateTimer = () => {
         const now = new Date();
-        const diff = targetMinutes * 60 - Math.floor((now.getTime() - startTime.getTime()) / 1000);
+        const startTimeDate = new Date(activeTimeEntry.startTime);
+        const diff =
+          targetMinutes * 60 - Math.floor((now.getTime() - startTimeDate.getTime()) / 1000);
 
         if (diff <= 0) {
-          setIsActive(false);
           clearInterval(intervalId);
           handleStopTimeEntry();
 
@@ -68,14 +62,14 @@ export default function FocusPage() {
         clearInterval(intervalId);
       }
     };
-  }, [isActive, startTime, targetMinutes]);
+  }, [activeTimeEntry, targetMinutes]);
 
   // Update initial duration when target minutes changes
   useEffect(() => {
-    if (!isActive) {
+    if (!activeTimeEntry) {
       setDuration(`${targetMinutes.toString().padStart(2, "0")}:00`);
     }
-  }, [targetMinutes, isActive]);
+  }, [targetMinutes, activeTimeEntry]);
 
   const handleStartSession = async (withTask: boolean = false) => {
     if (!withTask && !intention) {
@@ -97,10 +91,6 @@ export default function FocusPage() {
     }
 
     const now = new Date();
-    const end = new Date(now.getTime() + targetMinutes * 60 * 1000);
-    setStartTime(now);
-    setEndTime(end);
-    setIsActive(true);
 
     try {
       await createTimeEntry.mutateAsync({
@@ -155,8 +145,8 @@ export default function FocusPage() {
   };
 
   const formatTimeRange = () => {
-    if (!startTime || !endTime) return "";
-    return `${startTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })} → ${endTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })}`;
+    if (!activeTimeEntry) return "";
+    return `${new Date(activeTimeEntry.startTime).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })} → ${new Date(activeTimeEntry.endTime ?? "").toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })}`;
   };
 
   return (
@@ -237,7 +227,7 @@ export default function FocusPage() {
               </div>
               <button
                 onClick={() => handleStartSession(true)}
-                disabled={isActive}
+                disabled={!!activeTimeEntry}
                 className="w-full rounded-lg bg-red-400 py-3 font-medium text-white shadow-sm transition hover:bg-red-500 disabled:opacity-50"
               >
                 START WITH TASK
@@ -252,7 +242,7 @@ export default function FocusPage() {
               />
               <button
                 onClick={() => handleStartSession(false)}
-                disabled={isActive}
+                disabled={!!activeTimeEntry}
                 className="w-full rounded-lg border border-red-400 bg-white py-3 font-medium text-red-400 shadow-sm transition hover:bg-red-50 disabled:opacity-50"
               >
                 QUICK FOCUS

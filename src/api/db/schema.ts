@@ -44,10 +44,8 @@ export const timeEntries = sqliteTable("time_entries", {
   targetDuration: integer("target_duration"), // Duration in minutes
   description: text("description"),
   isFocusMode: integer("is_focus_mode", { mode: "boolean" }),
-  boardId: text("board_id")
-    .references(() => boards.id),
-  itemId: text("item_id")
-    .references(() => items.id),
+  boardId: text("board_id").references(() => boards.id),
+  itemId: text("item_id").references(() => items.id),
   userId: text("user_id").notNull(),
   invoiceId: text("invoice_id"),
   createdAt: text("created_at"),
@@ -67,12 +65,10 @@ export const activities = sqliteTable(
     url: text("url"),
     duration: integer().notNull(),
     taskId: text("task_id"),
-    isFocused: integer("is_focused", { mode: "boolean" }).default(false).notNull(),
     userId: text("user_id").notNull(),
   },
   (table) => [
     primaryKey({ columns: [table.timestamp] }),
-    index("isFocused_idx").on(table.isFocused),
     index("userId_idx").on(table.userId),
     index("taskId_idx").on(table.taskId),
     index("activity_match_idx").on(
@@ -81,8 +77,7 @@ export const activities = sqliteTable(
       table.ownerName,
       table.ownerPath,
       table.platform,
-      table.taskId,
-      table.isFocused
+      table.taskId
     ),
   ]
 );

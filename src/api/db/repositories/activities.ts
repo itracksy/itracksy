@@ -44,9 +44,6 @@ const findMatchingActivity = async (
         isNullOrUndefined(activity.taskId)
           ? sql`${activities.taskId} is null`
           : eq(activities.taskId, activity.taskId),
-        isNullOrUndefined(activity.isFocused)
-          ? sql`${activities.isFocused} is null`
-          : eq(activities.isFocused, activity.isFocused),
         gte(activities.timestamp, activity.timestamp - LIMIT_TIME_APART)
       )
     )
@@ -83,7 +80,6 @@ export const upsertActivity = async (activity: ActivityRecord): Promise<void> =>
     url: activity.url,
     duration: activity.duration,
     taskId: activity.taskId,
-    isFocused: activity.isFocused,
     userId: activity.userId,
   });
 };

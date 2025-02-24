@@ -35,7 +35,7 @@ export const getFocusedTimeByHour = async (
   const hourSummaries = await db
     .select({
       hour: hourCast,
-      totalFocusedTime: sql<number>`sum(CASE WHEN ${activities.isFocused} = 1 THEN ${activities.duration} ELSE 0 END)`,
+      totalFocusedTime: sql<number>`sum(${activities.duration})`,
     })
     .from(activities)
     .where(
@@ -61,7 +61,7 @@ export const getFocusedTimeByHour = async (
       and(
         gte(activities.timestamp, startOfDay.getTime()),
         lte(activities.timestamp, endOfDay.getTime()),
-        eq(activities.isFocused, true),
+
         eq(activities.userId, userId)
       )
     )
