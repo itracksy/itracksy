@@ -34,7 +34,7 @@ export function TimeEntryDialog({ open, onOpenChange }: TimeEntryDialogProps) {
       await createTimeEntry.mutateAsync({
         itemId: selectedItemId,
         boardId: selectedBoardId,
-        startTime: new Date().toISOString(),
+        startTime: Date.now(),
         isFocusMode,
       });
 
@@ -70,11 +70,7 @@ export function TimeEntryDialog({ open, onOpenChange }: TimeEntryDialogProps) {
         <div className="grid gap-4 py-4">
           <BoardSelector selectedItemId={selectedItemId} onItemSelect={setSelectedItemId} />
           <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={() => handleCreateTimeEntry(true)}
-              className="gap-2"
-            >
+            <Button variant="outline" onClick={() => handleCreateTimeEntry(true)} className="gap-2">
               <Focus className="h-4 w-4" />
               Focus Mode
             </Button>

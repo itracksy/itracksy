@@ -40,7 +40,7 @@ CREATE TABLE `boards` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
 	`color` text,
-	`created_at` text,
+	`created_at` integer,
 	`currency` text,
 	`hourly_rate` real,
 	`user_id` text NOT NULL
@@ -51,7 +51,7 @@ CREATE TABLE `columns` (
 	`name` text NOT NULL,
 	`board_id` text NOT NULL,
 	`order` integer NOT NULL,
-	`created_at` text,
+	`created_at` integer,
 	FOREIGN KEY (`board_id`) REFERENCES `boards`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
@@ -62,7 +62,7 @@ CREATE TABLE `items` (
 	`board_id` text NOT NULL,
 	`column_id` text NOT NULL,
 	`order` integer NOT NULL,
-	`created_at` text,
+	`created_at` integer,
 	FOREIGN KEY (`board_id`) REFERENCES `boards`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`column_id`) REFERENCES `columns`(`id`) ON UPDATE no action ON DELETE no action
 );
@@ -75,8 +75,8 @@ CREATE TABLE `local_storage` (
 --> statement-breakpoint
 CREATE TABLE `time_entries` (
 	`id` text PRIMARY KEY NOT NULL,
-	`start_time` text NOT NULL,
-	`end_time` text,
+	`start_time` integer NOT NULL,
+	`end_time` integer,
 	`duration` integer,
 	`target_duration` integer,
 	`description` text,
@@ -85,7 +85,7 @@ CREATE TABLE `time_entries` (
 	`item_id` text,
 	`user_id` text NOT NULL,
 	`invoice_id` text,
-	`created_at` text,
+	`created_at` integer,
 	FOREIGN KEY (`board_id`) REFERENCES `boards`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`item_id`) REFERENCES `items`(`id`) ON UPDATE no action ON DELETE no action
 );

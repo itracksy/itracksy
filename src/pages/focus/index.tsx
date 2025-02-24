@@ -83,12 +83,11 @@ export default function FocusPage() {
       return;
     }
 
-    const now = new Date();
     const minutes = activeTab === "focus" ? targetMinutes : breakMinutes;
     const { description, boardId, itemId } = getTimeEntryData();
     try {
       await createTimeEntry.mutateAsync({
-        startTime: now.toISOString(),
+        startTime: Date.now(),
         description,
         boardId,
         itemId,
@@ -145,7 +144,7 @@ export default function FocusPage() {
     try {
       await updateTimeEntry.mutateAsync({
         id: activeTimeEntry.id,
-        endTime: new Date().toISOString(),
+        endTime: Date.now(),
       });
 
       const mode = activeTimeEntry.isFocusMode ? "Focus" : "Break";

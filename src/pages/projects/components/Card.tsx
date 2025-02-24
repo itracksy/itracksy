@@ -81,7 +81,7 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
       createTimeEntry.mutate({
         itemId: id,
         boardId,
-        startTime: new Date().toISOString(),
+        startTime: Date.now(),
         isFocusMode: activitySettings?.isFocusMode,
       });
       trpcClient.user.updateActivitySettings.mutate({
@@ -96,7 +96,7 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
 
       updateTimeEntry.mutate({
         id: activeTimeEntry.id,
-        endTime: new Date().toISOString(),
+        endTime: Date.now(),
       });
     };
 

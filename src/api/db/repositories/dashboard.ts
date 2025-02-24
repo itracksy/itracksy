@@ -97,52 +97,52 @@ export const reportProjectByDay = async (startDate: number, endDate: number, use
   await db
     .update(timeEntries)
     .set({
-      duration: sql`CAST((
-        CASE 
-          WHEN ${timeEntries.endTime} IS NOT NULL THEN strftime('%s', ${timeEntries.endTime})
-          ELSE strftime('%s', 'now')
-        END
-        - strftime('%s', ${timeEntries.startTime})
-      ) AS INTEGER)`,
+      duration: sql`CAST(
+        (CAST(${timeEntries.endTime} AS INTEGER) - CAST(${timeEntries.startTime} AS INTEGER)) / 1000
+        AS INTEGER
+      )`,
     })
     .where(and(isNull(timeEntries.duration), isNotNull(timeEntries.startTime)));
 
-  // Get timezone offset in minutes
-  const timezoneOffset = new Date().getTimezoneOffset();
-
-  // Get entries grouped by board and item
+  // Get entries grouped by board and item, requiring both boardId and itemId
   const entries = await db
     .select({
       boardId: boards.id,
       boardName: boards.name,
+      boardColor: boards.color,
       itemId: items.id,
       itemTitle: items.title,
       totalDuration: sql<number>`sum(${timeEntries.duration})`,
     })
     .from(timeEntries)
-    .innerJoin(items, eq(timeEntries.itemId, items.id))
-    .innerJoin(boards, eq(timeEntries.boardId, boards.id))
+    .innerJoin(boards, eq(timeEntries.boardId, boards.id)) // Changed to innerJoin to require boardId
+    .innerJoin(items, eq(timeEntries.itemId, items.id))    // Changed to innerJoin to require itemId
     .where(
       and(
-        gte(sql`strftime('%s', ${timeEntries.startTime}) * 1000`, startDateTime.getTime()),
-        lte(sql`strftime('%s', ${timeEntries.startTime}) * 1000`, endDateTime.getTime()),
-        eq(timeEntries.userId, userId)
+        gte(timeEntries.startTime, startDateTime.getTime()),
+        lte(timeEntries.startTime, endDateTime.getTime()),
+        eq(timeEntries.userId, userId),
+        isNotNull(timeEntries.boardId),
+        isNotNull(timeEntries.itemId)
       )
     )
     .groupBy(boards.id, items.id)
     .orderBy(desc(sql<number>`sum(${timeEntries.duration})`));
 
-  // Calculate total duration for the day
+  // Calculate total duration for the day (only from entries with both board and item)
   const totalDuration = entries.reduce((sum, entry) => sum + entry.totalDuration, 0);
 
   // Group entries by board
   const boardMap = new Map<
     string,
     {
-      boardName: string;
+      id: string;
+      name: string;
+      color: string | null;
       totalDuration: number;
       tasks: {
-        itemTitle: string;
+        id: string;
+        title: string;
         duration: number;
       }[];
     }
@@ -150,14 +150,17 @@ export const reportProjectByDay = async (startDate: number, endDate: number, use
 
   entries.forEach((entry) => {
     const board = boardMap.get(entry.boardId) || {
-      boardName: entry.boardName,
+      id: entry.boardId,
+      name: entry.boardName,
+      color: entry.boardColor,
       totalDuration: 0,
       tasks: [],
     };
 
     board.totalDuration += entry.totalDuration;
     board.tasks.push({
-      itemTitle: entry.itemTitle,
+      id: entry.itemId,
+      title: entry.itemTitle || "Untitled",
       duration: entry.totalDuration,
     });
 
@@ -169,13 +172,12 @@ export const reportProjectByDay = async (startDate: number, endDate: number, use
     .sort((a, b) => b.totalDuration - a.totalDuration)
     .map((board) => ({
       ...board,
-      // Sort tasks within each board by duration
       tasks: board.tasks.sort((a, b) => b.duration - a.duration),
     }));
 
   return {
-    startDate: startDateTime.toISOString().split("T")[0],
-    endDate: endDateTime.toISOString().split("T")[0],
+    startDate: startDateTime.getTime(),
+    endDate: endDateTime.getTime(),
     totalDuration,
     projects,
   };

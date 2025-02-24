@@ -57,11 +57,11 @@ export default function ProjectTimeChart({ timeRange }: ProjectTimeChartProps) {
     if (!report) return [];
 
     return report.projects.map((project) => ({
-      name: project.boardName,
+      name: project.name,
       value: project.totalDuration,
       displayDuration: formatDuration(project.totalDuration),
       tasks: project.tasks.map((task) => ({
-        name: task.itemTitle,
+        name: task.title,
         duration: formatDuration(task.duration),
       })),
     }));

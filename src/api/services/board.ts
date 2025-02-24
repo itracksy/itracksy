@@ -41,7 +41,7 @@ export async function createBoard(
       ...board,
       id: nanoid(),
       userId,
-      createdAt: new Date().toISOString(),
+      createdAt: Date.now(),
     })
     .returning();
 
@@ -54,7 +54,7 @@ export async function createColumn(column: Omit<ColumnInsert, "id">): Promise<Co
     .values({
       ...column,
       id: nanoid(),
-      createdAt: new Date().toISOString(),
+      createdAt: Date.now(),
     })
     .returning();
 
@@ -75,7 +75,7 @@ export async function createItem(item: ItemInsert): Promise<Item> {
     .values({
       ...item,
       id: nanoid(),
-      createdAt: new Date().toISOString(),
+      createdAt: Date.now(),
     })
     .returning();
 

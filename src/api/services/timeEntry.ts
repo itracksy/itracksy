@@ -26,7 +26,7 @@ export async function createTimeEntry(
     ...timeEntry,
     id,
     userId,
-    createdAt: new Date().toISOString(),
+    createdAt: Date.now(),
   };
 
   // Calculate duration if end time is provided

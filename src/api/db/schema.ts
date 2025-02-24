@@ -6,7 +6,7 @@ export const boards = sqliteTable("boards", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   color: text("color"),
-  createdAt: text("created_at"),
+  createdAt: integer("created_at"),
   currency: text("currency"),
   hourlyRate: real("hourly_rate"),
   userId: text("user_id").notNull(),
@@ -19,7 +19,7 @@ export const columns = sqliteTable("columns", {
     .notNull()
     .references(() => boards.id),
   order: integer("order").notNull(),
-  createdAt: text("created_at"),
+  createdAt: integer("created_at"),
 });
 
 export const items = sqliteTable("items", {
@@ -33,13 +33,13 @@ export const items = sqliteTable("items", {
     .notNull()
     .references(() => columns.id),
   order: integer("order").notNull(),
-  createdAt: text("created_at"),
+  createdAt: integer("created_at"),
 });
 
 export const timeEntries = sqliteTable("time_entries", {
   id: text("id").primaryKey(),
-  startTime: text("start_time").notNull(),
-  endTime: text("end_time"),
+  startTime: integer("start_time").notNull(),
+  endTime: integer("end_time"),
   duration: integer("duration"),
   targetDuration: integer("target_duration"), // Duration in minutes
   description: text("description"),
@@ -48,7 +48,7 @@ export const timeEntries = sqliteTable("time_entries", {
   itemId: text("item_id").references(() => items.id),
   userId: text("user_id").notNull(),
   invoiceId: text("invoice_id"),
-  createdAt: text("created_at"),
+  createdAt: integer("created_at"),
 });
 
 export const activities = sqliteTable(

@@ -57,10 +57,7 @@ export function ItemDetailDialog({ open, onOpenChange, item }: ItemDetailDialogP
 
     if (!confirmed) return;
 
-    deleteTimeEntryMutation.mutate({
-      id: timeEntryId,
-      itemId: item.id,
-    });
+    deleteTimeEntryMutation.mutate(timeEntryId);
   };
 
   return (

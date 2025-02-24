@@ -50,7 +50,7 @@ export class ServerLogger {
   }
 
   private async logToFile(level: LogLevel, message: string, ...args: any[]) {
-    const timestamp = new Date().toISOString();
+    const timestamp = Date.now();
     const logEntry = {
       timestamp,
       level,

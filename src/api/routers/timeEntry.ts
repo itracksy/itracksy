@@ -37,16 +37,7 @@ export const timeEntryRouter = t.router({
     }),
 
   update: protectedProcedure
-    .input(
-      z.object({
-        id: z.string(),
-        boardId: z.string().optional(),
-        itemId: z.string().optional(),
-        startTime: z.string().optional(),
-        endTime: z.string().optional(),
-        duration: z.number().optional(),
-      })
-    )
+    .input(timeEntryInsertSchema.partial().extend({ id: z.string() }))
     .mutation(async ({ input }) => {
       const { id, ...data } = input;
       return updateTimeEntry(id, data);

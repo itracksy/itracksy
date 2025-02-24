@@ -74,7 +74,7 @@ export function BottomSideBar() {
     try {
       await updateTimeEntry.mutateAsync({
         id: activeTimeEntry.id,
-        endTime: new Date().toISOString(),
+        endTime: Date.now(),
       });
 
       toast({
@@ -103,7 +103,7 @@ export function BottomSideBar() {
     try {
       await updateTimeEntry.mutateAsync({
         id: activeTimeEntry.id,
-        endTime: new Date().toISOString(),
+        endTime: Date.now(),
       });
 
       // Show toast notification
@@ -158,7 +158,7 @@ export function BottomSideBar() {
       {
         boardId: lastTimeEntry.boardId,
         itemId: lastTimeEntry.itemId,
-        startTime: new Date().toISOString(),
+        startTime: Date.now(),
         isFocusMode: false,
       },
       {
