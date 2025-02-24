@@ -9,29 +9,24 @@ import { PlayCircle, StopCircle, Focus, History, Coffee } from "lucide-react";
 import { TimeEntryDialog } from "@/components/tracking/TimeEntryDialog";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
-import { useAtomValue } from "jotai";
-import { selectedBoardIdAtom } from "@/context/board";
+
 import { trpcClient } from "@/utils/trpc";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { useAtom } from "jotai";
+import { breakEndTimeAtom } from "@/context/board";
 import { NotificationOptions } from "@/types/notification";
 
 export function BottomSideBar() {
   const [duration, setDuration] = useState<string>("00:00:00");
   const [durationInMinutes, setDurationInMinutes] = useState(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [breakEndTime, setBreakEndTime] = useState<Date | null>(null);
+  const [breakEndTime, setBreakEndTime] = useAtom(breakEndTimeAtom);
 
   const { data: activeTimeEntry, isLoading } = useActiveTimeEntry();
   const { data: lastTimeEntry = null } = useLastTimeEntry();
   const updateTimeEntry = useUpdateTimeEntryMutation();
   const createTimeEntry = useCreateTimeEntryMutation();
   const { toast } = useToast();
-  const selectedBoardId = useAtomValue(selectedBoardIdAtom);
 
   const sendNotification = async (options: NotificationOptions) => {
     try {
@@ -95,8 +90,13 @@ export function BottomSideBar() {
     }
   };
 
-  const handleTakeBreak = async (breakDuration: number) => {
-    if (!activeTimeEntry) {
+  const handleTakeBreak = async () => {
+    if (!activeTimeEntry || !breakEndTime) {
+      toast({
+        title: "Error",
+        description: "Please stop the current time entry before taking a break",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -106,20 +106,18 @@ export function BottomSideBar() {
         endTime: new Date().toISOString(),
       });
 
-      const endTime = new Date(Date.now() + breakDuration * 60 * 1000);
-      setBreakEndTime(endTime);
-
       // Show toast notification
       toast({
-        title: `${breakDuration} minute break started! 🎉`,
+        title: `${breakEndTime} minute break started! 🎉`,
         description: "You've earned it! Time entry has been stopped.",
       });
 
-      // Send system notification for break start
+      // Send system notification
       await sendNotification({
-        body: `Taking a ${breakDuration} minute break. You've earned it!`,
-        silent: true,
-        title: "Break Time Started! 🎉",
+        body: "Time to get back to work! Open iTracksy to start tracking again.",
+        requireInteraction: true,
+        title: "Break Time's Over! 🚀",
+        timeoutMs: breakEndTime * 60 * 1000,
       });
 
       // Set up break end notification
@@ -132,17 +130,8 @@ export function BottomSideBar() {
               "Time to get back to work! Click 'Let's get shit done!' to start tracking again.",
             duration: 10000, // Show for 10 seconds
           });
-
-          // Send system notification
-          await sendNotification({
-            body: "Time to get back to work! Open iTracksy to start tracking again.",
-            requireInteraction: true,
-            title: "Break Time's Over! 🚀",
-          });
-
-          setBreakEndTime(null);
         },
-        breakDuration * 60 * 1000
+        breakEndTime * 60 * 1000
       );
 
       // Clean up timeout if component unmounts
@@ -212,36 +201,32 @@ export function BottomSideBar() {
                 </span>
               </span>
             </SidebarMenuButton>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  className="hover:text-orange-600"
-                  tooltip="Take a well-deserved break!"
-                >
-                  <Coffee className="h-6 w-6 text-orange-600" />
-                  <span className="flex items-center gap-2">
-                    <span className="text-base text-muted-foreground">Take a break</span>
-                    {breakEndTime && (
-                      <span className="text-xs text-orange-600">
-                        ({Math.max(0, Math.ceil((breakEndTime.getTime() - Date.now()) / 1000 / 60))}
-                        m left)
-                      </span>
-                    )}
-                  </span>
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => handleTakeBreak(5)}>
-                  5 minutes break
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleTakeBreak(10)}>
-                  10 minutes break
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleTakeBreak(15)}>
-                  15 minutes break
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+
+            <SidebarMenuButton
+              className="flex flex-row items-center gap-2 hover:text-orange-600"
+              tooltip="Take a well-deserved break!"
+            >
+              <Coffee className="h-6 w-6 text-orange-600" />
+              <Button variant="ghost" onClick={handleTakeBreak}>
+                <span className="text-base text-muted-foreground">Take a break</span>
+              </Button>
+              <input
+                type="number"
+                min="1"
+                max="120"
+                value={breakEndTime ?? ""}
+                onChange={(e) => {
+                  const value = Math.min(120, Math.max(1, parseInt(e.target.value) || 0));
+                  if (value > 0) {
+                    setBreakEndTime(value);
+                  } else {
+                    setBreakEndTime(null);
+                  }
+                  e.preventDefault();
+                }}
+                className="h-8 w-[50px] rounded-md border border-input/20 bg-transparent text-sm hover:bg-accent/50 hover:text-accent-foreground focus:border-orange-600 focus:outline-none focus:ring-1 focus:ring-orange-600"
+              />
+            </SidebarMenuButton>
           </>
         ) : (
           <>

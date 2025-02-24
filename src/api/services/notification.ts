@@ -17,7 +17,6 @@ export const sendSystemNotification = async (options: NotificationOptions) => {
       icon: "./resources/icon.png",
       timeoutType: options.requireInteraction ? "never" : "default",
     });
-    notification.show();
 
     // Handle notification click
     notification.on("click", () => {
@@ -31,7 +30,9 @@ export const sendSystemNotification = async (options: NotificationOptions) => {
     });
 
     if (options.timeoutMs) {
-      setTimeout(() => notification.close(), options.timeoutMs);
+      setTimeout(() => notification.show(), options.timeoutMs);
+    } else {
+      notification.show();
     }
 
     return true;
