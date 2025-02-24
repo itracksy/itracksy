@@ -10,11 +10,12 @@ import { useToast } from "@/hooks/use-toast";
 import { trpcClient } from "@/utils/trpc";
 import { useAtom } from "jotai";
 import { breakDurationAtom, selectedBoardIdAtom, targetMinutesAtom } from "@/context/board";
+import { useNavigate } from "@tanstack/react-router";
 
 import { BoardSelector } from "@/components/tracking/BoardSelector";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Brain, Coffee } from "lucide-react";
+import { Brain, Coffee, Cloud } from "lucide-react";
 
 export default function FocusPage() {
   const [intention, setIntention] = useState("");
@@ -29,6 +30,7 @@ export default function FocusPage() {
   const updateTimeEntry = useUpdateTimeEntryMutation();
   const createTimeEntry = useCreateTimeEntryMutation();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
@@ -203,6 +205,23 @@ export default function FocusPage() {
             >
               STOP SESSION
             </button>
+
+            {/* Raining Letters Button */}
+            {!activeTimeEntry.isFocusMode && (
+              <button
+                onClick={() => navigate({ to: "/raining-letters" })}
+                className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-lg bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 p-4 font-medium text-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-200/20"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                <Cloud className="h-6 w-6 animate-bounce transition-transform duration-300 group-hover:scale-110" />
+                <span className="relative z-10 bg-gradient-to-r from-white via-blue-50 to-white bg-clip-text text-lg font-bold text-transparent">
+                  Take a Magical Break
+                </span>
+                <div className="absolute -inset-1 -z-10 animate-pulse opacity-25 blur">
+                  <div className="h-full w-full bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400" />
+                </div>
+              </button>
+            )}
           </>
         ) : (
           <>

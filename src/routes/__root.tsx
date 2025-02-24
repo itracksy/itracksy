@@ -1,6 +1,6 @@
 import { useToast } from "@/hooks/use-toast";
 import BaseLayout from "@/layouts/BaseLayout";
-import { Outlet, createRootRoute } from "@tanstack/react-router";
+import { Outlet, createRootRoute, useMatches } from "@tanstack/react-router";
 import { ConfirmationDialogProvider } from "@/components/providers/ConfirmationDialog";
 
 export const RootRoute = createRootRoute({
@@ -19,11 +19,18 @@ export const RootRoute = createRootRoute({
 });
 
 function Root() {
+  const matches = useMatches();
+  const isFullScreenRoute = matches.some(match => match.pathname === '/raining-letters');
+
   return (
     <ConfirmationDialogProvider>
-      <BaseLayout>
+      {isFullScreenRoute ? (
         <Outlet />
-      </BaseLayout>
+      ) : (
+        <BaseLayout>
+          <Outlet />
+        </BaseLayout>
+      )}
     </ConfirmationDialogProvider>
   );
 }

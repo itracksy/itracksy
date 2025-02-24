@@ -2,6 +2,9 @@
 
 import type React from "react";
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { X } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 interface Character {
   char: string;
@@ -84,55 +87,103 @@ class TextScramble {
   }
 }
 
-const ScrambledTitle: React.FC = () => {
-  const elementRef = useRef<HTMLHeadingElement>(null);
-  const scramblerRef = useRef<TextScramble | null>(null);
+const defaultPhrases = [
+  "Focus,",
+  "Take a deep breath",
+  "Clear your mind",
+  "Stay present",
+  "Find your peace",
+  "Embrace the moment",
+];
+
+interface QuoteResponse {
+  quotes: Array<{
+    id: number;
+    quote: string;
+    author: string;
+  }>;
+  total: number;
+  skip: number;
+  limit: number;
+}
+
+const fetchQuote = async () => {
+  const skip = Math.floor(Math.random() * 140) * 10;
+  const response = await fetch(`https://dummyjson.com/quotes?limit=1&skip=${skip}`);
+  if (!response.ok) throw new Error("Failed to fetch quote");
+  const data: QuoteResponse = await response.json();
+  const { quote, author } = data.quotes[0];
+
+  if (!quote) throw new Error("No quote found");
+
+  // Split the quote into meaningful chunks
+  const words = quote.split(" ");
+  const chunks: string[] = [];
+  let currentChunk = "";
+
+  words.forEach((word: string, index: number) => {
+    if ((currentChunk + " " + word).length <= 20) {
+      currentChunk = currentChunk ? `${currentChunk} ${word}` : word;
+    } else {
+      if (currentChunk) chunks.push(currentChunk);
+      currentChunk = word;
+    }
+    if (index === words.length - 1 && currentChunk) {
+      chunks.push(currentChunk);
+    }
+  });
+
+  // Add author at the end
+  chunks.push(`- ${author}`);
+
+  return chunks;
+};
+
+const ScrambledTitle: React.FC<{ phrases?: string[] }> = ({ phrases = defaultPhrases }) => {
   const [mounted, setMounted] = useState(false);
+  const scramblerRef = useRef<TextScramble | null>(null);
+  const counterRef = useRef(0);
 
   useEffect(() => {
-    if (elementRef.current && !scramblerRef.current) {
-      scramblerRef.current = new TextScramble(elementRef.current);
-      setMounted(true);
-    }
+    setMounted(true);
+    return () => setMounted(false);
   }, []);
 
   useEffect(() => {
-    if (mounted && scramblerRef.current) {
-      const phrases = [
-        "Zuhair,",
-        "It's RAINING",
-        "with' letters",
-        "and alphabets",
-        "dont FORGET to bring",
-        "your umbrella today",
-      ];
-
-      let counter = 0;
-      const next = () => {
-        if (scramblerRef.current) {
-          scramblerRef.current.setText(phrases[counter]).then(() => {
+    if (mounted && !scramblerRef.current) {
+      const el = document.querySelector(".scramble-text");
+      if (el) {
+        scramblerRef.current = new TextScramble(el as HTMLElement);
+        const next = () => {
+          scramblerRef.current?.setText(phrases[counterRef.current]).then(() => {
             setTimeout(next, 2000);
           });
-          counter = (counter + 1) % phrases.length;
-        }
-      };
-
-      next();
+          counterRef.current = (counterRef.current + 1) % phrases.length;
+        };
+        next();
+      }
     }
-  }, [mounted]);
+  }, [mounted, phrases]);
 
   return (
-    <h1
-      ref={elementRef}
-      className="justify-center text-6xl font-bold tracking-wider text-white"
-      style={{ fontFamily: "monospace" }}
-    >
-      RAINING LETTERS
-    </h1>
+    <div className="flex flex-col items-center justify-center space-y-4">
+      <div
+        className="scramble-text text-center text-3xl font-bold text-green-400"
+        style={{
+          textShadow: "0 0 10px rgba(74, 222, 128, 0.5)",
+          fontFamily: "monospace",
+          minHeight: "8rem",
+          display: "flex",
+          alignItems: "center",
+          maxWidth: "80vw",
+        }}
+      ></div>
+    </div>
   );
 };
 
 const RainingLetters: React.FC = () => {
+  const navigate = useNavigate();
   const [characters, setCharacters] = useState<Character[]>([]);
   const [activeIndices, setActiveIndices] = useState<Set<number>>(new Set());
 
@@ -197,12 +248,25 @@ const RainingLetters: React.FC = () => {
     animationFrameId = requestAnimationFrame(updatePositions);
     return () => cancelAnimationFrame(animationFrameId);
   }, []);
-
+  const { data: phrases, isLoading } = useQuery({
+    queryKey: ["quote"],
+    queryFn: fetchQuote,
+    retry: 2, // Retry twice before falling back to default phrases
+    refetchInterval: 60 * 1000, // Refetch the quote every minute
+  });
   return (
     <div className="relative h-screen w-full overflow-hidden bg-black">
+      {/* Close Button */}
+      <button
+        onClick={() => navigate({ to: "/" })}
+        className="absolute right-6 top-6 z-30 rounded-full bg-black/20 p-2 text-white/50 backdrop-blur-sm transition hover:bg-black/30 hover:text-white"
+      >
+        <X className="h-6 w-6" />
+      </button>
+
       {/* Title */}
       <div className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 transform">
-        <ScrambledTitle />
+        {!isLoading && <ScrambledTitle phrases={phrases} />}
       </div>
 
       {/* Raining Characters */}

@@ -4,6 +4,8 @@ import DashboardPage from "@/pages/dashboard/index";
 import FocusPage from "@/pages/focus/index";
 import { ProjectsPage } from "@/pages/projects/page";
 import SettingsPage from "@/pages/settings-page/SettingsPage";
+import RainingLetters from "@/pages/rainning-letter/index";
+import FullScreenLayout from "@/layouts/FullScreenLayout";
 
 export const DashboardRoute = createRoute({
   getParentRoute: () => RootRoute,
@@ -28,9 +30,20 @@ export const SettingsRoute = createRoute({
   component: SettingsPage,
 });
 
+export const RainingLettersRoute = createRoute({
+  getParentRoute: () => RootRoute,
+  path: "/raining-letters",
+  component: () => (
+    <FullScreenLayout>
+      <RainingLetters />
+    </FullScreenLayout>
+  ),
+});
+
 export const rootTree = RootRoute.addChildren([
   FocusRoute,
   DashboardRoute,
   ProjectsRoute,
   SettingsRoute,
+  RainingLettersRoute,
 ]);
