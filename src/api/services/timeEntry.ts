@@ -7,21 +7,14 @@ export type TimeEntry = typeof timeEntries.$inferSelect;
 export type TimeEntryInsert = typeof timeEntries.$inferInsert;
 export type Item = typeof items.$inferSelect;
 
-export async function getActiveTimeEntry() {
+export async function getActiveTimeEntry(userId: string) {
   const entry = await db.query.timeEntries.findFirst({
-    where: isNull(timeEntries.endTime),
+    where: and(isNull(timeEntries.endTime), eq(timeEntries.userId, userId)),
     with: {
       item: true,
     },
   });
-
-  if (!entry) {
-    // Clean up any orphaned active entries
-    await db.delete(timeEntries).where(isNull(timeEntries.endTime));
-    return null;
-  }
-
-  return entry;
+  return entry ?? null;
 }
 
 export async function createTimeEntry(

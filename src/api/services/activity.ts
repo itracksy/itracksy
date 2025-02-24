@@ -5,29 +5,49 @@ import { LIMIT_TIME_APART, TRACKING_INTERVAL } from "../../config/tracking";
 import { extractUrlFromBrowserTitle } from "../../helpers/extractUrlFromBrowserTitle";
 import { logger } from "../../helpers/logger";
 import {
+  getCurrentUserIdLocalStorage,
   getUserBlockedApps,
   getUserBlockedDomains,
   getUserSettings,
 } from "../../api/db/repositories/userSettings";
+import { getActiveTimeEntry } from "./timeEntry";
 
 let trackingIntervalId: NodeJS.Timeout | null = null;
 let notificationWindow: BrowserWindow | null = null;
 let breakTimer: NodeJS.Timeout | null = null;
 let lastNotificationTime: number = 0;
 let isNotificationEnabled: boolean = true;
-
+let isAccessibilityError: boolean = false;
 const NOTIFICATION_COOLDOWN = 60 * 1000; // 1 minute in milliseconds
 
-export const startTracking = async (userId: string): Promise<void> => {
+export const startTracking = async (): Promise<void> => {
   // Clear any existing interval
   stopTracking();
 
   // Start the interval
   trackingIntervalId = setInterval(async () => {
     try {
-      const getWindows = await import("get-windows");
-
+      logger.info("[activity.startTracking] Starting interval");
+      const userId = await getCurrentUserIdLocalStorage();
+      if (!userId) {
+        return;
+      }
       const activitySettings = await getUserSettings({ userId });
+      if (!activitySettings.isFocusMode) {
+        return;
+      }
+      const activeEntry = await getActiveTimeEntry(userId);
+
+      if (!activeEntry) {
+        return;
+      }
+      if (activeEntry.endTime) {
+        return;
+      }
+      if (isAccessibilityError) {
+        return;
+      }
+      const getWindows = await import("get-windows");
       const blockedApps = await getUserBlockedApps(userId);
       const blockedDomains = await getUserBlockedDomains(userId);
       const result = await getWindows.activeWindow({
@@ -43,7 +63,7 @@ export const startTracking = async (userId: string): Promise<void> => {
       const transformedActivities: ActivityRecord = {
         platform: result.platform,
         activityId: result.id,
-        taskId: activitySettings.currentTaskId ?? undefined,
+        timeEntryId: activeEntry.id,
         title: result.title,
         ownerPath: result.owner.path,
         ownerProcessId: result.owner.processId,
@@ -59,7 +79,6 @@ export const startTracking = async (userId: string): Promise<void> => {
             : //@ts-ignore
               result.url,
         userId,
-        isFocused: activitySettings?.isFocusMode,
       };
 
       await upsertActivity(transformedActivities);
@@ -89,12 +108,13 @@ export const startTracking = async (userId: string): Promise<void> => {
       }
     } catch (error) {
       // Check if the error is related to accessibility permissions
-      const isAccessibilityError =
+      isAccessibilityError = Boolean(
         error &&
-        typeof error === "object" &&
-        "stdout" in error &&
-        typeof error.stdout === "string" &&
-        error.stdout.includes("permission");
+          typeof error === "object" &&
+          "stdout" in error &&
+          typeof error.stdout === "string" &&
+          error.stdout.includes("permission")
+      );
 
       if (isAccessibilityError) {
         const { response } = await dialog.showMessageBox({
@@ -111,8 +131,6 @@ export const startTracking = async (userId: string): Promise<void> => {
             "open x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
           );
         }
-        // Stop tracking since we don't have permission
-        stopTracking();
       }
       logger.error("[startTracking] Error occurred while tracking", { error });
       throw error;
@@ -120,7 +138,7 @@ export const startTracking = async (userId: string): Promise<void> => {
   }, TRACKING_INTERVAL);
 };
 
-export const stopTracking = (): void => {
+const stopTracking = (): void => {
   if (trackingIntervalId) {
     clearInterval(trackingIntervalId);
     trackingIntervalId = null;

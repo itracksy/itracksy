@@ -193,40 +193,37 @@ export function BottomSideBar() {
             >
               <StopCircle className="h-6 w-6 text-red-600" />
               <span className="flex items-center gap-2 text-base font-medium">
-                <span>{activeTimeEntry?.item?.title}</span>
-
-                <span className="text-xs text-muted-foreground">({duration})</span>
-                <span>
-                  {activeTimeEntry.isFocusMode && <Focus className="h-4 w-4 text-red-600" />}
-                </span>
+                <span>{activeTimeEntry.item?.title || activeTimeEntry.description}</span>
               </span>
             </SidebarMenuButton>
 
-            <SidebarMenuButton
-              className="flex flex-row items-center gap-2 hover:text-orange-600"
-              tooltip="Take a well-deserved break!"
-            >
-              <Coffee className="h-6 w-6 text-orange-600" />
-              <div onClick={handleTakeBreak} className="hover:text-orange-600 hover:underline">
-                <span className="text-base text-muted-foreground">Take a break</span>
-              </div>
-              <input
-                type="number"
-                min="1"
-                max="120"
-                value={breakDuration ?? ""}
-                onChange={(e) => {
-                  const value = Math.min(120, Math.max(1, parseInt(e.target.value) || 0));
-                  if (value > 0) {
-                    setBreakDuration(value);
-                  } else {
-                    setBreakDuration(5);
-                  }
-                  e.preventDefault();
-                }}
-                className="h-8 w-[50px] rounded-md border border-input/20 bg-transparent text-sm hover:bg-accent/50 hover:text-accent-foreground focus:border-orange-600 focus:outline-none focus:ring-1 focus:ring-orange-600"
-              />
-            </SidebarMenuButton>
+            {activeTimeEntry.isFocusMode && (
+              <SidebarMenuButton
+                className="flex flex-row items-center gap-2 hover:text-orange-600"
+                tooltip="Take a well-deserved break!"
+              >
+                <Coffee className="h-6 w-6 text-orange-600" />
+                <div onClick={handleTakeBreak} className="hover:text-orange-600 hover:underline">
+                  <span className="text-base text-muted-foreground">Take a break</span>
+                </div>
+                <input
+                  type="number"
+                  min="1"
+                  max="120"
+                  value={breakDuration ?? ""}
+                  onChange={(e) => {
+                    const value = Math.min(120, Math.max(1, parseInt(e.target.value) || 0));
+                    if (value > 0) {
+                      setBreakDuration(value);
+                    } else {
+                      setBreakDuration(5);
+                    }
+                    e.preventDefault();
+                  }}
+                  className="h-8 w-[50px] rounded-md border border-input/20 bg-transparent text-sm hover:bg-accent/50 hover:text-accent-foreground focus:border-orange-600 focus:outline-none focus:ring-1 focus:ring-orange-600"
+                />
+              </SidebarMenuButton>
+            )}
           </>
         ) : (
           <>
@@ -239,7 +236,7 @@ export function BottomSideBar() {
               <span className="text-base text-muted-foreground">Let's get shit done! </span>
             </SidebarMenuButton>
 
-            {lastTimeEntry && (
+            {lastTimeEntry && lastTimeEntry.item?.title && (
               <SidebarMenuButton
                 onClick={handleResumeLastTask}
                 className="hover:text-blue-600"

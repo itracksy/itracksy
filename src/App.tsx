@@ -10,26 +10,14 @@ import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from "@ta
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "./hooks/useAuth";
 
-import { useTracking } from "./hooks/useTracking";
-
 const queryClient = new QueryClient({});
 
 function AuthenticatedApp() {
   const { i18n } = useTranslation();
-  const hasSynced = useRef(false);
-  const { isTracking, startTracking } = useTracking();
 
   useEffect(() => {
     updateAppLanguage(i18n);
   }, [i18n]);
-
-  useEffect(() => {
-    if (!hasSynced.current && isTracking) {
-      hasSynced.current = true;
-
-      startTracking();
-    }
-  }, [isTracking, startTracking]);
 
   return <RouterProvider router={router} />;
 }

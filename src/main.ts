@@ -1,6 +1,6 @@
 import * as path from "path";
 
-import { app, BrowserWindow, Tray, Menu, nativeImage, Notification, powerMonitor } from "electron";
+import { app, BrowserWindow, Tray, Menu, nativeImage, Notification } from "electron";
 import { createIPCHandler } from "electron-trpc/main";
 import registerListeners from "./helpers/ipc/listeners-register";
 import { router } from "./api";
@@ -8,9 +8,7 @@ import { initializeDatabase } from "./api/db/init";
 import { createContext } from "./api/trpc";
 
 import { logger } from "./helpers/logger";
-import { getActiveTimeEntry, updateTimeEntry } from "./api/services/timeEntry";
-import { startTracking, stopTracking } from "./api/services/activity";
-import { getCurrentUserIdLocalStorage } from "./api/db/repositories/userSettings";
+import { startTracking } from "./api/services/activity";
 
 const inDevelopment: boolean = process.env.NODE_ENV === "development";
 let mainWindow: BrowserWindow | null = null;
@@ -119,6 +117,7 @@ app.whenReady().then(async () => {
   try {
     logger.clearLogFile();
     await initializeDatabase();
+    startTracking();
   } catch (error) {
     logger.error("[app.whenReady] Failed to initialize database:", error);
   }
@@ -152,26 +151,6 @@ if (require("electron-squirrel-startup")) {
   app.quit();
 }
 
-const stopTimeEntry = async () => {
-  const entry = await getActiveTimeEntry();
-  if (entry) {
-    await updateTimeEntry(entry.id, { endTime: new Date().toISOString() });
-  }
-  stopTracking();
-};
-
-powerMonitor.on("suspend", stopTimeEntry);
-powerMonitor.on("lock-screen", stopTimeEntry);
-
-const startTrackingOnResume = async () => {
-  const userId = await getCurrentUserIdLocalStorage();
-  if (userId) {
-    startTracking(userId);
-  }
-};
-
-powerMonitor.on("resume", startTrackingOnResume);
-powerMonitor.on("unlock-screen", startTrackingOnResume);
 export {};
 
 //osX only ends

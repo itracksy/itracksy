@@ -15,7 +15,7 @@ const timeEntryInsertSchema = createInsertSchema(timeEntries);
 
 export const timeEntryRouter = t.router({
   getActive: protectedProcedure.query(async ({ ctx }) => {
-    return getActiveTimeEntry();
+    return getActiveTimeEntry(ctx.userId!);
   }),
 
   getForItem: protectedProcedure.input(z.string()).query(async ({ input }) => {

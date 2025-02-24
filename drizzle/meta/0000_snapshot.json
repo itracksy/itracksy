@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "fccfcbd2-5e6e-46d4-86fe-66ee29efa890",
+  "id": "9cef1593-1e02-4c90-9a95-a8b327d1d744",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "activities": {
@@ -77,20 +77,12 @@
           "notNull": true,
           "autoincrement": false
         },
-        "task_id": {
-          "name": "task_id",
+        "timeEntryId": {
+          "name": "timeEntryId",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
-        },
-        "is_focused": {
-          "name": "is_focused",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": false
         },
         "user_id": {
           "name": "user_id",
@@ -101,13 +93,6 @@
         }
       },
       "indexes": {
-        "isFocused_idx": {
-          "name": "isFocused_idx",
-          "columns": [
-            "is_focused"
-          ],
-          "isUnique": false
-        },
         "userId_idx": {
           "name": "userId_idx",
           "columns": [
@@ -115,10 +100,10 @@
           ],
           "isUnique": false
         },
-        "taskId_idx": {
-          "name": "taskId_idx",
+        "timeEntryId_idx": {
+          "name": "timeEntryId_idx",
           "columns": [
-            "task_id"
+            "timeEntryId"
           ],
           "isUnique": false
         },
@@ -130,8 +115,7 @@
             "owner_name",
             "owner_path",
             "platform",
-            "task_id",
-            "is_focused"
+            "timeEntryId"
           ],
           "isUnique": false
         }
@@ -531,6 +515,13 @@
           "notNull": false,
           "autoincrement": false
         },
+        "target_duration": {
+          "name": "target_duration",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "description": {
           "name": "description",
           "type": "text",
@@ -549,14 +540,14 @@
           "name": "board_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "item_id": {
           "name": "item_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "user_id": {

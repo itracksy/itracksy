@@ -9,15 +9,13 @@ CREATE TABLE `activities` (
 	`owner_name` text NOT NULL,
 	`url` text,
 	`duration` integer NOT NULL,
-	`task_id` text,
-	`is_focused` integer DEFAULT false NOT NULL,
+	`timeEntryId` text,
 	`user_id` text NOT NULL
 );
 --> statement-breakpoint
-CREATE INDEX `isFocused_idx` ON `activities` (`is_focused`);--> statement-breakpoint
 CREATE INDEX `userId_idx` ON `activities` (`user_id`);--> statement-breakpoint
-CREATE INDEX `taskId_idx` ON `activities` (`task_id`);--> statement-breakpoint
-CREATE INDEX `activity_match_idx` ON `activities` (`title`,`owner_bundle_id`,`owner_name`,`owner_path`,`platform`,`task_id`,`is_focused`);--> statement-breakpoint
+CREATE INDEX `timeEntryId_idx` ON `activities` (`timeEntryId`);--> statement-breakpoint
+CREATE INDEX `activity_match_idx` ON `activities` (`title`,`owner_bundle_id`,`owner_name`,`owner_path`,`platform`,`timeEntryId`);--> statement-breakpoint
 CREATE TABLE `blocked_apps` (
 	`user_id` text NOT NULL,
 	`app_name` text NOT NULL,
@@ -80,10 +78,11 @@ CREATE TABLE `time_entries` (
 	`start_time` text NOT NULL,
 	`end_time` text,
 	`duration` integer,
+	`target_duration` integer,
 	`description` text,
 	`is_focus_mode` integer,
-	`board_id` text NOT NULL,
-	`item_id` text NOT NULL,
+	`board_id` text,
+	`item_id` text,
 	`user_id` text NOT NULL,
 	`invoice_id` text,
 	`created_at` text,

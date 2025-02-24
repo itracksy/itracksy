@@ -12,6 +12,7 @@ const USER_SETTINGS_KEYS = {
   screenRecordingPermission: "user.screenRecordingPermission",
   isFocusMode: "user.isFocusMode",
   currentTaskId: "user.currentTaskId",
+  timeEntryId: "user.timeEntryId",
   lastUpdateActivity: "user.lastUpdateActivity",
   currentUserId: "user.currentUserId",
   isTracking: "user.isTracking",
@@ -23,6 +24,7 @@ export async function getUserSettings({ userId }: { userId: string }) {
     screenRecordingPermission,
     isFocusMode,
     currentTaskId,
+    timeEntryId,
     lastUpdateActivity,
     isTracking,
   ] = await Promise.all([
@@ -30,6 +32,7 @@ export async function getUserSettings({ userId }: { userId: string }) {
     getValue(USER_SETTINGS_KEYS.screenRecordingPermission),
     getValue(USER_SETTINGS_KEYS.isFocusMode),
     getValue(USER_SETTINGS_KEYS.currentTaskId),
+    getValue(USER_SETTINGS_KEYS.timeEntryId),
     getValue(USER_SETTINGS_KEYS.lastUpdateActivity),
     getValue(USER_SETTINGS_KEYS.isTracking),
   ]);
@@ -40,6 +43,7 @@ export async function getUserSettings({ userId }: { userId: string }) {
     screenRecordingPermission: screenRecordingPermission === "true",
     isFocusMode: isFocusMode === "true",
     currentTaskId: currentTaskId || null,
+    timeEntryId: timeEntryId || null,
     lastUpdateActivity: lastUpdateActivity ? parseInt(lastUpdateActivity) : null,
     isTracking: isTracking === "true",
   };
@@ -202,6 +206,7 @@ export async function updateUserSettings(settings: {
   currentTaskId?: string | null;
   lastUpdateActivity?: number | null;
   isTracking?: boolean;
+  timeEntryId?: string | null;
 }) {
   const updates: Record<string, string> = {};
 
@@ -218,6 +223,9 @@ export async function updateUserSettings(settings: {
   }
   if (settings.currentTaskId !== undefined) {
     updates[USER_SETTINGS_KEYS.currentTaskId] = settings.currentTaskId || "";
+  }
+  if (settings.timeEntryId !== undefined) {
+    updates[USER_SETTINGS_KEYS.timeEntryId] = settings.timeEntryId || "";
   }
   if (settings.lastUpdateActivity !== undefined) {
     updates[USER_SETTINGS_KEYS.lastUpdateActivity] = settings.lastUpdateActivity?.toString() || "";

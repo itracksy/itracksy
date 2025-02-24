@@ -41,9 +41,9 @@ const findMatchingActivity = async (
         eq(activities.ownerName, activity.ownerName),
         eq(activities.ownerPath, activity.ownerPath),
         eq(activities.platform, activity.platform),
-        isNullOrUndefined(activity.taskId)
-          ? sql`${activities.taskId} is null`
-          : eq(activities.taskId, activity.taskId),
+        isNullOrUndefined(activity.timeEntryId)
+          ? sql`${activities.timeEntryId} is null`
+          : eq(activities.timeEntryId, activity.timeEntryId),
         gte(activities.timestamp, activity.timestamp - LIMIT_TIME_APART)
       )
     )
@@ -79,7 +79,7 @@ export const upsertActivity = async (activity: ActivityRecord): Promise<void> =>
     ownerName: activity.ownerName,
     url: activity.url,
     duration: activity.duration,
-    taskId: activity.taskId,
+    timeEntryId: activity.timeEntryId,
     userId: activity.userId,
   });
 };
