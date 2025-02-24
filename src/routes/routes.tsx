@@ -13,7 +13,7 @@ export const DashboardRoute = createRoute({
 
 export const FocusRoute = createRoute({
   getParentRoute: () => RootRoute,
-  path: "/focus",
+  path: "/",
   component: FocusPage,
 });
 export const ProjectsRoute = createRoute({

@@ -189,8 +189,8 @@ function showNotification(title: string, detail: string) {
 
   const options = {
     type: "question" as const,
-    title: "iTracksy-Activity Update",
-    message: title,
+    title: "iTracksy - Activity Update",
+    message: `iTracksy - ${title}`,
     detail: detail,
     buttons: ["Yes", "No", "Break in 15 min"],
     cancelId: 1, // 'No' button is the cancel button

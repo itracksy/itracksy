@@ -5,57 +5,62 @@ import {
   useCreateTimeEntryMutation,
   useLastTimeEntry,
 } from "@/hooks/useTimeEntryQueries";
-import { PlayCircle, StopCircle, Focus, History, Coffee } from "lucide-react";
+import { PlayCircle, StopCircle, Focus, History, Coffee, CheckCircle2, X } from "lucide-react";
 import { TimeEntryDialog } from "@/components/tracking/TimeEntryDialog";
-import { SidebarMenuButton } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-
 import { trpcClient } from "@/utils/trpc";
 import { useAtom } from "jotai";
-import { breakEndTimeAtom } from "@/context/board";
+import { breakDurationAtom, selectedBoardIdAtom } from "@/context/board";
 import { NotificationOptions } from "@/types/notification";
+import { cn } from "@/lib/utils";
+import { BoardSelector } from "@/components/tracking/BoardSelector";
+import { Slider } from "@/components/ui/slider";
 
 export default function FocusPage() {
-  const [duration, setDuration] = useState<string>("00:00:00");
-  const [durationInMinutes, setDurationInMinutes] = useState(0);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [breakEndTime, setBreakEndTime] = useAtom(breakEndTimeAtom);
+  const [duration, setDuration] = useState<string>("25:00");
+  const [focusType, setFocusType] = useState("General");
+  const [intention, setIntention] = useState("");
+  const [isActive, setIsActive] = useState(false);
+  const [startTime, setStartTime] = useState<Date | null>(null);
+  const [endTime, setEndTime] = useState<Date | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState("");
+  const [selectedBoardId] = useAtom(selectedBoardIdAtom);
+  const [targetMinutes, setTargetMinutes] = useState<number>(25);
 
   const { data: activeTimeEntry, isLoading } = useActiveTimeEntry();
-  const { data: lastTimeEntry = null } = useLastTimeEntry();
   const updateTimeEntry = useUpdateTimeEntryMutation();
   const createTimeEntry = useCreateTimeEntryMutation();
   const { toast } = useToast();
 
-  const sendNotification = async (options: NotificationOptions) => {
-    try {
-      await trpcClient.notification.sendNotification.mutate(options);
-    } catch (error) {
-      console.error("Failed to send notification:", error);
-    }
-  };
-
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
 
-    if (activeTimeEntry) {
-      const updateDuration = () => {
-        const startTime = new Date(activeTimeEntry.startTime).getTime();
-        const now = new Date().getTime();
-        const diff = now - startTime;
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-        setDurationInMinutes(hours * 60 + minutes);
+    if (isActive && startTime) {
+      const updateTimer = () => {
+        const now = new Date();
+        const diff = targetMinutes * 60 - Math.floor((now.getTime() - startTime.getTime()) / 1000);
+
+        if (diff <= 0) {
+          setIsActive(false);
+          clearInterval(intervalId);
+          handleStopTimeEntry();
+
+          // Send notification when time is up
+
+          return;
+        }
+
+        const minutes = Math.floor(diff / 60);
+        const seconds = diff % 60;
         setDuration(
-          `${hours.toString().padStart(2, "0")}:${minutes
-            .toString()
-            .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`
+          `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`
         );
       };
 
-      updateDuration();
-      intervalId = setInterval(updateDuration, 1000);
+      updateTimer();
+      intervalId = setInterval(updateTimer, 1000);
     }
 
     return () => {
@@ -63,12 +68,72 @@ export default function FocusPage() {
         clearInterval(intervalId);
       }
     };
-  }, [activeTimeEntry]);
+  }, [isActive, startTime, targetMinutes]);
+
+  // Update initial duration when target minutes changes
+  useEffect(() => {
+    if (!isActive) {
+      setDuration(`${targetMinutes.toString().padStart(2, "0")}:00`);
+    }
+  }, [targetMinutes, isActive]);
+
+  const handleStartSession = async (withTask: boolean = false) => {
+    if (!withTask && !intention) {
+      toast({
+        title: "Please set an intention",
+        description: "Enter what you want to focus on before starting the session.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (withTask && !selectedItemId) {
+      toast({
+        title: "Please select a task",
+        description: "Choose a task from the board before starting the session.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const now = new Date();
+    const end = new Date(now.getTime() + targetMinutes * 60 * 1000);
+    setStartTime(now);
+    setEndTime(end);
+    setIsActive(true);
+
+    try {
+      await createTimeEntry.mutateAsync({
+        startTime: now.toISOString(),
+        description: withTask ? undefined : intention,
+        boardId: withTask ? selectedBoardId : undefined,
+        itemId: withTask ? selectedItemId : undefined,
+        targetDuration: targetMinutes,
+        isFocusMode: true,
+      });
+
+      toast({
+        title: "Focus Session Started",
+        description: `Your ${targetMinutes}-minute focus session has begun. Stay focused!`,
+      });
+
+      // Send start notification
+      trpcClient.notification.sendNotification.mutate({
+        title: "Focus Session Complete! ",
+        body: `Great work! Your ${targetMinutes}-minute focus session is complete. Take a short break before starting another session.`,
+        timeoutMs: targetMinutes * 60 * 1000,
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to start focus session",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleStopTimeEntry = async () => {
-    if (!activeTimeEntry) {
-      return;
-    }
+    if (!activeTimeEntry) return;
 
     try {
       await updateTimeEntry.mutateAsync({
@@ -77,182 +142,125 @@ export default function FocusPage() {
       });
 
       toast({
-        title: "Time entry stopped",
-        description: "Great work! Your time has been recorded. ",
+        title: "Focus session completed",
+        description: "Great work! Your time has been recorded.",
       });
     } catch (error) {
       toast({
-        title: "Failed to stop time entry",
+        title: "Failed to stop focus session",
         description: error instanceof Error ? error.message : "An error occurred",
         variant: "destructive",
       });
     }
   };
 
-  const handleTakeBreak = async () => {
-    if (!activeTimeEntry || !breakEndTime) {
-      toast({
-        title: "Error",
-        description: "Please stop the current time entry before taking a break",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      await updateTimeEntry.mutateAsync({
-        id: activeTimeEntry.id,
-        endTime: new Date().toISOString(),
-      });
-
-      // Show toast notification
-      toast({
-        title: `${breakEndTime} minute break started! 🎉`,
-        description: "You've earned it! Time entry has been stopped.",
-      });
-
-      // Send system notification
-      await sendNotification({
-        body: "Time to get back to work! Open iTracksy to start tracking again.",
-        requireInteraction: true,
-        title: "Break Time's Over! 🚀",
-        timeoutMs: breakEndTime * 60 * 1000,
-      });
-
-      // Set up break end notification
-      const timeoutId = setTimeout(
-        async () => {
-          // Show toast notification
-          toast({
-            title: "Break time's over! 🚀",
-            description:
-              "Time to get back to work! Click 'Let's get shit done!' to start tracking again.",
-            duration: 10000, // Show for 10 seconds
-          });
-        },
-        breakEndTime * 60 * 1000
-      );
-
-      // Clean up timeout if component unmounts
-      return () => clearTimeout(timeoutId);
-    } catch (error) {
-      toast({
-        title: "Failed to stop time entry",
-        description: error instanceof Error ? error.message : "An error occurred",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleResumeLastTask = () => {
-    if (!lastTimeEntry?.item) {
-      toast({
-        title: "No previous task found",
-        description: "Start a new time entry to track your work!",
-      });
-      return;
-    }
-
-    createTimeEntry.mutate(
-      {
-        boardId: lastTimeEntry.boardId,
-        itemId: lastTimeEntry.itemId,
-        startTime: new Date().toISOString(),
-        isFocusMode: false,
-      },
-      {
-        onSuccess: () => {
-          toast({
-            title: "Resumed task",
-            description: `Now tracking: ${lastTimeEntry.item.title}`,
-          });
-        },
-        onError: (error) => {
-          toast({
-            title: "Failed to resume task",
-            description: error.message,
-            variant: "destructive",
-          });
-        },
-      }
-    );
+  const formatTimeRange = () => {
+    if (!startTime || !endTime) return "";
+    return `${startTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })} → ${endTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })}`;
   };
 
   return (
-    <>
-      <TimeEntryDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} />
-
-      <>
+    <div className="flex min-h-screen flex-col items-center bg-gradient-to-b from-white to-pink-50 p-8">
+      <div className="w-full max-w-md space-y-8">
         {activeTimeEntry ? (
           <>
-            <SidebarMenuButton
-              onClick={handleStopTimeEntry}
-              className="hover:text-red-600"
-              tooltip="Stop tracking"
-            >
-              <StopCircle className="h-6 w-6 text-red-600" />
-              <span className="flex items-center gap-2 text-base font-medium">
-                <span>{activeTimeEntry?.item?.title}</span>
-
-                <span className="text-xs text-muted-foreground">({duration})</span>
-                <span>
-                  {activeTimeEntry.isFocusMode && <Focus className="h-4 w-4 text-red-600" />}
-                </span>
-              </span>
-            </SidebarMenuButton>
-
-            <SidebarMenuButton
-              className="flex flex-row items-center gap-2 hover:text-orange-600"
-              tooltip="Take a well-deserved break!"
-            >
-              <Coffee className="h-6 w-6 text-orange-600" />
-              <div onClick={handleTakeBreak} className="hover:text-orange-600 hover:underline">
-                <span className="text-base text-muted-foreground">Take a break</span>
+            {/* Active Session Display */}
+            <div className="text-center">
+              <h2 className="mb-4 text-xl font-medium text-gray-700">Current Focus Session</h2>
+              <div className="rounded-lg bg-white p-4 shadow-sm">
+                <div className="flex items-center justify-center gap-2 text-gray-700">
+                  <span className="h-2 w-2 rounded-full bg-green-400"></span>
+                  {activeTimeEntry.item?.title || activeTimeEntry.description || "Focus Session"}
+                </div>
               </div>
-              <input
-                type="number"
-                min="1"
-                max="120"
-                value={breakEndTime ?? ""}
-                onChange={(e) => {
-                  const value = Math.min(120, Math.max(1, parseInt(e.target.value) || 0));
-                  if (value > 0) {
-                    setBreakEndTime(value);
-                  } else {
-                    setBreakEndTime(null);
-                  }
-                  e.preventDefault();
+            </div>
+
+            {/* Timer Display */}
+            <div className="relative mx-auto aspect-square w-64">
+              <div className="absolute inset-0 rounded-full border-[16px] border-pink-100"></div>
+              <div
+                className="absolute inset-0 rounded-full border-[16px] border-green-400"
+                style={{
+                  clipPath: `polygon(50% 50%, 50% 0, ${50 + 50 * Math.cos(Math.PI / 2)}% ${50 - 50 * Math.sin(Math.PI / 2)}%)`,
                 }}
-                className="h-8 w-[50px] rounded-md border border-input/20 bg-transparent text-sm hover:bg-accent/50 hover:text-accent-foreground focus:border-orange-600 focus:outline-none focus:ring-1 focus:ring-orange-600"
-              />
-            </SidebarMenuButton>
+              ></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="font-mono text-4xl font-medium text-gray-700">{duration}</span>
+              </div>
+            </div>
+
+            {/* Stop Button */}
+            <button
+              onClick={handleStopTimeEntry}
+              className="w-full rounded-lg bg-red-400 py-3 font-medium text-white shadow-sm transition hover:bg-red-500"
+            >
+              STOP SESSION
+            </button>
           </>
         ) : (
           <>
-            <SidebarMenuButton
-              onClick={() => setIsDialogOpen(true)}
-              className="hover:text-green-600"
-              tooltip="Let's get shit done! "
-            >
-              <PlayCircle className="h-6 w-6 text-green-600" />
-              <span className="text-base text-muted-foreground">Let's get shit done! </span>
-            </SidebarMenuButton>
+            {/* Timer Display */}
+            <div className="relative mx-auto aspect-square w-64">
+              <div className="absolute inset-0 rounded-full border-[16px] border-pink-100"></div>
+              <div className="absolute inset-0 rounded-full border-[16px] border-red-400"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="font-mono text-4xl font-medium text-gray-700">{duration}</span>
+              </div>
+            </div>
+            {/* Duration Slider */}
+            <div className="space-y-4 rounded-lg bg-white p-4 shadow-sm">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-gray-700">Session Duration</label>
+                <span className="font-mono text-sm text-gray-500">{targetMinutes} minutes</span>
+              </div>
+              <Slider
+                value={[targetMinutes]}
+                onValueChange={(values) => setTargetMinutes(values[0])}
+                min={5}
+                max={60}
+                step={1}
+                className="py-2"
+              />
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>5m</span>
+                <span>60m</span>
+              </div>
+            </div>
+            {/* Time Range */}
+            <div className="text-center font-mono text-sm text-gray-500">{formatTimeRange()}</div>
 
-            {lastTimeEntry && (
-              <SidebarMenuButton
-                onClick={handleResumeLastTask}
-                className="hover:text-blue-600"
-                tooltip={`Resume: ${lastTimeEntry.item?.title || "last task"}`}
+            {/* Start Buttons */}
+            <div className="space-y-3">
+              {/* Board Selector */}
+              <div className="space-y-4 rounded-lg bg-white p-4 shadow-sm">
+                <BoardSelector selectedItemId={selectedItemId} onItemSelect={setSelectedItemId} />
+              </div>
+              <button
+                onClick={() => handleStartSession(true)}
+                disabled={isActive}
+                className="w-full rounded-lg bg-red-400 py-3 font-medium text-white shadow-sm transition hover:bg-red-500 disabled:opacity-50"
               >
-                <History className="h-5 w-5 text-blue-600" />
-                <span className="text-base text-muted-foreground">
-                  Resume: {lastTimeEntry.item?.title}
-                </span>
-              </SidebarMenuButton>
-            )}
+                START WITH TASK
+              </button>
+              {/* Intention Input */}
+              <input
+                type="text"
+                placeholder="Intention (for quick focus without task)"
+                value={intention}
+                onChange={(e) => setIntention(e.target.value)}
+                className="w-full rounded-lg bg-white/80 px-4 py-2 text-gray-700 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+              />
+              <button
+                onClick={() => handleStartSession(false)}
+                disabled={isActive}
+                className="w-full rounded-lg border border-red-400 bg-white py-3 font-medium text-red-400 shadow-sm transition hover:bg-red-50 disabled:opacity-50"
+              >
+                QUICK FOCUS
+              </button>
+            </div>
           </>
         )}
-      </>
-    </>
+      </div>
+    </div>
   );
 }

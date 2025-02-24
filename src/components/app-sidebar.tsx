@@ -20,7 +20,7 @@ const items = [
   {
     title: "Focus Session",
     icon: Timer,
-    url: "/focus",
+    url: "/",
     isActive: true,
   },
   {
@@ -84,7 +84,9 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
           ))}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter>{/* <BottomSideBar /> */}</SidebarFooter>
+      <SidebarFooter>
+        <BottomSideBar />
+      </SidebarFooter>
       <SidebarRail className="border-tracksy-gold/20 dark:border-tracksy-gold/10" />
     </Sidebar>
   );

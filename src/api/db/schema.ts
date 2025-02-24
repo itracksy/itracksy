@@ -41,13 +41,12 @@ export const timeEntries = sqliteTable("time_entries", {
   startTime: text("start_time").notNull(),
   endTime: text("end_time"),
   duration: integer("duration"),
+  targetDuration: integer("target_duration"), // Duration in minutes
   description: text("description"),
   isFocusMode: integer("is_focus_mode", { mode: "boolean" }),
   boardId: text("board_id")
-    .notNull()
     .references(() => boards.id),
   itemId: text("item_id")
-    .notNull()
     .references(() => items.id),
   userId: text("user_id").notNull(),
   invoiceId: text("invoice_id"),
