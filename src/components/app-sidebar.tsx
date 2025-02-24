@@ -1,5 +1,5 @@
 import * as React from "react";
-import { LayoutGrid, FolderClosed, Settings } from "lucide-react";
+import { BarChart, FolderClosed, Settings, Timer } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 
@@ -18,10 +18,15 @@ import { BottomSideBar } from "./BottomSideBar";
 // This is sample data.
 const items = [
   {
-    title: "Dashboard",
-    icon: LayoutGrid,
-    url: "#",
+    title: "Focus Session",
+    icon: Timer,
+    url: "/focus",
     isActive: true,
+  },
+  {
+    title: "Analytics",
+    icon: BarChart,
+    url: "/dashboard",
   },
   {
     title: "Projects",

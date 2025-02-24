@@ -207,9 +207,9 @@ export function BottomSideBar() {
               tooltip="Take a well-deserved break!"
             >
               <Coffee className="h-6 w-6 text-orange-600" />
-              <Button variant="ghost" onClick={handleTakeBreak}>
+              <div onClick={handleTakeBreak} className="hover:text-orange-600 hover:underline">
                 <span className="text-base text-muted-foreground">Take a break</span>
-              </Button>
+              </div>
               <input
                 type="number"
                 min="1"
