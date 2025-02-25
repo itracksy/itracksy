@@ -1,24 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   useActiveTimeEntry,
   useUpdateTimeEntryMutation,
   useCreateTimeEntryMutation,
   useLastTimeEntry,
 } from "@/hooks/useTimeEntryQueries";
-import { PlayCircle, StopCircle, Focus, History, Coffee } from "lucide-react";
+import { PlayCircle, StopCircle, History, Coffee } from "lucide-react";
 import { TimeEntryDialog } from "@/components/tracking/TimeEntryDialog";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 
 import { trpcClient } from "@/utils/trpc";
-import { Button } from "@/components/ui/button";
 import { useAtom } from "jotai";
 import { breakDurationAtom } from "@/context/board";
 import { NotificationOptions } from "@/types/notification";
+import { useNavigate } from "@tanstack/react-router";
 
 export function BottomSideBar() {
-  const [duration, setDuration] = useState<string>("00:00:00");
-  const [durationInMinutes, setDurationInMinutes] = useState(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [breakDuration, setBreakDuration] = useAtom(breakDurationAtom);
 
@@ -27,44 +25,7 @@ export function BottomSideBar() {
   const updateTimeEntry = useUpdateTimeEntryMutation();
   const createTimeEntry = useCreateTimeEntryMutation();
   const { toast } = useToast();
-
-  const sendNotification = async (options: NotificationOptions) => {
-    try {
-      await trpcClient.notification.sendNotification.mutate(options);
-    } catch (error) {
-      console.error("Failed to send notification:", error);
-    }
-  };
-
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-
-    if (activeTimeEntry) {
-      const updateDuration = () => {
-        const startTime = new Date(activeTimeEntry.startTime).getTime();
-        const now = new Date().getTime();
-        const diff = now - startTime;
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-        setDurationInMinutes(hours * 60 + minutes);
-        setDuration(
-          `${hours.toString().padStart(2, "0")}:${minutes
-            .toString()
-            .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`
-        );
-      };
-
-      updateDuration();
-      intervalId = setInterval(updateDuration, 1000);
-    }
-
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [activeTimeEntry]);
+  const navigate = useNavigate();
 
   const handleStopTimeEntry = async () => {
     if (!activeTimeEntry) {
@@ -111,31 +72,6 @@ export function BottomSideBar() {
         title: `${breakDuration} minute break started! 🎉`,
         description: "You've earned it! Time entry has been stopped.",
       });
-
-      // Send system notification
-      await sendNotification({
-        body: "Time to get back to work! Open iTracksy to start tracking again.",
-        requireInteraction: true,
-        title: "Break Time's Over! 🚀",
-        timeoutMs: breakDuration * 60 * 1000,
-      });
-
-      // Set up break end notification
-      const timeoutId = setTimeout(
-        async () => {
-          // Show toast notification
-          toast({
-            title: "Break time's over! 🚀",
-            description:
-              "Time to get back to work! Click 'Let's get shit done!' to start tracking again.",
-            duration: 10000, // Show for 10 seconds
-          });
-        },
-        breakDuration * 60 * 1000
-      );
-
-      // Clean up timeout if component unmounts
-      return () => clearTimeout(timeoutId);
     } catch (error) {
       toast({
         title: "Failed to stop time entry",
@@ -146,7 +82,7 @@ export function BottomSideBar() {
   };
 
   const handleResumeLastTask = () => {
-    if (!lastTimeEntry?.item) {
+    if (!lastTimeEntry) {
       toast({
         title: "No previous task found",
         description: "Start a new time entry to track your work!",
@@ -159,14 +95,17 @@ export function BottomSideBar() {
         boardId: lastTimeEntry.boardId,
         itemId: lastTimeEntry.itemId,
         startTime: Date.now(),
-        isFocusMode: false,
+        isFocusMode: lastTimeEntry.isFocusMode,
+        targetDuration: lastTimeEntry.targetDuration,
+        description: lastTimeEntry.description,
       },
       {
         onSuccess: () => {
           toast({
             title: "Resumed task",
-            description: `Now tracking: ${lastTimeEntry?.item?.title}`,
+            description: `Now tracking: ${lastTimeEntry.item?.title || lastTimeEntry.description}`,
           });
+          navigate({ to: "/" });
         },
         onError: (error) => {
           toast({
@@ -228,7 +167,7 @@ export function BottomSideBar() {
         ) : (
           <>
             <SidebarMenuButton
-              onClick={() => setIsDialogOpen(true)}
+              onClick={() => navigate({ to: "/" })}
               className="hover:text-green-600"
               tooltip="Let's get shit done! "
             >
@@ -236,15 +175,15 @@ export function BottomSideBar() {
               <span className="text-base text-muted-foreground">Let's get shit done! </span>
             </SidebarMenuButton>
 
-            {lastTimeEntry && lastTimeEntry.item?.title && (
+            {lastTimeEntry && (
               <SidebarMenuButton
                 onClick={handleResumeLastTask}
                 className="hover:text-blue-600"
-                tooltip={`Resume: ${lastTimeEntry.item?.title || "last task"}`}
+                tooltip={`Resume: ${lastTimeEntry.item?.title || lastTimeEntry.description}`}
               >
                 <History className="h-5 w-5 text-blue-600" />
                 <span className="text-base text-muted-foreground">
-                  Resume: {lastTimeEntry.item?.title}
+                  Resume: {lastTimeEntry.item?.title || lastTimeEntry.description}
                 </span>
               </SidebarMenuButton>
             )}

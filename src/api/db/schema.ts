@@ -40,7 +40,7 @@ export const timeEntries = sqliteTable("time_entries", {
   id: text("id").primaryKey(),
   startTime: integer("start_time").notNull(),
   endTime: integer("end_time"),
-  duration: integer("duration"),
+  duration: integer("duration"), // seconds
   targetDuration: integer("target_duration"), // Duration in minutes
   description: text("description"),
   isFocusMode: integer("is_focus_mode", { mode: "boolean" }), // we have focus / break mode
@@ -49,6 +49,7 @@ export const timeEntries = sqliteTable("time_entries", {
   userId: text("user_id").notNull(),
   invoiceId: text("invoice_id"),
   createdAt: integer("created_at"),
+  notificationSentAt: integer("notification_sent_at"),
 });
 
 export const activities = sqliteTable(
@@ -63,7 +64,7 @@ export const activities = sqliteTable(
     ownerBundleId: text("owner_bundle_id"),
     ownerName: text("owner_name").notNull(),
     url: text("url"),
-    duration: integer().notNull(),
+    duration: integer().notNull(), // seconds
     timeEntryId: text("timeEntryId"),
     userId: text("user_id").notNull(),
   },

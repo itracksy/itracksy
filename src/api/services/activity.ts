@@ -11,6 +11,7 @@ import {
   getUserSettings,
 } from "../../api/db/repositories/userSettings";
 import { getActiveTimeEntry } from "./timeEntry";
+import { sendNotification } from "./notification";
 
 let trackingIntervalId: NodeJS.Timeout | null = null;
 let notificationWindow: BrowserWindow | null = null;
@@ -44,6 +45,9 @@ export const startTracking = async (): Promise<void> => {
       if (activeEntry.endTime) {
         return;
       }
+
+      sendNotification(activeEntry);
+
       if (isAccessibilityError) {
         return;
       }
@@ -54,7 +58,7 @@ export const startTracking = async (): Promise<void> => {
         accessibilityPermission: activitySettings.accessibilityPermission,
         screenRecordingPermission: activitySettings.screenRecordingPermission,
       });
-      logger.debug("[startTracking] Attempting to get active window", activitySettings);
+
       if (!result) {
         logger.warn("[startTracking] No active window result returned", { activitySettings });
         return;
@@ -69,7 +73,7 @@ export const startTracking = async (): Promise<void> => {
         ownerProcessId: result.owner.processId,
         ownerName: result.owner.name,
         timestamp: Date.now(),
-        duration: TRACKING_INTERVAL,
+        duration: TRACKING_INTERVAL / 1000, // seconds
         url:
           result.platform === "windows" &&
           (result.owner.name === "Google Chrome" ||
@@ -107,7 +111,10 @@ export const startTracking = async (): Promise<void> => {
           isNotificationEnabled &&
           Date.now() - lastNotificationTime >= NOTIFICATION_COOLDOWN
         ) {
-          showNotification(transformedActivities.title, transformedActivities.ownerPath || "");
+          showNotificationWarningBlock(
+            transformedActivities.title,
+            transformedActivities.ownerPath || ""
+          );
         }
       }
     } catch (error) {
@@ -149,7 +156,7 @@ const stopTracking = (): void => {
   }
 };
 
-function createNotificationWindow() {
+function createNotificationWarningBlockWindow() {
   // Get the current mouse position to determine active screen
   const mousePoint = screen.getCursorScreenPoint();
   const currentDisplay = screen.getDisplayNearestPoint(mousePoint);
@@ -196,9 +203,9 @@ function createNotificationWindow() {
   return notificationWindow;
 }
 
-function showNotification(title: string, detail: string) {
+function showNotificationWarningBlock(title: string, detail: string) {
   if (!notificationWindow || notificationWindow.isDestroyed()) {
-    notificationWindow = createNotificationWindow();
+    notificationWindow = createNotificationWarningBlockWindow();
   }
 
   // Update last notification time
@@ -238,7 +245,7 @@ function showNotification(title: string, detail: string) {
 
         // Set a new break timer
         breakTimer = setTimeout(() => {
-          showNotification(
+          showNotificationWarningBlock(
             "Time for a Break",
             "It's been 15 minutes since you requested a break. Would you like to take it now?"
           );

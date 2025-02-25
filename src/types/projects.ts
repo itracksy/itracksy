@@ -21,7 +21,7 @@ export type BoardWithRelations = Board & {
 };
 
 export type TimeEntryWithRelations = TimeEntry & {
-  items: Item | null;
+  item: Item | null;
 };
 
 // Table update types

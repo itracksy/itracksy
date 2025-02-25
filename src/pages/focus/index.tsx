@@ -3,11 +3,10 @@ import {
   useActiveTimeEntry,
   useUpdateTimeEntryMutation,
   useCreateTimeEntryMutation,
-  useLastTimeEntry,
 } from "@/hooks/useTimeEntryQueries";
 
 import { useToast } from "@/hooks/use-toast";
-import { trpcClient } from "@/utils/trpc";
+
 import { useAtom } from "jotai";
 import { breakDurationAtom, selectedBoardIdAtom, targetMinutesAtom } from "@/context/board";
 import { useNavigate } from "@tanstack/react-router";
@@ -16,6 +15,7 @@ import { BoardSelector } from "@/components/tracking/BoardSelector";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Brain, Coffee, Cloud } from "lucide-react";
+import { ActiveSession } from "./components/ActiveSession";
 
 export default function FocusPage() {
   const [intention, setIntention] = useState("");
@@ -27,45 +27,9 @@ export default function FocusPage() {
   const [activeTab, setActiveTab] = useState<"focus" | "break">("focus");
 
   const { data: activeTimeEntry, isLoading } = useActiveTimeEntry();
-  const updateTimeEntry = useUpdateTimeEntryMutation();
+
   const createTimeEntry = useCreateTimeEntryMutation();
   const { toast } = useToast();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-
-    if (activeTimeEntry) {
-      const updateTimer = () => {
-        const now = new Date();
-        const startTimeDate = new Date(activeTimeEntry.startTime);
-        const minutes = activeTimeEntry.isFocusMode ? targetMinutes : breakMinutes;
-        const diff = minutes * 60 - Math.floor((now.getTime() - startTimeDate.getTime()) / 1000);
-
-        if (diff <= 0) {
-          clearInterval(intervalId);
-          handleStopTimeEntry();
-
-          // Send notification when time is up
-
-          return;
-        }
-
-        const mins = Math.floor(diff / 60);
-        const secs = diff % 60;
-        setDuration(`${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`);
-      };
-
-      updateTimer();
-      intervalId = setInterval(updateTimer, 1000);
-    }
-
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [activeTimeEntry, targetMinutes, breakMinutes]);
 
   useEffect(() => {
     if (!activeTimeEntry) {
@@ -102,12 +66,6 @@ export default function FocusPage() {
         title: `${mode} Session Started`,
         description: `Your ${minutes}-minute ${mode.toLowerCase()} session has begun.`,
       });
-
-      trpcClient.notification.sendNotification.mutate({
-        title: `${mode} Session Complete! `,
-        body: `Great work! Your ${minutes}-minute ${mode.toLowerCase()} session is complete. Take a short break before starting another session.`,
-        timeoutMs: minutes * 60 * 1000,
-      });
     } catch (error) {
       toast({
         title: "Failed to start session",
@@ -140,29 +98,6 @@ export default function FocusPage() {
     }
   };
 
-  const handleStopTimeEntry = async () => {
-    if (!activeTimeEntry) return;
-
-    try {
-      await updateTimeEntry.mutateAsync({
-        id: activeTimeEntry.id,
-        endTime: Date.now(),
-      });
-
-      const mode = activeTimeEntry.isFocusMode ? "Focus" : "Break";
-      toast({
-        title: `${mode} session completed`,
-        description: "Great work! Your time has been recorded.",
-      });
-    } catch (error) {
-      toast({
-        title: "Failed to stop session",
-        description: error instanceof Error ? error.message : "An error occurred",
-        variant: "destructive",
-      });
-    }
-  };
-
   const formatTimeRange = () => {
     if (!activeTimeEntry) return "";
     return `${new Date(activeTimeEntry.startTime).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })} → ${new Date(activeTimeEntry.endTime ?? "").toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })}`;
@@ -172,57 +107,7 @@ export default function FocusPage() {
     <div className="flex min-h-screen flex-col items-center bg-transparent">
       <div className="w-full max-w-md space-y-8">
         {activeTimeEntry ? (
-          <>
-            {/* Active Session Display */}
-            <div className="text-center">
-              <h2 className="mb-4 text-xl font-medium text-gray-700">Current Session</h2>
-              <div className="rounded-lg bg-white p-4 shadow-sm">
-                <div className="flex items-center justify-center gap-2 text-gray-700">
-                  <span className="h-2 w-2 rounded-full bg-green-400"></span>
-                  {activeTimeEntry.item?.title || activeTimeEntry.description}
-                </div>
-              </div>
-            </div>
-
-            {/* Timer Display */}
-            <div className="relative mx-auto aspect-square w-64">
-              <div className="absolute inset-0 rounded-full border-[16px] border-pink-100"></div>
-              <div
-                className="absolute inset-0 rounded-full border-[16px] border-green-400"
-                style={{
-                  clipPath: `polygon(50% 50%, 50% 0, ${50 + 50 * Math.cos(Math.PI / 2)}% ${50 - 50 * Math.sin(Math.PI / 2)}%)`,
-                }}
-              ></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="font-mono text-4xl font-medium text-gray-700">{duration}</span>
-              </div>
-            </div>
-
-            {/* Stop Button */}
-            <button
-              onClick={handleStopTimeEntry}
-              className="w-full rounded-lg bg-red-400 py-3 font-medium text-white shadow-sm transition hover:bg-red-500"
-            >
-              STOP SESSION
-            </button>
-
-            {/* Raining Letters Button */}
-            {!activeTimeEntry.isFocusMode && (
-              <button
-                onClick={() => navigate({ to: "/raining-letters" })}
-                className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-lg bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 p-4 font-medium text-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-200/20"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                <Cloud className="h-6 w-6 animate-bounce transition-transform duration-300 group-hover:scale-110" />
-                <span className="relative z-10 bg-gradient-to-r from-white via-blue-50 to-white bg-clip-text text-lg font-bold text-transparent">
-                  Take a Magical Break
-                </span>
-                <div className="absolute -inset-1 -z-10 animate-pulse opacity-25 blur">
-                  <div className="h-full w-full bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400" />
-                </div>
-              </button>
-            )}
-          </>
+          <ActiveSession activeTimeEntry={activeTimeEntry} />
         ) : (
           <>
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "focus" | "break")}>

@@ -149,7 +149,8 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
           invariant(transfer.title, "missing title");
 
           const droppedOrder = acceptDrop === "top" ? previousOrder : nextOrder;
-          const moveOrder = (droppedOrder + order) / 2;
+          // Ensure we get an integer value for the order
+          const moveOrder = Math.floor((droppedOrder + order) / 2);
 
           moveItem.mutate({
             order: moveOrder,
