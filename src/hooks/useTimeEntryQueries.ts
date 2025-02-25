@@ -5,7 +5,7 @@ import { trpcClient } from "@/utils/trpc";
 
 export function useActiveTimeEntry() {
   return useQuery({
-    queryKey: ["timeEntries", "active"],
+    queryKey: ["timeEntry.getActive"],
     queryFn: () => trpcClient.timeEntry.getActive.query(),
   });
 }
@@ -39,7 +39,7 @@ export function useUpdateTimeEntryMutation() {
       queryClient.invalidateQueries({ queryKey: ["timeEntries"] });
       if (data.endTime) {
         console.log("invalidating active time entry", data.endTime);
-        queryClient.invalidateQueries({ queryKey: ["timeEntries", "active"] });
+        queryClient.invalidateQueries({ queryKey: ["timeEntry.getActive"] });
       }
       queryClient.invalidateQueries({ queryKey: ["board", data.boardId] });
     },

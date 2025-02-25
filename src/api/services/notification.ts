@@ -67,7 +67,7 @@ export const sendNotification = (timeEntry: TimeEntryWithRelations): void => {
   ) {
     const options = getNotificationOptions(timeEntry, timeExceeded);
     sendSystemNotification(options);
-    const notificationSentAt = timeEntry.notificationSentAt ?? 0 + 1;
+    const notificationSentAt = (timeEntry.notificationSentAt ?? 0) + 1;
     console.log("notificationSentAt", notificationSentAt);
     updateTimeEntry(timeEntry.id, { notificationSentAt });
   }
