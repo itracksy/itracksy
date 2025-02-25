@@ -3,8 +3,21 @@ import { useUpdateTimeEntryMutation } from "@/hooks/useTimeEntryQueries";
 import { TimeEntryWithRelations } from "@/types/projects";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { Cloud } from "lucide-react";
+import { Cloud, Clock, AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
+
+const warningMessages = [
+  "⏰ Tick tock! Time's flying!",
+  "🏃 Run, time is escaping!",
+  "🚨 Whoops! Time overflow!",
+  "🎯 Target time missed!",
+  "⚡ Time to wrap up!",
+  "🌪️ Time tornado alert!",
+  "🔥 Hot deadline alert!",
+  "🎮 Game over... or extend?",
+  "🌈 Time to finish up!",
+  "🚀 Houston, we've exceeded time!",
+];
 
 export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }> = ({
   activeTimeEntry,
@@ -13,7 +26,10 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
   const updateTimeEntry = useUpdateTimeEntryMutation();
   const { toast } = useToast();
   const [duration, setDuration] = useState<string>("00:00");
+  const [isTimeExceeded, setIsTimeExceeded] = useState(false);
+  const [warningMessage, setWarningMessage] = useState(warningMessages[0]);
   const queryClient = useQueryClient();
+
   const handleExtendTime = async () => {
     if (!activeTimeEntry) return;
 
@@ -68,26 +84,33 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
         const now = new Date();
         const startTimeDate = new Date(activeTimeEntry.startTime);
         const minutes = activeTimeEntry.targetDuration ?? 0;
-        const diff = minutes * 60 - Math.floor((now.getTime() - startTimeDate.getTime()) / 1000);
+        const secondsDiff =
+          minutes * 60 - Math.floor((now.getTime() - startTimeDate.getTime()) / 1000);
 
         // Format time differently for negative values
-        if (diff <= 0) {
-          const absDiff = Math.abs(diff);
+        if (secondsDiff <= 0) {
+          const absDiff = Math.abs(secondsDiff);
           const mins = Math.floor(absDiff / 60);
           const secs = absDiff % 60;
 
           // Only stop if autoStopEnabled is true
-          if (diff < 0 && activeTimeEntry.autoStopEnabled) {
+          if (secondsDiff < 0 && activeTimeEntry.autoStopEnabled) {
             queryClient.invalidateQueries({ queryKey: ["timeEntries"] });
             setDuration("00:00");
+            setIsTimeExceeded(false);
             return;
           } else {
             setDuration(`-${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`);
+            setIsTimeExceeded(true);
+            // Change message every 60 seconds when time is exceeded
+            const messageIndex = Math.floor(Math.abs(secondsDiff) / 60) % warningMessages.length;
+            setWarningMessage(warningMessages[messageIndex]);
           }
         } else {
-          const mins = Math.floor(diff / 60);
-          const secs = diff % 60;
+          const mins = Math.floor(secondsDiff / 60);
+          const secs = secondsDiff % 60;
           setDuration(`${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`);
+          setIsTimeExceeded(false);
         }
       };
 
@@ -124,8 +147,21 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
             clipPath: `polygon(50% 50%, 50% 0, ${50 + 50 * Math.cos(Math.PI / 2)}% ${50 - 50 * Math.sin(Math.PI / 2)}%)`,
           }}
         ></div>
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
           <span className="font-mono text-4xl font-medium text-gray-700">{duration}</span>
+          {isTimeExceeded && (
+            <div className="flex flex-col items-center space-y-1">
+              <AlertTriangle className="h-5 w-5 animate-bounce text-red-500" />
+              <span
+                className="text-sm font-medium text-red-500 transition-all duration-300"
+                style={{
+                  animation: "warning 2s infinite",
+                }}
+              >
+                {warningMessage}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -163,6 +199,22 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
           </div>
         </button>
       )}
+      <style>{`
+        @keyframes warning {
+          0% {
+            transform: scale(1);
+            opacity: 1;
+          }
+          50% {
+            transform: scale(1.1);
+            opacity: 0.8;
+          }
+          100% {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
+      `}</style>
     </>
   );
 };

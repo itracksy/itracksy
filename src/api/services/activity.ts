@@ -11,7 +11,7 @@ import {
   getUserSettings,
 } from "../../api/db/repositories/userSettings";
 import { getActiveTimeEntry, updateTimeEntry } from "./timeEntry";
-import { sendNotification, sendSystemNotification } from "./notification";
+import { sendNotification, sendNotificationWhenNoActiveEntry } from "./notification";
 
 let trackingIntervalId: NodeJS.Timeout | null = null;
 let notificationWindow: BrowserWindow | null = null;
@@ -33,23 +33,18 @@ export const startTracking = async (): Promise<void> => {
       if (!userId) {
         return;
       }
-      const activitySettings = await getUserSettings({ userId });
-      if (!activitySettings.isBlockingOnFocusMode) {
-        return;
-      }
 
       const activeEntry = await getActiveTimeEntry(userId);
 
-      if (!activeEntry) {
-        return;
-      }
-      if (activeEntry.endTime) {
+      if (!activeEntry || activeEntry.endTime) {
+        // No active entry, or entry has ended
+        sendNotificationWhenNoActiveEntry(userId);
         return;
       }
 
       const timeExceeded =
-        Math.floor((Date.now() - activeEntry?.startTime) / 1000) -
-        (activeEntry?.targetDuration ?? 0) * 60;
+        Math.floor((Date.now() - activeEntry.startTime) / 1000) -
+        (activeEntry.targetDuration ?? 0) * 60;
       logger.info("[activity.startTracking] timeExceeded", timeExceeded);
       if (timeExceeded > 0) {
         await sendNotification(activeEntry, timeExceeded);
@@ -63,6 +58,11 @@ export const startTracking = async (): Promise<void> => {
       if (isAccessibilityError) {
         return;
       }
+      const activitySettings = await getUserSettings({ userId });
+      if (!activitySettings.isBlockingOnFocusMode) {
+        return;
+      }
+
       const getWindows = await import("get-windows");
       const blockedApps = await getUserBlockedApps(userId);
       const blockedDomains = await getUserBlockedDomains(userId);

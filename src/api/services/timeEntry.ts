@@ -1,4 +1,4 @@
-import { eq, desc, and, isNull } from "drizzle-orm";
+import { eq, desc, and, isNull, isNotNull } from "drizzle-orm";
 import { timeEntries, items } from "../db/schema";
 import { nanoid } from "nanoid";
 import db from "../db";
@@ -103,7 +103,22 @@ export async function getTimeEntriesForBoard(boardId: string) {
 
 export async function getLastTimeEntry(userId: string) {
   const entry = await db.query.timeEntries.findFirst({
-    where: eq(timeEntries.userId, userId),
+    where: and(eq(timeEntries.userId, userId), isNotNull(timeEntries.endTime)),
+    orderBy: desc(timeEntries.startTime),
+    with: {
+      item: true,
+    },
+  });
+  return entry ?? null;
+}
+
+export async function getLastWorkingTimeEntry(userId: string) {
+  const entry = await db.query.timeEntries.findFirst({
+    where: and(
+      eq(timeEntries.userId, userId),
+      eq(timeEntries.isFocusMode, true),
+      isNotNull(timeEntries.endTime)
+    ),
     orderBy: desc(timeEntries.startTime),
     with: {
       item: true,
