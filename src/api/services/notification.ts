@@ -44,29 +44,36 @@ export const sendSystemNotification = async (options: NotificationOptions) => {
   }
 };
 
-export const sendNotification = (
+export const sendNotification = async (
   timeEntry: TimeEntryWithRelations,
   secondsExceeded: number
-): void => {
+): Promise<void> => {
   if (!timeEntry.targetDuration) {
     return;
   }
 
-  console.log("timeExceeded", secondsExceeded);
-  console.log("getTimeToSendNoti", getSecondsToSendNoti(timeEntry.notificationSentAt));
+  logger.debug("[sendNotification] Time exceeded (seconds)", {
+    secondsExceeded,
+    nextNotificationAt: getSecondsToSendNoti(timeEntry.notificationSentAt),
+  });
 
   if (
-    (timeEntry.notificationSentAt ?? 0) < 3 &&
+    (timeEntry.notificationSentAt ?? 0) <= 3 &&
     secondsExceeded >= getSecondsToSendNoti(timeEntry.notificationSentAt)
   ) {
     const options = getNotificationOptions({
       timeEntry,
       minutesExceeded: Math.floor(secondsExceeded / 60),
     });
-    sendSystemNotification(options);
-    const notificationSentAt = (timeEntry.notificationSentAt ?? 0) + 1;
-    console.log("notificationSentAt", notificationSentAt);
-    updateTimeEntry(timeEntry.id, { notificationSentAt });
+
+    try {
+      sendSystemNotification(options);
+      const notificationSentAt = (timeEntry.notificationSentAt ?? 0) + 1;
+      logger.debug("[sendNotification] Updating notification count", { notificationSentAt });
+      await updateTimeEntry(timeEntry.id, { notificationSentAt });
+    } catch (error) {
+      logger.error("[sendNotification] Failed to send or update notification", { error });
+    }
   }
 };
 
@@ -77,13 +84,15 @@ const getNotificationOptions = ({
   timeEntry: TimeEntryWithRelations;
   minutesExceeded: number;
 }): NotificationOptions => {
+  const sessionTitle = timeEntry.item?.title || timeEntry.description || "your session";
+
   if (timeEntry.isFocusMode) {
     return {
       title: "Time for a Break! ",
       body:
         minutesExceeded > 0
-          ? `You've been focused for ${minutesExceeded} minutes over your target. Take a short break to recharge.`
-          : "You've reached your focus time target. Time for a short break!",
+          ? `You've been focused on "${sessionTitle}" for ${minutesExceeded} minutes over your target. Take a short break to recharge.`
+          : `You've reached your focus time target for "${sessionTitle}". Time for a short break!`,
       requireInteraction: true,
     };
   }
@@ -100,9 +109,9 @@ const getNotificationOptions = ({
 
 function getSecondsToSendNoti(notificationSentAt: number | null): number {
   if (!notificationSentAt || notificationSentAt === 0) return 0;
-  if (notificationSentAt === 1) return 5 * 60; // 5 minutes
-  if (notificationSentAt === 2) return 25 * 60; // 25 minutes
-  if (notificationSentAt === 3) return 60 * 60; // 1 hour
+  if (notificationSentAt === 1) return 2 * 60; // First reminder after 2 minutes
+  if (notificationSentAt === 2) return 10 * 60; // Second reminder after 10 minutes
+  if (notificationSentAt === 3) return 30 * 60; // Final reminder after 30 minutes
 
   return Number.MAX_SAFE_INTEGER;
 }

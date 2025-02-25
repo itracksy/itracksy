@@ -75,12 +75,14 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
           const absDiff = Math.abs(diff);
           const mins = Math.floor(absDiff / 60);
           const secs = absDiff % 60;
-          setDuration(`-${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`);
 
           // Only stop if autoStopEnabled is true
           if (diff < 0 && activeTimeEntry.autoStopEnabled) {
-            queryClient.invalidateQueries({ queryKey: ["timeEntries", "active"] });
+            queryClient.invalidateQueries({ queryKey: ["timeEntries"] });
+            setDuration("00:00");
             return;
+          } else {
+            setDuration(`-${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`);
           }
         } else {
           const mins = Math.floor(diff / 60);

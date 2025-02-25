@@ -52,10 +52,10 @@ export const startTracking = async (): Promise<void> => {
         (activeEntry?.targetDuration ?? 0) * 60;
       logger.info("[activity.startTracking] timeExceeded", timeExceeded);
       if (timeExceeded > 0) {
-        sendNotification(activeEntry, timeExceeded);
+        await sendNotification(activeEntry, timeExceeded);
         if (activeEntry.autoStopEnabled) {
           //stop the session when time is exceeded
-          updateTimeEntry(activeEntry.id, { endTime: Date.now() });
+          await updateTimeEntry(activeEntry.id, { endTime: Date.now() });
           return;
         }
       }

@@ -21,7 +21,7 @@ export function BottomSideBar() {
   const [breakDuration, setBreakDuration] = useAtom(breakDurationAtom);
 
   const { data: activeTimeEntry, isLoading } = useActiveTimeEntry();
-  const { data: lastTimeEntry = null } = useLastTimeEntry();
+  const { data: lastTimeEntry } = useLastTimeEntry();
   const updateTimeEntry = useUpdateTimeEntryMutation();
   const createTimeEntry = useCreateTimeEntryMutation();
   const { toast } = useToast();

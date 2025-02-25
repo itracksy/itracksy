@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
-import { useActiveTimeEntry, useCreateTimeEntryMutation } from "@/hooks/useTimeEntryQueries";
+import {
+  useActiveTimeEntry,
+  useCreateTimeEntryMutation,
+  useLastTimeEntry,
+} from "@/hooks/useTimeEntryQueries";
 import { useToast } from "@/hooks/use-toast";
 
 import { useAtom } from "jotai";
@@ -28,15 +32,19 @@ export default function FocusPage() {
   const [autoStopEnabled, setAutoStopEnabled] = useAtom(autoStopEnabledsAtom);
   const { data: activeTimeEntry, isLoading } = useActiveTimeEntry();
   const createTimeEntry = useCreateTimeEntryMutation();
-
+  const { data: lastTimeEntry } = useLastTimeEntry();
   const { toast } = useToast();
 
   useEffect(() => {
     if (!activeTimeEntry) {
       const minutes = activeTab === "focus" ? targetMinutes : breakMinutes;
       setDuration(`${minutes.toString().padStart(2, "0")}:00`);
+    } else {
+      if (lastTimeEntry) {
+        setActiveTab(lastTimeEntry.isFocusMode ? "break" : "focus");
+      }
     }
-  }, [targetMinutes, breakMinutes, activeTab, activeTimeEntry]);
+  }, [targetMinutes, breakMinutes, activeTab, activeTimeEntry, lastTimeEntry]);
 
   const handleStartSession = async () => {
     if (activeTab === "focus" && !intention && !selectedItemId) {
