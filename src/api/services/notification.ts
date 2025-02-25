@@ -1,10 +1,18 @@
-import { NotificationOptions } from "@/types/notification";
+import { NotificationInsert } from "@/types/notification";
 import { logger } from "../../helpers/logger";
 import { Notification, BrowserWindow } from "electron";
 import { TimeEntryWithRelations } from "@/types/projects";
 import { getLastWorkingTimeEntry, updateTimeEntry } from "./timeEntry";
 
-export const sendSystemNotification = async (options: NotificationOptions) => {
+import { notifications } from "../db/schema";
+import { nanoid } from "nanoid";
+import db from "../db";
+import { getLastNotification } from "../db/repositories/notifications";
+
+export const sendSystemNotification = async (
+  options: Omit<NotificationInsert, "id">,
+  timeoutMs?: number
+) => {
   try {
     // Check if notifications are supported
     if (!Notification.isSupported()) {
@@ -15,9 +23,18 @@ export const sendSystemNotification = async (options: NotificationOptions) => {
     const notification = new Notification({
       title: options.title,
       body: options.body,
-      silent: options.silent,
       icon: "./resources/icon.png",
-      timeoutType: options.requireInteraction ? "never" : "default",
+    });
+
+    // Store notification in database
+    await db.insert(notifications).values({
+      id: nanoid(),
+      title: options.title,
+      body: options.body,
+      type: "system",
+      userId: options.userId,
+      timeEntryId: options.timeEntryId,
+      createdAt: Date.now(),
     });
 
     // Handle notification click
@@ -31,8 +48,8 @@ export const sendSystemNotification = async (options: NotificationOptions) => {
       }
     });
 
-    if (options.timeoutMs) {
-      setTimeout(() => notification.show(), options.timeoutMs);
+    if (timeoutMs) {
+      setTimeout(() => notification.show(), timeoutMs);
     } else {
       notification.show();
     }
@@ -59,42 +76,44 @@ const motivationalMessages = [
 
 export const sendNotificationWhenNoActiveEntry = async (userId: string) => {
   const lastTimeEntry = await getLastWorkingTimeEntry(userId);
-
-  if (!lastTimeEntry || lastTimeEntry.endTime) {
+  const lastNotification = await getLastNotification(userId, "remind_last_time_entry");
+  const now = new Date();
+  const isTimeToWork = now.getHours() >= 8 && now.getHours() < 22;
+  if (!isTimeToWork) {
+    return;
+  }
+  if (!lastTimeEntry) {
+    return;
+  }
+  if (!lastTimeEntry.endTime) {
     return;
   }
 
-  const now = new Date();
-  const lastEndTime = new Date(lastTimeEntry.endTime!);
-  const minutesSinceLastSession = Math.floor((now.getTime() - lastEndTime.getTime()) / (1000 * 60));
+  const sessionMinutesDuration = Math.round((now.getTime() - lastTimeEntry.startTime) / 1000 / 60);
+  const taskTitle = lastTimeEntry.item?.title || lastTimeEntry.description || "Untitled";
 
-  // Only send notifications if:
-  // 1. At least 30 minutes have passed since last session
-  // 2. It's between 8 AM and 10 PM (respect user's likely working hours)
-  // 3. Not sending notifications too frequently (at least 2 hours between notifications)
-  if (
-    minutesSinceLastSession >= 30 &&
-    now.getHours() >= 8 &&
-    now.getHours() < 22 &&
-    minutesSinceLastSession % 120 === 0
-  ) {
-    // Pick a random motivational message
-    const messageIndex = Math.floor(Math.random() * motivationalMessages.length);
-    const message = motivationalMessages[messageIndex];
+  const minutesSinceLastSession = Math.floor((now.getTime() - lastTimeEntry.endTime) / (1000 * 60));
 
-    // Calculate productivity stats to make the message more engaging
-    const sessionDuration = Math.floor(
-      (new Date(lastTimeEntry.endTime!).getTime() - new Date(lastTimeEntry.startTime).getTime()) /
-        (1000 * 60)
-    );
+  if (minutesSinceLastSession < 30) {
+    return;
+  }
 
-    // Get the task title, fallback to description or "your task" if neither exists
-    const taskTitle = lastTimeEntry.item?.title || lastTimeEntry.description || "your task";
+  // Don't send notification if last one was sent less than 2 hours ago
+  if (lastNotification && Date.now() - lastNotification.createdAt < 2 * 60 * 60 * 1000) {
+    return;
+  }
 
+  const messages = motivationalMessages;
+  const message = messages[Math.floor(Math.random() * messages.length)];
+
+  if (message) {
     await sendSystemNotification({
       title: "Time for a New Focus Session!",
-      body: `${message}\n\nLast session: ${sessionDuration} minutes focused on "${taskTitle}" 🎯`,
-      silent: false,
+      body: `${message}\n\nLast session: ${sessionMinutesDuration} minutes focused on "${taskTitle}" 🎯`,
+      userId: userId,
+      type: "remind_last_time_entry",
+      timeEntryId: lastTimeEntry.id,
+      createdAt: Date.now(),
     });
   }
 };
@@ -107,24 +126,26 @@ export const sendNotification = async (
     return;
   }
 
-  logger.debug("[sendNotification] Time exceeded (seconds)", {
-    secondsExceeded,
-    nextNotificationAt: getSecondsToSendNoti(timeEntry.notificationSentAt),
-  });
-
   if (
     (timeEntry.notificationSentAt ?? 0) <= 3 &&
     secondsExceeded >= getSecondsToSendNoti(timeEntry.notificationSentAt)
   ) {
-    const options = getNotificationOptions({
+    const { title, body } = getNotificationOptions({
       timeEntry,
       minutesExceeded: Math.floor(secondsExceeded / 60),
     });
 
     try {
-      sendSystemNotification(options);
+      sendSystemNotification({
+        title,
+        body,
+        userId: timeEntry.userId,
+        type: "engagement_time_entry",
+        timeEntryId: timeEntry.id,
+        createdAt: Date.now(),
+      });
       const notificationSentAt = (timeEntry.notificationSentAt ?? 0) + 1;
-      logger.debug("[sendNotification] Updating notification count", { notificationSentAt });
+
       await updateTimeEntry(timeEntry.id, { notificationSentAt });
     } catch (error) {
       logger.error("[sendNotification] Failed to send or update notification", { error });
@@ -138,7 +159,7 @@ const getNotificationOptions = ({
 }: {
   timeEntry: TimeEntryWithRelations;
   minutesExceeded: number;
-}): NotificationOptions => {
+}): { title: string; body: string } => {
   const sessionTitle = timeEntry.item?.title || timeEntry.description || "your session";
 
   // Fun messages for focus mode
@@ -164,7 +185,6 @@ const getNotificationOptions = ({
         minutesExceeded > 0
           ? focusMessages[Math.floor(Math.random() * focusMessages.length)]
           : `Mission accomplished on "${sessionTitle}"! 🎉 You've crushed your focus goal! Time for a victory break!`,
-      requireInteraction: true,
     };
   }
 
@@ -174,7 +194,6 @@ const getNotificationOptions = ({
       minutesExceeded > 0
         ? breakMessages[Math.floor(Math.random() * breakMessages.length)]
         : `Break time complete! 🎉 Ready to tackle work with fresh energy?`,
-    requireInteraction: true,
   };
 };
 

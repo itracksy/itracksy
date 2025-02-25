@@ -28,7 +28,6 @@ export const startTracking = async (): Promise<void> => {
   // Start the interval
   trackingIntervalId = setInterval(async () => {
     try {
-      logger.info("[activity.startTracking] Starting interval");
       const userId = await getCurrentUserIdLocalStorage();
       if (!userId) {
         return;
@@ -45,7 +44,7 @@ export const startTracking = async (): Promise<void> => {
       const timeExceeded =
         Math.floor((Date.now() - activeEntry.startTime) / 1000) -
         (activeEntry.targetDuration ?? 0) * 60;
-      logger.info("[activity.startTracking] timeExceeded", timeExceeded);
+
       if (timeExceeded > 0) {
         await sendNotification(activeEntry, timeExceeded);
         if (activeEntry.autoStopEnabled) {

@@ -120,6 +120,25 @@ export const localStorage = sqliteTable("local_storage", {
   updatedAt: integer("updated_at").notNull(),
 });
 
+export const notifications = sqliteTable(
+  "notifications",
+  {
+    id: text("id").primaryKey(),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    type: text("type").notNull(), // 'system', 'time_entry', etc.
+    userId: text("user_id").notNull(),
+    timeEntryId: text("time_entry_id").references(() => timeEntries.id),
+    createdAt: integer("created_at").notNull(),
+  },
+  (table) => [
+    index("notifications_user_id_idx").on(table.userId),
+    index("notifications_type_idx").on(table.type),
+    index("notifications_created_at_idx").on(table.createdAt),
+    index("notifications_time_entry_id_idx").on(table.timeEntryId),
+  ]
+);
+
 // Relations
 export const boardsRelations = relations(boards, ({ many }) => ({
   columns: many(columns),
@@ -155,5 +174,12 @@ export const timeEntriesRelations = relations(timeEntries, ({ one }) => ({
   item: one(items, {
     fields: [timeEntries.itemId],
     references: [items.id],
+  }),
+}));
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  timeEntry: one(timeEntries, {
+    fields: [notifications.timeEntryId],
+    references: [timeEntries.id],
   }),
 }));
