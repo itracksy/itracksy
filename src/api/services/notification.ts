@@ -44,28 +44,25 @@ export const sendSystemNotification = async (options: NotificationOptions) => {
   }
 };
 
-export const sendNotification = (timeEntry: TimeEntryWithRelations): void => {
+export const sendNotification = (
+  timeEntry: TimeEntryWithRelations,
+  secondsExceeded: number
+): void => {
   if (!timeEntry.targetDuration) {
     return;
   }
 
-  // if the active entry is longer than the limit time apart, ignore it
-  const timeDiff = new Date().getTime() - new Date(timeEntry.startTime).getTime();
-  const timeExceeded = Math.floor((timeDiff - timeEntry.targetDuration) / (60 * 1000)); // minutes exceeded
+  console.log("timeExceeded", secondsExceeded);
+  console.log("getTimeToSendNoti", getSecondsToSendNoti(timeEntry.notificationSentAt));
 
-  console.log("timeEntry", timeEntry);
-  console.log("timeExceeded", timeExceeded);
-  console.log("getTimeToSendNoti", getTimeToSendNoti(timeEntry.notificationSentAt));
-  console.log("(timeEntry.notificationSentAt ?? 0) < 3", (timeEntry.notificationSentAt ?? 0) < 3);
-  console.log(
-    "timeExceeded > getTimeToSendNoti(timeEntry.notificationSentAt)",
-    timeExceeded > getTimeToSendNoti(timeEntry.notificationSentAt)
-  );
   if (
     (timeEntry.notificationSentAt ?? 0) < 3 &&
-    timeExceeded > getTimeToSendNoti(timeEntry.notificationSentAt)
+    secondsExceeded >= getSecondsToSendNoti(timeEntry.notificationSentAt)
   ) {
-    const options = getNotificationOptions(timeEntry, timeExceeded);
+    const options = getNotificationOptions({
+      timeEntry,
+      minutesExceeded: Math.floor(secondsExceeded / 60),
+    });
     sendSystemNotification(options);
     const notificationSentAt = (timeEntry.notificationSentAt ?? 0) + 1;
     console.log("notificationSentAt", notificationSentAt);
@@ -73,16 +70,19 @@ export const sendNotification = (timeEntry: TimeEntryWithRelations): void => {
   }
 };
 
-const getNotificationOptions = (
-  timeEntry: TimeEntryWithRelations,
-  timeExceeded: number
-): NotificationOptions => {
+const getNotificationOptions = ({
+  timeEntry,
+  minutesExceeded,
+}: {
+  timeEntry: TimeEntryWithRelations;
+  minutesExceeded: number;
+}): NotificationOptions => {
   if (timeEntry.isFocusMode) {
     return {
       title: "Time for a Break! ",
       body:
-        timeExceeded > 0
-          ? `You've been focused for ${timeExceeded} minutes over your target. Take a short break to recharge.`
+        minutesExceeded > 0
+          ? `You've been focused for ${minutesExceeded} minutes over your target. Take a short break to recharge.`
           : "You've reached your focus time target. Time for a short break!",
       requireInteraction: true,
     };
@@ -91,18 +91,18 @@ const getNotificationOptions = (
   return {
     title: "Break Time's Over! ",
     body:
-      timeExceeded > 0
-        ? `Your break has extended ${timeExceeded} minutes over the target. Time to get back to work!`
+      minutesExceeded > 0
+        ? `Your break has extended ${minutesExceeded} minutes over the target. Time to get back to work!`
         : "Time to get back to work! Open iTracksy to start tracking again.",
     requireInteraction: true,
   };
 };
 
-function getTimeToSendNoti(notificationSentAt: number | null): number {
+function getSecondsToSendNoti(notificationSentAt: number | null): number {
   if (!notificationSentAt || notificationSentAt === 0) return 0;
-  if (notificationSentAt === 1) return 5; // 5 minutes
-  if (notificationSentAt === 2) return 25; // 25 minutes
-  if (notificationSentAt === 3) return 60; // 1 hour
+  if (notificationSentAt === 1) return 5 * 60; // 5 minutes
+  if (notificationSentAt === 2) return 25 * 60; // 25 minutes
+  if (notificationSentAt === 3) return 60 * 60; // 1 hour
 
   return Number.MAX_SAFE_INTEGER;
 }

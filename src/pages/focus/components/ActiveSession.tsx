@@ -1,6 +1,7 @@
 import { useToast } from "@/hooks/use-toast";
 import { useUpdateTimeEntryMutation } from "@/hooks/useTimeEntryQueries";
 import { TimeEntryWithRelations } from "@/types/projects";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { Cloud } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -12,7 +13,7 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
   const updateTimeEntry = useUpdateTimeEntryMutation();
   const { toast } = useToast();
   const [duration, setDuration] = useState<string>("00:00");
-
+  const queryClient = useQueryClient();
   const handleExtendTime = async () => {
     if (!activeTimeEntry) return;
 
@@ -75,11 +76,10 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
           const mins = Math.floor(absDiff / 60);
           const secs = absDiff % 60;
           setDuration(`-${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`);
-          
+
           // Only stop if autoStopEnabled is true
-          if (diff === 0 && activeTimeEntry.autoStopEnabled) {
-            clearInterval(intervalId);
-            handleStopTimeEntry();
+          if (diff < 0 && activeTimeEntry.autoStopEnabled) {
+            queryClient.invalidateQueries({ queryKey: ["timeEntries", "active"] });
             return;
           }
         } else {
