@@ -12,6 +12,30 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
   const updateTimeEntry = useUpdateTimeEntryMutation();
   const { toast } = useToast();
   const [duration, setDuration] = useState<string>("00:00");
+
+  const handleExtendTime = async () => {
+    if (!activeTimeEntry) return;
+
+    try {
+      const newTargetDuration = (activeTimeEntry.targetDuration ?? 0) + 5;
+      await updateTimeEntry.mutateAsync({
+        id: activeTimeEntry.id,
+        targetDuration: newTargetDuration,
+      });
+
+      toast({
+        title: "Time Extended",
+        description: "Added 5 minutes to your session.",
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to extend time",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleStopTimeEntry = async () => {
     if (!activeTimeEntry) return;
 
@@ -45,18 +69,24 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
         const minutes = activeTimeEntry.targetDuration ?? 0;
         const diff = minutes * 60 - Math.floor((now.getTime() - startTimeDate.getTime()) / 1000);
 
+        // Format time differently for negative values
         if (diff <= 0) {
-          clearInterval(intervalId);
-          handleStopTimeEntry();
-
-          // Send notification when time is up
-
-          return;
+          const absDiff = Math.abs(diff);
+          const mins = Math.floor(absDiff / 60);
+          const secs = absDiff % 60;
+          setDuration(`-${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`);
+          
+          // Only stop if autoStopEnabled is true
+          if (diff === 0 && activeTimeEntry.autoStopEnabled) {
+            clearInterval(intervalId);
+            handleStopTimeEntry();
+            return;
+          }
+        } else {
+          const mins = Math.floor(diff / 60);
+          const secs = diff % 60;
+          setDuration(`${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`);
         }
-
-        const mins = Math.floor(diff / 60);
-        const secs = diff % 60;
-        setDuration(`${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`);
       };
 
       updateTimer();
@@ -97,13 +127,23 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
         </div>
       </div>
 
-      {/* Stop Button */}
-      <button
-        onClick={handleStopTimeEntry}
-        className="w-full rounded-lg bg-red-400 py-3 font-medium text-white shadow-sm transition hover:bg-red-500"
-      >
-        STOP SESSION
-      </button>
+      {/* Action Buttons */}
+      <div className="mt-4 space-y-2">
+        <button
+          onClick={handleStopTimeEntry}
+          className="w-full rounded-lg bg-red-400 py-3 font-medium text-white shadow-sm transition hover:bg-red-500"
+        >
+          STOP {activeTimeEntry.isFocusMode ? "FOCUS" : "BREAK"}
+        </button>
+
+        {/* Extend Time Button */}
+        <button
+          onClick={handleExtendTime}
+          className="w-full rounded-lg border border-gray-200 bg-white py-3 font-medium text-gray-700 shadow-sm transition hover:bg-gray-50"
+        >
+          +5 MINUTES
+        </button>
+      </div>
 
       {/* Raining Letters Button */}
       {!activeTimeEntry.isFocusMode && (

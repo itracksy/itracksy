@@ -15,6 +15,13 @@
       "when": 1740452791302,
       "tag": "0001_stale_skrulls",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1740457628073,
+      "tag": "0002_shiny_hairball",
+      "breakpoints": true
     }
   ]
 }

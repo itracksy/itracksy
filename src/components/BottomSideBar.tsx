@@ -98,6 +98,7 @@ export function BottomSideBar() {
         isFocusMode: lastTimeEntry.isFocusMode,
         targetDuration: lastTimeEntry.targetDuration,
         description: lastTimeEntry.description,
+        autoStopEnabled: lastTimeEntry.autoStopEnabled,
       },
       {
         onSuccess: () => {

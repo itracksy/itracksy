@@ -44,6 +44,7 @@ export const timeEntries = sqliteTable("time_entries", {
   targetDuration: integer("target_duration"), // Duration in minutes
   description: text("description"),
   isFocusMode: integer("is_focus_mode", { mode: "boolean" }), // we have focus / break mode
+  autoStopEnabled: integer("auto_stop_enabled", { mode: "boolean" }).default(true),
   boardId: text("board_id").references(() => boards.id),
   itemId: text("item_id").references(() => items.id),
   userId: text("user_id").notNull(),

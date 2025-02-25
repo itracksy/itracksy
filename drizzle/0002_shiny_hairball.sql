@@ -1,0 +1,1 @@
+ALTER TABLE `time_entries` ADD `auto_stop_enabled` integer DEFAULT true;

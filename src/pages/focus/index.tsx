@@ -1,20 +1,20 @@
 import { useState, useEffect } from "react";
-import {
-  useActiveTimeEntry,
-  useUpdateTimeEntryMutation,
-  useCreateTimeEntryMutation,
-} from "@/hooks/useTimeEntryQueries";
-
+import { useActiveTimeEntry, useCreateTimeEntryMutation } from "@/hooks/useTimeEntryQueries";
 import { useToast } from "@/hooks/use-toast";
 
 import { useAtom } from "jotai";
-import { breakDurationAtom, selectedBoardIdAtom, targetMinutesAtom } from "@/context/board";
-import { useNavigate } from "@tanstack/react-router";
+import {
+  autoStopEnabledsAtom,
+  breakDurationAtom,
+  selectedBoardIdAtom,
+  targetMinutesAtom,
+} from "@/context/board";
 
 import { BoardSelector } from "@/components/tracking/BoardSelector";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Brain, Coffee, Cloud } from "lucide-react";
+import { Brain, Coffee } from "lucide-react";
 import { ActiveSession } from "./components/ActiveSession";
 
 export default function FocusPage() {
@@ -25,10 +25,10 @@ export default function FocusPage() {
   const [breakMinutes, setBreakMinutes] = useAtom(breakDurationAtom);
   const [duration, setDuration] = useState<string>(`${targetMinutes}:00`);
   const [activeTab, setActiveTab] = useState<"focus" | "break">("focus");
-
+  const [autoStopEnabled, setAutoStopEnabled] = useAtom(autoStopEnabledsAtom);
   const { data: activeTimeEntry, isLoading } = useActiveTimeEntry();
-
   const createTimeEntry = useCreateTimeEntryMutation();
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -59,6 +59,7 @@ export default function FocusPage() {
         itemId,
         targetDuration: minutes,
         isFocusMode: activeTab === "focus",
+        autoStopEnabled,
       });
 
       const mode = activeTab === "focus" ? "Focus" : "Break";
@@ -96,11 +97,6 @@ export default function FocusPage() {
 
       return { boardId: undefined, itemId: undefined, description: "Break Time" };
     }
-  };
-
-  const formatTimeRange = () => {
-    if (!activeTimeEntry) return "";
-    return `${new Date(activeTimeEntry.startTime).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })} → ${new Date(activeTimeEntry.endTime ?? "").toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })}`;
   };
 
   return (
@@ -199,17 +195,23 @@ export default function FocusPage() {
               </TabsContent>
             </Tabs>
 
-            {/* Time Range */}
-            <div className="text-center font-mono text-sm text-gray-500">{formatTimeRange()}</div>
-
             {/* Start Button */}
-            <button
-              onClick={handleStartSession}
-              disabled={!!activeTimeEntry}
-              className="w-full rounded-lg bg-red-400 py-3 font-medium text-white shadow-sm transition hover:bg-red-500 disabled:opacity-50"
-            >
-              START {activeTab === "focus" ? "FOCUS" : "BREAK"}
-            </button>
+            <div className="space-y-2">
+              <button
+                onClick={handleStartSession}
+                disabled={!!activeTimeEntry}
+                className="w-full rounded-lg bg-red-400 py-3 font-medium text-white shadow-sm transition hover:bg-red-500 disabled:opacity-50"
+              >
+                START {activeTab === "focus" ? "FOCUS" : "BREAK"}
+              </button>
+              {/* Auto Stop Setting */}
+              <div className="flex items-center justify-end space-x-2">
+                <div>
+                  <p className="text-xs text-gray-500">Stop timer when duration is reached</p>
+                </div>
+                <Switch checked={autoStopEnabled} onCheckedChange={setAutoStopEnabled} />
+              </div>
+            </div>
           </>
         )}
       </div>
