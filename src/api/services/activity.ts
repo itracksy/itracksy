@@ -10,12 +10,13 @@ import {
   getUserBlockedDomains,
   getUserSettings,
 } from "../../api/db/repositories/userSettings";
-import { getActiveTimeEntry, updateTimeEntry } from "./timeEntry";
-import { sendNotification, sendNotificationWhenNoActiveEntry } from "./notification";
+import { createTimeEntry, getActiveTimeEntry, updateTimeEntry } from "./timeEntry";
+import { sendNotificationService, sendNotificationWhenNoActiveEntry } from "./notification";
+import { createNotification } from "../db/repositories/notifications";
 
 let trackingIntervalId: NodeJS.Timeout | null = null;
 let notificationWindow: BrowserWindow | null = null;
-let breakTimer: NodeJS.Timeout | null = null;
+
 let lastNotificationTime: number = 0;
 let isNotificationEnabled: boolean = true;
 let isAccessibilityError: boolean = false;
@@ -46,7 +47,7 @@ export const startTracking = async (): Promise<void> => {
         (activeEntry.targetDuration ?? 0) * 60;
 
       if (timeExceeded > 0) {
-        await sendNotification(activeEntry, timeExceeded);
+        await sendNotificationService(activeEntry, timeExceeded);
         if (activeEntry.autoStopEnabled) {
           //stop the session when time is exceeded
           await updateTimeEntry(activeEntry.id, { endTime: Date.now() });
@@ -122,10 +123,12 @@ export const startTracking = async (): Promise<void> => {
           isNotificationEnabled &&
           Date.now() - lastNotificationTime >= NOTIFICATION_COOLDOWN
         ) {
-          showNotificationWarningBlock(
-            transformedActivities.title,
-            transformedActivities.ownerPath || ""
-          );
+          showNotificationWarningBlock({
+            title: transformedActivities.title,
+            detail: transformedActivities.ownerPath || "",
+            userId,
+            timeEntryId: activeEntry.id,
+          });
         }
       }
     } catch (error) {
@@ -196,25 +199,31 @@ function createNotificationWarningBlockWindow() {
   notificationWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   notificationWindow.moveTop();
 
-  // Make window draggable from any point
-  notificationWindow.webContents.on("did-finish-load", () => {
-    notificationWindow?.webContents.insertCSS(`
-      body {
-        -webkit-app-region: drag;
-      }
-      button, input, a {
-        -webkit-app-region: no-drag;
-      }
-    `);
-  });
-
   // Set window bounds to cover current display
   notificationWindow.setBounds(currentDisplay.bounds);
 
   return notificationWindow;
 }
 
-function showNotificationWarningBlock(title: string, detail: string) {
+function showNotificationWarningBlock({
+  title,
+  detail,
+  userId,
+  timeEntryId,
+}: {
+  title: string;
+  detail: string;
+  userId: string;
+  timeEntryId: string;
+}) {
+  createNotification({
+    title,
+    body: detail,
+    type: "blocking_notification",
+    userId,
+    createdAt: Date.now(),
+    timeEntryId,
+  });
   if (!notificationWindow || notificationWindow.isDestroyed()) {
     notificationWindow = createNotificationWarningBlockWindow();
   }
@@ -232,36 +241,46 @@ function showNotificationWarningBlock(title: string, detail: string) {
     title: "iTracksy - Activity Update",
     message: `iTracksy - ${title}`,
     detail: detail,
-    buttons: ["Yes", "No", "Break in 15 min"],
+    buttons: [
+      "You are on focus mode, come back to it!",
+      "This is part of my work",
+      "I'm in my break. Let me take a 15 minute break.",
+    ],
     cancelId: 1, // 'No' button is the cancel button
     defaultId: 0, // 'Yes' button is the default
     noLink: true,
   };
 
-  dialog.showMessageBox(notificationWindow, options).then((value) => {
+  dialog.showMessageBox(notificationWindow, options).then(async (value) => {
     switch (value.response) {
-      case 0: // Yes
+      case 0: // You are on focus mode, come back to it!
         // Continue showing notifications after cooldown
         isNotificationEnabled = true;
         break;
-      case 1: // No
-        // Disable notifications
+      case 1: // This is part of my work
+        // Disable notifications in this session focus
         isNotificationEnabled = false;
         break;
       case 2: // Break in 15 min
-        // Clear any existing break timer
-        if (breakTimer) {
-          clearTimeout(breakTimer);
+        const userId = await getCurrentUserIdLocalStorage();
+        if (!userId) {
+          return;
         }
-
-        // Set a new break timer
-        breakTimer = setTimeout(() => {
-          showNotificationWarningBlock(
-            "Time for a Break",
-            "It's been 15 minutes since you requested a break. Would you like to take it now?"
-          );
-          breakTimer = null;
-        }, LIMIT_TIME_APART); // 15 minutes in milliseconds
+        // get the current time entry and stop it
+        const timeEntry = await getActiveTimeEntry(userId);
+        if (!timeEntry) {
+          return;
+        }
+        await updateTimeEntry(timeEntry.id, { endTime: Date.now() });
+        // start a new time entry in break mode
+        await createTimeEntry(
+          {
+            isFocusMode: false,
+            startTime: Date.now(),
+            targetDuration: 15,
+          },
+          userId
+        );
         break;
     }
 

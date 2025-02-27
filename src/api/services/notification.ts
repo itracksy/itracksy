@@ -9,7 +9,7 @@ import { nanoid } from "nanoid";
 import db from "../db";
 import { getLastNotification } from "../db/repositories/notifications";
 
-export const sendSystemNotification = async (
+export const sendNotification = async (
   options: Omit<NotificationInsert, "id">,
   timeoutMs?: number
 ) => {
@@ -28,13 +28,8 @@ export const sendSystemNotification = async (
 
     // Store notification in database
     await db.insert(notifications).values({
+      ...options,
       id: nanoid(),
-      title: options.title,
-      body: options.body,
-      type: "system",
-      userId: options.userId,
-      timeEntryId: options.timeEntryId,
-      createdAt: Date.now(),
     });
 
     // Handle notification click
@@ -107,7 +102,7 @@ export const sendNotificationWhenNoActiveEntry = async (userId: string) => {
   const message = messages[Math.floor(Math.random() * messages.length)];
 
   if (message) {
-    await sendSystemNotification({
+    await sendNotification({
       title: "Time for a New Focus Session!",
       body: `${message}\n\nLast session: ${sessionMinutesDuration} minutes focused on "${taskTitle}" 🎯`,
       userId: userId,
@@ -118,7 +113,7 @@ export const sendNotificationWhenNoActiveEntry = async (userId: string) => {
   }
 };
 
-export const sendNotification = async (
+export const sendNotificationService = async (
   timeEntry: TimeEntryWithRelations,
   secondsExceeded: number
 ): Promise<void> => {
@@ -136,7 +131,7 @@ export const sendNotification = async (
     });
 
     try {
-      sendSystemNotification({
+      sendNotification({
         title,
         body,
         userId: timeEntry.userId,
