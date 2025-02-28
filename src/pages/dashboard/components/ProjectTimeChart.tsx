@@ -36,6 +36,29 @@ const COLORS = [
   "#8338EC", // Violet
 ];
 
+// Define types for chart data
+type TaskChartItem = {
+  name: string;
+  value: number;
+  displayDuration: string;
+  projectName: string;
+  isTask: boolean;
+};
+
+type ProjectChartItem = {
+  name: string;
+  value: number;
+  displayDuration: string;
+  tasks: { name: string; duration: string; }[];
+};
+
+type ChartDataItem = TaskChartItem | ProjectChartItem;
+
+// Type guard function to check if an item is a ProjectChartItem
+function isProjectChartItem(item: ChartDataItem): item is ProjectChartItem {
+  return 'tasks' in item;
+}
+
 interface ProjectTimeChartProps {
   timeRange: TimeRange;
 }
@@ -53,10 +76,23 @@ export default function ProjectTimeChart({ timeRange }: ProjectTimeChartProps) {
     },
   });
 
-  const chartData = useMemo(() => {
+  const chartData = useMemo<ChartDataItem[]>(() => {
     if (!report) return [];
 
-    return report.projects.map((project) => ({
+    // If there's only one project, show tasks with different colors
+    if (report.projects.length === 1) {
+      const project = report.projects[0];
+      return project.tasks.map((task): TaskChartItem => ({
+        name: task.title,
+        value: task.duration,
+        displayDuration: formatDuration(task.duration),
+        projectName: project.name,
+        isTask: true,
+      }));
+    }
+
+    // Normal case - multiple projects
+    return report.projects.map((project): ProjectChartItem => ({
       name: project.name,
       value: project.totalDuration,
       displayDuration: formatDuration(project.totalDuration),
@@ -131,14 +167,16 @@ export default function ProjectTimeChart({ timeRange }: ProjectTimeChartProps) {
                             <p className="font-medium">{data.name}</p>
                           </div>
                           <p className="text-sm text-muted-foreground">{data.displayDuration}</p>
-                          <div className="mt-2">
-                            <p className="text-xs font-medium">Tasks:</p>
-                            {data.tasks.map((task: any) => (
-                              <p key={task.name} className="text-xs text-muted-foreground">
-                                {task.name}: {task.duration}
-                              </p>
-                            ))}
-                          </div>
+                          {isProjectChartItem(data) && (
+                            <div className="mt-2">
+                              <p className="text-xs font-medium">Tasks:</p>
+                              {data.tasks.map((task) => (
+                                <p key={task.name} className="text-xs text-muted-foreground">
+                                  {task.name}: {task.duration}
+                                </p>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       );
                     }}
@@ -162,7 +200,7 @@ export default function ProjectTimeChart({ timeRange }: ProjectTimeChartProps) {
                       </span>
                     </div>
                     <div className="ml-5 mt-1">
-                      {project.tasks.map((task) => (
+                      {isProjectChartItem(project) && project.tasks.map((task) => (
                         <div
                           key={task.name}
                           className="flex justify-between text-sm text-muted-foreground"
