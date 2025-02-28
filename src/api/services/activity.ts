@@ -2,7 +2,7 @@ import { ActivityRecord } from "@/types/activity";
 import { BrowserWindow, dialog, screen } from "electron";
 import { upsertActivity } from "../db/repositories/activities";
 import { LIMIT_TIME_APART, TRACKING_INTERVAL } from "../../config/tracking";
-import { extractUrlFromBrowserTitle } from "../../helpers/extractUrlFromBrowserTitle";
+import { extractDomain, urlContainsDomain } from "../../utils/url";
 import { logger } from "../../helpers/logger";
 import {
   getCurrentUserIdLocalStorage,
@@ -94,7 +94,7 @@ export const startTracking = async (): Promise<void> => {
           (result.owner.name === "Google Chrome" ||
             result.owner.name === "Mozilla Firefox" ||
             result.owner.name === "Microsoft Edge")
-            ? extractUrlFromBrowserTitle(result.title, result.owner.name)
+            ? extractDomain(result.title)
             : //@ts-ignore
               result.url,
         userId,
@@ -107,23 +107,26 @@ export const startTracking = async (): Promise<void> => {
       await upsertActivity(transformedActivities);
       if (activitySettings.isBlockingOnFocusMode) {
         const url = transformedActivities.url?.toLowerCase();
+        const extractedDomain = url ? extractDomain(url) : null;
 
         const appName = transformedActivities.ownerName.toLowerCase();
         const isBlockedApp =
           appName && blockedApps.some((app) => appName.includes(app.appName.toLowerCase()));
         const isBlockedDomain =
-          url &&
-          url.trim().length > 0 &&
+          extractedDomain &&
           blockedDomains.some(({ domain }) =>
-            result.platform === "windows" ? domain.includes(url) : url.includes(domain)
+            result.platform === "windows" 
+              ? domain.includes(extractedDomain) 
+              : urlContainsDomain(url, domain)
           );
+        console.log("activeEntry.whiteListedActivities", activeEntry.whiteListedActivities);
         // Show notification in full-screen window
         if (
           (isBlockedDomain || isBlockedApp) &&
           (!activeEntry.whiteListedActivities ||
             !activeEntry.whiteListedActivities
               .split(",")
-              .includes(isBlockedDomain ? url : appName)) &&
+              .includes(isBlockedDomain ? extractedDomain : appName)) &&
           Date.now() - lastNotificationTime >= NOTIFICATION_COOLDOWN
         ) {
           showNotificationWarningBlock({
@@ -131,7 +134,7 @@ export const startTracking = async (): Promise<void> => {
             detail: transformedActivities.ownerPath || "",
             userId,
             timeEntryId: activeEntry.id,
-            appOrDomain: isBlockedDomain ? url : appName,
+            appOrDomain: isBlockedDomain ? extractedDomain : appName,
           });
         }
       }

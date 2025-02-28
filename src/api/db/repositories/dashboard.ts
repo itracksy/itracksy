@@ -48,7 +48,6 @@ export const getFocusedTimeByHour = async (
     .groupBy(hourExpr)
     .orderBy(hourCast);
 
-  console.log("hourSummaries", hourSummaries);
   // Then get detailed activities for each hour
   const detailedActivities = await db
     .select({
@@ -68,7 +67,7 @@ export const getFocusedTimeByHour = async (
     )
     .orderBy(desc(activities.duration))
     .limit(15);
-  console.log("detailedActivities", detailedActivities);
+
   // Combine the summaries with detailed activities
   return hourSummaries.map((summary) => {
     const hourActivities = detailedActivities
@@ -95,15 +94,16 @@ export const reportProjectByDay = async (startDate: number, endDate: number, use
   endDateTime.setHours(23, 59, 59, 999);
 
   // Update entries with null duration
+  const currentTimeMs = Date.now();
   await db
     .update(timeEntries)
     .set({
       duration: sql`CAST(
-        (CAST(${timeEntries.endTime} AS INTEGER) - CAST(${timeEntries.startTime} AS INTEGER)) / 1000
+        (${Math.floor(currentTimeMs / 1000)} - CAST(${timeEntries.startTime} / 1000 AS INTEGER))
         AS INTEGER
       )`,
     })
-    .where(and(isNull(timeEntries.duration), isNotNull(timeEntries.startTime)));
+    .where(and(isNull(timeEntries.endTime), isNotNull(timeEntries.startTime)));
 
   // Get entries grouped by board and item
   const entries = await db
