@@ -41,6 +41,9 @@ export function useDeleteItemMutation() {
 
   return useMutation({
     mutationFn: trpcClient.board.deleteItem.mutate,
+    onSettled: (data, error, itemId) => {
+      queryClient.invalidateQueries({ queryKey: ["board"] });
+    },
   });
 }
 
@@ -49,6 +52,9 @@ export function useDeleteColumnMutation() {
 
   return useMutation({
     mutationFn: trpcClient.board.deleteColumn.mutate,
+    onSettled: (data, error) => {
+      queryClient.invalidateQueries({ queryKey: ["board"] });
+    },
   });
 }
 

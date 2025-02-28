@@ -13,14 +13,17 @@ import {
 import { createTimeEntry, getActiveTimeEntry, updateTimeEntry } from "./timeEntry";
 import { sendNotificationService, sendNotificationWhenNoActiveEntry } from "./notification";
 import { createNotification } from "../db/repositories/notifications";
+import db from "../db";
+import { timeEntries } from "../db/schema";
+import { eq, sql } from "drizzle-orm";
 
 let trackingIntervalId: NodeJS.Timeout | null = null;
 let notificationWindow: BrowserWindow | null = null;
 
 let lastNotificationTime: number = 0;
-let isNotificationEnabled: boolean = true;
+
 let isAccessibilityError: boolean = false;
-const NOTIFICATION_COOLDOWN = 60 * 1000; // 1 minute in milliseconds
+const NOTIFICATION_COOLDOWN = 10 * 1000; // 10 seconds in milliseconds
 
 export const startTracking = async (): Promise<void> => {
   // Clear any existing interval
@@ -103,24 +106,24 @@ export const startTracking = async (): Promise<void> => {
 
       await upsertActivity(transformedActivities);
       if (activitySettings.isBlockingOnFocusMode) {
-        const url = transformedActivities.url;
-        console.log("[startTracking] url", url);
-        const appName = transformedActivities.ownerName;
+        const url = transformedActivities.url?.toLowerCase();
+
+        const appName = transformedActivities.ownerName.toLowerCase();
         const isBlockedApp =
-          appName &&
-          blockedApps.some((app) => appName.toLowerCase().includes(app.appName.toLowerCase()));
+          appName && blockedApps.some((app) => appName.includes(app.appName.toLowerCase()));
         const isBlockedDomain =
           url &&
           url.trim().length > 0 &&
           blockedDomains.some(({ domain }) =>
-            result.platform === "windows"
-              ? domain.includes(url.toLowerCase())
-              : url.includes(domain)
+            result.platform === "windows" ? domain.includes(url) : url.includes(domain)
           );
         // Show notification in full-screen window
         if (
           (isBlockedDomain || isBlockedApp) &&
-          isNotificationEnabled &&
+          (!activeEntry.whiteListedActivities ||
+            !activeEntry.whiteListedActivities
+              .split(",")
+              .includes(isBlockedDomain ? url : appName)) &&
           Date.now() - lastNotificationTime >= NOTIFICATION_COOLDOWN
         ) {
           showNotificationWarningBlock({
@@ -128,6 +131,7 @@ export const startTracking = async (): Promise<void> => {
             detail: transformedActivities.ownerPath || "",
             userId,
             timeEntryId: activeEntry.id,
+            appOrDomain: isBlockedDomain ? url : appName,
           });
         }
       }
@@ -210,11 +214,13 @@ function showNotificationWarningBlock({
   detail,
   userId,
   timeEntryId,
+  appOrDomain,
 }: {
   title: string;
   detail: string;
   userId: string;
   timeEntryId: string;
+  appOrDomain: string;
 }) {
   createNotification({
     title,
@@ -238,28 +244,36 @@ function showNotificationWarningBlock({
 
   const options = {
     type: "question" as const,
-    title: "iTracksy - Activity Update",
-    message: `iTracksy - ${title}`,
-    detail: detail,
+    title: "iTracksy - Work Activity Alert",
+    message: `Activity Detection: ${title}`,
+    detail: `${detail}\n\nPlease choose how you want to proceed with your current activity. Your choice helps us better track your work patterns and productivity.\n\nNote: Your response affects how iTracksy monitors your future activities.`,
     buttons: [
-      "You are on focus mode, come back to it!",
-      "This is part of my work",
-      "I'm in my break. Let me take a 15 minute break.",
+      "✓ Continue Working - This activity is work-related",
+      "⚠️ Return to Focus - Switch back to your primary task",
+      "🕒 Take a Break - Pause tracking for 15 minutes",
     ],
-    cancelId: 1, // 'No' button is the cancel button
-    defaultId: 0, // 'Yes' button is the default
+    cancelId: 1,
+    defaultId: 0,
     noLink: true,
   };
 
   dialog.showMessageBox(notificationWindow, options).then(async (value) => {
     switch (value.response) {
-      case 0: // You are on focus mode, come back to it!
-        // Continue showing notifications after cooldown
-        isNotificationEnabled = true;
+      case 0: // This is part of my work
+        // Update whitelisted activities by appending new app/domain
+        await db
+          .update(timeEntries)
+          .set({
+            whiteListedActivities: sql`CASE 
+              WHEN white_listed_activities IS NULL OR white_listed_activities = '' THEN ${appOrDomain}
+              ELSE white_listed_activities || ',' || ${appOrDomain}
+            END`,
+          })
+          .where(eq(timeEntries.id, timeEntryId));
         break;
-      case 1: // This is part of my work
-        // Disable notifications in this session focus
-        isNotificationEnabled = false;
+      case 1: // You are on focus mode, come back to it!
+        // Continue showing notifications after cooldown
+
         break;
       case 2: // Break in 15 min
         const userId = await getCurrentUserIdLocalStorage();
@@ -278,6 +292,7 @@ function showNotificationWarningBlock({
             isFocusMode: false,
             startTime: Date.now(),
             targetDuration: 15,
+            description: "Break Time",
           },
           userId
         );

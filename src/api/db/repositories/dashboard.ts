@@ -10,7 +10,7 @@ export const getFocusedTimeByHour = async (
 ): Promise<
   {
     hour: number;
-    totalFocusedTime: number;
+    totalSecondsFocusedTime: number;
     activities: {
       title: string;
       ownerName: string;
@@ -48,6 +48,7 @@ export const getFocusedTimeByHour = async (
     .groupBy(hourExpr)
     .orderBy(hourCast);
 
+  console.log("hourSummaries", hourSummaries);
   // Then get detailed activities for each hour
   const detailedActivities = await db
     .select({
@@ -67,7 +68,7 @@ export const getFocusedTimeByHour = async (
     )
     .orderBy(desc(activities.duration))
     .limit(15);
-
+  console.log("detailedActivities", detailedActivities);
   // Combine the summaries with detailed activities
   return hourSummaries.map((summary) => {
     const hourActivities = detailedActivities
@@ -80,7 +81,7 @@ export const getFocusedTimeByHour = async (
 
     return {
       hour: summary.hour,
-      totalFocusedTime: summary.totalFocusedTime ?? 0,
+      totalSecondsFocusedTime: summary.totalFocusedTime ?? 0,
       activities: hourActivities,
     };
   });

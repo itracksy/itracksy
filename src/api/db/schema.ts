@@ -50,6 +50,7 @@ export const timeEntries = sqliteTable("time_entries", {
   userId: text("user_id").notNull(),
   invoiceId: text("invoice_id"),
   createdAt: integer("created_at"),
+  whiteListedActivities: text("white_listed_activities"),
   notificationSentAt: integer("notification_sent_at"),
 });
 

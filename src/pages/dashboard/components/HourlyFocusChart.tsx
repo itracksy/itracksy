@@ -21,6 +21,7 @@ export default function HourlyFocusChart({ timeRange }: HourlyFocusChartProps) {
         startDate: timeRange.start.getTime(),
         endDate: timeRange.end.getTime(),
       });
+
       return data;
     },
     refetchInterval: 10000,
@@ -39,7 +40,7 @@ export default function HourlyFocusChart({ timeRange }: HourlyFocusChartProps) {
   const formattedData =
     hourlyData?.map((item) => ({
       hour: `${item.hour}:00`,
-      focusedTime: Math.round(item.totalFocusedTime / (1000 * 60)), // Convert to minutes
+      focusedTime: Math.round(item.totalSecondsFocusedTime / 60), // Convert to minutes
       activities: item.activities,
     })) ?? [];
 
@@ -132,7 +133,9 @@ export default function HourlyFocusChart({ timeRange }: HourlyFocusChartProps) {
                                             {activity.ownerName}
                                           </span>
                                           <span className="font-medium">
-                                            {Math.round(activity.duration / (1000 * 60))}m
+                                            {activity.duration < 60
+                                              ? `${activity.duration}s`
+                                              : `${Math.round(activity.duration / 60)}m`}
                                           </span>
                                         </div>
                                       </div>

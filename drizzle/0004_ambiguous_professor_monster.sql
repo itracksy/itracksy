@@ -1,0 +1,1 @@
+ALTER TABLE `time_entries` ADD `white_listed_activities` text;
