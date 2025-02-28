@@ -18,6 +18,7 @@ import { timeEntries } from "../db/schema";
 import { eq, sql } from "drizzle-orm";
 import { formatDuration } from "../../utils/formatTime";
 import { getTray } from "../../main";
+import { extractUrlFromBrowserTitle } from "../../helpers/extractUrlFromBrowserTitle";
 
 let trackingIntervalId: NodeJS.Timeout | null = null;
 let notificationWindow: BrowserWindow | null = null;
@@ -101,6 +102,7 @@ export const startTracking = async (): Promise<void> => {
 
       const transformedActivities: ActivityRecord = {
         platform: result.platform,
+        isFocusMode: activeEntry.isFocusMode,
         activityId: result.id,
         timeEntryId: activeEntry.id,
         title: result.title,
@@ -114,15 +116,11 @@ export const startTracking = async (): Promise<void> => {
           (result.owner.name === "Google Chrome" ||
             result.owner.name === "Mozilla Firefox" ||
             result.owner.name === "Microsoft Edge")
-            ? extractDomain(result.title)
+            ? extractUrlFromBrowserTitle(result.title, result.owner.name)
             : //@ts-ignore
               result.url,
         userId,
       };
-      if (!activeEntry.isFocusMode) {
-        // it is break entry time, need to handle blockingOnBreakMode
-        return;
-      }
 
       await upsertActivity(transformedActivities);
       if (activitySettings.isBlockingOnFocusMode) {
@@ -287,7 +285,7 @@ function showNotificationWarningBlock({
         await db
           .update(timeEntries)
           .set({
-            whiteListedActivities: sql`CASE 
+            whiteListedActivities: sql`CASE
               WHEN white_listed_activities IS NULL OR white_listed_activities = '' THEN ${appOrDomain}
               ELSE white_listed_activities || ',' || ${appOrDomain}
             END`,

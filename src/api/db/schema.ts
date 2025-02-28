@@ -69,10 +69,12 @@ export const activities = sqliteTable(
     duration: integer().notNull(), // seconds
     timeEntryId: text("timeEntryId"),
     userId: text("user_id").notNull(),
+    isFocusMode: integer("is_focus_mode", { mode: "boolean" }),
   },
   (table) => [
     primaryKey({ columns: [table.timestamp] }),
     index("userId_idx").on(table.userId),
+    index("isFocusMode_idx").on(table.isFocusMode),
     index("timeEntryId_idx").on(table.timeEntryId),
     index("activity_match_idx").on(
       table.title,

@@ -70,6 +70,7 @@ export const upsertActivity = async (activity: ActivityRecord): Promise<void> =>
   }
   await db.insert(activities).values({
     timestamp: activity.timestamp,
+    isFocusMode: activity.isFocusMode,
     activityId: activity.activityId,
     platform: activity.platform,
     title: activity.title,

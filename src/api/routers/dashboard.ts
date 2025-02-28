@@ -23,7 +23,7 @@ export const dashboardRouter = t.router({
       })
     )
     .query(async ({ input, ctx }) => {
-      const focusedTime = await getFocusedTimeByHour(input.startDate, input.endDate, ctx.userId);
-      return focusedTime;
+      const activityData = await getFocusedTimeByHour(input.startDate, input.endDate, ctx.userId);
+      return activityData;
     }),
 });

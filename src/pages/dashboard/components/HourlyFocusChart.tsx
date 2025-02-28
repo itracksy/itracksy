@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { trpcClient } from "@/utils/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { TimeRange } from "./TimeRangeSelector";
 import { Button } from "@/components/ui/button";
 import { PlayCircle } from "lucide-react";
@@ -30,10 +30,12 @@ export default function HourlyFocusChart({ timeRange }: HourlyFocusChartProps) {
   type FormatedData = {
     hour: string;
     focusedTime: number;
+    breakTime: number;
     activities: {
       title: string;
       duration: number;
       ownerName: string;
+      isFocusMode: boolean;
     }[];
   };
 
@@ -41,10 +43,11 @@ export default function HourlyFocusChart({ timeRange }: HourlyFocusChartProps) {
     hourlyData?.map((item) => ({
       hour: `${item.hour}:00`,
       focusedTime: Math.round(item.totalSecondsFocusedTime / 60), // Convert to minutes
+      breakTime: Math.round(item.totalSecondsBreakTime / 60), // Convert to minutes
       activities: item.activities,
     })) ?? [];
 
-  const hasData = formattedData && formattedData.some((item) => item.focusedTime > 0);
+  const hasData = formattedData && formattedData.some((item) => item.focusedTime > 0 || item.breakTime > 0);
 
   return (
     <>
@@ -52,7 +55,7 @@ export default function HourlyFocusChart({ timeRange }: HourlyFocusChartProps) {
 
       <Card className="col-span-3">
         <CardHeader>
-          <CardTitle>Hourly Focus Time</CardTitle>
+          <CardTitle>Hourly Activity Breakdown</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -65,7 +68,7 @@ export default function HourlyFocusChart({ timeRange }: HourlyFocusChartProps) {
           ) : !hasData ? (
             <div className="flex h-[300px] flex-col items-center justify-center gap-4">
               <div className="text-center">
-                <h3 className="text-lg font-semibold">No Focus Time Recorded</h3>
+                <h3 className="text-lg font-semibold">No Activity Recorded</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Ready to boost your productivity? Start tracking your work time!
                 </p>
@@ -111,10 +114,16 @@ export default function HourlyFocusChart({ timeRange }: HourlyFocusChartProps) {
                                   <span className="font-bold">{data.hour}</span>
                                 </div>
                                 <div className="flex flex-col items-end">
-                                  <span className="text-[0.70rem] uppercase text-muted-foreground">
-                                    Total Focus
-                                  </span>
-                                  <span className="font-bold">{data.focusedTime}m</span>
+                                  <div className="flex gap-2">
+                                    <div className="flex items-center">
+                                      <div className="mr-1 h-3 w-3 rounded-full bg-primary"></div>
+                                      <span className="font-bold">{data.focusedTime}m</span>
+                                    </div>
+                                    <div className="flex items-center">
+                                      <div className="mr-1 h-3 w-3 rounded-full bg-secondary"></div>
+                                      <span className="font-bold">{data.breakTime}m</span>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                               {data.activities && data.activities.length > 0 && (
@@ -132,11 +141,14 @@ export default function HourlyFocusChart({ timeRange }: HourlyFocusChartProps) {
                                           <span className="max-w-[180px] truncate">
                                             {activity.ownerName}
                                           </span>
-                                          <span className="font-medium">
-                                            {activity.duration < 60
-                                              ? `${activity.duration}s`
-                                              : `${Math.round(activity.duration / 60)}m`}
-                                          </span>
+                                          <div className="flex items-center">
+                                            <div className={`mr-1 h-2 w-2 rounded-full ${activity.isFocusMode ? 'bg-primary' : 'bg-secondary'}`}></div>
+                                            <span className="font-medium">
+                                              {activity.duration < 60
+                                                ? `${activity.duration}s`
+                                                : `${Math.round(activity.duration / 60)}m`}
+                                            </span>
+                                          </div>
                                         </div>
                                       </div>
                                     ))}
@@ -150,11 +162,20 @@ export default function HourlyFocusChart({ timeRange }: HourlyFocusChartProps) {
                       return null;
                     }}
                   />
+                  <Legend />
                   <Bar
                     dataKey="focusedTime"
+                    name="Focus Time"
                     fill="currentColor"
                     radius={[4, 4, 0, 0]}
                     className="fill-primary"
+                  />
+                  <Bar
+                    dataKey="breakTime"
+                    name="Break Time"
+                    fill="currentColor"
+                    radius={[4, 4, 0, 0]}
+                    className="fill-secondary"
                   />
                 </BarChart>
               </ResponsiveContainer>

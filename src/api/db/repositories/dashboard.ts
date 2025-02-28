@@ -11,10 +11,12 @@ export const getFocusedTimeByHour = async (
   {
     hour: number;
     totalSecondsFocusedTime: number;
+    totalSecondsBreakTime: number;
     activities: {
       title: string;
       ownerName: string;
       duration: number;
+      isFocusMode: boolean;
     }[];
   }[]
 > => {
@@ -31,8 +33,8 @@ export const getFocusedTimeByHour = async (
   const hourExpr = sql`strftime('%H', datetime(${activities.timestamp} / 1000 + ${-timezoneOffset * 60}, 'unixepoch'))`;
   const hourCast = sql<number>`cast(${hourExpr} as integer)`;
 
-  // First get hourly summaries
-  const hourSummaries = await db
+  // First get hourly summaries for focus mode
+  const focusHourSummaries = await db
     .select({
       hour: hourCast,
       totalFocusedTime: sql<number>`sum(${activities.duration})`,
@@ -42,7 +44,26 @@ export const getFocusedTimeByHour = async (
       and(
         gte(activities.timestamp, startOfDay.getTime()),
         lte(activities.timestamp, endOfDay.getTime()),
-        eq(activities.userId, userId)
+        eq(activities.userId, userId),
+        eq(activities.isFocusMode, true)
+      )
+    )
+    .groupBy(hourExpr)
+    .orderBy(hourCast);
+
+  // Get hourly summaries for break mode
+  const breakHourSummaries = await db
+    .select({
+      hour: hourCast,
+      totalBreakTime: sql<number>`sum(${activities.duration})`,
+    })
+    .from(activities)
+    .where(
+      and(
+        gte(activities.timestamp, startOfDay.getTime()),
+        lte(activities.timestamp, endOfDay.getTime()),
+        eq(activities.userId, userId),
+        eq(activities.isFocusMode, false)
       )
     )
     .groupBy(hourExpr)
@@ -55,35 +76,47 @@ export const getFocusedTimeByHour = async (
       title: activities.title,
       ownerName: activities.ownerName,
       duration: activities.duration,
+      isFocusMode: activities.isFocusMode,
     })
     .from(activities)
     .where(
       and(
         gte(activities.timestamp, startOfDay.getTime()),
         lte(activities.timestamp, endOfDay.getTime()),
-
         eq(activities.userId, userId)
       )
     )
     .orderBy(desc(activities.duration))
     .limit(15);
 
+  // Get all unique hours from both focus and break summaries
+  const allHours = new Set([
+    ...focusHourSummaries.map(summary => summary.hour),
+    ...breakHourSummaries.map(summary => summary.hour)
+  ]);
+
+  // Create a map for quick lookup
+  const focusMap = new Map(focusHourSummaries.map(item => [item.hour, item.totalFocusedTime]));
+  const breakMap = new Map(breakHourSummaries.map(item => [item.hour, item.totalBreakTime]));
+
   // Combine the summaries with detailed activities
-  return hourSummaries.map((summary) => {
+  return Array.from(allHours).map((hour) => {
     const hourActivities = detailedActivities
-      .filter((activity) => activity.hour === summary.hour)
-      .map(({ title, ownerName, duration }) => ({
+      .filter((activity) => activity.hour === hour)
+      .map(({ title, ownerName, duration, isFocusMode }) => ({
         title,
         ownerName,
         duration,
+        isFocusMode: isFocusMode ?? true, // Default to focus mode if null
       }));
 
     return {
-      hour: summary.hour,
-      totalSecondsFocusedTime: summary.totalFocusedTime ?? 0,
+      hour,
+      totalSecondsFocusedTime: focusMap.get(hour) ?? 0,
+      totalSecondsBreakTime: breakMap.get(hour) ?? 0,
       activities: hourActivities,
     };
-  });
+  }).sort((a, b) => a.hour - b.hour);
 };
 
 export const reportProjectByDay = async (startDate: number, endDate: number, userId: string) => {
