@@ -9,8 +9,12 @@ export const boardQueries = {
 };
 
 export function useCreateColumnMutation() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: trpcClient.board.createColumn.mutate,
+    onSettled: (data, error, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["board", variables.boardId] });
+    },
   });
 }
 

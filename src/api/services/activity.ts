@@ -1,7 +1,7 @@
 import { ActivityRecord } from "@/types/activity";
 import { BrowserWindow, dialog, screen } from "electron";
 import { upsertActivity } from "../db/repositories/activities";
-import { LIMIT_TIME_APART, TRACKING_INTERVAL } from "../../config/tracking";
+import { TRACKING_INTERVAL } from "../../config/tracking";
 import { extractDomain, urlContainsDomain } from "../../utils/url";
 import { logger } from "../../helpers/logger";
 import {
@@ -16,6 +16,8 @@ import { createNotification } from "../db/repositories/notifications";
 import db from "../db";
 import { timeEntries } from "../db/schema";
 import { eq, sql } from "drizzle-orm";
+import { formatDuration } from "../../utils/formatTime";
+import { getTray } from "../../main";
 
 let trackingIntervalId: NodeJS.Timeout | null = null;
 let notificationWindow: BrowserWindow | null = null;
@@ -42,7 +44,25 @@ export const startTracking = async (): Promise<void> => {
       if (!activeEntry || activeEntry.endTime) {
         // No active entry, or entry has ended
         sendNotificationWhenNoActiveEntry(userId);
+        // Update tray title to default
+        const tray = getTray();
+        if (tray) {
+          tray.setTitle("iTracksy");
+        }
         return;
+      }
+
+      // Update tray title with duration and mode
+      const durationInSeconds = Math.floor((Date.now() - activeEntry.startTime) / 1000);
+      const formattedDuration = formatDuration(durationInSeconds);
+      // Use a simple character prefix for mode (F=Focus, B=Break)
+      const modePrefix = activeEntry.isFocusMode ? "F" : "B";
+
+      const tray = getTray();
+      if (tray) {
+        // Keep the title short to fit within macOS tray title character limit
+        // Format: F 12:34 or B 12:34
+        tray.setTitle(`${modePrefix} ${formattedDuration}`);
       }
 
       const timeExceeded =
@@ -115,11 +135,11 @@ export const startTracking = async (): Promise<void> => {
         const isBlockedDomain =
           extractedDomain &&
           blockedDomains.some(({ domain }) =>
-            result.platform === "windows" 
-              ? domain.includes(extractedDomain) 
+            result.platform === "windows"
+              ? domain.includes(extractedDomain)
               : urlContainsDomain(url, domain)
           );
-        console.log("activeEntry.whiteListedActivities", activeEntry.whiteListedActivities);
+
         // Show notification in full-screen window
         if (
           (isBlockedDomain || isBlockedApp) &&

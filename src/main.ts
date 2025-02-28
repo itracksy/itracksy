@@ -15,6 +15,14 @@ let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let isQuiting: boolean = false;
 
+/**
+ * Get the tray instance
+ * @returns The tray instance or null if not created yet
+ */
+export function getTray(): Tray | null {
+  return tray;
+}
+
 async function createTray() {
   // Request notification permission on macOS
   if (process.platform === "darwin") {
