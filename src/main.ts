@@ -32,12 +32,47 @@ async function createTray() {
     }
   }
 
-  const iconPath =
-    process.platform === "win32"
+  // Get the correct path to the resources directory
+  let iconPath: string;
+  const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+  
+  if (isDev) {
+    // In development mode, use the root project directory
+    const rootDir = path.resolve(path.join(__dirname, '..', '..'));
+    iconPath = process.platform === "win32" 
+      ? path.join(rootDir, "resources", "icon.ico") 
+      : path.join(rootDir, "resources", "icon.png");
+  } else {
+    // In production mode, use the original path
+    iconPath = process.platform === "win32"
       ? path.join(__dirname, "../resources/icon.ico")
       : path.join(__dirname, "../resources/icon.png");
+  }
+  
   logger.debug("Main: Icon path", iconPath);
+  
+  // Check if file exists
+  const fs = require('fs');
+  if (fs.existsSync(iconPath)) {
+    logger.debug("Main: Icon file exists at path", iconPath);
+  } else {
+    logger.error("Main: Icon file does not exist at path", iconPath);
+    logger.debug("Main: __dirname value:", __dirname);
+    logger.debug("Main: Resolved absolute path:", path.resolve(iconPath));
+    // List directory contents to debug
+    try {
+      const resourcesDir = path.dirname(iconPath);
+      logger.debug("Main: Checking resources directory:", resourcesDir);
+      const files = fs.readdirSync(resourcesDir);
+      logger.debug("Main: Resources directory contents:", files);
+    } catch (err) {
+      logger.error("Main: Error reading resources directory:", err);
+    }
+  }
+
   const icon = nativeImage.createFromPath(iconPath);
+  logger.debug("Main: Created nativeImage, isEmpty:", icon.isEmpty());
+  
   // Remove resize for Windows
   if (process.platform === "darwin") {
     icon.resize({ width: 18, height: 18 });
