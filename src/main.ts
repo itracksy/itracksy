@@ -34,25 +34,27 @@ async function createTray() {
 
   // Get the correct path to the resources directory
   let iconPath: string;
-  const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
-  
+  const isDev = process.env.NODE_ENV === "development" || !app.isPackaged;
+
   if (isDev) {
     // In development mode, use the root project directory
-    const rootDir = path.resolve(path.join(__dirname, '..', '..'));
-    iconPath = process.platform === "win32" 
-      ? path.join(rootDir, "resources", "icon.ico") 
-      : path.join(rootDir, "resources", "icon.png");
+    const rootDir = path.resolve(path.join(__dirname, "..", ".."));
+    iconPath =
+      process.platform === "win32"
+        ? path.join(rootDir, "resources", "icon.ico")
+        : path.join(rootDir, "resources", "icon_16x16.png");
   } else {
     // In production mode, use the original path
-    iconPath = process.platform === "win32"
-      ? path.join(__dirname, "../resources/icon.ico")
-      : path.join(__dirname, "../resources/icon.png");
+    iconPath =
+      process.platform === "win32"
+        ? path.join(__dirname, "../resources/icon.ico")
+        : path.join(__dirname, "../resources/icon_16x16.png");
   }
-  
+
   logger.debug("Main: Icon path", iconPath);
-  
+
   // Check if file exists
-  const fs = require('fs');
+  const fs = require("fs");
   if (fs.existsSync(iconPath)) {
     logger.debug("Main: Icon file exists at path", iconPath);
   } else {
@@ -72,10 +74,10 @@ async function createTray() {
 
   const icon = nativeImage.createFromPath(iconPath);
   logger.debug("Main: Created nativeImage, isEmpty:", icon.isEmpty());
-  
+
   // Remove resize for Windows
   if (process.platform === "darwin") {
-    icon.resize({ width: 18, height: 18 });
+    icon.resize({ width: 16, height: 16 });
     icon.setTemplateImage(true);
   }
 
@@ -102,7 +104,7 @@ async function createTray() {
   tray.setContextMenu(contextMenu);
   tray.setToolTip("iTracksy");
 
-  tray.setTitle("iTracksy");
+  tray.setTitle("");
 
   tray.on("click", () => {
     if (!mainWindow) {

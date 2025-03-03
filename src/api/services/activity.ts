@@ -48,7 +48,7 @@ export const startTracking = async (): Promise<void> => {
         // Update tray title to default
         const tray = getTray();
         if (tray) {
-          tray.setTitle("iTracksy");
+          tray.setTitle("");
         }
         return;
       }
