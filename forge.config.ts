@@ -38,7 +38,7 @@ const packagerConfig: ForgePackagerOptions = {
   // The name of the application
   name: "itracksy",
   // Path to the application icon
-  icon: "./resources/icon",
+  icon: process.platform === 'win32' ? "./resources/icon.ico" : "./resources/icon",
   // The bundle ID for the application
   appBundleId: "com.itracksy.app",
   // Define custom protocols for the application
@@ -236,7 +236,19 @@ const config: ForgeConfig = {
   // Rebuild configuration
   rebuildConfig: {},
   // Makers for different platforms
-  makers: [new MakerSquirrel({}), new MakerDMG({}), new MakerRpm({}), new MakerDeb({})],
+  makers: [
+    new MakerSquirrel({
+      name: 'itracksy',
+      setupIcon: path.resolve(__dirname, 'resources', 'icon.ico'),
+      iconUrl: 'https://raw.githubusercontent.com/hunght/itracksy/main/resources/icon.ico',
+      loadingGif: path.resolve(__dirname, 'resources', 'icon_64x64.png'),
+      setupExe: 'itracksy-Setup.exe',
+      noMsi: true
+    }), 
+    new MakerDMG({}), 
+    new MakerRpm({}), 
+    new MakerDeb({})
+  ],
   // Publishers for different platforms
   publishers: [
     new PublisherGithub({

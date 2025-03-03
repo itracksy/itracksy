@@ -22,18 +22,35 @@ async function generatePngIcons() {
 
 // Generate ICO file (Windows)
 async function generateIcoFile() {
-  const iconsForIco = await Promise.all(
-    sizes.map(async (size) => {
-      const buffer = await sharp(inputFile)
-        .resize(size, size)
-        .toBuffer();
-      return { input: buffer, size };
-    })
-  );
-
-  await sharp(inputFile)
-    .resize(256, 256)
-    .toFile(path.join(outputDir, 'icon.ico'));
+  try {
+    console.log('Creating Windows .ico file...');
+    const pngToIco = require('png-to-ico');
+    
+    // Use existing PNG files rather than generating new ones
+    const pngFiles = [];
+    for (const size of [16, 32, 48, 64, 128, 256]) {
+      const pngPath = path.join(outputDir, `icon_${size}x${size}.png`);
+      if (fs.existsSync(pngPath)) {
+        pngFiles.push(pngPath);
+        console.log(`Found existing PNG: ${pngPath}`);
+      }
+    }
+    
+    if (pngFiles.length === 0) {
+      throw new Error('No PNG files found for generating ICO');
+    }
+    
+    // Generate the ICO file with multiple resolutions
+    const buf = await pngToIco(pngFiles);
+    
+    // Save the ICO file
+    const icoPath = path.join(outputDir, 'icon.ico');
+    fs.writeFileSync(icoPath, buf);
+    console.log(`Successfully created .ico file at: ${icoPath}`);
+  } catch (error) {
+    console.error('Error creating .ico file:', error);
+    throw error;
+  }
 }
 
 // Generate ICNS file (macOS)
