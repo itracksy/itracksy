@@ -17,6 +17,8 @@ import { useConfirmationDialog } from "@/components/providers/ConfirmationDialog
 import { ItemDetailDialog } from "./ItemDetailDialog";
 import { trpcClient } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
+import { targetMinutesAtom } from "@/context/board";
+import { useAtomValue } from "jotai";
 
 interface CardProps {
   title: string;
@@ -31,6 +33,7 @@ interface CardProps {
 
 export const Card = forwardRef<HTMLLIElement, CardProps>(
   ({ title, content, id, columnId, boardId, order, nextOrder, previousOrder }, ref) => {
+    const targetMinutes = useAtomValue(targetMinutesAtom);
     const [acceptDrop, setAcceptDrop] = useState<"none" | "top" | "bottom">("none");
     const [totalDuration, setTotalDuration] = useState<string>("00:00:00");
     const [showDetailDialog, setShowDetailDialog] = useState(false);
@@ -83,6 +86,7 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
         boardId,
         startTime: Date.now(),
         isFocusMode: activitySettings?.isBlockingOnFocusMode,
+        targetDuration: targetMinutes,
       });
       trpcClient.user.updateActivitySettings.mutate({
         currentTaskId: id,
