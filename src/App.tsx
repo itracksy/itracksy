@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import { useTranslation } from "react-i18next";
+import { PostHogProvider } from "posthog-js/react";
 
 import "./localization/i18n";
 import { updateAppLanguage } from "./helpers/language_helpers";
@@ -9,8 +10,15 @@ import { RouterProvider } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "./hooks/useAuth";
+import { getConfig } from "./config/env";
 
 const queryClient = new QueryClient({});
+
+// PostHog configuration
+const posthogOptions = {
+  api_host: getConfig("posthogHost"),
+  capture_pageview: true,
+};
 
 function AuthenticatedApp() {
   const { i18n } = useTranslation();
@@ -53,6 +61,8 @@ function App() {
 const root = createRoot(document.getElementById("app")!);
 root.render(
   <React.StrictMode>
-    <App />
+    <PostHogProvider apiKey={getConfig("posthogKey")} options={posthogOptions}>
+      <App />
+    </PostHogProvider>
   </React.StrictMode>
 );

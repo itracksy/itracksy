@@ -4,6 +4,10 @@ interface ImportMetaEnv {
   VITE_AXIOM_TOKEN: string | undefined;
   VITE_AXIOM_ORG_ID: string | undefined;
   VITE_AXIOM_DATASET: string | undefined;
+
+  // PostHog variables
+  VITE_PUBLIC_POSTHOG_KEY: string | undefined;
+  VITE_PUBLIC_POSTHOG_HOST: string | undefined;
 }
 
 interface ImportMeta {
@@ -33,6 +37,18 @@ export const config = {
   axiomOrgId: validateEnvVar(import.meta.env.VITE_AXIOM_ORG_ID, "VITE_AXIOM_ORG_ID"),
   // @ts-ignore
   axiomDataset: validateEnvVar(import.meta.env.VITE_AXIOM_DATASET, "VITE_AXIOM_DATASET"),
+  // PostHog config
+
+  posthogKey: validateEnvVar(
+    // @ts-ignore
+    import.meta.env.VITE_PUBLIC_POSTHOG_KEY,
+    "VITE_PUBLIC_POSTHOG_KEY"
+  ),
+  posthogHost: validateEnvVar(
+    // @ts-ignore
+    import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+    "VITE_PUBLIC_POSTHOG_HOST"
+  ),
 } as const;
 
 // Type-safe config getter
