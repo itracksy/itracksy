@@ -44,11 +44,15 @@ async function createTray() {
         ? path.join(rootDir, "resources", "icon.ico")
         : path.join(rootDir, "resources", "icon_16x16.png");
   } else {
-    // In production mode, use the original path
-    iconPath =
-      process.platform === "win32"
-        ? path.join(__dirname, "../resources/icon.ico")
-        : path.join(__dirname, "../resources/icon_16x16.png");
+    // In production mode
+    if (process.platform === "darwin") {
+      // For macOS, use the Contents/Resources directory
+      iconPath = path.join(process.resourcesPath, "icon_16x16.png");
+      logger.debug("Main: Using macOS production path:", iconPath);
+    } else {
+      // For Windows and other platforms
+      iconPath = path.join(__dirname, "../resources/icon.ico");
+    }
   }
 
   logger.debug("Main: Icon path", iconPath);
@@ -61,6 +65,25 @@ async function createTray() {
     logger.error("Main: Icon file does not exist at path", iconPath);
     logger.debug("Main: __dirname value:", __dirname);
     logger.debug("Main: Resolved absolute path:", path.resolve(iconPath));
+
+    // Try alternative paths for macOS
+    if (process.platform === "darwin" && !isDev) {
+      const altPaths = [
+        path.join(process.resourcesPath, "resources", "icon_16x16.png"),
+        path.join(app.getAppPath(), "resources", "icon_16x16.png"),
+        path.join(__dirname, "../../resources/icon_16x16.png"),
+      ];
+
+      for (const altPath of altPaths) {
+        logger.debug("Main: Trying alternative path:", altPath);
+        if (fs.existsSync(altPath)) {
+          iconPath = altPath;
+          logger.debug("Main: Found icon at alternative path:", iconPath);
+          break;
+        }
+      }
+    }
+
     // List directory contents to debug
     try {
       const resourcesDir = path.dirname(iconPath);
@@ -75,13 +98,15 @@ async function createTray() {
   const icon = nativeImage.createFromPath(iconPath);
   logger.debug("Main: Created nativeImage, isEmpty:", icon.isEmpty());
 
-  // Remove resize for Windows
+  // Handle macOS icon properly
   if (process.platform === "darwin") {
-    icon.resize({ width: 16, height: 16 });
-    icon.setTemplateImage(true);
+    // Create a proper sized icon for macOS
+    const resizedIcon = icon.resize({ width: 16, height: 16 });
+    resizedIcon.setTemplateImage(true);
+    tray = new Tray(resizedIcon);
+  } else {
+    tray = new Tray(icon);
   }
-
-  tray = new Tray(icon);
 
   const contextMenu = Menu.buildFromTemplate([
     {
