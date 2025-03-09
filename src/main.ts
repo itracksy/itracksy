@@ -98,19 +98,11 @@ async function createTray() {
   const icon = nativeImage.createFromPath(iconPath);
   logger.debug("Main: Created nativeImage, isEmpty:", icon.isEmpty());
 
-  // Handle macOS icon properly
-  if (process.platform === "darwin") {
-    // Create a proper sized icon for macOS
-    const resizedIcon = icon.resize({ width: 16, height: 16 });
-    resizedIcon.setTemplateImage(true);
-    tray = new Tray(resizedIcon);
-  } else {
-    tray = new Tray(icon);
-  }
+  tray = new Tray(icon);
 
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: "Show",
+      label: "Show iTracksy",
       click: () => {
         if (mainWindow) {
           mainWindow.show();
