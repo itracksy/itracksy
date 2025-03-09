@@ -2,7 +2,8 @@
 
 iTracksy is a powerful desktop application for tracking your activities and managing projects efficiently. It provides real-time window activity tracking, project management with boards, and detailed time analytics to help you understand how you spend your time.
 
-// Todo: Add screenshot
+![Screenshot 2025-03-08 at 20 18 19](https://github.com/user-attachments/assets/e2255cb1-4a3c-4ab8-a83b-c95c3196caab)
+
 ![Demo GIF](https://github.com/hunght/iTracksy/blob/main/images/demo.gif)
 
 ## Features
