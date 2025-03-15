@@ -15,6 +15,7 @@ jobs:
     strategy:
       matrix:
         arch: [x64, arm64]
+      fail-fast: false # Continue with other architectures if one fails
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -110,7 +111,23 @@ jobs:
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" $RUNNER_TEMP/app-signing.keychain-db
 
           # Build with the specific architecture
-          npm run publish -- --arch=$ARCH
+          npx electron-forge publish --arch=${{ matrix.arch }} --platform=darwin
+
+      # Add post-build check to verify output files were created
+      - name: Check build outputs
+        run: |
+          echo "Listing make directory contents for architecture ${{ matrix.arch }}:"
+          find out -type f -name "*.dmg" | sort
+          find out -type f -name "*.zip" | sort
+
+          echo "Listing out directory structure:"
+          find out -type d | sort
+
+          echo "Detailed listing of make directory (if it exists):"
+          [ -d "out/make" ] && ls -la out/make || echo "make directory not found"
+
+          echo "Environment variables:"
+          printenv | grep -i arch
 
       - name: Clean up keychain
         run: |

@@ -245,6 +245,8 @@ const config: ForgeConfig = {
     }),
     new MakerDMG({
       icon: path.resolve(__dirname, "resources", "icon.icns"),
+      // Include architecture in the filename
+      name: `\${productName}-\${version}-\${arch}`,
     }),
     new MakerRpm({}),
     new MakerDeb({}),
@@ -258,6 +260,10 @@ const config: ForgeConfig = {
       },
       prerelease: false,
       draft: false,
+      // Make sure each architecture is uploaded as a separate artifact
+      tagPrefix: '',
+      // Don't replace existing artifacts if multiple builds are uploading
+      force: false,
     }),
   ],
   // Plugins for custom build steps
