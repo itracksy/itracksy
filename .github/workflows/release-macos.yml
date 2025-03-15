@@ -28,6 +28,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install architecture-specific dependencies
+        run: |
+          # Only install architecture-specific dependencies on macOS
+          if [ "${{ matrix.arch }}" == "x64" ]; then
+            npm install @libsql/darwin-x64 || echo "Already installed or not required"
+          elif [ "${{ matrix.arch }}" == "arm64" ]; then
+            npm install @libsql/darwin-arm64 || echo "May not install on x64 host, will be handled during packaging"
+          fi
+
       - name: Create data directories
         shell: bash
         run: |
