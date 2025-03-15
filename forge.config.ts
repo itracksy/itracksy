@@ -27,8 +27,7 @@ export const EXTERNAL_DEPENDENCIES = [
   "get-windows",
   "zod",
   "@libsql/client",
-  // Only include platform-specific dependencies based on target platform
-  ...(process.platform === 'darwin' ? ['@libsql/darwin-x64'] : []),
+  "@libsql/darwin-x64",
   "drizzle-orm",
   "drizzle-zod",
 ];
