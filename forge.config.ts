@@ -27,6 +27,7 @@ export const EXTERNAL_DEPENDENCIES = [
   "get-windows",
   "zod",
   "@libsql/client",
+  "@libsql/darwin-x64",
   "drizzle-orm",
   "drizzle-zod",
 ];
@@ -53,7 +54,7 @@ const packagerConfig: ForgePackagerOptions = {
 };
 
 // Configure codesigning and notarization for macOS builds
-if (process.env["NODE_ENV"] !== "development") {
+if (process.env["NODE_ENV"] === "production") {
   packagerConfig.osxSign = {
     // Options for codesigning the application
     optionsForFile: (filePath: string) => ({
@@ -244,7 +245,6 @@ const config: ForgeConfig = {
     }),
     new MakerDMG({
       icon: path.resolve(__dirname, "resources", "icon.icns"),
-      format: "ULFO", // Universal format (supports both Intel and Apple Silicon)
     }),
     new MakerRpm({}),
     new MakerDeb({}),
