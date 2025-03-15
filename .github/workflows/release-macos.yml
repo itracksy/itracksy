@@ -12,6 +12,9 @@ permissions:
 jobs:
   release-macos:
     runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -67,7 +70,7 @@ jobs:
           # Allow codesign to access keychain
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
-      - name: Build for macOS
+      - name: Build for macOS (${{ matrix.arch }})
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -75,6 +78,7 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           NODE_ENV: production
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARCH: ${{ matrix.arch }}
 
           VITE_AXIOM_TOKEN: ${{ secrets.VITE_AXIOM_TOKEN }}
           VITE_AXIOM_ORG_ID: ${{ secrets.VITE_AXIOM_ORG_ID }}
@@ -83,6 +87,7 @@ jobs:
           VITE_PUBLIC_POSTHOG_HOST: ${{ secrets.VITE_PUBLIC_POSTHOG_HOST }}
         run: |
           echo "Setting up notarization environment..."
+          echo "Building for architecture: $ARCH"
           echo "Checking for entitlements.plist..."
           if [ ! -f "entitlements.plist" ]; then
             echo " entitlements.plist not found"
@@ -95,7 +100,8 @@ jobs:
           # Verify keychain access
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" $RUNNER_TEMP/app-signing.keychain-db
 
-          npm run publish
+          # Build with the specific architecture
+          npm run publish -- --arch=$ARCH
 
       - name: Clean up keychain
         run: |

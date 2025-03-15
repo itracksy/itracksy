@@ -242,7 +242,10 @@ const config: ForgeConfig = {
       iconUrl: "https://raw.githubusercontent.com/hunght/itracksy/main/resources/icon.ico",
       loadingGif: path.resolve(__dirname, "resources", "icon_64x64.png"),
     }),
-    new MakerDMG({}),
+    new MakerDMG({
+      icon: path.resolve(__dirname, "resources", "icon.icns"),
+      format: "ULFO", // Universal format (supports both Intel and Apple Silicon)
+    }),
     new MakerRpm({}),
     new MakerDeb({}),
   ],
