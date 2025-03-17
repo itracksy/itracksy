@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { trpcClient } from "@/utils/trpc";
 import { useAtom } from "jotai";
 import { breakDurationAtom } from "@/context/board";
-import { NotificationOptions } from "@/types/notification";
+
 import { useNavigate } from "@tanstack/react-router";
 
 export function BottomSideBar() {

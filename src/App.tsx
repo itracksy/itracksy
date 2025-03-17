@@ -11,6 +11,7 @@ import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from "@ta
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "./hooks/useAuth";
 import { getConfig } from "./config/env";
+import { VersionChecker } from "@/components/version-checker"; // Import the VersionChecker component
 
 const queryClient = new QueryClient({});
 
@@ -53,6 +54,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthenticatedApp />
+        <VersionChecker autoCheck={true} showCheckButton={false} />
       </TooltipProvider>
     </QueryClientProvider>
   );
