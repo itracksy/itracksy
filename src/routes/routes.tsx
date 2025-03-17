@@ -5,6 +5,7 @@ import FocusPage from "@/pages/focus/index";
 import { ProjectsPage } from "@/pages/projects/page";
 import SettingsPage from "@/pages/settings-page/SettingsPage";
 import RainingLetters from "@/pages/rainning-letter/index";
+import AchievementsPage from "@/pages/achievements";
 import FullScreenLayout from "@/layouts/FullScreenLayout";
 
 export const DashboardRoute = createRoute({
@@ -40,10 +41,17 @@ export const RainingLettersRoute = createRoute({
   ),
 });
 
+export const AchievementsRoute = createRoute({
+  getParentRoute: () => RootRoute,
+  path: "/achievements",
+  component: AchievementsPage,
+});
+
 export const rootTree = RootRoute.addChildren([
   FocusRoute,
   DashboardRoute,
   ProjectsRoute,
   SettingsRoute,
   RainingLettersRoute,
+  AchievementsRoute,
 ]);

@@ -44,7 +44,7 @@ export function AboutSection() {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <VersionChecker 
+              <VersionChecker
                 autoCheck={false}
                 showCheckButton={true}
                 onVersionInfo={handleVersionInfo}
@@ -53,13 +53,6 @@ export function AboutSection() {
               <Button variant="outline" onClick={handleOpenLogFile}>
                 <ScrollTextIcon className="mr-2 h-4 w-4" />
                 View Logs
-              </Button>
-            </div>
-
-            <div className="text-sm text-muted-foreground">
-              <Button variant="outline" onClick={handleClearActivities}>
-                <Trash2Icon className="mr-2 h-4 w-4" />
-                Clear Activities
               </Button>
             </div>
           </div>
