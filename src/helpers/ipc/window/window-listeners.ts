@@ -31,44 +31,44 @@ export const addWindowEventListeners = (mainWindow: BrowserWindow, tray: Tray | 
       logger.info("Checking for updates...");
       const currentVersion = app.getVersion();
       logger.info(`Current app version: ${currentVersion}`);
-      
+
       // Fetch the latest release from GitHub
-      const response = await fetch('https://api.github.com/repos/hunght/itracksy/releases/latest');
-      
+      const response = await fetch("https://api.github.com/repos/hunght/itracksy/releases/latest");
+
       if (!response.ok) {
         logger.error(`Failed to fetch latest release: ${response.statusText}`);
-        return { 
-          status: "error", 
+        return {
+          status: "error",
           message: "Failed to check for updates. Please try again later.",
-          hasUpdate: false
+          hasUpdate: false,
         };
       }
-      
+
       const release = await response.json();
-      const latestVersion = release.tag_name.replace('v', '');
-      const downloadUrl = release.html_url;
-      
+      const latestVersion = release.tag_name.replace("v", "");
+      const downloadUrl = "https://www.itracksy.com/download";
+
       logger.info(`Latest version available: ${latestVersion}`);
-      
+
       // Compare versions (simple string comparison, assuming semver format)
       const hasUpdate = latestVersion > currentVersion;
-      
-      return { 
-        status: "success", 
-        message: hasUpdate 
-          ? `Update available: ${latestVersion}` 
+
+      return {
+        status: "success",
+        message: hasUpdate
+          ? `Update available: ${latestVersion}`
           : "You are using the latest version.",
         hasUpdate,
         currentVersion,
         latestVersion,
-        downloadUrl
+        downloadUrl,
       };
     } catch (error) {
       logger.error("Failed to check for updates", error);
-      return { 
-        status: "error", 
+      return {
+        status: "error",
         message: "Failed to check for updates. Please try again later.",
-        hasUpdate: false
+        hasUpdate: false,
       };
     }
   });
