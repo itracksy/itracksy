@@ -1,11 +1,11 @@
-import db from "..";
-import { blockedDomains, blockedApps } from "../schema";
+import db from "../db";
+import { blockedDomains, blockedApps } from "../db/schema";
 import { eq } from "drizzle-orm";
-import { defaultBlockedApps, defaultBlockedDomains } from "../../../config/tracking";
+import { defaultBlockedApps, defaultBlockedDomains } from "../../config/tracking";
 import { getValue, setValue, setMultipleValues } from "./localStorage";
-import { logger } from "../../../helpers/logger";
-import { boards } from "../../db/schema";
-import { createBoard, createColumn, createItem } from "../../services/board";
+import { logger } from "../../helpers/logger";
+import { boards } from "../db/schema";
+import { createBoard, createColumn, createItem } from "../services/board";
 import { nanoid } from "nanoid";
 const USER_SETTINGS_KEYS = {
   accessibilityPermission: "user.accessibilityPermission",

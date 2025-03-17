@@ -1,5 +1,5 @@
 import { t, publicProcedure } from "../trpc";
-import { getCurrentUserIdLocalStorage, setCurrentUserId } from "../db/repositories/userSettings";
+import { getCurrentUserIdLocalStorage, setCurrentUserId } from "../services/userSettings";
 import { logger } from "../../helpers/logger";
 
 export const authRouter = t.router({

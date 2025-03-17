@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { t, protectedProcedure } from "../trpc";
-import { getFocusedTimeByHour, reportProjectByDay } from "../db/repositories/dashboard";
+import { getFocusedTimeByHour, reportProjectByDay } from "../services/dashboard";
 
 export const dashboardRouter = t.router({
   reportProjectByDay: protectedProcedure

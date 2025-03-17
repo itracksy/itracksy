@@ -1,11 +1,10 @@
 import { ActivityRecord } from "@/types/activity";
-import { isNullOrUndefined } from "../../../utils/value-checks";
-
-import db from "..";
-import { activities } from "../schema";
+import { isNullOrUndefined } from "../../utils/value-checks";
 
 import { gte, desc, and, eq, sql, lte } from "drizzle-orm";
-import { LIMIT_TIME_APART } from "../../../config/tracking";
+import { LIMIT_TIME_APART } from "../../config/tracking";
+import db from "../db";
+import { activities } from "../db/schema";
 
 export const getActivities = async (date?: number): Promise<ActivityRecord[]> => {
   const fifteenMinutesAgo = Date.now() - 15 * 60 * 1000; // 15 minutes in milliseconds

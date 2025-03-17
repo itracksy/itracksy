@@ -1,6 +1,6 @@
 import { ActivityRecord } from "@/types/activity";
 import { BrowserWindow, dialog, screen } from "electron";
-import { upsertActivity } from "../db/repositories/activities";
+import { upsertActivity } from "./activities";
 import { TRACKING_INTERVAL } from "../../config/tracking";
 import { extractDomain, urlContainsDomain } from "../../utils/url";
 import { logger } from "../../helpers/logger";
@@ -9,10 +9,10 @@ import {
   getUserBlockedApps,
   getUserBlockedDomains,
   getUserSettings,
-} from "../../api/db/repositories/userSettings";
+} from "./userSettings";
 import { createTimeEntry, getActiveTimeEntry, updateTimeEntry } from "./timeEntry";
 import { sendNotificationService, sendNotificationWhenNoActiveEntry } from "./notification";
-import { createNotification } from "../db/repositories/notifications";
+import { createNotification } from "./notifications";
 import db from "../db";
 import { timeEntries } from "../db/schema";
 import { eq, sql } from "drizzle-orm";

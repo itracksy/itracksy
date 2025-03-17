@@ -1,5 +1,5 @@
 import { protectedProcedure, t } from "../trpc";
-import { clearActivities, getActivities } from "../db/repositories/activities";
+import { clearActivities, getActivities } from "../services/activities";
 
 export const activityRouter = t.router({
   getActivities: protectedProcedure.query(async () => {

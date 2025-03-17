@@ -3,7 +3,7 @@ import { t, protectedProcedure } from "../trpc";
 import { blockedDomains, blockedApps } from "../db/schema";
 import { and, eq } from "drizzle-orm";
 import db from "../db";
-import { getUserSettings, updateUserSettings } from "../db/repositories/userSettings";
+import { getUserSettings, updateUserSettings } from "../services/userSettings";
 
 const trackingSettingsSchema = z.object({
   accessibilityPermission: z.boolean(),

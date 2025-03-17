@@ -7,7 +7,7 @@ import { getLastWorkingTimeEntry, updateTimeEntry } from "./timeEntry";
 import { notifications } from "../db/schema";
 import { nanoid } from "nanoid";
 import db from "../db";
-import { getLastNotification } from "../db/repositories/notifications";
+import { getLastNotification } from "./notifications";
 
 export const sendNotification = async (
   options: Omit<NotificationInsert, "id">,
