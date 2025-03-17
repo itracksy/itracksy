@@ -34,6 +34,7 @@ jobs:
           # Use npm config to set the target architecture instead of direct installation
           if [ "${{ matrix.arch }}" == "x64" ]; then
             npm install @libsql/darwin-x64 --ignore-scripts --force --no-save || echo "Already installed or not required"
+          fi
 
       - name: Create data directories
         shell: bash
