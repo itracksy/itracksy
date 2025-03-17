@@ -8,7 +8,7 @@ import { initializeDatabase } from "./api/db/init";
 import { createContext } from "./api/trpc";
 
 import { logger } from "./helpers/logger";
-import { startTracking } from "./api/services/activity";
+import { startTracking } from "./api/services/trackingIntervalActivity";
 
 const inDevelopment: boolean = process.env.NODE_ENV === "development";
 let mainWindow: BrowserWindow | null = null;

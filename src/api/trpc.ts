@@ -1,6 +1,6 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import { logger } from "../helpers/logger";
-import { getCurrentUserIdLocalStorage } from "./db/repositories/userSettings";
+import { getCurrentUserIdLocalStorage } from "./services/userSettings";
 
 // Define context type
 export interface Context {
