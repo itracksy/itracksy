@@ -1,5 +1,5 @@
-import { eq, desc, and, isNull, isNotNull } from "drizzle-orm";
-import { timeEntries, items } from "../db/schema";
+import { eq, desc, and, isNull, isNotNull, sql } from "drizzle-orm";
+import { timeEntries, items, activities } from "../db/schema";
 import { nanoid } from "nanoid";
 import db from "../db";
 
@@ -126,4 +126,64 @@ export async function getLastWorkingTimeEntry(userId: string) {
   });
 
   return entry ?? null; // Ensure we always return null instead of undefined
+}
+
+export async function getTimeEntries({
+  userId,
+  boardId,
+  page = 1,
+  limit = 20,
+}: {
+  userId: string;
+  boardId?: string;
+  page?: number;
+  limit?: number;
+}): Promise<{
+  entries: TimeEntry[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}> {
+  const offset = (page - 1) * limit;
+  const whereConditions = [eq(timeEntries.userId, userId)];
+  if (boardId) {
+    whereConditions.push(eq(timeEntries.boardId, boardId));
+  }
+
+  const [entries, total] = await Promise.all([
+    db.query.timeEntries.findMany({
+      where: and(...whereConditions),
+      with: {
+        item: true,
+      },
+      orderBy: desc(timeEntries.startTime),
+      limit,
+      offset,
+    }),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(timeEntries)
+      .where(and(...whereConditions))
+      .then((result) => result[0].count),
+  ]);
+
+  return {
+    entries,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+}
+
+export async function getActivitiesForTimeEntry({ timeEntryId }: { timeEntryId: string }) {
+  return await db.query.activities.findMany({
+    where: eq(activities.timeEntryId, timeEntryId),
+    orderBy: desc(activities.timestamp),
+  });
 }

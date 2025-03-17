@@ -1,8 +1,13 @@
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
+import { trpcClient } from "@/utils/trpc";
+import { TimeEntryList } from "./components/TimeEntryList";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Session {
   id: string;
@@ -12,29 +17,26 @@ interface Session {
   endTime: Date;
 }
 
-const mockSessions: Session[] = [
-  {
-    id: "1",
-    type: "focus",
-    duration: 25 * 60, // 25 minutes in seconds
-    startTime: new Date("2024-03-20T10:00:00"),
-    endTime: new Date("2024-03-20T10:25:00"),
-  },
-  {
-    id: "2",
-    type: "break",
-    duration: 5 * 60, // 5 minutes in seconds
-    startTime: new Date("2024-03-20T10:25:00"),
-    endTime: new Date("2024-03-20T10:30:00"),
-  },
-  // Add more mock data as needed
-];
-
 const AchievementsPage: React.FC = () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const limit = 10;
+
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     return `${minutes} min`;
   };
+
+  const { data: timeEntriesData } = useQuery({
+    queryKey: ["timeEntries", currentPage, limit],
+    queryFn: () =>
+      trpcClient.timeEntry.getTimeEntries.query({
+        page: currentPage,
+        limit,
+      }),
+  });
+
+  const timeEntries = timeEntriesData?.entries || [];
+  const pagination = timeEntriesData?.pagination;
 
   const renderSessionCard = (session: Session) => (
     <Card key={session.id} className="mb-4">
@@ -76,11 +78,17 @@ const AchievementsPage: React.FC = () => {
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
-                  <p className="text-2xl font-bold">2</p>
+                  <p className="text-2xl font-bold">{pagination?.total || 0}</p>
                   <p className="text-sm text-muted-foreground">Focus Sessions</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold">50 min</p>
+                  <p className="text-2xl font-bold">
+                    {timeEntries
+                      ? formatDuration(
+                          timeEntries.reduce((total, entry) => total + (entry.duration || 0), 0)
+                        )
+                      : "0 min"}
+                  </p>
                   <p className="text-sm text-muted-foreground">Total Focus Time</p>
                 </div>
               </div>
@@ -92,8 +100,41 @@ const AchievementsPage: React.FC = () => {
               <CardTitle>Session History</CardTitle>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-[400px]">{mockSessions.map(renderSessionCard)}</ScrollArea>
+              <ScrollArea className="h-[400px]">
+                {timeEntries.length > 0 ? (
+                  <TimeEntryList timeEntries={timeEntries} />
+                ) : (
+                  <p className="text-muted-foreground">No sessions recorded yet</p>
+                )}
+              </ScrollArea>
             </CardContent>
+            {pagination && pagination.totalPages > 1 && (
+              <CardFooter className="flex items-center justify-between pt-4">
+                <div className="text-sm text-muted-foreground">
+                  Page {pagination.page} of {pagination.totalPages}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage <= 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, pagination.totalPages))
+                    }
+                    disabled={currentPage >= pagination.totalPages}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardFooter>
+            )}
           </Card>
         </TabsContent>
 
