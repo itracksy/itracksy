@@ -33,12 +33,7 @@ jobs:
           # Install architecture-specific dependencies based on target architecture, not host architecture
           # Use npm config to set the target architecture instead of direct installation
           if [ "${{ matrix.arch }}" == "x64" ]; then
-            npm config set arch x64
-            npm install @libsql/darwin-x64 --ignore-scripts || echo "Already installed or not required"
-          elif [ "${{ matrix.arch }}" == "arm64" ]; then
-            npm config set arch arm64
-            npm install @libsql/darwin-arm64 --ignore-scripts || echo "Already installed or not required"
-          fi
+            npm install @libsql/darwin-x64 --ignore-scripts --force --no-save || echo "Already installed or not required"
 
       - name: Create data directories
         shell: bash
