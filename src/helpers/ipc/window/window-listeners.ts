@@ -29,13 +29,47 @@ export const addWindowEventListeners = (mainWindow: BrowserWindow, tray: Tray | 
   safelyRegisterListener(WIN_CHECK_UPDATES_CHANNEL, async () => {
     try {
       logger.info("Checking for updates...");
-      // Implement your update check logic here
-      // For example, if using electron-updater:
-      // await autoUpdater.checkForUpdates();
-      return { status: "success", message: "Update check completed" };
+      const currentVersion = app.getVersion();
+      logger.info(`Current app version: ${currentVersion}`);
+      
+      // Fetch the latest release from GitHub
+      const response = await fetch('https://api.github.com/repos/hunght/itracksy/releases/latest');
+      
+      if (!response.ok) {
+        logger.error(`Failed to fetch latest release: ${response.statusText}`);
+        return { 
+          status: "error", 
+          message: "Failed to check for updates. Please try again later.",
+          hasUpdate: false
+        };
+      }
+      
+      const release = await response.json();
+      const latestVersion = release.tag_name.replace('v', '');
+      const downloadUrl = release.html_url;
+      
+      logger.info(`Latest version available: ${latestVersion}`);
+      
+      // Compare versions (simple string comparison, assuming semver format)
+      const hasUpdate = latestVersion > currentVersion;
+      
+      return { 
+        status: "success", 
+        message: hasUpdate 
+          ? `Update available: ${latestVersion}` 
+          : "You are using the latest version.",
+        hasUpdate,
+        currentVersion,
+        latestVersion,
+        downloadUrl
+      };
     } catch (error) {
       logger.error("Failed to check for updates", error);
-      throw error;
+      return { 
+        status: "error", 
+        message: "Failed to check for updates. Please try again later.",
+        hasUpdate: false
+      };
     }
   });
   safelyRegisterListener(WIN_GET_LOG_FILE_CONTENT_CHANNEL, async () => {

@@ -235,7 +235,14 @@ interface ElectronWindow {
   close: () => Promise<void>;
   updateTrayTitle: (title: string) => Promise<void>;
   getAppVersion: () => Promise<string>;
-  checkForUpdates: () => Promise<{ status: "success" | "error"; message: string }>;
+  checkForUpdates: () => Promise<{
+    status: "success" | "error";
+    message: string;
+    hasUpdate: boolean;
+    currentVersion?: string;
+    latestVersion?: string;
+    downloadUrl?: string;
+  }>;
   getLogFileContent: () => Promise<string>;
 }
 
