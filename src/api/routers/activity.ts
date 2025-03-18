@@ -6,8 +6,6 @@ import {
   getProductivityStats,
   getUserActivities,
   setActivityRating,
-  setActivityRatingWithSuggestions,
-  getBestRuleForActivity,
 } from "../services/activities";
 import {
   createDefaultRules,
@@ -64,62 +62,6 @@ export const activityRouter = t.router({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.userId;
       return setActivityRating(input.timestamp, userId, input.rating);
-    }),
-
-  setActivityRatingWithSuggestions: protectedProcedure
-    .input(
-      z.object({
-        timestamp: z.number(),
-        rating: z.number().nullable(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const userId = ctx.userId;
-      return setActivityRatingWithSuggestions(input.timestamp, userId, input.rating);
-    }),
-
-  getBestRuleForActivity: protectedProcedure
-    .input(
-      z.object({
-        timestamp: z.number(),
-        rating: z.number().min(0).max(1),
-      })
-    )
-    .query(async ({ ctx, input }) => {
-      const userId = ctx.userId;
-      return getBestRuleForActivity(input.timestamp, userId, input.rating);
-    }),
-
-  createRuleFromActivity: protectedProcedure
-    .input(
-      z.object({
-        timestamp: z.number(),
-        rating: z.number().min(0).max(1),
-        ruleName: z.string().optional(),
-        ruleDescription: z.string().optional(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const userId = ctx.userId;
-
-      // Get the best rule suggestion
-      const ruleSuggestion = await getBestRuleForActivity(input.timestamp, userId, input.rating);
-
-      if (!ruleSuggestion) {
-        throw new Error("Could not generate a rule for this activity");
-      }
-
-      // Override name and description if provided
-      if (input.ruleName) {
-        ruleSuggestion.name = input.ruleName;
-      }
-
-      if (input.ruleDescription) {
-        ruleSuggestion.description = input.ruleDescription;
-      }
-
-      // Create the rule
-      return createRule(ruleSuggestion);
     }),
 
   getProductivityStats: protectedProcedure

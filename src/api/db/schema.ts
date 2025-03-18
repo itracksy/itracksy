@@ -94,6 +94,8 @@ export const activityRules = sqliteTable(
     id: text("id").primaryKey(),
     name: text("name").notNull(),
     description: text("description"),
+    appName: text("app_name"), // Optional app name
+    domain: text("domain"), // Optional domain
     ruleType: text("rule_type").notNull(), // 'duration', 'app_name', 'domain', etc.
     condition: text("condition").notNull(), // '>', '<', '=', 'contains', etc.
     value: text("value").notNull(), // The value to compare against

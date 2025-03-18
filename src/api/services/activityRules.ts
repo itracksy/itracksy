@@ -13,6 +13,8 @@ export interface CreateRuleParams {
   rating: number; // 0 = bad, 1 = good
   userId: string;
   active?: boolean;
+  appName?: string;
+  domain?: string;
 }
 
 /**

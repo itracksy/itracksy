@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { TimeEntry } from "@/api/services/timeEntry";
-import { Eye, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Eye, ThumbsUp, ThumbsDown, ChevronDown, Shield } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { trpcClient } from "@/utils/trpc";
@@ -133,6 +133,72 @@ export function TimeEntryList({ timeEntries }: TimeEntryListProps) {
   );
 }
 
+// Helper function to extract domain from URL
+function extractDomain(url: string): string {
+  try {
+    const domain = new URL(url).hostname;
+    return domain;
+  } catch (e) {
+    return url;
+  }
+}
+
+// Helper function to group activities
+function groupActivities(activities: Activity[]) {
+  const appGroups: Record<
+    string,
+    {
+      appName: string;
+      totalDuration: number;
+      domains: Record<
+        string,
+        {
+          domain: string;
+          activities: Activity[];
+          totalDuration: number;
+        }
+      >;
+      activitiesWithoutUrl: Activity[];
+    }
+  > = {};
+
+  activities.forEach((activity) => {
+    const appName = activity.ownerName;
+
+    // Initialize app group if it doesn't exist
+    if (!appGroups[appName]) {
+      appGroups[appName] = {
+        appName,
+        totalDuration: 0,
+        domains: {},
+        activitiesWithoutUrl: [],
+      };
+    }
+
+    appGroups[appName].totalDuration += activity.duration;
+
+    if (activity.url) {
+      const domain = extractDomain(activity.url);
+
+      // Initialize domain group if it doesn't exist
+      if (!appGroups[appName].domains[domain]) {
+        appGroups[appName].domains[domain] = {
+          domain,
+          activities: [],
+          totalDuration: 0,
+        };
+      }
+
+      appGroups[appName].domains[domain].activities.push(activity);
+      appGroups[appName].domains[domain].totalDuration += activity.duration;
+    } else {
+      appGroups[appName].activitiesWithoutUrl.push(activity);
+    }
+  });
+
+  return appGroups;
+}
+
 function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
   const { data: activities, isLoading } = useQuery({
     queryKey: ["activities", timeEntryId],
@@ -142,84 +208,42 @@ function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
 
   const queryClient = useQueryClient();
 
-  const [showRuleDialog, setShowRuleDialog] = useState(false);
-  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
-  const [ruleSuggestion, setRuleSuggestion] = useState<CreateRuleParams | null>(null);
-  const [ruleFormData, setRuleFormData] = useState({
-    name: "",
-    description: "",
-  });
+  // Track expanded app and domain groups
+  const [expandedApps, setExpandedApps] = useState<string[]>([]);
+  const [expandedDomains, setExpandedDomains] = useState<string[]>([]);
 
   // Mutation for setting activity rating
   const ratingMutation = useMutation({
     mutationFn: ({ timestamp, rating }: { timestamp: number; rating: number }) =>
-      trpcClient.activity.setActivityRatingWithSuggestions.mutate({ timestamp, rating }),
+      trpcClient.activity.setActivityRating.mutate({ timestamp, rating }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["activities", timeEntryId] });
-
-      // If the user marked the activity as bad (rating=0), show the rule dialog
-      if (data.activity && data.activity.rating === 0 && data.suggestions.length > 0) {
-        setSelectedActivity(data.activity);
-
-        // Get the best suggestion
-        const bestSuggestion =
-          data.suggestions.find((s) => s.ruleType === "domain") ||
-          data.suggestions.find((s) => s.ruleType === "app_name") ||
-          data.suggestions[0];
-
-        setRuleSuggestion(bestSuggestion);
-        setRuleFormData({
-          name: bestSuggestion.name,
-          description: bestSuggestion.description || "",
-        });
-        setShowRuleDialog(true);
-      }
     },
   });
 
-  // Mutation for creating a rule from an activity
-  const createRuleMutation = useMutation({
-    mutationFn: ({
-      timestamp,
-      rating,
-      ruleName,
-      ruleDescription,
-    }: {
-      timestamp: number;
-      rating: number;
-      ruleName?: string;
-      ruleDescription?: string;
-    }) =>
-      trpcClient.activity.createRuleFromActivity.mutate({
-        timestamp,
-        rating,
-        ruleName,
-        ruleDescription,
-      }),
-    onSuccess: () => {
-      toast({
-        title: "Rule created",
-        description: "The rule has been created and will be applied to future activities.",
-      });
-      setShowRuleDialog(false);
-    },
-  });
+  // Function to open rule dialog for an app
+  const openAppRuleDialog = (appName: string) => {};
+
+  // Function to open rule dialog for a domain
+  const openDomainRuleDialog = (appName: string, domain: string) => {};
 
   // Function to rate an activity
   const handleRateActivity = (activity: Activity, rating: number) => {
     ratingMutation.mutate({ timestamp: activity.timestamp, rating });
   };
 
-  // Function to create a rule from the dialog
-  const handleCreateRule = () => {
-    if (!selectedActivity) return;
+  // Toggle expansion for app groups
+  const toggleAppExpansion = (appName: string) => {
+    setExpandedApps((prev) =>
+      prev.includes(appName) ? prev.filter((name) => name !== appName) : [...prev, appName]
+    );
+  };
 
-    createRuleMutation.mutate({
-      timestamp: selectedActivity.timestamp,
-      rating: 0, // Bad activities get rules
-      ruleName: ruleFormData.name,
-      ruleDescription: ruleFormData.description,
-    });
+  // Toggle expansion for domain groups
+  const toggleDomainExpansion = (domainId: string) => {
+    setExpandedDomains((prev) =>
+      prev.includes(domainId) ? prev.filter((id) => id !== domainId) : [...prev, domainId]
+    );
   };
 
   if (isLoading) {
@@ -238,117 +262,178 @@ function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
     );
   }
 
+  // Group activities by app and domain
+  const groupedActivities = groupActivities(activities);
+
   return (
     <div className="mt-4 space-y-2">
       <h4 className="text-sm font-medium">Activities</h4>
       <div className="space-y-2">
-        {activities.map((activity) => (
-          <div
-            key={activity.timestamp}
-            className="flex items-center justify-between rounded-md bg-muted/30 p-3 text-sm"
-          >
-            <div className="flex-1">
-              <p className="font-medium">{activity.title}</p>
-              <p className="text-muted-foreground">
-                {activity.ownerName} • {formatDuration(activity.duration)}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              {/* Rating indicator */}
-              {activity.rating !== null && (
-                <span
-                  className={`rounded-full px-2 py-1 text-xs ${
-                    activity.rating === 1
-                      ? "bg-green-100 text-green-800"
-                      : "bg-red-100 text-red-800"
+        {Object.values(groupedActivities).map((appGroup) => (
+          <div key={appGroup.appName} className="rounded-md bg-muted/20">
+            {/* App Group Header */}
+            <div className="flex items-center justify-between rounded-t-md bg-muted/40 p-3">
+              <div
+                className="flex cursor-pointer items-center gap-2"
+                onClick={() => toggleAppExpansion(appGroup.appName)}
+              >
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform ${
+                    expandedApps.includes(appGroup.appName) ? "rotate-180 transform" : ""
                   }`}
-                >
-                  {activity.rating === 1 ? "Productive" : "Distracting"}
+                />
+                <span className="font-medium">{appGroup.appName}</span>
+                <span className="text-xs text-muted-foreground">
+                  ({formatDuration(appGroup.totalDuration)})
                 </span>
-              )}
-
-              {/* Rating buttons */}
-              <div className="flex gap-1">
-                <Button
-                  variant={activity.rating === 1 ? "default" : "outline"}
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => handleRateActivity(activity, 1)}
-                  disabled={ratingMutation.isPending}
-                >
-                  <ThumbsUp className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={activity.rating === 0 ? "default" : "outline"}
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => handleRateActivity(activity, 0)}
-                  disabled={ratingMutation.isPending}
-                >
-                  <ThumbsDown className="h-4 w-4" />
-                </Button>
               </div>
+
+              {/* App level rule button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1 text-xs"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openAppRuleDialog(appGroup.appName);
+                }}
+              >
+                <Shield className="h-3 w-3" />
+                <span>Block App</span>
+              </Button>
             </div>
+
+            {/* App Group Content */}
+            {expandedApps.includes(appGroup.appName) && (
+              <div className="space-y-2 p-2">
+                {/* Activities without URL */}
+                {appGroup.activitiesWithoutUrl.length > 0 && (
+                  <div className="space-y-2 pl-4">
+                    {appGroup.activitiesWithoutUrl.map((activity) => (
+                      <ActivityItem
+                        key={activity.timestamp}
+                        activity={activity}
+                        handleRateActivity={handleRateActivity}
+                        ratingMutation={ratingMutation}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Domain Groups */}
+                {Object.values(appGroup.domains).map((domainGroup) => {
+                  const domainId = `${appGroup.appName}-${domainGroup.domain}`;
+
+                  return (
+                    <div key={domainId} className="rounded-md bg-muted/10">
+                      {/* Domain Group Header */}
+                      <div className="flex items-center justify-between bg-muted/30 p-2 pl-6">
+                        <div
+                          className="flex cursor-pointer items-center gap-2"
+                          onClick={() => toggleDomainExpansion(domainId)}
+                        >
+                          <ChevronDown
+                            className={`h-3 w-3 transition-transform ${
+                              expandedDomains.includes(domainId) ? "rotate-180 transform" : ""
+                            }`}
+                          />
+                          <span className="text-sm font-medium">{domainGroup.domain}</span>
+                          <span className="text-xs text-muted-foreground">
+                            ({formatDuration(domainGroup.totalDuration)})
+                          </span>
+                        </div>
+
+                        {/* Domain level rule button */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 gap-1 text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openDomainRuleDialog(appGroup.appName, domainGroup.domain);
+                          }}
+                        >
+                          <Shield className="h-3 w-3" />
+                          <span>Block Domain</span>
+                        </Button>
+                      </div>
+
+                      {/* Domain Group Content */}
+                      {expandedDomains.includes(domainId) && (
+                        <div className="space-y-2 p-2 pl-8">
+                          {domainGroup.activities.map((activity) => (
+                            <ActivityItem
+                              key={activity.timestamp}
+                              activity={activity}
+                              handleRateActivity={handleRateActivity}
+                              ratingMutation={ratingMutation}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         ))}
       </div>
+    </div>
+  );
+}
 
-      {/* Rule creation dialog */}
-      <Dialog open={showRuleDialog} onOpenChange={setShowRuleDialog}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Create Rule for Distracting Activity</DialogTitle>
-            <DialogDescription>
-              Create a rule to automatically classify similar activities as distracting in the
-              future.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            {selectedActivity && (
-              <div className="mb-4 rounded-md bg-muted p-3">
-                <p className="font-medium">{selectedActivity.title}</p>
-                <p className="text-sm text-muted-foreground">{selectedActivity.ownerName}</p>
-                {selectedActivity.url && (
-                  <p className="truncate text-xs text-muted-foreground">{selectedActivity.url}</p>
-                )}
-              </div>
-            )}
+// Extract Activity Item as a separate component for clarity
+function ActivityItem({
+  activity,
+  handleRateActivity,
+  ratingMutation,
+}: {
+  activity: Activity;
+  handleRateActivity: (activity: Activity, rating: number) => void;
+  ratingMutation: any;
+}) {
+  return (
+    <div className="flex items-center justify-between rounded-md bg-muted/30 p-3 text-sm">
+      <div className="flex-1">
+        <p className="font-medium">{activity.title}</p>
+        <p className="text-muted-foreground">{formatDuration(activity.duration)}</p>
+        {activity.url && <p className="truncate text-xs text-muted-foreground">{activity.url}</p>}
+      </div>
+      <div className="flex items-center gap-2">
+        {/* Rating indicator */}
+        {activity.rating !== null && (
+          <span
+            className={`rounded-full px-2 py-1 text-xs ${
+              activity.rating === 1 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+            }`}
+          >
+            {activity.rating === 1 ? "Productive" : "Distracting"}
+          </span>
+        )}
 
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="rule-name" className="text-right">
-                Rule Name
-              </Label>
-              <Input
-                id="rule-name"
-                value={ruleFormData.name}
-                onChange={(e) => setRuleFormData((prev) => ({ ...prev, name: e.target.value }))}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="rule-description" className="text-right">
-                Description
-              </Label>
-              <Input
-                id="rule-description"
-                value={ruleFormData.description}
-                onChange={(e) =>
-                  setRuleFormData((prev) => ({ ...prev, description: e.target.value }))
-                }
-                className="col-span-3"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRuleDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateRule} disabled={createRuleMutation.isPending}>
-              {createRuleMutation.isPending ? "Creating..." : "Create Rule"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        {/* Rating buttons */}
+        <div className="flex gap-1">
+          <Button
+            variant={activity.rating === 1 ? "default" : "outline"}
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => handleRateActivity(activity, 1)}
+            disabled={ratingMutation.isPending}
+          >
+            <ThumbsUp className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={activity.rating === 0 ? "default" : "outline"}
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => handleRateActivity(activity, 0)}
+            disabled={ratingMutation.isPending}
+          >
+            <ThumbsDown className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

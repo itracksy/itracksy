@@ -50,6 +50,13 @@
       "when": 1742229420623,
       "tag": "0006_cool_nighthawk",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1742287325148,
+      "tag": "0007_bright_lucky_pierre",
+      "breakpoints": true
     }
   ]
 }
