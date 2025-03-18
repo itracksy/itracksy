@@ -43,6 +43,13 @@
       "when": 1740751556744,
       "tag": "0005_cute_mandrill",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1742229420623,
+      "tag": "0006_cool_nighthawk",
+      "breakpoints": true
     }
   ]
 }

@@ -70,6 +70,7 @@ export const activities = sqliteTable(
     timeEntryId: text("timeEntryId"),
     userId: text("user_id").notNull(),
     isFocusMode: integer("is_focus_mode", { mode: "boolean" }),
+    rating: integer("rating"), // null = unrated, 0 = bad, 1 = good
   },
   (table) => [
     primaryKey({ columns: [table.timestamp] }),
@@ -84,6 +85,27 @@ export const activities = sqliteTable(
       table.platform,
       table.timeEntryId
     ),
+  ]
+);
+
+export const activityRules = sqliteTable(
+  "activity_rules",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    description: text("description"),
+    ruleType: text("rule_type").notNull(), // 'duration', 'app_name', 'domain', etc.
+    condition: text("condition").notNull(), // '>', '<', '=', 'contains', etc.
+    value: text("value").notNull(), // The value to compare against
+    rating: integer("rating").notNull(), // 0 = bad, 1 = good
+    userId: text("user_id").notNull(),
+    createdAt: integer("created_at").notNull(),
+    active: integer("active", { mode: "boolean" }).notNull().default(true),
+  },
+  (table) => [
+    index("activity_rules_user_id_idx").on(table.userId),
+    index("activity_rules_rule_type_idx").on(table.ruleType),
+    index("activity_rules_active_idx").on(table.active),
   ]
 );
 
@@ -185,4 +207,15 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
     fields: [notifications.timeEntryId],
     references: [timeEntries.id],
   }),
+}));
+
+export const activitiesRelations = relations(activities, ({ one }) => ({
+  timeEntry: one(timeEntries, {
+    fields: [activities.timeEntryId],
+    references: [timeEntries.id],
+  }),
+}));
+
+export const activityRulesRelations = relations(activityRules, ({ many }) => ({
+  // No direct relations needed for now, but could be extended in the future
 }));

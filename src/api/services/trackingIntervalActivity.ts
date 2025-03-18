@@ -1,4 +1,4 @@
-import { ActivityRecord } from "@/types/activity";
+import { Activity } from "@/types/activity";
 import { BrowserWindow, dialog, screen } from "electron";
 import { upsertActivity } from "./activities";
 import { TRACKING_INTERVAL } from "../../config/tracking";
@@ -100,7 +100,7 @@ export const startTracking = async (): Promise<void> => {
         return;
       }
 
-      const transformedActivities: ActivityRecord = {
+      const transformedActivities: Activity = {
         platform: result.platform,
         isFocusMode: activeEntry.isFocusMode,
         activityId: result.id,

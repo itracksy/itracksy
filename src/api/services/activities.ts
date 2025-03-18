@@ -1,12 +1,13 @@
-import { ActivityRecord } from "@/types/activity";
+import { Activity } from "@/types/activity";
 import { isNullOrUndefined } from "../../utils/value-checks";
 
-import { gte, desc, and, eq, sql, lte } from "drizzle-orm";
+import { gte, desc, and, eq, sql, isNull } from "drizzle-orm";
 import { LIMIT_TIME_APART } from "../../config/tracking";
 import db from "../db";
 import { activities } from "../db/schema";
+import { rateActivity } from "./activityRating";
 
-export const getActivities = async (date?: number): Promise<ActivityRecord[]> => {
+export const getActivities = async (date?: number): Promise<Activity[]> => {
   const fifteenMinutesAgo = Date.now() - 15 * 60 * 1000; // 15 minutes in milliseconds
 
   const results = await db
@@ -24,9 +25,7 @@ export const clearActivities = async (date?: string): Promise<void> => {
 };
 
 // Find matching activities using the composite index
-const findMatchingActivity = async (
-  activity: ActivityRecord
-): Promise<ActivityRecord | undefined> => {
+const findMatchingActivity = async (activity: Activity): Promise<Activity | undefined> => {
   const query = db
     .select()
     .from(activities)
@@ -54,7 +53,7 @@ const findMatchingActivity = async (
 };
 
 // Upsert activity with conflict detection using the composite index
-export const upsertActivity = async (activity: ActivityRecord): Promise<void> => {
+export const upsertActivity = async (activity: Activity): Promise<void> => {
   const existingActivity = await findMatchingActivity(activity);
 
   if (existingActivity) {
@@ -83,3 +82,101 @@ export const upsertActivity = async (activity: ActivityRecord): Promise<void> =>
     userId: activity.userId,
   });
 };
+
+/**
+ * Track a new activity with automatic rating
+ */
+export async function trackActivity(activityData: Omit<Activity, "rating">) {
+  // Insert the activity first
+  const inserted = await db
+    .insert(activities)
+    .values({
+      ...activityData,
+      rating: null,
+    })
+    .returning();
+
+  const activity = inserted[0];
+
+  // Rate the activity using rules
+  await rateActivity(activity);
+
+  return activity;
+}
+
+/**
+ * Get activities for a user with pagination
+ */
+export async function getUserActivities({
+  userId,
+  limit = 100,
+  offset = 0,
+  timeEntryId = null,
+  ratingFilter = null, // null = all, 0 = bad, 1 = good, -1 = unrated
+}: {
+  userId: string;
+  limit?: number;
+  offset?: number;
+  timeEntryId?: string | null;
+  ratingFilter?: number | null;
+}) {
+  const query = db.query.activities.findMany({
+    where: (() => {
+      const conditions = [eq(activities.userId, userId)];
+
+      if (timeEntryId) {
+        conditions.push(eq(activities.timeEntryId, timeEntryId));
+      }
+
+      if (ratingFilter !== null) {
+        if (ratingFilter === -1) {
+          conditions.push(isNull(activities.rating));
+        } else {
+          conditions.push(eq(activities.rating, ratingFilter));
+        }
+      }
+
+      return and(...conditions);
+    })(),
+    orderBy: [desc(activities.timestamp)],
+    limit,
+    offset,
+  });
+
+  return query;
+}
+
+/**
+ * Manually set a rating for an activity
+ */
+export async function setActivityRating(timestamp: number, userId: string, rating: number | null) {
+  return await db
+    .update(activities)
+    .set({ rating })
+    .where(and(eq(activities.timestamp, timestamp), eq(activities.userId, userId)))
+    .returning();
+}
+
+/**
+ * Get productivity stats based on activity ratings
+ */
+export async function getProductivityStats(userId: string, startTime: number, endTime: number) {
+  const result = await db
+    .select({
+      totalDuration: sql`SUM(${activities.duration})`,
+      goodDuration: sql`SUM(CASE WHEN ${activities.rating} = 1 THEN ${activities.duration} ELSE 0 END)`,
+      badDuration: sql`SUM(CASE WHEN ${activities.rating} = 0 THEN ${activities.duration} ELSE 0 END)`,
+      unratedDuration: sql`SUM(CASE WHEN ${activities.rating} IS NULL THEN ${activities.duration} ELSE 0 END)`,
+      activityCount: sql`COUNT(*)`,
+    })
+    .from(activities)
+    .where(
+      and(
+        eq(activities.userId, userId),
+        sql`${activities.timestamp} >= ${startTime}`,
+        sql`${activities.timestamp} <= ${endTime}`
+      )
+    );
+
+  return result[0];
+}
