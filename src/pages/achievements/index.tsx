@@ -38,27 +38,6 @@ const AchievementsPage: React.FC = () => {
   const timeEntries = timeEntriesData?.entries || [];
   const pagination = timeEntriesData?.pagination;
 
-  const renderSessionCard = (session: Session) => (
-    <Card key={session.id} className="mb-4">
-      <CardContent className="pt-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-semibold capitalize">{session.type} Session</h3>
-            <p className="text-sm text-muted-foreground">
-              {format(session.startTime, "MMM d, yyyy h:mm a")}
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="font-medium">{formatDuration(session.duration)}</p>
-            <p className="text-sm text-muted-foreground">
-              {format(session.startTime, "h:mm a")} - {format(session.endTime, "h:mm a")}
-            </p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
   return (
     <div className="container mx-auto py-8">
       <h1 className="mb-8 text-3xl font-bold">Achievements</h1>

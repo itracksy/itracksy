@@ -1,5 +1,5 @@
-import db from "..";
-import { activities, timeEntries, items, boards } from "../schema";
+import db from "../db";
+import { activities, timeEntries, items, boards } from "../db/schema";
 
 import { gte, desc, and, eq, sql, lte, isNull, isNotNull } from "drizzle-orm";
 
@@ -91,32 +91,34 @@ export const getFocusedTimeByHour = async (
 
   // Get all unique hours from both focus and break summaries
   const allHours = new Set([
-    ...focusHourSummaries.map(summary => summary.hour),
-    ...breakHourSummaries.map(summary => summary.hour)
+    ...focusHourSummaries.map((summary) => summary.hour),
+    ...breakHourSummaries.map((summary) => summary.hour),
   ]);
 
   // Create a map for quick lookup
-  const focusMap = new Map(focusHourSummaries.map(item => [item.hour, item.totalFocusedTime]));
-  const breakMap = new Map(breakHourSummaries.map(item => [item.hour, item.totalBreakTime]));
+  const focusMap = new Map(focusHourSummaries.map((item) => [item.hour, item.totalFocusedTime]));
+  const breakMap = new Map(breakHourSummaries.map((item) => [item.hour, item.totalBreakTime]));
 
   // Combine the summaries with detailed activities
-  return Array.from(allHours).map((hour) => {
-    const hourActivities = detailedActivities
-      .filter((activity) => activity.hour === hour)
-      .map(({ title, ownerName, duration, isFocusMode }) => ({
-        title,
-        ownerName,
-        duration,
-        isFocusMode: isFocusMode ?? true, // Default to focus mode if null
-      }));
+  return Array.from(allHours)
+    .map((hour) => {
+      const hourActivities = detailedActivities
+        .filter((activity) => activity.hour === hour)
+        .map(({ title, ownerName, duration, isFocusMode }) => ({
+          title,
+          ownerName,
+          duration,
+          isFocusMode: isFocusMode ?? true, // Default to focus mode if null
+        }));
 
-    return {
-      hour,
-      totalSecondsFocusedTime: focusMap.get(hour) ?? 0,
-      totalSecondsBreakTime: breakMap.get(hour) ?? 0,
-      activities: hourActivities,
-    };
-  }).sort((a, b) => a.hour - b.hour);
+      return {
+        hour,
+        totalSecondsFocusedTime: focusMap.get(hour) ?? 0,
+        totalSecondsBreakTime: breakMap.get(hour) ?? 0,
+        activities: hourActivities,
+      };
+    })
+    .sort((a, b) => a.hour - b.hour);
 };
 
 export const reportProjectByDay = async (startDate: number, endDate: number, userId: string) => {

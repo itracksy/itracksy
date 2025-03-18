@@ -1,5 +1,5 @@
-import db from "..";
-import { localStorage } from "../schema";
+import db from "../db";
+import { localStorage } from "../db/schema";
 import { eq } from "drizzle-orm";
 
 export const getValue = async (key: string): Promise<string | null> => {

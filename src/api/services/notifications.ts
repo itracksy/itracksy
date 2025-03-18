@@ -1,6 +1,6 @@
 import { desc, eq, and } from "drizzle-orm";
-import db from "..";
-import { notifications } from "../schema";
+import db from "../db";
+import { notifications } from "../db/schema";
 import { NotificationInsert } from "@/types/notification";
 import { nanoid } from "nanoid";
 export const getLastNotification = async (userId: string, type?: string) => {
