@@ -64,7 +64,7 @@ export const activities = sqliteTable(
     ownerPath: text("owner_path").notNull(),
     ownerProcessId: integer("owner_process_id").notNull(),
     ownerBundleId: text("owner_bundle_id"),
-    ownerName: text("owner_name").notNull(),
+    ownerName: text("owner_name").notNull(), // app name
     url: text("url"),
     duration: integer().notNull(), // seconds
     timeEntryId: text("timeEntryId"),
