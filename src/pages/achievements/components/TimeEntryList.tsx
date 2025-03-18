@@ -9,8 +9,9 @@ import { Button } from "@/components/ui/button";
 import { TimeEntry, getActivitiesForTimeEntry } from "@/api/services/timeEntry";
 import { Eye } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { formatDate, formatDuration } from "@/lib/utils";
+
 import { trpcClient } from "@/utils/trpc";
+import { formatDate, formatDuration } from "@/utils/formatTime";
 
 interface TimeEntryListProps {
   timeEntries: (TimeEntry & { item?: { title: string } | null })[];

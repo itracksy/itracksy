@@ -9,14 +9,6 @@ import { TimeEntryList } from "./components/TimeEntryList";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-interface Session {
-  id: string;
-  type: "focus" | "break";
-  duration: number;
-  startTime: Date;
-  endTime: Date;
-}
-
 const AchievementsPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 10;
