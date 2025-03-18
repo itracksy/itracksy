@@ -13,18 +13,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpcClient } from "@/utils/trpc";
 import { formatDate, formatDuration } from "@/utils/formatTime";
 import { Activity } from "@/types/activity";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CreateRuleParams } from "@/api/services/activityRules";
 import { toast } from "@/hooks/use-toast";
+import { RuleDialog, RuleFormValues } from "@/components/rules/rule-dialog";
 
 interface TimeEntryListProps {
   timeEntries: (TimeEntry & { item?: { title: string } | null })[];
@@ -212,6 +204,10 @@ function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
   const [expandedApps, setExpandedApps] = useState<string[]>([]);
   const [expandedDomains, setExpandedDomains] = useState<string[]>([]);
 
+  // Rule dialog state
+  const [isRuleDialogOpen, setIsRuleDialogOpen] = useState(false);
+  const [ruleDefaults, setRuleDefaults] = useState<Partial<RuleFormValues> | undefined>();
+
   // Mutation for setting activity rating
   const ratingMutation = useMutation({
     mutationFn: ({ timestamp, rating }: { timestamp: number; rating: number }) =>
@@ -221,15 +217,80 @@ function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
     },
   });
 
+  // Mutation for creating rules
+  const createRuleMutation = useMutation({
+    mutationFn: (values: RuleFormValues) => trpcClient.activity.createRule.mutate(values),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["activityRules"] });
+      toast({
+        title: "Rule created",
+        description: "Your activity rule has been created successfully",
+      });
+      setIsRuleDialogOpen(false);
+    },
+  });
+
   // Function to open rule dialog for an app
-  const openAppRuleDialog = (appName: string) => {};
+  const openAppRuleDialog = (appName: string) => {
+    setRuleDefaults({
+      name: `Block ${appName}`,
+      description: `Block the application: ${appName}`,
+      ruleType: "app_name",
+      condition: "=",
+      value: appName,
+      rating: 0, // Distracting by default for blocking
+      active: true,
+    });
+    setIsRuleDialogOpen(true);
+  };
 
   // Function to open rule dialog for a domain
-  const openDomainRuleDialog = (appName: string, domain: string) => {};
+  const openDomainRuleDialog = (appName: string, domain: string) => {
+    setRuleDefaults({
+      name: `Block ${domain}`,
+      description: `Block the domain: ${domain}`,
+      ruleType: "domain",
+      condition: "=",
+      value: domain,
+      rating: 0, // Distracting by default for blocking
+      active: true,
+    });
+    setIsRuleDialogOpen(true);
+  };
+
+  // Function to handle rule submission
+  const handleRuleSubmit = (values: RuleFormValues) => {
+    createRuleMutation.mutate(values);
+  };
+
+  // Function to handle dialog close
+  const handleRuleDialogClose = (open: boolean) => {
+    if (!open) {
+      setIsRuleDialogOpen(false);
+      setRuleDefaults(undefined);
+    }
+  };
 
   // Function to rate an activity
   const handleRateActivity = (activity: Activity, rating: number) => {
     ratingMutation.mutate({ timestamp: activity.timestamp, rating });
+  };
+
+  // Function to create rule from activity
+  const createRuleFromActivity = (activity: Activity) => {
+    const value = activity.url || activity.title || activity.ownerName;
+    const ruleType = activity.url ? "url" : "title";
+
+    setRuleDefaults({
+      name: `Rule for ${activity.ownerName}`,
+      description: `Created from activity: ${activity.title}`,
+      ruleType: ruleType,
+      condition: "contains",
+      value: value,
+      rating: activity.rating ?? 0,
+      active: true,
+    });
+    setIsRuleDialogOpen(true);
   };
 
   // Toggle expansion for app groups
@@ -315,6 +376,7 @@ function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
                         activity={activity}
                         handleRateActivity={handleRateActivity}
                         ratingMutation={ratingMutation}
+                        onCreateRule={() => createRuleFromActivity(activity)}
                       />
                     ))}
                   </div>
@@ -367,6 +429,7 @@ function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
                               activity={activity}
                               handleRateActivity={handleRateActivity}
                               ratingMutation={ratingMutation}
+                              onCreateRule={() => createRuleFromActivity(activity)}
                             />
                           ))}
                         </div>
@@ -379,6 +442,16 @@ function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
           </div>
         ))}
       </div>
+
+      {/* Rule Dialog */}
+      <RuleDialog
+        open={isRuleDialogOpen}
+        onOpenChange={handleRuleDialogClose}
+        onSubmit={handleRuleSubmit}
+        defaultValues={ruleDefaults as RuleFormValues}
+        isSubmitting={createRuleMutation.isPending}
+        mode="create"
+      />
     </div>
   );
 }
@@ -388,10 +461,12 @@ function ActivityItem({
   activity,
   handleRateActivity,
   ratingMutation,
+  onCreateRule,
 }: {
   activity: Activity;
   handleRateActivity: (activity: Activity, rating: number) => void;
   ratingMutation: any;
+  onCreateRule: () => void;
 }) {
   return (
     <div className="flex items-center justify-between rounded-md bg-muted/30 p-3 text-sm">
@@ -412,7 +487,7 @@ function ActivityItem({
           </span>
         )}
 
-        {/* Rating buttons */}
+        {/* Rating and create rule buttons */}
         <div className="flex gap-1">
           <Button
             variant={activity.rating === 1 ? "default" : "outline"}
@@ -431,6 +506,9 @@ function ActivityItem({
             disabled={ratingMutation.isPending}
           >
             <ThumbsDown className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="icon" className="h-8 w-8" onClick={onCreateRule}>
+            <Shield className="h-4 w-4" />
           </Button>
         </div>
       </div>
