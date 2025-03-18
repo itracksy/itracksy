@@ -222,64 +222,6 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Blocked Domains</CardTitle>
-          <CardDescription>Manage websites you want to block during focus mode</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <Input
-              placeholder="Enter domain to block"
-              value={newDomain}
-              onChange={(e) => setNewDomain(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleAddDomain()}
-            />
-            <Button onClick={handleAddDomain}>Add</Button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {blockedDomains.map(({ domain }, index) => (
-              <Badge key={domain} variant="secondary" className="text-sm">
-                {domain}
-                <Cross2Icon
-                  className="ml-2 h-3 w-3 cursor-pointer"
-                  onClick={() => setItemToDelete({ type: "domain", index })}
-                />
-              </Badge>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Blocked Applications</CardTitle>
-          <CardDescription>Manage applications you want to block during focus mode</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <Input
-              placeholder="Enter app name to block"
-              value={newApp}
-              onChange={(e) => setNewApp(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleAddApp()}
-            />
-            <Button onClick={handleAddApp}>Add</Button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {blockedApps.map(({ appName }, index) => (
-              <Badge key={appName} variant="secondary" className="text-sm">
-                {appName}
-                <Cross2Icon
-                  className="ml-2 h-3 w-3 cursor-pointer"
-                  onClick={() => setItemToDelete({ type: "app", index })}
-                />
-              </Badge>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
       <AboutSection />
     </div>
   );

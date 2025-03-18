@@ -152,11 +152,14 @@ export async function getUserActivities({
  * Manually set a rating for an activity
  */
 export async function setActivityRating(timestamp: number, userId: string, rating: number | null) {
-  return await db
+  const updatedActivities = await db
     .update(activities)
     .set({ rating })
     .where(and(eq(activities.timestamp, timestamp), eq(activities.userId, userId)))
     .returning();
+
+  // Return the single updated activity or null if not found
+  return updatedActivities[0] || null;
 }
 
 /**

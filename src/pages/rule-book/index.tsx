@@ -18,7 +18,7 @@ import { Plus, Trash, Edit } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { RuleDialog, RuleFormValues, ruleFormSchema } from "@/components/rules/rule-dialog";
+import { RuleDialog, RuleFormValues } from "@/components/rules/rule-dialog";
 
 export default function RuleBookPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -42,7 +42,7 @@ export default function RuleBookPage() {
       setIsDialogOpen(false);
     },
   });
-
+  console.log("rules", rules);
   const updateMutation = useMutation({
     mutationFn: (values: RuleFormValues & { id: string }) => {
       const { id, ...updates } = values;
@@ -114,6 +114,8 @@ export default function RuleBookPage() {
       value: editingRule.value,
       rating: editingRule.rating,
       active: editingRule.active,
+      appName: editingRule.appName,
+      domain: editingRule.domain,
     };
   };
 

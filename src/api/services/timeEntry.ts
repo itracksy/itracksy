@@ -184,6 +184,6 @@ export async function getTimeEntries({
 export async function getActivitiesForTimeEntry({ timeEntryId }: { timeEntryId: string }) {
   return await db.query.activities.findMany({
     where: eq(activities.timeEntryId, timeEntryId),
-    orderBy: desc(activities.timestamp),
+    orderBy: [desc(activities.timestamp), desc(activities.duration)],
   });
 }

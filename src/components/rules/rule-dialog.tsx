@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -30,16 +30,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-
-export const ruleFormSchema = z.object({
-  name: z.string().min(2).max(100),
-  description: z.string().optional(),
-  ruleType: z.enum(["duration", "app_name", "domain", "title", "url"]),
-  condition: z.enum([">", "<", "=", ">=", "<=", "contains", "startsWith", "endsWith"]),
-  value: z.string().min(1),
-  rating: z.number().min(0).max(1),
-  active: z.boolean().default(true),
-});
+import { ruleFormSchema } from "@/types/rule";
 
 export type RuleFormValues = z.infer<typeof ruleFormSchema>;
 
@@ -68,10 +59,14 @@ export function RuleDialog({
       ruleType: "app_name",
       condition: "=",
       value: "",
-      rating: 1,
+      rating: 0,
       active: true,
     },
   });
+
+  useEffect(() => {
+    form.reset(defaultValues);
+  }, [defaultValues]);
 
   function handleSubmit(values: RuleFormValues) {
     onSubmit(values);
@@ -100,7 +95,7 @@ export function RuleDialog({
                   <FormControl>
                     <Input placeholder="e.g., Social Media Sites" {...field} />
                   </FormControl>
-                  <FormDescription>A descriptive name for your rule</FormDescription>
+
                   <FormMessage />
                 </FormItem>
               )}
@@ -209,32 +204,6 @@ export function RuleDialog({
                       {...field}
                     />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="rating"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Classification</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(parseInt(value))}
-                    defaultValue={field.value.toString()}
-                    value={field.value.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select classification" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="1">Productive</SelectItem>
-                      <SelectItem value="0">Distracting</SelectItem>
-                    </SelectContent>
-                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

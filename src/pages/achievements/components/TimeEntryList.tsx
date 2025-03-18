@@ -13,8 +13,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpcClient } from "@/utils/trpc";
 import { formatDate, formatDuration } from "@/utils/formatTime";
 import { Activity } from "@/types/activity";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+
 import { toast } from "@/hooks/use-toast";
 import { RuleDialog, RuleFormValues } from "@/components/rules/rule-dialog";
 
@@ -206,13 +205,17 @@ function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
 
   // Rule dialog state
   const [isRuleDialogOpen, setIsRuleDialogOpen] = useState(false);
-  const [ruleDefaults, setRuleDefaults] = useState<Partial<RuleFormValues> | undefined>();
+  const [ruleDefaults, setRuleDefaults] = useState<RuleFormValues | undefined>();
 
   // Mutation for setting activity rating
   const ratingMutation = useMutation({
     mutationFn: ({ timestamp, rating }: { timestamp: number; rating: number }) =>
       trpcClient.activity.setActivityRating.mutate({ timestamp, rating }),
     onSuccess: (data) => {
+      console.log("ratingMutation", data);
+      if (data.rating === 0) {
+        createRuleFromActivity(data);
+      }
       queryClient.invalidateQueries({ queryKey: ["activities", timeEntryId] });
     },
   });
@@ -250,6 +253,7 @@ function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
       name: `Block ${domain}`,
       description: `Block the domain: ${domain}`,
       ruleType: "domain",
+      appName: appName,
       condition: "=",
       value: domain,
       rating: 0, // Distracting by default for blocking
@@ -280,7 +284,7 @@ function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
   const createRuleFromActivity = (activity: Activity) => {
     const value = activity.url || activity.title || activity.ownerName;
     const ruleType = activity.url ? "url" : "title";
-
+    console.log("createRuleFromActivity", activity);
     setRuleDefaults({
       name: `Rule for ${activity.ownerName}`,
       description: `Created from activity: ${activity.title}`,
@@ -289,6 +293,8 @@ function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
       value: value,
       rating: activity.rating ?? 0,
       active: true,
+      appName: activity.ownerName,
+      domain: activity.url ? extractDomain(activity.url) : undefined,
     });
     setIsRuleDialogOpen(true);
   };
@@ -375,8 +381,7 @@ function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
                         key={activity.timestamp}
                         activity={activity}
                         handleRateActivity={handleRateActivity}
-                        ratingMutation={ratingMutation}
-                        onCreateRule={() => createRuleFromActivity(activity)}
+                        isPending={ratingMutation.isPending}
                       />
                     ))}
                   </div>
@@ -428,8 +433,7 @@ function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
                               key={activity.timestamp}
                               activity={activity}
                               handleRateActivity={handleRateActivity}
-                              ratingMutation={ratingMutation}
-                              onCreateRule={() => createRuleFromActivity(activity)}
+                              isPending={ratingMutation.isPending}
                             />
                           ))}
                         </div>
@@ -448,7 +452,7 @@ function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
         open={isRuleDialogOpen}
         onOpenChange={handleRuleDialogClose}
         onSubmit={handleRuleSubmit}
-        defaultValues={ruleDefaults as RuleFormValues}
+        defaultValues={ruleDefaults}
         isSubmitting={createRuleMutation.isPending}
         mode="create"
       />
@@ -460,13 +464,11 @@ function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
 function ActivityItem({
   activity,
   handleRateActivity,
-  ratingMutation,
-  onCreateRule,
+  isPending,
 }: {
   activity: Activity;
   handleRateActivity: (activity: Activity, rating: number) => void;
-  ratingMutation: any;
-  onCreateRule: () => void;
+  isPending: boolean;
 }) {
   return (
     <div className="flex items-center justify-between rounded-md bg-muted/30 p-3 text-sm">
@@ -494,7 +496,7 @@ function ActivityItem({
             size="icon"
             className="h-8 w-8"
             onClick={() => handleRateActivity(activity, 1)}
-            disabled={ratingMutation.isPending}
+            disabled={isPending}
           >
             <ThumbsUp className="h-4 w-4" />
           </Button>
@@ -503,12 +505,9 @@ function ActivityItem({
             size="icon"
             className="h-8 w-8"
             onClick={() => handleRateActivity(activity, 0)}
-            disabled={ratingMutation.isPending}
+            disabled={isPending}
           >
             <ThumbsDown className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="icon" className="h-8 w-8" onClick={onCreateRule}>
-            <Shield className="h-4 w-4" />
           </Button>
         </div>
       </div>

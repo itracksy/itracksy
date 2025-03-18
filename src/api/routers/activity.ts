@@ -16,6 +16,7 @@ import {
   updateRule,
 } from "../services/activityRules";
 import { rateUserActivities } from "../services/activityRating";
+import { ruleFormSchema } from "../../types/rule";
 
 export const activityRouter = t.router({
   // Existing procedures
@@ -82,40 +83,22 @@ export const activityRouter = t.router({
     return getUserRules(userId);
   }),
 
-  createRule: protectedProcedure
-    .input(
-      z.object({
-        name: z.string(),
-        description: z.string().optional(),
-        ruleType: z.enum(["duration", "app_name", "domain", "title", "url"]),
-        condition: z.enum([">", "<", "=", ">=", "<=", "contains", "startsWith", "endsWith"]),
-        value: z.string(),
-        rating: z.number().min(0).max(1),
-        active: z.boolean().optional(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const userId = ctx.userId;
-      return createRule({
-        ...input,
-        userId,
-      });
-    }),
+  createRule: protectedProcedure.input(ruleFormSchema).mutation(async ({ ctx, input }) => {
+    const userId = ctx.userId;
+    console.log("createRule", input);
+    return createRule({
+      ...input,
+      userId,
+    });
+  }),
 
   updateRule: protectedProcedure
     .input(
-      z.object({
-        id: z.string(),
-        name: z.string().optional(),
-        description: z.string().optional(),
-        ruleType: z.enum(["duration", "app_name", "domain", "title", "url"]).optional(),
-        condition: z
-          .enum([">", "<", "=", ">=", "<=", "contains", "startsWith", "endsWith"])
-          .optional(),
-        value: z.string().optional(),
-        rating: z.number().min(0).max(1).optional(),
-        active: z.boolean().optional(),
-      })
+      ruleFormSchema.merge(
+        z.object({
+          id: z.string(),
+        })
+      )
     )
     .mutation(async ({ ctx, input }) => {
       const { id, ...updates } = input;

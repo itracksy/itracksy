@@ -1,12 +1,13 @@
 import db from "../db";
 import { blockedDomains, blockedApps } from "../db/schema";
 import { eq } from "drizzle-orm";
-import { defaultBlockedApps, defaultBlockedDomains } from "../../config/tracking";
+
 import { getValue, setValue, setMultipleValues } from "./localStorage";
 import { logger } from "../../helpers/logger";
 import { boards } from "../db/schema";
 import { createBoard, createColumn, createItem } from "../services/board";
 import { nanoid } from "nanoid";
+
 const USER_SETTINGS_KEYS = {
   accessibilityPermission: "user.accessibilityPermission",
   screenRecordingPermission: "user.screenRecordingPermission",
@@ -159,43 +160,6 @@ export async function setCurrentUserId(userId: string): Promise<string> {
 
   await setMultipleValues(defaultSettings);
 
-  // Insert default blocked domains
-  for (const domain of defaultBlockedDomains) {
-    await db
-      .insert(blockedDomains)
-      .values({
-        userId: existingUserId,
-        domain,
-        active: true,
-        updatedAt: Date.now(),
-      })
-      .onConflictDoUpdate({
-        target: [blockedDomains.userId, blockedDomains.domain],
-        set: {
-          active: true,
-          updatedAt: Date.now(),
-        },
-      });
-  }
-
-  // Insert default blocked apps
-  for (const appName of defaultBlockedApps) {
-    await db
-      .insert(blockedApps)
-      .values({
-        userId: existingUserId,
-        appName,
-        active: true,
-        updatedAt: Date.now(),
-      })
-      .onConflictDoUpdate({
-        target: [blockedApps.userId, blockedApps.appName],
-        set: {
-          active: true,
-          updatedAt: Date.now(),
-        },
-      });
-  }
   return existingUserId;
 }
 
