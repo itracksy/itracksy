@@ -13,6 +13,7 @@ import {
 } from "../../api/services/timeEntry";
 import { timeEntries } from "../db/schema";
 import { createInsertSchema } from "drizzle-zod";
+import { getUserActivities } from "../services/activities";
 const timeEntryInsertSchema = createInsertSchema(timeEntries);
 
 export const timeEntryRouter = t.router({

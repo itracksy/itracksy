@@ -6,6 +6,8 @@ import { LIMIT_TIME_APART } from "../../config/tracking";
 import db from "../db";
 import { activities } from "../db/schema";
 import { rateActivity } from "./activityRating";
+import { CreateRuleParams } from "./activityRules";
+import { generateRuleSuggestions, getBestRuleSuggestion } from "./activityRatingHelper";
 
 export const getActivities = async (date?: number): Promise<Activity[]> => {
   const fifteenMinutesAgo = Date.now() - 15 * 60 * 1000; // 15 minutes in milliseconds
@@ -155,6 +157,56 @@ export async function setActivityRating(timestamp: number, userId: string, ratin
     .set({ rating })
     .where(and(eq(activities.timestamp, timestamp), eq(activities.userId, userId)))
     .returning();
+}
+
+/**
+ * Manually set a rating for an activity and get rule suggestions
+ */
+export async function setActivityRatingWithSuggestions(
+  timestamp: number,
+  userId: string,
+  rating: number | null
+) {
+  // First update the activity rating
+  const updatedActivity = await db
+    .update(activities)
+    .set({ rating })
+    .where(and(eq(activities.timestamp, timestamp), eq(activities.userId, userId)))
+    .returning();
+
+  if (!updatedActivity.length || rating === null) {
+    return { activity: updatedActivity[0] || null, suggestions: [] };
+  }
+
+  // Generate rule suggestions based on the rated activity
+  const suggestions = generateRuleSuggestions(updatedActivity[0], rating);
+
+  return {
+    activity: updatedActivity[0],
+    suggestions,
+  };
+}
+
+/**
+ * Get the best rule suggestion for an activity
+ */
+export async function getBestRuleForActivity(
+  timestamp: number,
+  userId: string,
+  rating: number
+): Promise<CreateRuleParams | null> {
+  // Get the activity
+  const activityResult = await db
+    .select()
+    .from(activities)
+    .where(and(eq(activities.timestamp, timestamp), eq(activities.userId, userId)))
+    .limit(1);
+
+  if (!activityResult.length) {
+    return null;
+  }
+
+  return getBestRuleSuggestion(activityResult[0], rating);
 }
 
 /**

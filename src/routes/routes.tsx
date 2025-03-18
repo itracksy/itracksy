@@ -7,6 +7,7 @@ import SettingsPage from "@/pages/settings-page/SettingsPage";
 import RainingLetters from "@/pages/rainning-letter/index";
 import AchievementsPage from "@/pages/achievements";
 import FullScreenLayout from "@/layouts/FullScreenLayout";
+import RuleBookPage from "@/pages/rule-book";
 
 export const DashboardRoute = createRoute({
   getParentRoute: () => RootRoute,
@@ -47,6 +48,12 @@ export const AchievementsRoute = createRoute({
   component: AchievementsPage,
 });
 
+export const RuleBookRoute = createRoute({
+  getParentRoute: () => RootRoute,
+  path: "/rule-book",
+  component: RuleBookPage,
+});
+
 export const rootTree = RootRoute.addChildren([
   FocusRoute,
   DashboardRoute,
@@ -54,4 +61,5 @@ export const rootTree = RootRoute.addChildren([
   SettingsRoute,
   RainingLettersRoute,
   AchievementsRoute,
+  RuleBookRoute,
 ]);

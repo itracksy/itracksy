@@ -3,6 +3,7 @@ import { eq, and, isNull } from "drizzle-orm";
 import { activities, activityRules } from "../db/schema";
 import db from "../db";
 import { Activity, ActivityRule } from "@/types/activity";
+import { extractDomain } from "../../utils/url";
 
 export type RuleCondition = ">" | "<" | "=" | ">=" | "<=" | "contains" | "startsWith" | "endsWith";
 export type RuleType = "duration" | "app_name" | "domain" | "title" | "url";
@@ -68,7 +69,7 @@ function evaluateRules(activity: Activity, rules: ActivityRule[]): ActivityRule[
       case "domain":
         return activity.url
           ? evaluateStringRule(
-              extractDomain(activity.url),
+              extractDomain(activity.url) ?? "",
               rule.condition as RuleCondition,
               rule.value
             )
@@ -125,17 +126,6 @@ function evaluateStringRule(text: string, condition: RuleCondition, value: strin
       return text === value;
     default:
       return false;
-  }
-}
-
-/**
- * Extract domain from URL
- */
-function extractDomain(url: string): string {
-  try {
-    return new URL(url).hostname;
-  } catch {
-    return url;
   }
 }
 
