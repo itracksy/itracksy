@@ -57,30 +57,28 @@ const AchievementsPage: React.FC = () => {
     <div className="container mx-auto py-8">
       <h1 className="mb-8 text-center text-3xl font-bold">Achievements</h1>
 
-      <Card className="border-none shadow-none">
-        <CardContent className="p-4">
-          <ScrollArea className="h-full" ref={scrollAreaRef} onScroll={handleScroll}>
-            {status === "pending" ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : status === "error" ? (
-              <p className="text-center text-red-500">Error loading sessions</p>
-            ) : timeEntries.length > 0 ? (
-              <>
-                <TimeEntryList timeEntries={timeEntries} />
-                {isFetchingNextPage && (
-                  <div className="flex justify-center py-4">
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                  </div>
-                )}
-              </>
-            ) : (
-              <p className="text-center text-muted-foreground">No sessions recorded yet</p>
-            )}
-          </ScrollArea>
-        </CardContent>
-      </Card>
+      <div className="p-4">
+        <ScrollArea className="h-full" ref={scrollAreaRef} onScroll={handleScroll}>
+          {status === "pending" ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : status === "error" ? (
+            <p className="text-center text-red-500">Error loading sessions</p>
+          ) : timeEntries.length > 0 ? (
+            <>
+              <TimeEntryList timeEntries={timeEntries} />
+              {isFetchingNextPage && (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="text-center text-muted-foreground">No sessions recorded yet</p>
+          )}
+        </ScrollArea>
+      </div>
     </div>
   );
 };

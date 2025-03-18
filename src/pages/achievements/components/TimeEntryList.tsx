@@ -32,43 +32,102 @@ interface TimeEntryListProps {
 
 export function TimeEntryList({ timeEntries }: TimeEntryListProps) {
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
+
+  // Handle item expansion with auto-collapse of others
+  const handleItemChange = (value: string[]) => {
+    // If we're expanding an item (value has one item that wasn't in expandedItems)
+    if (value.length > expandedItems.length) {
+      const newItem = value.find((item) => !expandedItems.includes(item));
+      if (newItem) {
+        // Only keep the newly expanded item open
+        setExpandedItems([newItem]);
+        setFocusedItemId(newItem);
+      }
+    } else if (value.length === 0) {
+      // All items closed
+      setExpandedItems([]);
+      setFocusedItemId(null);
+    } else {
+      // Normal case (closing an item)
+      setExpandedItems(value);
+      setFocusedItemId(value[0] || null);
+    }
+  };
+
+  // Handle clicking on an entry item
+  const handleItemClick = (entryId: string) => {
+    // If the item is already expanded, collapse it
+    if (expandedItems.includes(entryId)) {
+      setExpandedItems([]);
+      setFocusedItemId(null);
+    } else {
+      // Otherwise expand this item and collapse others
+      setExpandedItems([entryId]);
+      setFocusedItemId(entryId);
+    }
+  };
 
   return (
     <div className="space-y-4">
       <Accordion
         type="multiple"
         value={expandedItems}
-        onValueChange={setExpandedItems}
+        onValueChange={handleItemChange}
         className="w-full"
       >
-        {timeEntries.map((entry) => (
-          <AccordionItem key={entry.id} value={entry.id} className="rounded-lg border px-4">
-            <div className="flex items-center justify-between py-4">
-              <div className="space-y-1">
-                <h3 className="font-medium">{entry.item?.title || "Untitled Item"}</h3>
-                <p className="text-sm text-muted-foreground">{formatDate(entry.startTime)}</p>
+        {timeEntries.map((entry) => {
+          const isExpanded = expandedItems.includes(entry.id);
+          const isFocused = focusedItemId === entry.id;
+
+          return (
+            <AccordionItem
+              key={entry.id}
+              value={entry.id}
+              className={`group rounded-lg px-4 transition-all duration-200 hover:cursor-pointer hover:bg-primary/10 ${
+                isExpanded ? "bg-primary/5 shadow-sm" : isFocused ? "bg-muted/40" : "bg-muted/20"
+              }`}
+            >
+              <div
+                className="flex items-center justify-between py-4"
+                onClick={(e) => {
+                  handleItemClick(entry.id);
+                }}
+              >
+                <div className="space-y-1">
+                  <h3
+                    className={`font-medium group-hover:text-primary ${isFocused ? "text-primary" : ""}`}
+                  >
+                    {entry.item?.title || "Untitled Item"}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">{formatDate(entry.startTime)}</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm font-medium">
+                    {entry.duration ? formatDuration(entry.duration) : "In Progress"}
+                  </span>
+                  <AccordionTrigger className="py-0" data-accordion-trigger="true">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`group-hover:text-primary ${isFocused ? "text-primary" : ""}`}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </AccordionTrigger>
+                </div>
               </div>
-              <div className="flex items-center gap-4">
-                <span className="text-sm font-medium">
-                  {entry.duration ? formatDuration(entry.duration) : "In Progress"}
-                </span>
-                <AccordionTrigger className="py-0">
-                  <Button variant="ghost" size="icon">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                </AccordionTrigger>
-              </div>
-            </div>
-            <AccordionContent>
-              <div className="border-t py-4">
-                <p className="text-sm text-muted-foreground">
-                  {entry.description || "No description provided"}
-                </p>
-                <TimeEntryActivities timeEntryId={entry.id} />
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        ))}
+              <AccordionContent>
+                <div className="border-t py-4">
+                  <p className="text-sm text-muted-foreground">
+                    {entry.description || "No description provided"}
+                  </p>
+                  <TimeEntryActivities timeEntryId={entry.id} />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          );
+        })}
       </Accordion>
     </div>
   );
@@ -186,7 +245,7 @@ function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
         {activities.map((activity) => (
           <div
             key={activity.timestamp}
-            className="flex items-center justify-between rounded-md border p-3 text-sm"
+            className="flex items-center justify-between rounded-md bg-muted/30 p-3 text-sm"
           >
             <div className="flex-1">
               <p className="font-medium">{activity.title}</p>
