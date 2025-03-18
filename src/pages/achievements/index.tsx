@@ -1,32 +1,57 @@
-import React, { useState } from "react";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import React, { useRef, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { trpcClient } from "@/utils/trpc";
 import { TimeEntryList } from "./components/TimeEntryList";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2 } from "lucide-react";
+
+// Define the type for the API response
+type TimeEntriesResponse = {
+  entries: any[];
+  pagination: {
+    page: number;
+    totalPages: number;
+    total: number;
+  };
+};
 
 const AchievementsPage: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState(1);
   const limit = 10;
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  const formatDuration = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    return `${minutes} min`;
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
+    useInfiniteQuery<TimeEntriesResponse>({
+      queryKey: ["timeEntries"],
+      queryFn: ({ pageParam = 1 }) =>
+        trpcClient.timeEntry.getTimeEntries.query({
+          page: Number(pageParam),
+          limit,
+        }),
+      getNextPageParam: (lastPage) => {
+        if (lastPage.pagination.page < lastPage.pagination.totalPages) {
+          return lastPage.pagination.page + 1;
+        }
+        return undefined;
+      },
+      initialPageParam: 1,
+    });
+
+  // Handle scroll to bottom to load more entries
+  const handleScroll = () => {
+    if (!scrollAreaRef.current) return;
+
+    const scrollElement = scrollAreaRef.current;
+    const { scrollTop, scrollHeight, clientHeight } = scrollElement;
+
+    // Load more entries when user scrolls near the bottom
+    if (scrollHeight - scrollTop - clientHeight < 200 && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
   };
 
-  const { data: timeEntriesData } = useQuery({
-    queryKey: ["timeEntries", currentPage, limit],
-    queryFn: () =>
-      trpcClient.timeEntry.getTimeEntries.query({
-        page: currentPage,
-        limit,
-      }),
-  });
-
-  const timeEntries = timeEntriesData?.entries || [];
-  const pagination = timeEntriesData?.pagination;
+  // Combine all entries from all pages
+  const timeEntries = data?.pages.flatMap((page) => page.entries) || [];
 
   return (
     <div className="container mx-auto py-8">
@@ -34,39 +59,27 @@ const AchievementsPage: React.FC = () => {
 
       <Card className="border-none shadow-none">
         <CardContent className="p-4">
-          <ScrollArea className="h-full">
-            {timeEntries.length > 0 ? (
-              <TimeEntryList timeEntries={timeEntries} />
+          <ScrollArea className="h-full" ref={scrollAreaRef} onScroll={handleScroll}>
+            {status === "pending" ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : status === "error" ? (
+              <p className="text-center text-red-500">Error loading sessions</p>
+            ) : timeEntries.length > 0 ? (
+              <>
+                <TimeEntryList timeEntries={timeEntries} />
+                {isFetchingNextPage && (
+                  <div className="flex justify-center py-4">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                )}
+              </>
             ) : (
               <p className="text-center text-muted-foreground">No sessions recorded yet</p>
             )}
           </ScrollArea>
         </CardContent>
-        {pagination && pagination.totalPages > 1 && (
-          <CardFooter className="flex items-center justify-between pt-4">
-            <div className="text-sm text-muted-foreground">
-              Page {pagination.page} of {pagination.totalPages}
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage <= 1}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, pagination.totalPages))}
-                disabled={currentPage >= pagination.totalPages}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardFooter>
-        )}
       </Card>
     </div>
   );
