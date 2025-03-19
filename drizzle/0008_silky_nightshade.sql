@@ -1,1 +1,0 @@
-CREATE UNIQUE INDEX `activity_rules_user_id_rule_type_condition_value_app_name_domain_rating_unique` ON `activity_rules` (`user_id`,`rule_type`,`condition`,`value`,`app_name`,`domain`,`rating`);

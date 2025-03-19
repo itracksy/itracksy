@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "a2ea4d79-08ba-42e5-a2ef-df6b0052c892",
+  "id": "35b934d8-7d59-4c55-8f86-37eafb4b38c9",
   "prevId": "654d15a3-e0cc-4d48-a6a0-f31e5fa6e3fa",
   "tables": {
     "activities": {
@@ -170,6 +170,22 @@
           "notNull": false,
           "autoincrement": false
         },
+        "app_name": {
+          "name": "app_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "''"
+        },
+        "domain": {
+          "name": "domain",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "''"
+        },
         "rule_type": {
           "name": "rule_type",
           "type": "text",
@@ -242,6 +258,18 @@
             "active"
           ],
           "isUnique": false
+        },
+        "activity_rules_user_id_rule_type_condition_value_app_name_domain_unique": {
+          "name": "activity_rules_user_id_rule_type_condition_value_app_name_domain_unique",
+          "columns": [
+            "user_id",
+            "rule_type",
+            "condition",
+            "value",
+            "app_name",
+            "domain"
+          ],
+          "isUnique": true
         }
       },
       "foreignKeys": {},
