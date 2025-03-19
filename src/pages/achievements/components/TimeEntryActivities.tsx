@@ -10,6 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import { RuleDialog, RuleFormValues } from "@/components/rules/rule-dialog";
 import { extractDomain, groupActivities, findActivitiesMatchingRule } from "@/utils/activityUtils";
 import { ActivityItem } from "./ActivityItem";
+import { useCreateRule } from "@/hooks/use-create-rule";
 
 export function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
   const { data: activities, isLoading } = useQuery({
@@ -41,31 +42,16 @@ export function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
     },
   });
 
-  // Mutation for creating rules
-  const createRuleMutation = useMutation({
-    mutationFn: (values: RuleFormValues) => trpcClient.activity.createRule.mutate(values),
-    onSuccess: (values) => {
-      // when a rule is created, find all activities that match the rule and set their rating
-      const unRatedActivities = activities?.filter((activity) => activity.rating === null);
-      console.log("unRatedActivities", unRatedActivities);
-      console.log("activities", activities);
-      if (unRatedActivities?.length) {
-        const activitiesToRate = findActivitiesMatchingRule(
-          unRatedActivities,
-          values as RuleFormValues
-        );
-
-        activitiesToRate.forEach((activity) => {
-          ratingMutation.mutate({ timestamp: activity.timestamp, rating: values.rating });
-        });
-      }
-
-      queryClient.invalidateQueries({ queryKey: ["activityRules"] });
+  // Use the custom hook for creating rules
+  const createRuleMutation = useCreateRule({
+    timeEntryId,
+    activities,
+    onSuccess: () => {
+      setIsRuleDialogOpen(false);
       toast({
         title: "Rule created",
-        description: "Your activity rule has been created successfully",
+        description: "Your productivity rule has been created successfully",
       });
-      setIsRuleDialogOpen(false);
     },
   });
 

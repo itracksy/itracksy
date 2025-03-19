@@ -19,6 +19,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { RuleDialog, RuleFormValues } from "@/components/rules/rule-dialog";
+import { useCreateRule } from "@/hooks/use-create-rule";
 
 export default function RuleBookPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -31,8 +32,7 @@ export default function RuleBookPage() {
     queryFn: () => trpcClient.activity.getUserRules.query(),
   });
 
-  const createMutation = useMutation({
-    mutationFn: (values: RuleFormValues) => trpcClient.activity.createRule.mutate(values),
+  const createMutation = useCreateRule({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["activityRules"] });
       toast({

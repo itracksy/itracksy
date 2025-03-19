@@ -16,6 +16,7 @@ import { Activity } from "@/types/activity";
 
 import { toast } from "@/hooks/use-toast";
 import { RuleDialog, RuleFormValues } from "@/components/rules/rule-dialog";
+import { useCreateRule } from "@/hooks/use-create-rule";
 
 interface TimeEntryListProps {
   timeEntries: (TimeEntry & { item?: { title: string } | null })[];
@@ -221,16 +222,16 @@ function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
   });
 
   // Mutation for creating rules
-  const createRuleMutation = useMutation({
-    mutationFn: (values: RuleFormValues) => trpcClient.activity.createRule.mutate(values),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["activityRules"] });
+  const createRuleMutation = useCreateRule({
+    onSuccess: (values) => {
+      setIsRuleDialogOpen(false);
       toast({
         title: "Rule created",
-        description: "Your activity rule has been created successfully",
+        description: "Your productivity rule has been created successfully",
       });
-      setIsRuleDialogOpen(false);
     },
+    timeEntryId,
+    activities,
   });
 
   // Function to open rule dialog for an app
