@@ -8,7 +8,7 @@ import { formatDuration } from "@/utils/formatTime";
 import { Activity } from "@/types/activity";
 import { toast } from "@/hooks/use-toast";
 import { RuleDialog, RuleFormValues } from "@/components/rules/rule-dialog";
-import { extractDomain, groupActivities } from "@/utils/activityUtils";
+import { extractDomain, groupActivities, findActivitiesMatchingRule } from "@/utils/activityUtils";
 import { ActivityItem } from "./ActivityItem";
 
 export function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
@@ -44,7 +44,22 @@ export function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
   // Mutation for creating rules
   const createRuleMutation = useMutation({
     mutationFn: (values: RuleFormValues) => trpcClient.activity.createRule.mutate(values),
-    onSuccess: () => {
+    onSuccess: (values) => {
+      // when a rule is created, find all activities that match the rule and set their rating
+      const unRatedActivities = activities?.filter((activity) => activity.rating === null);
+      console.log("unRatedActivities", unRatedActivities);
+      console.log("activities", activities);
+      if (unRatedActivities?.length) {
+        const activitiesToRate = findActivitiesMatchingRule(
+          unRatedActivities,
+          values as RuleFormValues
+        );
+
+        activitiesToRate.forEach((activity) => {
+          ratingMutation.mutate({ timestamp: activity.timestamp, rating: values.rating });
+        });
+      }
+
       queryClient.invalidateQueries({ queryKey: ["activityRules"] });
       toast({
         title: "Rule created",

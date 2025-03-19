@@ -1,5 +1,13 @@
 import { relations } from "drizzle-orm";
-import { sqliteTable, text, integer, index, primaryKey, real } from "drizzle-orm/sqlite-core";
+import {
+  sqliteTable,
+  text,
+  integer,
+  index,
+  primaryKey,
+  real,
+  unique,
+} from "drizzle-orm/sqlite-core";
 
 // Tables
 export const boards = sqliteTable("boards", {
@@ -108,6 +116,16 @@ export const activityRules = sqliteTable(
     index("activity_rules_user_id_idx").on(table.userId),
     index("activity_rules_rule_type_idx").on(table.ruleType),
     index("activity_rules_active_idx").on(table.active),
+    // Add a unique composite key to ensure no duplicate rules
+    unique().on(
+      table.userId,
+      table.ruleType,
+      table.condition,
+      table.value,
+      table.appName,
+      table.domain,
+      table.rating
+    ),
   ]
 );
 
