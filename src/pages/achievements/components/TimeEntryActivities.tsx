@@ -56,21 +56,29 @@ export function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
   });
 
   // Function to open rule dialog for an app
-  const openAppRuleDialog = (appName: string) => {
+  const openAppRuleDialog = ({ appName, rating }: { appName: string; rating: number }) => {
     setRuleDefaults({
       name: `Block ${appName}`,
       description: `Block the application: ${appName}`,
       ruleType: "app_name",
       condition: "=",
       value: appName,
-      rating: 0, // Distracting by default for blocking
+      rating,
       active: true,
     });
     setIsRuleDialogOpen(true);
   };
 
   // Function to open rule dialog for a domain
-  const openDomainRuleDialog = (appName: string, domain: string) => {
+  const openDomainRuleDialog = ({
+    appName,
+    domain,
+    rating,
+  }: {
+    appName: string;
+    domain: string;
+    rating: number;
+  }) => {
     setRuleDefaults({
       name: `Block ${domain}`,
       description: `Block the domain: ${domain}`,
@@ -78,7 +86,7 @@ export function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
       appName: appName,
       condition: "=",
       value: domain,
-      rating: 0, // Distracting by default for blocking
+      rating,
       active: true,
     });
     setIsRuleDialogOpen(true);
@@ -178,18 +186,31 @@ export function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
               </div>
 
               {/* App level rule button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 gap-1 text-xs"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openAppRuleDialog(appGroup.appName);
-                }}
-              >
-                <Shield className="h-3 w-3" />
-                <span>Block App</span>
-              </Button>
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground">Is this app distracting?</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openAppRuleDialog({ appName: appGroup.appName, rating: 0 });
+                  }}
+                >
+                  YES
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openAppRuleDialog({ appName: appGroup.appName, rating: 1 });
+                  }}
+                >
+                  NO
+                </Button>
+              </div>
             </div>
 
             {/* App Group Content */}
@@ -233,18 +254,41 @@ export function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
                         </div>
 
                         {/* Domain level rule button */}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 gap-1 text-xs"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openDomainRuleDialog(appGroup.appName, domainGroup.domain);
-                          }}
-                        >
-                          <Shield className="h-3 w-3" />
-                          <span>Block Domain</span>
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-muted-foreground">
+                            Is this domain distracting?
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openDomainRuleDialog({
+                                appName: appGroup.appName,
+                                domain: domainGroup.domain,
+                                rating: 0,
+                              });
+                            }}
+                          >
+                            YES
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openDomainRuleDialog({
+                                appName: appGroup.appName,
+                                domain: domainGroup.domain,
+                                rating: 1,
+                              });
+                            }}
+                          >
+                            NO
+                          </Button>
+                        </div>
                       </div>
 
                       {/* Domain Group Content */}

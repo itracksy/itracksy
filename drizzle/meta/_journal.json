@@ -64,6 +64,13 @@
       "when": 1742345378978,
       "tag": "0008_silky_nightshade",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1742375671471,
+      "tag": "0009_nifty_vampiro",
+      "breakpoints": true
     }
   ]
 }

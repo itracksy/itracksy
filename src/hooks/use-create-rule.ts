@@ -7,15 +7,42 @@ import { findActivitiesMatchingRule } from "@/utils/activityUtils";
 
 interface UseCreateRuleOptions {
   onSuccess?: (values: RuleFormValues) => void;
+  onError?: (error: Error) => void;
   timeEntryId?: string;
   activities?: Activity[];
 }
 
-export function useCreateRule({ onSuccess, timeEntryId, activities }: UseCreateRuleOptions = {}) {
+export function useCreateRule({
+  onSuccess,
+  onError,
+  timeEntryId,
+  activities,
+}: UseCreateRuleOptions = {}) {
   const queryClient = useQueryClient();
 
   const createRuleMutation = useMutation({
-    mutationFn: (values: RuleFormValues) => trpcClient.activity.createRule.mutate(values),
+    mutationFn: async (values: RuleFormValues) => {
+      try {
+        return await trpcClient.activity.createRule.mutate(values);
+      } catch (error) {
+        // Check if error is related to a unique constraint violation
+        if (error instanceof Error && error.message.includes("UNIQUE constraint failed")) {
+          throw new Error("A similar rule already exists. Please modify your rule.");
+        }
+        throw error;
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Error creating rule",
+        description: error.message,
+        variant: "destructive",
+      });
+
+      if (onError) {
+        onError(error);
+      }
+    },
     onSuccess: (values) => {
       // when a rule is created, find all activities that match the rule and set their rating
       if (activities?.length) {
