@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useCreateTimeEntryMutation } from "@/hooks/useTimeEntryQueries";
 import { useToast } from "@/hooks/use-toast";
 import { useAtomValue } from "jotai";
-import { selectedBoardIdAtom } from "@/context/board";
+import { selectedBoardIdAtom, targetMinutesAtom } from "@/context/board";
 import { trpcClient } from "@/utils/trpc";
 import { Focus } from "lucide-react";
 import { BoardSelector } from "./BoardSelector";
@@ -19,7 +19,7 @@ export function TimeEntryDialog({ open, onOpenChange }: TimeEntryDialogProps) {
   const selectedBoardId = useAtomValue(selectedBoardIdAtom);
   const createTimeEntry = useCreateTimeEntryMutation();
   const { toast } = useToast();
-
+  const targetMinutes = useAtomValue(targetMinutesAtom);
   const handleCreateTimeEntry = async (isFocusMode: boolean = false) => {
     if (!selectedItemId || !selectedBoardId) {
       toast({
@@ -35,7 +35,8 @@ export function TimeEntryDialog({ open, onOpenChange }: TimeEntryDialogProps) {
         itemId: selectedItemId,
         boardId: selectedBoardId,
         startTime: Date.now(),
-        isFocusMode,
+        isFocusMode: isFocusMode,
+        targetDuration: targetMinutes,
       });
 
       await trpcClient.user.updateActivitySettings.mutate({
@@ -72,9 +73,8 @@ export function TimeEntryDialog({ open, onOpenChange }: TimeEntryDialogProps) {
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => handleCreateTimeEntry(true)} className="gap-2">
               <Focus className="h-4 w-4" />
-              Focus Mode
+              Start
             </Button>
-            <Button onClick={() => handleCreateTimeEntry(false)}>Start</Button>
           </div>
         </div>
       </DialogContent>

@@ -8,6 +8,7 @@ import { notifications } from "../db/schema";
 import { nanoid } from "nanoid";
 import db from "../db";
 import { getLastNotification } from "./notifications";
+import { getTitleTimeEntry } from "../db/timeEntryExt";
 
 export const sendNotification = async (
   options: Omit<NotificationInsert, "id">,
@@ -85,7 +86,7 @@ export const sendNotificationWhenNoActiveEntry = async (userId: string) => {
   }
 
   const sessionMinutesDuration = Math.round((now.getTime() - lastTimeEntry.startTime) / 1000 / 60);
-  const taskTitle = lastTimeEntry.item?.title || lastTimeEntry.description || "Untitled";
+  const taskTitle = getTitleTimeEntry(lastTimeEntry);
 
   const minutesSinceLastSession = Math.floor((now.getTime() - lastTimeEntry.endTime) / (1000 * 60));
 
@@ -155,7 +156,7 @@ const getNotificationOptions = ({
   timeEntry: TimeEntryWithRelations;
   minutesExceeded: number;
 }): { title: string; body: string } => {
-  const sessionTitle = timeEntry.item?.title || timeEntry.description || "your session";
+  const sessionTitle = getTitleTimeEntry(timeEntry);
 
   // Fun messages for focus mode
   const focusMessages = [

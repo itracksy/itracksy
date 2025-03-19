@@ -15,6 +15,8 @@ import { useAtom } from "jotai";
 import { breakDurationAtom } from "@/context/board";
 
 import { useNavigate } from "@tanstack/react-router";
+import { get } from "http";
+import { getTitleTimeEntry } from "@/api/db/timeEntryExt";
 
 export function BottomSideBar() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -104,7 +106,7 @@ export function BottomSideBar() {
         onSuccess: () => {
           toast({
             title: "Resumed task",
-            description: `Now tracking: ${lastTimeEntry.item?.title || lastTimeEntry.description}`,
+            description: `Now tracking: ${getTitleTimeEntry(lastTimeEntry)}`,
           });
           navigate({ to: "/" });
         },
@@ -133,7 +135,7 @@ export function BottomSideBar() {
             >
               <StopCircle className="h-6 w-6 text-red-600" />
               <span className="flex items-center gap-2 text-base font-medium">
-                <span>{activeTimeEntry.item?.title || activeTimeEntry.description}</span>
+                <span>{getTitleTimeEntry(activeTimeEntry)}</span>
               </span>
             </SidebarMenuButton>
 
@@ -180,11 +182,11 @@ export function BottomSideBar() {
               <SidebarMenuButton
                 onClick={handleResumeLastTask}
                 className="hover:text-blue-600"
-                tooltip={`Resume: ${lastTimeEntry.item?.title || lastTimeEntry.description}`}
+                tooltip={`Resume: ${getTitleTimeEntry(lastTimeEntry)}`}
               >
                 <History className="h-5 w-5 text-blue-600" />
                 <span className="text-base text-muted-foreground">
-                  Resume: {lastTimeEntry.item?.title || lastTimeEntry.description}
+                  Resume: {getTitleTimeEntry(lastTimeEntry)}
                 </span>
               </SidebarMenuButton>
             )}

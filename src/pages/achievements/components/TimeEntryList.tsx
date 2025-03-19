@@ -19,9 +19,11 @@ import { RuleDialog, RuleFormValues } from "@/components/rules/rule-dialog";
 import { useCreateRule } from "@/hooks/use-create-rule";
 import { ActivityItem } from "./ActivityItem";
 import { TimeEntryActivities } from "./TimeEntryActivities";
+import { getTitleTimeEntry } from "@/api/db/timeEntryExt";
+import { TimeEntryWithRelations } from "@/types/projects";
 
 interface TimeEntryListProps {
-  timeEntries: (TimeEntry & { item?: { title: string } | null })[];
+  timeEntries: TimeEntryWithRelations[];
 }
 
 export function TimeEntryList({ timeEntries }: TimeEntryListProps) {
@@ -92,7 +94,7 @@ export function TimeEntryList({ timeEntries }: TimeEntryListProps) {
                   <h3
                     className={`font-medium group-hover:text-primary ${isFocused ? "text-primary" : ""}`}
                   >
-                    {entry.item?.title || "Untitled Item"}
+                    {getTitleTimeEntry(entry)}
                   </h3>
                   <p className="text-sm text-muted-foreground">{formatDate(entry.startTime)}</p>
                 </div>

@@ -170,8 +170,9 @@ export function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
           <div key={appGroup.appName} className="rounded-md bg-muted/20">
             {/* App Group Header */}
             <div className="flex items-center justify-between rounded-t-md bg-muted/40 p-3">
-              <div
-                className="flex cursor-pointer items-center gap-2"
+              <button
+                type="button"
+                className="flex items-center gap-2 text-left"
                 onClick={() => toggleAppExpansion(appGroup.appName)}
               >
                 <ChevronDown
@@ -183,9 +184,9 @@ export function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
                 <span className="text-xs text-muted-foreground">
                   ({formatDuration(appGroup.totalDuration)})
                 </span>
-              </div>
+              </button>
 
-              {/* App level rule button */}
+              {/* App level rule buttons - moved outside the clickable area */}
               <div className="flex items-center gap-1">
                 <span className="text-xs text-muted-foreground">Is this app distracting?</span>
                 <Button
