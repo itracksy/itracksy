@@ -1,4 +1,3 @@
-DROP TABLE IF EXISTS `activity_rules`;
 CREATE TABLE `activity_rules` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
