@@ -123,8 +123,7 @@ export const activityRules = sqliteTable(
       table.condition,
       table.value,
       table.appName,
-      table.domain,
-      table.rating
+      table.domain
     ),
   ]
 );

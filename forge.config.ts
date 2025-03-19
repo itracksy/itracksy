@@ -257,7 +257,7 @@ const config: ForgeConfig = {
         name: "itracksy",
       },
       prerelease: false,
-      draft: false,
+      draft: true,
     }),
   ],
   // Plugins for custom build steps
