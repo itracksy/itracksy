@@ -112,3 +112,4 @@ local.db
 .vscode/*
 
 .env.local
+logs.txt

@@ -1,10 +1,9 @@
 import { app } from "electron";
 import type { Client } from "@axiomhq/axiom-node";
 import { v4 as uuidv4 } from "uuid";
-import { config } from "../../config/env";
-import { LogLevel } from "./types";
 import * as fs from "fs";
 import * as path from "path";
+import { LogLevel } from "./types";
 
 // Log levels configuration
 const LOG_CONFIG = {
@@ -26,21 +25,37 @@ export class ServerLogger {
   private userId: string | null = null;
   private sessionId: string;
   private environment: "development" | "production";
+  private config: { axiomToken?: string; axiomOrgId?: string; axiomDataset?: string } = {};
 
   constructor() {
     this.environment = process.env.NODE_ENV === "production" ? "production" : "development";
     this.sessionId = uuidv4();
-    const userDataPath = app.getPath("userData");
+    const userDataPath = app?.getPath("userData") ?? "";
     this.logPath = path.join(userDataPath, "logs.txt");
     console.log("Log path:", this.logPath);
-    // Initialize Axiom client if tokens are available
-    if (config.axiomToken && config.axiomOrgId) {
-      import("@axiomhq/axiom-node").then(({ Client }) => {
+
+    // Only load config and initialize Axiom client in production
+    if (this.environment === "production") {
+      this.initializeProduction();
+    }
+  }
+
+  private async initializeProduction() {
+    try {
+      // Dynamic import of config to avoid loading it in development
+      const { config } = await import("../../config/env");
+      this.config = config;
+
+      // Initialize Axiom client if tokens are available
+      if (config.axiomToken && config.axiomOrgId) {
+        const { Client } = await import("@axiomhq/axiom-node");
         this.axiomClient = new Client({
           token: config.axiomToken,
           orgId: config.axiomOrgId,
         });
-      });
+      }
+    } catch (error) {
+      console.error("Failed to initialize production logger:", error);
     }
   }
 
@@ -68,10 +83,10 @@ export class ServerLogger {
   }
 
   private async logToAxiom(level: LogLevel, message: string, ...args: any[]) {
-    if (!this.axiomClient) return;
+    if (!this.axiomClient || this.environment !== "production") return;
 
     try {
-      this.axiomClient.ingestEvents(config.axiomDataset, [
+      this.axiomClient.ingestEvents(this.config.axiomDataset || "default", [
         {
           timestamp: new Date(),
           level,

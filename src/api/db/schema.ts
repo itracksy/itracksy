@@ -85,6 +85,7 @@ export const activities = sqliteTable(
     index("userId_idx").on(table.userId),
     index("isFocusMode_idx").on(table.isFocusMode),
     index("timeEntryId_idx").on(table.timeEntryId),
+    index("activity_rating_idx").on(table.rating),
     index("activity_match_idx").on(
       table.title,
       table.ownerBundleId,
@@ -116,6 +117,7 @@ export const activityRules = sqliteTable(
     index("activity_rules_user_id_idx").on(table.userId),
     index("activity_rules_rule_type_idx").on(table.ruleType),
     index("activity_rules_active_idx").on(table.active),
+    index("activity_rules_rating_idx").on(table.rating),
     // Add a unique composite key to ensure no duplicate rules
     unique().on(
       table.userId,

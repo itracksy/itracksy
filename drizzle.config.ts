@@ -8,4 +8,7 @@ export default defineConfig({
   dbCredentials: {
     url: getDatabasePath(),
   },
+  // These options make migrations safer
+  strict: true,
+  verbose: true,
 });

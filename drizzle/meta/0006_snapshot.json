@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "35b934d8-7d59-4c55-8f86-37eafb4b38c9",
+  "id": "d2cf42b0-c21b-47a6-859c-7b6382d43c31",
   "prevId": "654d15a3-e0cc-4d48-a6a0-f31e5fa6e3fa",
   "tables": {
     "activities": {
@@ -125,6 +125,13 @@
           "name": "timeEntryId_idx",
           "columns": [
             "timeEntryId"
+          ],
+          "isUnique": false
+        },
+        "activity_rating_idx": {
+          "name": "activity_rating_idx",
+          "columns": [
+            "rating"
           ],
           "isUnique": false
         },
@@ -256,6 +263,13 @@
           "name": "activity_rules_active_idx",
           "columns": [
             "active"
+          ],
+          "isUnique": false
+        },
+        "activity_rules_rating_idx": {
+          "name": "activity_rules_rating_idx",
+          "columns": [
+            "rating"
           ],
           "isUnique": false
         },
