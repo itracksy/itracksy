@@ -3,6 +3,9 @@ import db from "../db";
 import { activityRules } from "../db/schema";
 import { nanoid } from "nanoid";
 import { RuleCondition, RuleType } from "./activityRating";
+import { Activity, ActivityRule } from "@/types/activity";
+
+import { extractDomain } from "../../utils/url";
 
 export interface CreateRuleParams {
   name: string;
@@ -116,4 +119,78 @@ export async function createDefaultRules(userId: string) {
   for (const rule of defaultRules) {
     await createRule(rule);
   }
+}
+
+export async function getGroupActivities(activities: Activity[]) {
+  const appGroups: Record<
+    string,
+    {
+      appName: string;
+      rule?: ActivityRule;
+      totalDuration: number;
+      domains: Record<
+        string,
+        {
+          domain: string;
+          activities: Activity[];
+          totalDuration: number;
+          rule?: ActivityRule;
+        }
+      >;
+      activitiesWithoutUrl: Activity[];
+    }
+  > = {};
+
+  for (const activity of activities) {
+    const appName = activity.ownerName;
+
+    // Initialize app group if it doesn't exist
+    if (!appGroups[appName]) {
+      const rule = await db
+        .select()
+        .from(activityRules)
+        .where(and(eq(activityRules.ruleType, "app_name"), eq(activityRules.value, appName)))
+        .get();
+      console.log(appName, rule);
+      appGroups[appName] = {
+        appName,
+        totalDuration: 0,
+        domains: {},
+        activitiesWithoutUrl: [],
+        rule,
+      };
+    }
+
+    appGroups[appName].totalDuration += activity.duration;
+
+    if (activity.url) {
+      const domain = extractDomain(activity.url);
+      if (!domain) {
+        console.log("No domain found for URL", activity.url);
+        continue;
+      }
+      // Initialize domain group if it doesn't exist
+      if (!appGroups[appName].domains[domain]) {
+        const rule = await db
+          .select()
+          .from(activityRules)
+          .where(and(eq(activityRules.ruleType, "domain"), eq(activityRules.value, domain)))
+          .get();
+        console.log(domain, rule);
+        appGroups[appName].domains[domain] = {
+          domain,
+          activities: [],
+          totalDuration: 0,
+          rule,
+        };
+      }
+
+      appGroups[appName].domains[domain].activities.push(activity);
+      appGroups[appName].domains[domain].totalDuration += activity.duration;
+    } else {
+      appGroups[appName].activitiesWithoutUrl.push(activity);
+    }
+  }
+  console.log("appGroups", appGroups);
+  return appGroups;
 }

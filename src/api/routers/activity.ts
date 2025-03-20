@@ -11,6 +11,7 @@ import {
   createDefaultRules,
   createRule,
   deleteRule,
+  getGroupActivities,
   getUserRules,
   toggleRuleActive,
   updateRule,
@@ -94,11 +95,11 @@ export const activityRouter = t.router({
 
   updateRule: protectedProcedure
     .input(
-      ruleFormSchema.merge(
-        z.object({
+      z
+        .object({
           id: z.string(),
         })
-      )
+        .merge(ruleFormSchema.partial())
     )
     .mutation(async ({ ctx, input }) => {
       const { id, ...updates } = input;

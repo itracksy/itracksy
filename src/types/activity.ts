@@ -3,6 +3,7 @@ import { activities, activityRules } from "@/api/db/schema";
 export type Activity = typeof activities.$inferInsert;
 
 export type ActivityRule = typeof activityRules.$inferSelect;
+
 export interface ApplicationDurationReport {
   applicationName: string;
   totalDuration: number; // in milliseconds

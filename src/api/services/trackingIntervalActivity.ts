@@ -2,7 +2,7 @@ import { Activity } from "@/types/activity";
 import { BrowserWindow, dialog, screen } from "electron";
 import { upsertActivity } from "./activities";
 import { TRACKING_INTERVAL } from "../../config/tracking";
-import { extractDomain, urlContainsDomain } from "../../utils/url";
+import { extractDomain, extractDomainWindows, urlContainsDomain } from "../../utils/url";
 import { logger } from "../../helpers/logger";
 import {
   getCurrentUserIdLocalStorage,
@@ -125,7 +125,7 @@ export const startTracking = async (): Promise<void> => {
       await upsertActivity(transformedActivities);
       if (activitySettings.isBlockingOnFocusMode) {
         const url = transformedActivities.url?.toLowerCase();
-        const extractedDomain = url ? extractDomain(url) : null;
+        const extractedDomain = url ? extractDomainWindows(url) : null;
 
         const appName = transformedActivities.ownerName.toLowerCase();
         const isBlockedApp =

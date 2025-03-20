@@ -1,3 +1,4 @@
+import { activityRules } from "@/api/db/schema";
 import { z } from "zod";
 
 export const ruleFormSchema = z.object({
@@ -11,5 +12,3 @@ export const ruleFormSchema = z.object({
   appName: z.string().optional(),
   domain: z.string().optional(),
 });
-
-export type RuleFormSchema = z.infer<typeof ruleFormSchema>;

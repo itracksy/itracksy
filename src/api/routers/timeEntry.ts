@@ -14,6 +14,7 @@ import {
 import { timeEntries } from "../db/schema";
 import { createInsertSchema } from "drizzle-zod";
 import { getUserActivities } from "../services/activities";
+import { getGroupActivities } from "../services/activityRules";
 const timeEntryInsertSchema = createInsertSchema(timeEntries);
 
 export const timeEntryRouter = t.router({
@@ -45,6 +46,11 @@ export const timeEntryRouter = t.router({
     }),
   getActivitiesForTimeEntry: protectedProcedure.input(z.string()).query(async ({ input }) => {
     return getActivitiesForTimeEntry({ timeEntryId: input });
+  }),
+  getGroupActivitiesForTimeEntry: protectedProcedure.input(z.string()).query(async ({ input }) => {
+    const activities = await getActivitiesForTimeEntry({ timeEntryId: input });
+    const groupedActivities = await getGroupActivities(activities);
+    return { groupedActivities, activities };
   }),
   create: protectedProcedure
     .input(timeEntryInsertSchema.omit({ id: true, userId: true }))
