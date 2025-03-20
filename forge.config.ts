@@ -30,6 +30,7 @@ export const EXTERNAL_DEPENDENCIES = [
   "@libsql/darwin-x64",
   "drizzle-orm",
   "drizzle-zod",
+  "date-fns",
 ];
 
 // Base packager configuration
