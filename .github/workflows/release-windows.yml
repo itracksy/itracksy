@@ -102,3 +102,4 @@ jobs:
         with:
           files: out/make/**/*
           token: ${{ secrets.GITHUB_TOKEN }}
+          draft: true
