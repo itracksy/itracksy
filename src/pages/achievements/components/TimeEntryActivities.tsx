@@ -33,10 +33,6 @@ export function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
     mutationFn: ({ timestamp, rating }: { timestamp: number; rating: number }) =>
       trpcClient.activity.setActivityRating.mutate({ timestamp, rating }),
     onSuccess: (data) => {
-      console.log("ratingMutation", data);
-      if (data.rating === 0) {
-        createRuleFromActivity(data);
-      }
       queryClient.invalidateQueries({ queryKey: ["activities", timeEntryId] });
     },
   });

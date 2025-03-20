@@ -135,9 +135,6 @@ export function RuleDialog({
                       <SelectContent>
                         <SelectItem value="app_name">Application</SelectItem>
                         <SelectItem value="domain">Domain</SelectItem>
-                        <SelectItem value="title">Title</SelectItem>
-                        <SelectItem value="url">URL</SelectItem>
-                        <SelectItem value="duration">Duration</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
