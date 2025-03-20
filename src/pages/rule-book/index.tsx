@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { RuleDialog, RuleFormValues } from "@/components/rules/rule-dialog";
 import { useCreateRule } from "@/hooks/use-create-rule";
+import { useUpdateRule } from "@/hooks/use-update-rule";
 
 export default function RuleBookPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -42,18 +43,9 @@ export default function RuleBookPage() {
       setIsDialogOpen(false);
     },
   });
-  console.log("rules", rules);
-  const updateMutation = useMutation({
-    mutationFn: (values: RuleFormValues & { id: string }) => {
-      const { id, ...updates } = values;
-      return trpcClient.activity.updateRule.mutate({ id, ...updates });
-    },
+
+  const updateMutation = useUpdateRule({
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["activityRules"] });
-      toast({
-        title: "Rule updated",
-        description: "Your productivity rule has been updated successfully",
-      });
       setIsDialogOpen(false);
       setEditingRule(null);
     },

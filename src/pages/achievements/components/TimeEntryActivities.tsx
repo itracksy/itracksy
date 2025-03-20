@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 import { trpcClient } from "@/utils/trpc";
 import { formatDuration } from "@/utils/formatTime";
@@ -29,10 +28,6 @@ export function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
   const [expandedApps, setExpandedApps] = useState<string[]>([]);
   const [expandedDomains, setExpandedDomains] = useState<string[]>([]);
 
-  // Rule dialog state
-  const [isRuleDialogOpen, setIsRuleDialogOpen] = useState(false);
-  const [ruleDefaults, setRuleDefaults] = useState<RuleFormValues | undefined>();
-
   // Mutation for setting activity rating
   const ratingMutation = useMutation({
     mutationFn: ({ timestamp, rating }: { timestamp: number; rating: number }) =>
@@ -51,7 +46,6 @@ export function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
     timeEntryId,
     activities,
     onSuccess: () => {
-      setIsRuleDialogOpen(false);
       toast({
         title: "Rule created",
         description: "Your productivity rule has been created successfully",
@@ -82,7 +76,7 @@ export function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
       });
     } else {
       if (params.domain) {
-        openDomainRuleDialog({
+        createRuleMutation.mutate({
           name: `Rule for ${params.domain}`,
           description: `Created from activity`,
           ruleType: "domain",
@@ -92,7 +86,7 @@ export function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
           active: true,
         });
       } else {
-        openAppRuleDialog({
+        createRuleMutation.mutate({
           name: `Rule for ${params.appName}`,
           description: `Created from activity`,
           ruleType: "app_name",
@@ -105,29 +99,9 @@ export function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
     }
   };
 
-  // Function to open rule dialog for an app
-  const openAppRuleDialog = (defaults: RuleFormValues) => {
-    setRuleDefaults(defaults);
-    setIsRuleDialogOpen(true);
-  };
-
-  // Function to open rule dialog for a domain
-  const openDomainRuleDialog = (defaults: RuleFormValues) => {
-    setRuleDefaults(defaults);
-    setIsRuleDialogOpen(true);
-  };
-
   // Function to handle rule submission
   const handleRuleSubmit = (values: RuleFormValues) => {
     createRuleMutation.mutate(values);
-  };
-
-  // Function to handle dialog close
-  const handleRuleDialogClose = (open: boolean) => {
-    if (!open) {
-      setIsRuleDialogOpen(false);
-      setRuleDefaults(undefined);
-    }
   };
 
   // Function to rate an activity
@@ -140,7 +114,7 @@ export function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
     const value = activity.url || activity.title || activity.ownerName;
     const ruleType = activity.url ? "url" : "title";
     console.log("createRuleFromActivity", activity);
-    setRuleDefaults({
+    createRuleMutation.mutate({
       name: `Rule for ${activity.ownerName}`,
       description: `Created from activity: ${activity.title}`,
       ruleType: ruleType,
@@ -151,7 +125,6 @@ export function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
       appName: activity.ownerName,
       domain: activity.url ?? (extractDomain(activity.url) || undefined),
     });
-    setIsRuleDialogOpen(true);
   };
 
   // Toggle expansion for app groups
@@ -287,16 +260,6 @@ export function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
             </div>
           ))}
       </div>
-
-      {/* Rule Dialog */}
-      <RuleDialog
-        open={isRuleDialogOpen}
-        onOpenChange={handleRuleDialogClose}
-        onSubmit={handleRuleSubmit}
-        defaultValues={ruleDefaults}
-        isSubmitting={createRuleMutation.isPending}
-        mode="create"
-      />
     </div>
   );
 }
