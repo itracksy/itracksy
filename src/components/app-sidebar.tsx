@@ -38,11 +38,11 @@ const items = [
     icon: Trophy,
     url: "/achievements",
   },
-  {
-    title: "Rule Book",
-    icon: BookOpen,
-    url: "/rule-book",
-  },
+  // {
+  //   title: "Rule Book",
+  //   icon: BookOpen,
+  //   url: "/rule-book",
+  // },
   {
     title: "Settings",
     icon: Settings,
