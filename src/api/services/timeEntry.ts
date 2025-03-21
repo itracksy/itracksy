@@ -191,11 +191,15 @@ export async function getTimeEntriesByTimeRange({
   startTimestamp: number;
   endTimestamp: number;
 }): Promise<TimeEntry[]> {
-  // Build where conditions
+  const startOfDay = new Date(startTimestamp);
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const endOfDay = new Date(endTimestamp);
+  endOfDay.setHours(23, 59, 59, 999);
   const whereConditions = [
     eq(timeEntries.userId, userId),
-    gte(timeEntries.startTime, startTimestamp),
-    lte(timeEntries.startTime, endTimestamp),
+    gte(timeEntries.startTime, startOfDay.getTime()),
+    lte(timeEntries.startTime, endOfDay.getTime()),
   ];
 
   const entries = await db.query.timeEntries.findMany({
