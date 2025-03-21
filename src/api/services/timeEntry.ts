@@ -2,6 +2,7 @@ import { eq, desc, and, isNull, isNotNull, sql } from "drizzle-orm";
 import { timeEntries, items, activities } from "../db/schema";
 import { nanoid } from "nanoid";
 import db from "../db";
+import { TimeRange } from "@/types/time";
 
 export type TimeEntry = typeof timeEntries.$inferSelect;
 export type TimeEntryInsert = typeof timeEntries.$inferInsert;
@@ -179,6 +180,33 @@ export async function getTimeEntries({
       totalPages: Math.ceil(total / limit),
     },
   };
+}
+
+export async function getTimeEntriesByTimeRange({
+  userId,
+  startTimestamp,
+  endTimestamp,
+}: {
+  userId: string;
+  startTimestamp: number;
+  endTimestamp: number;
+}): Promise<TimeEntry[]> {
+  // Build where conditions
+  const whereConditions = [
+    eq(timeEntries.userId, userId),
+    sql`${timeEntries.startTime} >= ${startTimestamp}`,
+    sql`${timeEntries.startTime} <= ${endTimestamp}`,
+  ];
+  console.log("whereConditions", startTimestamp, endTimestamp, whereConditions);
+  const entries = await db.query.timeEntries.findMany({
+    where: and(...whereConditions),
+    with: {
+      item: true,
+    },
+    orderBy: desc(timeEntries.startTime),
+  });
+  console.log("entries", entries);
+  return entries;
 }
 
 export async function getActivitiesForTimeEntry({ timeEntryId }: { timeEntryId: string }) {

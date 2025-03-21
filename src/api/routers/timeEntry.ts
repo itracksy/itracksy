@@ -10,6 +10,7 @@ import {
   getLastTimeEntry,
   getTimeEntries,
   getActivitiesForTimeEntry,
+  getTimeEntriesByTimeRange,
 } from "../../api/services/timeEntry";
 import { timeEntries } from "../db/schema";
 import { createInsertSchema } from "drizzle-zod";
@@ -47,6 +48,20 @@ export const timeEntryRouter = t.router({
   getActivitiesForTimeEntry: protectedProcedure.input(z.string()).query(async ({ input }) => {
     return getActivitiesForTimeEntry({ timeEntryId: input });
   }),
+  getTimeEntriesByTimeRange: protectedProcedure
+    .input(
+      z.object({
+        startTimestamp: z.number(),
+        endTimestamp: z.number(),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      return getTimeEntriesByTimeRange({
+        userId: ctx.userId!,
+        startTimestamp: input.startTimestamp,
+        endTimestamp: input.endTimestamp,
+      });
+    }),
   getGroupActivitiesForTimeEntry: protectedProcedure.input(z.string()).query(async ({ input }) => {
     const activities = await getActivitiesForTimeEntry({ timeEntryId: input });
     const groupedActivities = await getGroupActivities(activities);

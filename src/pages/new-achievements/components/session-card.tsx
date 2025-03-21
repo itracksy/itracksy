@@ -3,50 +3,54 @@ import { format } from "date-fns";
 import { ChevronDown, ChevronUp, CheckCircle, AlertCircle, HelpCircle } from "lucide-react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { ActivityGroup } from "./activity-group";
-import type { Session, Rule } from "@/lib/types";
+
 import { formatTime } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { TimeEntry } from "@/types/projects";
+import { useQuery } from "@tanstack/react-query";
+import { trpcClient } from "@/utils/trpc";
 
 interface SessionCardProps {
-  session: Session;
-  rules: Rule[];
+  session: TimeEntry;
+
   isExpanded: boolean;
   onToggle: () => void;
   onClassify: (
     sessionId: string,
     appName: string,
     domainName: string | null,
-    activityId: string,
+    activityId: number,
     isProductive: boolean
   ) => void;
 }
 
 export function SessionCard({
   session,
-  rules,
+
   isExpanded,
   onToggle,
   onClassify,
 }: SessionCardProps) {
   const [showCelebration, setShowCelebration] = useState(false);
   const [prevClassifiedCount, setPrevClassifiedCount] = useState(0);
-
-  // Group activities by app
-  const appGroups = session.activities.reduce(
-    (groups, activity) => {
-      const appName = activity.appName;
-      if (!groups[appName]) {
-        groups[appName] = [];
-      }
-      groups[appName].push(activity);
-      return groups;
-    },
-    {} as Record<string, typeof session.activities>
-  );
-
+  const { data, isLoading } = useQuery({
+    queryKey: ["activities", session.id],
+    queryFn: () => trpcClient.timeEntry.getGroupActivitiesForTimeEntry.query(session.id),
+    enabled: true,
+  });
+  const { activities, groupedActivities } = data ?? {};
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+  if (!activities) {
+    return <div>Failed to load activities</div>;
+  }
+  if (!groupedActivities) {
+    return <div>Failed to load grouped activities</div>;
+  }
   // Calculate classification status
-  const totalActivities = session.activities.length;
-  const classifiedActivities = session.activities.filter((a) => a.isClassified).length;
+  const totalActivities = activities.length;
+  const classifiedActivities = activities.filter((a) => a.rating !== null).length;
 
   let classificationStatus: "unclassified" | "partial" | "complete" = "unclassified";
   if (classifiedActivities === totalActivities) {
@@ -56,16 +60,16 @@ export function SessionCard({
   }
 
   // Calculate productivity for this session
-  const productiveTime = session.activities
-    .filter((activity) => activity.isProductive)
+  const productiveTime = activities
+    .filter((activity) => activity.rating === 1)
     .reduce((total, activity) => total + activity.duration, 0);
 
   const productivityPercentage =
-    session.duration > 0 ? Math.round((productiveTime / session.duration) * 100) : 0;
+    (session.duration ?? 0) > 0 ? Math.round((productiveTime / (session.duration ?? 0)) * 100) : 0;
 
   // Check if classification was just completed
   useEffect(() => {
-    const currentClassifiedCount = session.activities.filter((a) => a.isClassified).length;
+    const currentClassifiedCount = activities.filter((a) => a.rating !== null).length;
 
     if (currentClassifiedCount > prevClassifiedCount) {
       // Show celebration if all activities are now classified
@@ -76,7 +80,7 @@ export function SessionCard({
     }
 
     setPrevClassifiedCount(currentClassifiedCount);
-  }, [session.activities, totalActivities, prevClassifiedCount]);
+  }, [activities, totalActivities, prevClassifiedCount]);
 
   return (
     <Card
@@ -96,9 +100,9 @@ export function SessionCard({
         <div className="flex items-center gap-4">
           <div className="flex flex-col">
             <h3 className="font-medium text-gray-900">
-              {format(new Date(session.date), "MMMM d, yyyy")}
+              {format(new Date(session.startTime), "MMMM d, yyyy")}
             </h3>
-            <p className="text-sm text-gray-500">{formatTime(session.duration)}</p>
+            <p className="text-sm text-gray-500">{formatTime(session.duration ?? 0)}</p>
           </div>
 
           <div className="flex items-center gap-1.5">
@@ -140,13 +144,13 @@ export function SessionCard({
       {isExpanded && (
         <CardContent className="p-0">
           <div className="divide-y">
-            {Object.entries(appGroups).map(([appName, activities]) => (
+            {Object.entries(groupedActivities).map(([appName, activities]) => (
               <ActivityGroup
                 key={`${session.id}-${appName}`}
                 sessionId={session.id}
                 appName={appName}
-                activities={activities}
-                rules={rules}
+                groupActivity={activities}
+                rule={activities.rule}
                 onClassify={onClassify}
               />
             ))}

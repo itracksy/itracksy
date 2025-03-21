@@ -52,14 +52,18 @@ export interface CategoryRule {
   };
 }
 
-export interface CategoryDurationReport {
-  category: string[];
+export type GroupActivity = {
+  appName: string;
+  rule?: ActivityRule;
   totalDuration: number;
-  percentage: number;
-  children: CategoryDurationReport[];
-  instances: {
-    startTime: number;
-    endTime: number;
-    duration: number;
-  }[];
-}
+  domains: Record<
+    string,
+    {
+      domain: string;
+      activities: Activity[];
+      totalDuration: number;
+      rule?: ActivityRule;
+    }
+  >;
+  activitiesWithoutUrl: Activity[];
+};

@@ -2,23 +2,24 @@
 
 import { useState } from "react";
 import { ChevronDown, ChevronUp, Monitor, Globe, CheckCircle, XCircle } from "lucide-react";
-import type { Activity, Rule } from "@/lib/types";
+
 import { formatTime } from "@/lib/utils";
 import { Toggle } from "@/components/ui/toggle";
 import { cn } from "@/lib/utils";
 import { RulesBadge } from "./rules-badge";
 import { RulesInfo } from "./rules-info";
+import { Activity, ActivityRule, GroupActivity } from "@/types/activity";
 
 interface ActivityGroupProps {
   sessionId: string;
   appName: string;
-  activities: Activity[];
-  rules: Rule[];
+  groupActivity: GroupActivity;
+  rule?: ActivityRule;
   onClassify: (
     sessionId: string,
     appName: string,
-    domainName: string | null,
-    activityId: string,
+    domain: string | null,
+    activityId: number,
     isProductive: boolean
   ) => void;
 }
@@ -26,42 +27,35 @@ interface ActivityGroupProps {
 export function ActivityGroup({
   sessionId,
   appName,
-  activities,
-  rules,
+  groupActivity,
+
   onClassify,
 }: ActivityGroupProps) {
   const [expanded, setExpanded] = useState(false);
 
+  // Reference to activities for more convenient access
+  const activities = groupActivity.activitiesWithoutUrl;
+
   // Group activities by domain
-  const domainGroups = activities.reduce(
-    (groups, activity) => {
-      const domainName = activity.domainName || "No Domain";
-      if (!groups[domainName]) {
-        groups[domainName] = [];
-      }
-      groups[domainName].push(activity);
-      return groups;
-    },
-    {} as Record<string, typeof activities>
-  );
+  const domainGroups = groupActivity.domains;
 
   // Calculate app-level statistics
   const totalAppTime = activities.reduce((total, activity) => total + activity.duration, 0);
-  const classifiedActivities = activities.filter((a) => a.isClassified).length;
+  const classifiedActivities = activities.filter((a) => a.rating !== null).length;
   const allClassified = classifiedActivities === activities.length;
   const anyClassified = classifiedActivities > 0;
 
   // Check if all activities in the app are productive
-  const productiveActivities = activities.filter((a) => a.isProductive).length;
+  const productiveActivities = activities.filter((a) => a.rating === 1).length;
   const allProductive = productiveActivities === activities.length && allClassified;
   const allDistracted = productiveActivities === 0 && allClassified;
 
   // Check if there's a rule for this app
-  const appRule = rules.find((rule) => rule.type === "app" && rule.name === appName);
+  const appRule = groupActivity.rule;
 
   // Handle app-level classification
   const handleAppClassification = (isProductive: boolean) => {
-    onClassify(sessionId, appName, null, "", isProductive);
+    onClassify(sessionId, appName, null, 0, isProductive);
   };
 
   return (
@@ -77,7 +71,7 @@ export function ActivityGroup({
 
           <div className="flex items-center gap-2">
             <h4 className="font-medium text-gray-900">{appName}</h4>
-            {appRule && <RulesBadge isProductive={appRule.isProductive} />}
+            {appRule && <RulesBadge isProductive={appRule.rating === 1} />}
           </div>
 
           <div>
@@ -137,14 +131,14 @@ export function ActivityGroup({
 
       {expanded && (
         <div className="divide-y border-t pl-12">
-          {Object.entries(domainGroups).map(([domainName, domainActivities]) => (
+          {Object.entries(domainGroups).map(([domain, domainActivities]) => (
             <DomainGroup
-              key={`${sessionId}-${appName}-${domainName}`}
+              key={`${sessionId}-${appName}-${domain}`}
               sessionId={sessionId}
               appName={appName}
-              domainName={domainName === "No Domain" ? null : domainName}
-              activities={domainActivities}
-              rules={rules}
+              domain={domain === "No Domain" ? null : domain}
+              activities={domainActivities.activities}
+              rule={domainActivities.rule}
               onClassify={onClassify}
             />
           ))}
@@ -157,14 +151,14 @@ export function ActivityGroup({
 interface DomainGroupProps {
   sessionId: string;
   appName: string;
-  domainName: string | null;
+  domain: string | null;
   activities: Activity[];
-  rules: Rule[];
+  rule?: ActivityRule; // Updated type from Rule[] to ActivityRule[]
   onClassify: (
     sessionId: string,
     appName: string,
-    domainName: string | null,
-    activityId: string,
+    domain: string | null,
+    activityId: number,
     isProductive: boolean
   ) => void;
 }
@@ -172,32 +166,30 @@ interface DomainGroupProps {
 function DomainGroup({
   sessionId,
   appName,
-  domainName,
+  domain,
   activities,
-  rules,
+  rule,
   onClassify,
 }: DomainGroupProps) {
   const [expanded, setExpanded] = useState(false);
 
   // Calculate domain-level statistics
   const totalDomainTime = activities.reduce((total, activity) => total + activity.duration, 0);
-  const classifiedActivities = activities.filter((a) => a.isClassified).length;
+  const classifiedActivities = activities.filter((a) => a.rating !== null).length;
   const allClassified = classifiedActivities === activities.length;
   const anyClassified = classifiedActivities > 0;
 
   // Check if all activities in the domain are productive
-  const productiveActivities = activities.filter((a) => a.isProductive).length;
+  const productiveActivities = activities.filter((a) => a.rating === 1).length;
   const allProductive = productiveActivities === activities.length && allClassified;
   const allDistracted = productiveActivities === 0 && allClassified;
 
   // Check if there's a rule for this domain
-  const domainRule = domainName
-    ? rules.find((rule) => rule.type === "domain" && rule.name === domainName)
-    : undefined;
+  const domainRule = rule;
 
   // Handle domain-level classification
   const handleDomainClassification = (isProductive: boolean) => {
-    onClassify(sessionId, appName, domainName, "", isProductive);
+    onClassify(sessionId, appName, domain, 0, isProductive);
   };
 
   return (
@@ -212,8 +204,8 @@ function DomainGroup({
           </div>
 
           <div className="flex items-center gap-2">
-            <h5 className="font-medium text-gray-900">{domainName || "No Domain"}</h5>
-            {domainRule && <RulesBadge isProductive={domainRule.isProductive} />}
+            <h5 className="font-medium text-gray-900">{domain || "No Domain"}</h5>
+            {domainRule && <RulesBadge isProductive={domainRule.rating === 1} />}
           </div>
 
           <div>
@@ -275,10 +267,10 @@ function DomainGroup({
         <div className="divide-y border-t">
           {activities.map((activity) => (
             <ActivityItem
-              key={activity.id}
+              key={activity.timestamp}
               sessionId={sessionId}
               appName={appName}
-              domainName={domainName}
+              domain={domain}
               activity={activity}
               onClassify={onClassify}
             />
@@ -292,28 +284,28 @@ function DomainGroup({
 interface ActivityItemProps {
   sessionId: string;
   appName: string;
-  domainName: string | null;
+  domain: string | null;
   activity: Activity;
   onClassify: (
     sessionId: string,
     appName: string,
-    domainName: string | null,
-    activityId: string,
+    domain: string | null,
+    activityId: number,
     isProductive: boolean
   ) => void;
 }
 
-function ActivityItem({ sessionId, appName, domainName, activity, onClassify }: ActivityItemProps) {
+function ActivityItem({ sessionId, appName, domain, activity, onClassify }: ActivityItemProps) {
   // Handle activity-level classification
   const handleActivityClassification = (isProductive: boolean) => {
-    onClassify(sessionId, appName, domainName, activity.id, isProductive);
+    onClassify(sessionId, appName, domain, activity.timestamp, isProductive);
   };
 
   return (
     <div
       className={cn(
         "flex items-center justify-between p-4 pl-12 hover:bg-gray-50",
-        !activity.isClassified && "m-2 rounded-md border border-dashed border-gray-300 bg-gray-50"
+        activity.rating === null && "m-2 rounded-md border border-dashed border-gray-300 bg-gray-50"
       )}
     >
       <div className="flex items-center gap-3">
@@ -322,7 +314,7 @@ function ActivityItem({ sessionId, appName, domainName, activity, onClassify }: 
           <p className="text-sm text-gray-500">{formatTime(activity.duration)}</p>
         </div>
 
-        {!activity.isClassified && (
+        {activity.rating === null && (
           <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-800">
             Unclassified
           </span>
@@ -331,7 +323,7 @@ function ActivityItem({ sessionId, appName, domainName, activity, onClassify }: 
 
       <div className="flex items-center gap-2">
         <Toggle
-          pressed={activity.isProductive}
+          pressed={activity.rating === 1}
           onPressedChange={() => handleActivityClassification(true)}
           className={cn(
             "data-[state=on]:border-green-200 data-[state=on]:bg-green-100 data-[state=on]:text-green-800",
@@ -344,7 +336,7 @@ function ActivityItem({ sessionId, appName, domainName, activity, onClassify }: 
         </Toggle>
 
         <Toggle
-          pressed={activity.isClassified && !activity.isProductive}
+          pressed={activity.rating !== null && activity.rating === 0}
           onPressedChange={() => handleActivityClassification(false)}
           className={cn(
             "data-[state=on]:border-red-200 data-[state=on]:bg-red-100 data-[state=on]:text-red-800",

@@ -3,7 +3,7 @@ import db from "../db";
 import { activityRules } from "../db/schema";
 import { nanoid } from "nanoid";
 import { RuleCondition, RuleType } from "./activityRating";
-import { Activity, ActivityRule } from "@/types/activity";
+import { Activity, ActivityRule, GroupActivity } from "@/types/activity";
 
 import { extractDomain } from "../../utils/url";
 
@@ -122,24 +122,7 @@ export async function createDefaultRules(userId: string) {
 }
 
 export async function getGroupActivities(activities: Activity[]) {
-  const appGroups: Record<
-    string,
-    {
-      appName: string;
-      rule?: ActivityRule;
-      totalDuration: number;
-      domains: Record<
-        string,
-        {
-          domain: string;
-          activities: Activity[];
-          totalDuration: number;
-          rule?: ActivityRule;
-        }
-      >;
-      activitiesWithoutUrl: Activity[];
-    }
-  > = {};
+  const appGroups: Record<string, GroupActivity> = {};
 
   for (const activity of activities) {
     const appName = activity.ownerName;

@@ -1,21 +1,35 @@
-import { useState } from "react"
-import { format } from "date-fns"
-import type { Rule } from "@/lib/types"
-import { Sparkles, CheckCircle, XCircle, Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useState } from "react";
+import { format } from "date-fns";
+import { Sparkles, CheckCircle, XCircle, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { ActivityRule } from "@/types/activity";
 
 interface RulesPanelProps {
-  rules: Rule[]
-  onDeleteRule: (ruleId: string) => void
+  rules: ActivityRule[];
+  onDeleteRule: (ruleId: string) => void;
 }
 
 export function RulesPanel({ rules, onDeleteRule }: RulesPanelProps) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
 
-  const appRules = rules.filter((rule) => rule.type === "app")
-  const domainRules = rules.filter((rule) => rule.type === "domain")
+  const appRules = rules.filter((rule) => rule.ruleType === "app_name");
+  const domainRules = rules.filter((rule) => rule.ruleType === "domain");
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -25,10 +39,12 @@ export function RulesPanel({ rules, onDeleteRule }: RulesPanelProps) {
           View Classification Rules
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+      <SheetContent className="w-full overflow-y-auto sm:max-w-md">
         <SheetHeader>
           <SheetTitle>Classification Rules</SheetTitle>
-          <SheetDescription>Rules automatically classify future activities based on app or domain.</SheetDescription>
+          <SheetDescription>
+            Rules automatically classify future activities based on app or domain.
+          </SheetDescription>
         </SheetHeader>
 
         <div className="mt-6 space-y-6">
@@ -52,7 +68,7 @@ export function RulesPanel({ rules, onDeleteRule }: RulesPanelProps) {
                       <TableCell className="font-medium">{rule.name}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1.5">
-                          {rule.isProductive ? (
+                          {rule.rating === 1 ? (
                             <>
                               <CheckCircle className="h-4 w-4 text-green-600" />
                               <span className="text-green-600">Productive</span>
@@ -65,7 +81,7 @@ export function RulesPanel({ rules, onDeleteRule }: RulesPanelProps) {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
+                      <TableCell className="text-sm text-muted-foreground">
                         {format(new Date(rule.createdAt), "MMM d, yyyy")}
                       </TableCell>
                       <TableCell>
@@ -106,7 +122,7 @@ export function RulesPanel({ rules, onDeleteRule }: RulesPanelProps) {
                       <TableCell className="font-medium">{rule.name}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1.5">
-                          {rule.isProductive ? (
+                          {rule.rating === 1 ? (
                             <>
                               <CheckCircle className="h-4 w-4 text-green-600" />
                               <span className="text-green-600">Productive</span>
@@ -119,7 +135,7 @@ export function RulesPanel({ rules, onDeleteRule }: RulesPanelProps) {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
+                      <TableCell className="text-sm text-muted-foreground">
                         {format(new Date(rule.createdAt), "MMM d, yyyy")}
                       </TableCell>
                       <TableCell>
@@ -142,6 +158,5 @@ export function RulesPanel({ rules, onDeleteRule }: RulesPanelProps) {
         </div>
       </SheetContent>
     </Sheet>
-  )
+  );
 }
-

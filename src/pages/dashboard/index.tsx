@@ -1,13 +1,14 @@
 import { useState } from "react";
 import HourlyFocusChart from "./components/HourlyFocusChart";
 import ProjectTimeChart from "./components/ProjectTimeChart";
-import TimeRangeSelector, { TimeRange } from "./components/TimeRangeSelector";
+import TimeRangeSelector from "@/components/TimeRangeSelector";
+import { TimeRange } from "@/types/time";
 
 export default function DashboardPage() {
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>({
     start: new Date(),
     end: new Date(),
-    label: "Today"
+    label: "Today",
   });
 
   return (

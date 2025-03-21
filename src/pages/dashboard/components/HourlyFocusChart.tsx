@@ -3,10 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { trpcClient } from "@/utils/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bar, BarChart, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { TimeRange } from "./TimeRangeSelector";
+
 import { Button } from "@/components/ui/button";
 import { PlayCircle } from "lucide-react";
 import { TimeEntryDialog } from "@/components/tracking/TimeEntryDialog";
+import { TimeRange } from "@/types/time";
 
 interface HourlyFocusChartProps {
   timeRange: TimeRange;
@@ -47,7 +48,8 @@ export default function HourlyFocusChart({ timeRange }: HourlyFocusChartProps) {
       activities: item.activities,
     })) ?? [];
 
-  const hasData = formattedData && formattedData.some((item) => item.focusedTime > 0 || item.breakTime > 0);
+  const hasData =
+    formattedData && formattedData.some((item) => item.focusedTime > 0 || item.breakTime > 0);
 
   return (
     <>
@@ -142,7 +144,9 @@ export default function HourlyFocusChart({ timeRange }: HourlyFocusChartProps) {
                                             {activity.ownerName}
                                           </span>
                                           <div className="flex items-center">
-                                            <div className={`mr-1 h-2 w-2 rounded-full ${activity.isFocusMode ? 'bg-primary' : 'bg-secondary'}`}></div>
+                                            <div
+                                              className={`mr-1 h-2 w-2 rounded-full ${activity.isFocusMode ? "bg-primary" : "bg-secondary"}`}
+                                            ></div>
                                             <span className="font-medium">
                                               {activity.duration < 60
                                                 ? `${activity.duration}s`
