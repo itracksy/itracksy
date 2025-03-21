@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -16,15 +15,23 @@ import { DateRange } from "react-day-picker";
 import { TimeRange } from "@/types/time";
 
 type TimeRangeSelectorProps = {
+  start: Date;
+  end: Date;
+
+  value: string;
   onRangeChange: (range: TimeRange) => void;
 };
 
-export default function TimeRangeSelector({ onRangeChange }: TimeRangeSelectorProps) {
-  const [selectedPreset, setSelectedPreset] = useState<string>("today");
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: new Date(),
-    to: new Date(),
-  });
+export default function TimeRangeSelector({
+  start,
+  end,
+  value,
+  onRangeChange,
+}: TimeRangeSelectorProps) {
+  const dateRange: DateRange = {
+    from: start,
+    to: end,
+  };
 
   const presets = {
     today: {
@@ -84,31 +91,31 @@ export default function TimeRangeSelector({ onRangeChange }: TimeRangeSelectorPr
   };
 
   const handlePresetChange = (value: string) => {
-    setSelectedPreset(value);
     const preset = presets[value as keyof typeof presets];
-    const { start, end } = preset.range();
-    setDateRange({ from: start, to: end });
+    const { start: newStart, end: newEnd } = preset.range();
+
     onRangeChange({
-      start,
-      end,
-      label: preset.label,
+      start: newStart,
+      end: newEnd,
+
+      value,
     });
   };
 
   const handleDateRangeSelect = (range: DateRange | undefined) => {
     if (!range?.from || !range?.to) return;
-    setDateRange(range);
-    setSelectedPreset("custom");
+
     onRangeChange({
       start: range.from,
       end: range.to,
-      label: `${format(range.from, "MMM d")} - ${format(range.to, "MMM d, yyyy")}`,
+
+      value: "custom",
     });
   };
 
   return (
     <div className="flex items-center gap-4">
-      <Select value={selectedPreset} onValueChange={handlePresetChange}>
+      <Select value={value} onValueChange={handlePresetChange}>
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="Select time range" />
         </SelectTrigger>
@@ -133,7 +140,7 @@ export default function TimeRangeSelector({ onRangeChange }: TimeRangeSelectorPr
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {dateRange?.from ? (
+            {dateRange.from ? (
               dateRange.to ? (
                 <>
                   {format(dateRange.from, "MMM d")} - {format(dateRange.to, "MMM d, yyyy")}
@@ -150,7 +157,7 @@ export default function TimeRangeSelector({ onRangeChange }: TimeRangeSelectorPr
           <Calendar
             initialFocus
             mode="range"
-            defaultMonth={dateRange?.from}
+            defaultMonth={dateRange.from}
             selected={dateRange}
             onSelect={handleDateRangeSelect}
             numberOfMonths={2}

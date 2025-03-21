@@ -9,9 +9,6 @@ import { trpcClient } from "@/utils/trpc";
 import { useState } from "react";
 
 interface SessionListProps {
-  startTimestamp: number;
-  endTimestamp: number;
-  onRangeChange: (range: TimeRange) => void;
   onClassify: (
     sessionId: string,
     appName: string,
@@ -21,13 +18,18 @@ interface SessionListProps {
   ) => void;
 }
 
-export function SessionList({
-  onClassify,
-  onRangeChange,
-  startTimestamp,
-  endTimestamp,
-}: SessionListProps) {
+export function SessionList({ onClassify }: SessionListProps) {
   const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
+  const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>({
+    start: new Date(),
+    end: new Date(),
+
+    value: "today",
+  });
+
+  const startTimestamp = selectedTimeRange.start.getTime();
+  const endTimestamp = selectedTimeRange.end.getTime();
+
   // Use useQuery with proper error handling
   const {
     data: sessions,
@@ -36,19 +38,11 @@ export function SessionList({
   } = useQuery({
     queryKey: ["timeEntry.getTimeEntriesByTimeRange", startTimestamp, endTimestamp],
     queryFn: async () => {
-      try {
-        return await trpcClient.timeEntry.getTimeEntriesByTimeRange.query({
-          startTimestamp,
-          endTimestamp,
-        });
-      } catch (error) {
-        console.error("Error fetching time entries:", error);
-        return [];
-      }
+      return await trpcClient.timeEntry.getTimeEntriesByTimeRange.query({
+        startTimestamp,
+        endTimestamp,
+      });
     },
-    // Add these options to prevent excessive retries and refetching
-    retry: 1,
-    refetchOnWindowFocus: false,
   });
 
   // Handle loading state
@@ -68,7 +62,12 @@ export function SessionList({
           Your Focus Sessions
           <div className="mt-2 h-1 w-20 rounded bg-tracksy-gold dark:bg-tracksy-gold/70"></div>
         </h2>
-        <TimeRangeSelector onRangeChange={onRangeChange} />
+        <TimeRangeSelector
+          start={selectedTimeRange.start}
+          end={selectedTimeRange.end}
+          value={selectedTimeRange.value}
+          onRangeChange={setSelectedTimeRange}
+        />
       </div>
       {!sessions || sessions.length === 0 ? (
         <div className="rounded-lg border border-gray-200 bg-white py-8 text-center">

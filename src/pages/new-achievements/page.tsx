@@ -9,12 +9,6 @@ import { trpcClient } from "@/utils/trpc";
 import { TimeRange } from "@/types/time";
 
 export function FocusSessionsAchievement() {
-  const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>({
-    start: new Date(),
-    end: new Date(),
-    label: "Today",
-  });
-
   const { toast } = useToast();
   const { data: rules, isLoading } = useQuery({
     queryKey: ["activityRules"],
@@ -66,12 +60,7 @@ export function FocusSessionsAchievement() {
         classificationProgress={classificationProgress}
       />
 
-      <SessionList
-        onRangeChange={setSelectedTimeRange}
-        startTimestamp={selectedTimeRange.start.getTime()}
-        endTimestamp={selectedTimeRange.end.getTime()}
-        onClassify={handleClassification}
-      />
+      <SessionList onClassify={handleClassification} />
       <div className="h-20" />
     </div>
   );

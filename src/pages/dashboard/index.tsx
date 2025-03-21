@@ -8,7 +8,7 @@ export default function DashboardPage() {
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>({
     start: new Date(),
     end: new Date(),
-    label: "Today",
+    value: "today",
   });
 
   return (
@@ -20,7 +20,12 @@ export default function DashboardPage() {
               Activity Dashboard
               <div className="mt-2 h-1 w-20 rounded bg-tracksy-gold dark:bg-tracksy-gold/70"></div>
             </h1>
-            <TimeRangeSelector onRangeChange={setSelectedTimeRange} />
+            <TimeRangeSelector
+              start={selectedTimeRange.start}
+              end={selectedTimeRange.end}
+              value={selectedTimeRange.value}
+              onRangeChange={setSelectedTimeRange}
+            />
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
