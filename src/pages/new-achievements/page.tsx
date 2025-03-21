@@ -15,7 +15,6 @@ export function FocusSessionsAchievement() {
     label: "Today",
   });
 
-  const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
   const { toast } = useToast();
   const { data: rules, isLoading } = useQuery({
     queryKey: ["activityRules"],
@@ -71,8 +70,6 @@ export function FocusSessionsAchievement() {
         onRangeChange={setSelectedTimeRange}
         startTimestamp={selectedTimeRange.start.getTime()}
         endTimestamp={selectedTimeRange.end.getTime()}
-        expandedSessionId={expandedSessionId}
-        onExpandSession={setExpandedSessionId}
         onClassify={handleClassification}
       />
       <div className="h-20" />

@@ -6,10 +6,9 @@ import { SessionCard } from "./session-card";
 import { TimeRange } from "@/types/time";
 import { useQuery } from "@tanstack/react-query";
 import { trpcClient } from "@/utils/trpc";
+import { useState } from "react";
 
 interface SessionListProps {
-  expandedSessionId: string | null;
-  onExpandSession: (id: string | null) => void;
   startTimestamp: number;
   endTimestamp: number;
   onRangeChange: (range: TimeRange) => void;
@@ -23,13 +22,12 @@ interface SessionListProps {
 }
 
 export function SessionList({
-  expandedSessionId,
-  onExpandSession,
   onClassify,
   onRangeChange,
   startTimestamp,
   endTimestamp,
 }: SessionListProps) {
+  const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
   // Use useQuery with proper error handling
   const {
     data: sessions,
@@ -84,7 +82,7 @@ export function SessionList({
               session={session}
               isExpanded={expandedSessionId === session.id}
               onToggle={() => {
-                onExpandSession(expandedSessionId === session.id ? null : session.id);
+                setExpandedSessionId(expandedSessionId === session.id ? null : session.id);
               }}
               onClassify={onClassify}
             />
