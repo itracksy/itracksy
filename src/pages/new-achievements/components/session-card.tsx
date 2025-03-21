@@ -67,21 +67,6 @@ export function SessionCard({
   const productivityPercentage =
     (session.duration ?? 0) > 0 ? Math.round((productiveTime / (session.duration ?? 0)) * 100) : 0;
 
-  // Check if classification was just completed
-  useEffect(() => {
-    const currentClassifiedCount = activities.filter((a) => a.rating !== null).length;
-
-    if (currentClassifiedCount > prevClassifiedCount) {
-      // Show celebration if all activities are now classified
-      if (currentClassifiedCount === totalActivities) {
-        setShowCelebration(true);
-        setTimeout(() => setShowCelebration(false), 3000);
-      }
-    }
-
-    setPrevClassifiedCount(currentClassifiedCount);
-  }, [activities, totalActivities, prevClassifiedCount]);
-
   return (
     <Card
       className={cn(

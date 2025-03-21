@@ -195,6 +195,7 @@ export async function getTimeEntriesByTimeRange({
   const whereConditions = [
     eq(timeEntries.userId, userId),
     gte(timeEntries.startTime, startTimestamp),
+    lte(timeEntries.startTime, endTimestamp),
   ];
 
   const entries = await db.query.timeEntries.findMany({
