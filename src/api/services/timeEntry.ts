@@ -1,4 +1,4 @@
-import { eq, desc, and, isNull, isNotNull, sql } from "drizzle-orm";
+import { eq, desc, and, isNull, isNotNull, sql, gte, lte } from "drizzle-orm";
 import { timeEntries, items, activities } from "../db/schema";
 import { nanoid } from "nanoid";
 import db from "../db";
@@ -194,8 +194,7 @@ export async function getTimeEntriesByTimeRange({
   // Build where conditions
   const whereConditions = [
     eq(timeEntries.userId, userId),
-    sql`${timeEntries.startTime} >= ${startTimestamp}`,
-    sql`${timeEntries.startTime} <= ${endTimestamp}`,
+    gte(timeEntries.startTime, startTimestamp),
   ];
   console.log("whereConditions", startTimestamp, endTimestamp, whereConditions);
   const entries = await db.query.timeEntries.findMany({

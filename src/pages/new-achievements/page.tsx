@@ -6,8 +6,15 @@ import { RulesPanel } from "./components/rules-panel";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { trpcClient } from "@/utils/trpc";
+import { TimeRange } from "@/types/time";
 
 export function FocusSessionsAchievement() {
+  const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>({
+    start: new Date(),
+    end: new Date(),
+    label: "Today",
+  });
+
   const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
   const { toast } = useToast();
   const { data: rules, isLoading } = useQuery({
@@ -61,6 +68,9 @@ export function FocusSessionsAchievement() {
       />
 
       <SessionList
+        onRangeChange={setSelectedTimeRange}
+        startTimestamp={selectedTimeRange.start.getTime()}
+        endTimestamp={selectedTimeRange.end.getTime()}
         expandedSessionId={expandedSessionId}
         setExpandedSessionId={setExpandedSessionId}
         onClassify={handleClassification}

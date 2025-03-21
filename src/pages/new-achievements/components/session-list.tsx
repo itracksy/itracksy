@@ -3,7 +3,6 @@
 import TimeRangeSelector from "@/components/TimeRangeSelector";
 import { SessionCard } from "./session-card";
 
-import { useState } from "react";
 import { TimeRange } from "@/types/time";
 import { useQuery } from "@tanstack/react-query";
 import { trpcClient } from "@/utils/trpc";
@@ -11,6 +10,9 @@ import { trpcClient } from "@/utils/trpc";
 interface SessionListProps {
   expandedSessionId: string | null;
   setExpandedSessionId: (id: string | null) => void;
+  startTimestamp: number;
+  endTimestamp: number;
+  onRangeChange: (range: TimeRange) => void;
   onClassify: (
     sessionId: string,
     appName: string,
@@ -24,26 +26,43 @@ export function SessionList({
   expandedSessionId,
   setExpandedSessionId,
   onClassify,
+  onRangeChange,
+  startTimestamp,
+  endTimestamp,
 }: SessionListProps) {
-  const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>({
-    start: new Date(),
-    end: new Date(),
-    label: "Today",
+  // Use useQuery with proper error handling
+  const {
+    data: sessions,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["timeEntry.getTimeEntriesByTimeRange", startTimestamp, endTimestamp],
+    queryFn: async () => {
+      try {
+        return await trpcClient.timeEntry.getTimeEntriesByTimeRange.query({
+          startTimestamp,
+          endTimestamp,
+        });
+      } catch (error) {
+        console.error("Error fetching time entries:", error);
+        return [];
+      }
+    },
+    // Add these options to prevent excessive retries and refetching
+    retry: 1,
+    refetchOnWindowFocus: false,
   });
-  const { data: sessions, isLoading } = useQuery({
-    queryKey: ["timeEntry.getTimeEntriesByTimeRange"],
-    queryFn: () =>
-      trpcClient.timeEntry.getTimeEntriesByTimeRange.query({
-        startTimestamp: selectedTimeRange.start.getTime(),
-        endTimestamp: selectedTimeRange.end.getTime(),
-      }),
-  });
+
+  // Handle loading state
   if (isLoading) {
     return <div>Loading...</div>;
   }
-  if (!sessions) {
-    return <div>Failed to load sessions</div>;
+
+  // Handle error state
+  if (error) {
+    return <div>Error loading sessions: {(error as Error).message}</div>;
   }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -51,9 +70,9 @@ export function SessionList({
           Your Focus Sessions
           <div className="mt-2 h-1 w-20 rounded bg-tracksy-gold dark:bg-tracksy-gold/70"></div>
         </h2>
-        <TimeRangeSelector onRangeChange={setSelectedTimeRange} />
+        <TimeRangeSelector onRangeChange={onRangeChange} />
       </div>
-      {sessions.length === 0 ? (
+      {!sessions || sessions.length === 0 ? (
         <div className="rounded-lg border border-gray-200 bg-white py-8 text-center">
           <p className="text-gray-500">No focus sessions recorded yet.</p>
         </div>
