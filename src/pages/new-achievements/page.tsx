@@ -72,7 +72,7 @@ export function FocusSessionsAchievement() {
         startTimestamp={selectedTimeRange.start.getTime()}
         endTimestamp={selectedTimeRange.end.getTime()}
         expandedSessionId={expandedSessionId}
-        setExpandedSessionId={setExpandedSessionId}
+        onExpandSession={setExpandedSessionId}
         onClassify={handleClassification}
       />
       <div className="h-20" />

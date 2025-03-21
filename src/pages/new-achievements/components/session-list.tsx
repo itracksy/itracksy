@@ -9,7 +9,7 @@ import { trpcClient } from "@/utils/trpc";
 
 interface SessionListProps {
   expandedSessionId: string | null;
-  setExpandedSessionId: (id: string | null) => void;
+  onExpandSession: (id: string | null) => void;
   startTimestamp: number;
   endTimestamp: number;
   onRangeChange: (range: TimeRange) => void;
@@ -24,7 +24,7 @@ interface SessionListProps {
 
 export function SessionList({
   expandedSessionId,
-  setExpandedSessionId,
+  onExpandSession,
   onClassify,
   onRangeChange,
   startTimestamp,
@@ -83,9 +83,9 @@ export function SessionList({
               key={session.id}
               session={session}
               isExpanded={expandedSessionId === session.id}
-              onToggle={() =>
-                setExpandedSessionId(expandedSessionId === session.id ? null : session.id)
-              }
+              onToggle={() => {
+                onExpandSession(expandedSessionId === session.id ? null : session.id);
+              }}
               onClassify={onClassify}
             />
           ))}
