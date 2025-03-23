@@ -20,7 +20,7 @@ export function TimeEntryActivities({ timeEntryId }: { timeEntryId: string }) {
     queryFn: () => trpcClient.timeEntry.getGroupActivitiesForTimeEntry.query(timeEntryId),
     enabled: true,
   });
-  const { activities, groupedActivities } = data ?? {};
+  const { activities = null, groupedActivities } = data ?? {};
 
   const queryClient = useQueryClient();
 

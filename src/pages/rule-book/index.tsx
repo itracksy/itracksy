@@ -34,6 +34,7 @@ export default function RuleBookPage() {
   });
 
   const createMutation = useCreateRule({
+    activities: null,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["activityRules"] });
       toast({
@@ -45,6 +46,7 @@ export default function RuleBookPage() {
   });
 
   const updateMutation = useUpdateRule({
+    activities: null,
     onSuccess: () => {
       setIsDialogOpen(false);
       setEditingRule(null);

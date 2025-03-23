@@ -91,12 +91,12 @@ export function ActivityGroup({
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
             <Toggle
               pressed={allProductive}
               onPressedChange={() => handleAppClassification(true)}
               className={cn(
-                "data-[state=on]:border-green-200 data-[state=on]:bg-green-100 data-[state=on]:text-green-800",
+                appRule?.rating === 1 ? "border-green-200 bg-green-100 text-green-800" : "",
                 "h-8 border px-2"
               )}
               aria-label="Mark all app activities as productive"
@@ -109,7 +109,7 @@ export function ActivityGroup({
               pressed={allDistracted}
               onPressedChange={() => handleAppClassification(false)}
               className={cn(
-                "data-[state=on]:border-red-200 data-[state=on]:bg-red-100 data-[state=on]:text-red-800",
+                appRule?.rating === 0 ? "border-red-200 bg-red-100 text-red-800" : "",
                 "h-8 border px-2"
               )}
               aria-label="Mark all app activities as distracting"
@@ -233,12 +233,12 @@ function DomainGroup({
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
             <Toggle
               pressed={allProductive}
               onPressedChange={() => handleDomainClassification(true)}
               className={cn(
-                "data-[state=on]:border-green-200 data-[state=on]:bg-green-100 data-[state=on]:text-green-800",
+                rule?.rating === 1 ? "border-green-200 bg-green-100 text-green-800" : "",
                 "h-8 border px-2"
               )}
               aria-label="Mark all domain activities as productive"
@@ -251,7 +251,7 @@ function DomainGroup({
               pressed={allDistracted}
               onPressedChange={() => handleDomainClassification(false)}
               className={cn(
-                "data-[state=on]:border-red-200 data-[state=on]:bg-red-100 data-[state=on]:text-red-800",
+                rule?.rating === 0 ? "border-red-200 bg-red-100 text-red-800" : "",
                 "h-8 border px-2"
               )}
               aria-label="Mark all domain activities as distracting"
@@ -329,12 +329,12 @@ function ActivityItem({ sessionId, appName, domain, activity, onClassify }: Acti
         )}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
         <Toggle
           pressed={activity.rating === 1}
           onPressedChange={() => handleActivityClassification(true)}
           className={cn(
-            "data-[state=on]:border-green-200 data-[state=on]:bg-green-100 data-[state=on]:text-green-800",
+            activity.rating === 1 ? "border-green-200 bg-green-100 text-green-800" : "",
             "h-8 border px-2"
           )}
           aria-label="Mark activity as productive"
@@ -347,7 +347,9 @@ function ActivityItem({ sessionId, appName, domain, activity, onClassify }: Acti
           pressed={activity.rating !== null && activity.rating === 0}
           onPressedChange={() => handleActivityClassification(false)}
           className={cn(
-            "data-[state=on]:border-red-200 data-[state=on]:bg-red-100 data-[state=on]:text-red-800",
+            activity.rating !== null && activity.rating === 0
+              ? "border-red-200 bg-red-100 text-red-800"
+              : "",
             "h-8 border px-2"
           )}
           aria-label="Mark activity as distracting"

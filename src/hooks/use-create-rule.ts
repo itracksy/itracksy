@@ -9,15 +9,12 @@ interface UseCreateRuleOptions {
   onSuccess?: (values: RuleFormValues) => void;
   onError?: (error: Error) => void;
   timeEntryId?: string;
-  activities?: Activity[];
+  activities: Activity[] | null;
 }
 
-export function useCreateRule({
-  onSuccess,
-  onError,
-  timeEntryId,
-  activities,
-}: UseCreateRuleOptions = {}) {
+export function useCreateRule(
+  { onSuccess, onError, timeEntryId, activities }: UseCreateRuleOptions = { activities: null }
+) {
   const queryClient = useQueryClient();
 
   const createRuleMutation = useMutation({

@@ -9,15 +9,12 @@ interface UseUpdateRuleOptions {
   onSuccess?: (data: any) => void;
   onError?: (error: Error) => void;
   timeEntryId?: string;
-  activities?: Activity[];
+  activities: Activity[] | null;
 }
 
-export function useUpdateRule({
-  onSuccess,
-  onError,
-  timeEntryId,
-  activities,
-}: UseUpdateRuleOptions = {}) {
+export function useUpdateRule(
+  { onSuccess, onError, timeEntryId, activities }: UseUpdateRuleOptions = { activities: null }
+) {
   const queryClient = useQueryClient();
 
   const updateRuleMutation = useMutation({
@@ -38,24 +35,20 @@ export function useUpdateRule({
     onSuccess: (data) => {
       // Handle updating activities that match the rule
       if (activities?.length && data) {
-        const unRatedActivities = activities.filter((activity) => activity.rating === null);
+        // Find activities that match the updated rule and update their ratings
+        const activitiesToRate = findActivitiesMatchingRule(activities, {
+          ruleType: data.ruleType,
+          condition: data.condition,
+          value: data.value,
+          rating: data.rating,
+        } as RuleFormValues);
 
-        if (unRatedActivities?.length) {
-          // Find activities that match the updated rule and update their ratings
-          const activitiesToRate = findActivitiesMatchingRule(unRatedActivities, {
-            ruleType: data.ruleType,
-            condition: data.condition,
-            value: data.value,
+        activitiesToRate.forEach((activity) => {
+          trpcClient.activity.setActivityRating.mutate({
+            timestamp: activity.timestamp,
             rating: data.rating,
-          } as RuleFormValues);
-
-          activitiesToRate.forEach((activity) => {
-            trpcClient.activity.setActivityRating.mutate({
-              timestamp: activity.timestamp,
-              rating: data.rating,
-            });
           });
-        }
+        });
       }
 
       // Invalidate necessary queries
