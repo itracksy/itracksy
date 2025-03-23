@@ -9,19 +9,14 @@ import { cn } from "@/lib/utils";
 import { TimeEntry } from "@/types/projects";
 import { useQuery } from "@tanstack/react-query";
 import { trpcClient } from "@/utils/trpc";
+import { OnClassify } from "@/types/classify";
 
 interface SessionCardProps {
   session: TimeEntry;
 
   isExpanded: boolean;
   onToggle: () => void;
-  onClassify: (
-    sessionId: string,
-    appName: string,
-    domainName: string | null,
-    activityId: number,
-    isProductive: boolean
-  ) => void;
+  onClassify: OnClassify;
 }
 
 export function SessionCard({

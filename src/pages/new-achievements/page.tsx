@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { SummaryCard } from "./components/summary-card";
 import { SessionList } from "./components/session-list";
 import { RulesPanel } from "./components/rules-panel";
@@ -6,7 +5,6 @@ import { RulesPanel } from "./components/rules-panel";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { trpcClient } from "@/utils/trpc";
-import { TimeRange } from "@/types/time";
 
 export function FocusSessionsAchievement() {
   const { toast } = useToast();
@@ -14,6 +12,7 @@ export function FocusSessionsAchievement() {
     queryKey: ["activityRules"],
     queryFn: () => trpcClient.activity.getUserRules.query(),
   });
+
   // Calculate summary statistics
   const totalFocusTime = 0;
   const totalSessions = 0;
@@ -31,14 +30,6 @@ export function FocusSessionsAchievement() {
   // Delete a rule
   const deleteRule = (ruleId: string) => {};
 
-  // Handle classification updates
-  const handleClassification = (
-    sessionId: string,
-    appName: string,
-    domainName: string | null,
-    activityId: number,
-    isProductive: boolean
-  ) => {};
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -60,7 +51,7 @@ export function FocusSessionsAchievement() {
         classificationProgress={classificationProgress}
       />
 
-      <SessionList onClassify={handleClassification} />
+      <SessionList />
       <div className="h-20" />
     </div>
   );

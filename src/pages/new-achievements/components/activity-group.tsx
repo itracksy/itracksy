@@ -9,26 +9,20 @@ import { cn } from "@/lib/utils";
 import { RulesBadge } from "./rules-badge";
 import { RulesInfo } from "./rules-info";
 import { Activity, ActivityRule, GroupActivity } from "@/types/activity";
+import { OnClassify } from "@/types/classify";
 
 interface ActivityGroupProps {
   sessionId: string;
   appName: string;
   groupActivity: GroupActivity;
   rule?: ActivityRule;
-  onClassify: (
-    sessionId: string,
-    appName: string,
-    domain: string | null,
-    activityId: number,
-    isProductive: boolean
-  ) => void;
+  onClassify: OnClassify;
 }
 
 export function ActivityGroup({
   sessionId,
   appName,
   groupActivity,
-
   onClassify,
 }: ActivityGroupProps) {
   const [expanded, setExpanded] = useState(false);
@@ -55,7 +49,13 @@ export function ActivityGroup({
 
   // Handle app-level classification
   const handleAppClassification = (isProductive: boolean) => {
-    onClassify(sessionId, appName, null, 0, isProductive);
+    onClassify({
+      ruleId: appRule?.id ?? null,
+      appName,
+      domain: null,
+      activityId: null,
+      isProductive,
+    });
   };
 
   return (
@@ -144,6 +144,20 @@ export function ActivityGroup({
           ))}
         </div>
       )}
+      {expanded && (
+        <div className="divide-y border-t">
+          {activities.map((activity) => (
+            <ActivityItem
+              key={activity.timestamp}
+              sessionId={sessionId}
+              appName={appName}
+              domain={null}
+              activity={activity}
+              onClassify={onClassify}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -154,13 +168,7 @@ interface DomainGroupProps {
   domain: string | null;
   activities: Activity[];
   rule?: ActivityRule; // Updated type from Rule[] to ActivityRule[]
-  onClassify: (
-    sessionId: string,
-    appName: string,
-    domain: string | null,
-    activityId: number,
-    isProductive: boolean
-  ) => void;
+  onClassify: OnClassify;
 }
 
 function DomainGroup({
@@ -189,7 +197,7 @@ function DomainGroup({
 
   // Handle domain-level classification
   const handleDomainClassification = (isProductive: boolean) => {
-    onClassify(sessionId, appName, domain, 0, isProductive);
+    onClassify({ ruleId: domainRule?.id ?? null, appName, domain, activityId: null, isProductive });
   };
 
   return (
@@ -286,19 +294,19 @@ interface ActivityItemProps {
   appName: string;
   domain: string | null;
   activity: Activity;
-  onClassify: (
-    sessionId: string,
-    appName: string,
-    domain: string | null,
-    activityId: number,
-    isProductive: boolean
-  ) => void;
+  onClassify: OnClassify;
 }
 
 function ActivityItem({ sessionId, appName, domain, activity, onClassify }: ActivityItemProps) {
   // Handle activity-level classification
   const handleActivityClassification = (isProductive: boolean) => {
-    onClassify(sessionId, appName, domain, activity.timestamp, isProductive);
+    onClassify({
+      ruleId: null,
+      appName,
+      domain,
+      activityId: activity.timestamp,
+      isProductive,
+    });
   };
 
   return (

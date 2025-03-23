@@ -4,21 +4,16 @@ import TimeRangeSelector from "@/components/TimeRangeSelector";
 import { SessionCard } from "./session-card";
 
 import { TimeRange } from "@/types/time";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcClient } from "@/utils/trpc";
 import { useState } from "react";
+import { OnClassify } from "@/types/classify";
+import { useUpdateRule } from "@/hooks/use-update-rule";
+import { useCreateRule } from "@/hooks/use-create-rule";
 
-interface SessionListProps {
-  onClassify: (
-    sessionId: string,
-    appName: string,
-    domainName: string | null,
-    activityId: number,
-    isProductive: boolean
-  ) => void;
-}
+interface SessionListProps {}
 
-export function SessionList({ onClassify }: SessionListProps) {
+export function SessionList({}: SessionListProps) {
   const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>({
     start: new Date(),
@@ -26,7 +21,69 @@ export function SessionList({ onClassify }: SessionListProps) {
 
     value: "today",
   });
+  const queryClient = useQueryClient();
 
+  // Mutation for setting activity rating
+  const ratingMutation = useMutation({
+    mutationFn: ({ timestamp, rating }: { timestamp: number; rating: number }) =>
+      trpcClient.activity.setActivityRating.mutate({ timestamp, rating }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["activities", expandedSessionId] });
+    },
+  });
+  const updateRuleMutation = useUpdateRule({
+    onSuccess: () => {},
+  });
+  const createRuleMutation = useCreateRule({
+    onSuccess: () => {},
+  });
+
+  // Handle classification updates
+  const handleClassification: OnClassify = ({
+    ruleId,
+    appName,
+    domain: domainName,
+    activityId,
+    isProductive,
+  }) => {
+    if (activityId) {
+      ratingMutation.mutate({
+        timestamp: activityId,
+        rating: isProductive ? 1 : 0,
+      });
+
+      return;
+    }
+
+    if (ruleId) {
+      updateRuleMutation.mutate({
+        id: ruleId,
+        rating: isProductive ? 1 : 0,
+      });
+    } else {
+      if (domainName) {
+        createRuleMutation.mutate({
+          name: `Rule for ${domainName}`,
+          description: `Created from activity`,
+          ruleType: "domain",
+          condition: "contains",
+          value: domainName,
+          rating: isProductive ? 1 : 0,
+          active: true,
+        });
+      } else {
+        createRuleMutation.mutate({
+          name: `Rule for ${appName}`,
+          description: `Created from activity`,
+          ruleType: "app_name",
+          condition: "contains",
+          value: appName,
+          rating: isProductive ? 1 : 0,
+          active: true,
+        });
+      }
+    }
+  };
   const startTimestamp = selectedTimeRange.start.getTime();
   const endTimestamp = selectedTimeRange.end.getTime();
 
@@ -83,7 +140,7 @@ export function SessionList({ onClassify }: SessionListProps) {
               onToggle={() => {
                 setExpandedSessionId(expandedSessionId === session.id ? null : session.id);
               }}
-              onClassify={onClassify}
+              onClassify={handleClassification}
             />
           ))}
         </div>
