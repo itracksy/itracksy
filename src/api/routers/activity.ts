@@ -70,12 +70,12 @@ export const activityRouter = t.router({
     .input(
       z.object({
         startTime: z.number(),
-        endTime: z.number(),
+        endTime: z.number().optional(),
       })
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.userId;
-      return getProductivityStats(userId, input.startTime, input.endTime);
+      return getProductivityStats({ userId, startTime: input.startTime, endTime: input.endTime });
     }),
 
   // Activity rule management

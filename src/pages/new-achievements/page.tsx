@@ -5,6 +5,8 @@ import { RulesPanel } from "./components/rules-panel";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { trpcClient } from "@/utils/trpc";
+import { useAtomValue } from "jotai";
+import { selectedAchievementTimeRangeAtom } from "@/context/timeRange";
 
 export function FocusSessionsAchievement() {
   const { toast } = useToast();
@@ -12,19 +14,31 @@ export function FocusSessionsAchievement() {
     queryKey: ["activityRules"],
     queryFn: () => trpcClient.activity.getUserRules.query(),
   });
+  const selectedAchievementTimeRange = useAtomValue(selectedAchievementTimeRangeAtom);
+
+  // Get productivity stats based on the selected time range
+  const { data: productivityStats, isLoading: isLoadingStats } = useQuery({
+    queryKey: ["productivityStats", selectedAchievementTimeRange],
+    queryFn: () =>
+      trpcClient.activity.getProductivityStats.query({
+        startTime: selectedAchievementTimeRange.start,
+        endTime: selectedAchievementTimeRange.end,
+      }),
+    enabled: !!selectedAchievementTimeRange,
+  });
 
   // Calculate summary statistics
-  const totalFocusTime = 0;
-  const totalSessions = 0;
+  const totalFocusTime = productivityStats?.totalDuration || 0;
+  const totalSessions = productivityStats?.focusSessionCount || 0;
 
-  const classifiedActivities = 0;
+  const classifiedActivities = productivityStats?.ratedActivityCount || 0;
+  const totalActivities = productivityStats?.activityCount || 0;
 
-  const totalActivities = 0;
+  const productiveTime = productivityStats?.productiveDuration || 0;
 
-  const productiveTime = 0;
-
-  const productivityPercentage = 0;
-
+  const productivityPercentage = Math.round(
+    (productiveTime / (productivityStats?.totalDuration || 1)) * 100
+  );
   // Create a new rule
 
   // Delete a rule
@@ -36,7 +50,7 @@ export function FocusSessionsAchievement() {
   if (!rules) {
     return <div>Failed to load rules</div>;
   }
-  const classificationProgress = classifiedActivities / totalActivities;
+  const classificationProgress = totalActivities > 0 ? classifiedActivities / totalActivities : 0;
   return (
     <div className="mx-auto max-w-4xl space-y-8">
       <div className="flex items-center justify-between">

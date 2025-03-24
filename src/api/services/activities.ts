@@ -165,23 +165,45 @@ export async function setActivityRating(timestamp: number, userId: string, ratin
 /**
  * Get productivity stats based on activity ratings
  */
-export async function getProductivityStats(userId: string, startTime: number, endTime: number) {
+export async function getProductivityStats({
+  userId,
+  startTime,
+  endTime,
+}: {
+  userId: string;
+  startTime: number;
+  endTime?: number;
+}) {
+  const startOfDay = new Date(startTime);
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const endOfDay = new Date(endTime ?? startTime);
+  endOfDay.setHours(23, 59, 59, 999);
   const result = await db
     .select({
       totalDuration: sql`SUM(${activities.duration})`,
-      goodDuration: sql`SUM(CASE WHEN ${activities.rating} = 1 THEN ${activities.duration} ELSE 0 END)`,
-      badDuration: sql`SUM(CASE WHEN ${activities.rating} = 0 THEN ${activities.duration} ELSE 0 END)`,
-      unratedDuration: sql`SUM(CASE WHEN ${activities.rating} IS NULL THEN ${activities.duration} ELSE 0 END)`,
+      productiveDuration: sql`SUM(CASE WHEN ${activities.rating} = 1 THEN ${activities.duration} ELSE 0 END)`,
+      distractingDuration: sql`SUM(CASE WHEN ${activities.rating} = 0 THEN ${activities.duration} ELSE 0 END)`,
       activityCount: sql`COUNT(*)`,
+      focusSessionCount: sql`COUNT(DISTINCT ${activities.timeEntryId})`,
+      ratedActivityCount: sql`COUNT(CASE WHEN ${activities.rating} IS NOT NULL THEN 1 ELSE NULL END)`,
     })
     .from(activities)
     .where(
       and(
         eq(activities.userId, userId),
-        sql`${activities.timestamp} >= ${startTime}`,
-        sql`${activities.timestamp} <= ${endTime}`
+        sql`${activities.timestamp} >= ${startOfDay.getTime()}`,
+        sql`${activities.timestamp} <= ${endOfDay.getTime()}`
       )
     );
 
-  return result[0];
+  // Convert SQL results to numbers with fallback to 0 for null values
+  return {
+    totalDuration: Number(result[0].totalDuration || 0),
+    productiveDuration: Number(result[0].productiveDuration || 0),
+    distractingDuration: Number(result[0].distractingDuration || 0),
+    activityCount: Number(result[0].activityCount || 0),
+    focusSessionCount: Number(result[0].focusSessionCount || 0),
+    ratedActivityCount: Number(result[0].ratedActivityCount || 0),
+  };
 }

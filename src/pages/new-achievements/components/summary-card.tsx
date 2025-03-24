@@ -69,10 +69,12 @@ export function SummaryCard({
                   <Tag className="h-5 w-5 text-[#E5A853]" />
                   <p className="text-sm font-medium text-gray-100">Classification Progress</p>
                 </div>
-                <span className="text-sm font-medium">{classificationProgress}%</span>
+                <span className="text-sm font-medium">
+                  {Math.round(classificationProgress * 100)}%
+                </span>
               </div>
               <Progress
-                value={classificationProgress}
+                value={classificationProgress * 100}
                 className="h-2 bg-white/20"
                 indicatorClassName="bg-[#E5A853]"
               />
