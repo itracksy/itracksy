@@ -125,9 +125,9 @@ export const startTracking = async (): Promise<void> => {
       const appName = transformedActivities.ownerName.toLowerCase();
       const rule = await findMatchingDistractingRules(transformedActivities);
 
-      const isBlocked = rule !== null;
+      const isBlocked = rule && rule.rating === 0;
 
-      await upsertActivity({ ...transformedActivities, rating: isBlocked ? 0 : 1 });
+      await upsertActivity({ ...transformedActivities, rating: rule ? rule.rating : null });
       console.log("rule", rule);
 
       const isBlockedDomain = rule?.ruleType === "domain";

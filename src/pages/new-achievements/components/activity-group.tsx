@@ -10,6 +10,7 @@ import { RulesBadge } from "./rules-badge";
 import { RulesInfo } from "./rules-info";
 import { Activity, ActivityRule, GroupActivity } from "@/types/activity";
 import { OnClassify } from "@/types/classify";
+import { isNonEmptyObject } from "@/utils/value-checks";
 
 interface ActivityGroupProps {
   sessionId: string;
@@ -32,7 +33,7 @@ export function ActivityGroup({
 
   // Group activities by domain
   const domainGroups = groupActivity.domains;
-
+  const isBrowser = isNonEmptyObject(domainGroups);
   // Calculate app-level statistics
   const totalAppTime = activities.reduce((total, activity) => total + activity.duration, 0);
   const classifiedActivities = activities.filter((a) => a.rating !== null).length;
@@ -71,7 +72,7 @@ export function ActivityGroup({
 
           <div className="flex items-center gap-2">
             <h4 className="font-medium text-gray-900">{appName}</h4>
-            {appRule && <RulesBadge isProductive={appRule.rating === 1} />}
+            {appRule && !isBrowser && <RulesBadge isProductive={appRule.rating === 1} />}
           </div>
 
           <div>
@@ -91,35 +92,41 @@ export function ActivityGroup({
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-            <Toggle
-              pressed={allProductive}
-              onPressedChange={() => handleAppClassification(true)}
-              className={cn(
-                appRule?.rating === 1 ? "border-green-200 bg-green-100 text-green-800" : "",
-                "h-8 border px-2"
-              )}
-              aria-label="Mark all app activities as productive"
-            >
-              <CheckCircle className="mr-1 h-4 w-4" />
-              Productive
-            </Toggle>
+          {!isBrowser ? (
+            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+              <Toggle
+                pressed={allProductive}
+                onPressedChange={() => handleAppClassification(true)}
+                className={cn(
+                  appRule?.rating === 1 ? "border-green-200 bg-green-100 text-green-800" : "",
+                  "h-8 border px-2"
+                )}
+                aria-label="Mark all app activities as productive"
+              >
+                <CheckCircle className="mr-1 h-4 w-4" />
+                Productive
+              </Toggle>
 
-            <Toggle
-              pressed={allDistracted}
-              onPressedChange={() => handleAppClassification(false)}
-              className={cn(
-                appRule?.rating === 0 ? "border-red-200 bg-red-100 text-red-800" : "",
-                "h-8 border px-2"
-              )}
-              aria-label="Mark all app activities as distracting"
-            >
-              <XCircle className="mr-1 h-4 w-4" />
-              Distracting
-            </Toggle>
+              <Toggle
+                pressed={allDistracted}
+                onPressedChange={() => handleAppClassification(false)}
+                className={cn(
+                  appRule?.rating === 0 ? "border-red-200 bg-red-100 text-red-800" : "",
+                  "h-8 border px-2"
+                )}
+                aria-label="Mark all app activities as distracting"
+              >
+                <XCircle className="mr-1 h-4 w-4" />
+                Distracting
+              </Toggle>
 
-            <RulesInfo />
-          </div>
+              <RulesInfo />
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-500">It is browser</span>
+            </div>
+          )}
 
           {expanded ? (
             <ChevronUp className="h-5 w-5 text-gray-400" />
@@ -136,7 +143,7 @@ export function ActivityGroup({
               key={`${sessionId}-${appName}-${domain}`}
               sessionId={sessionId}
               appName={appName}
-              domain={domain === "No Domain" ? null : domain}
+              domain={domain}
               activities={domainActivities.activities}
               rule={domainActivities.rule}
               onClassify={onClassify}

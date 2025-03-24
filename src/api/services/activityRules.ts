@@ -185,11 +185,9 @@ export async function findMatchingDistractingRules(activity: Activity) {
       return and(
         eq(rules.userId, activity.userId),
         eq(rules.active, true),
-        eq(rules.rating, 0), // distracting
-        or(
-          and(eq(rules.ruleType, "app_name"), eq(rules.value, activity.ownerName)),
-          and(eq(rules.ruleType, "domain"), eq(rules.value, extractDomain(activity.url)))
-        )
+        activity.url
+          ? and(eq(rules.ruleType, "domain"), eq(rules.value, extractDomain(activity.url)))
+          : and(eq(rules.ruleType, "app_name"), eq(rules.value, activity.ownerName))
       );
     },
   });

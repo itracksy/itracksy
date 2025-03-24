@@ -67,22 +67,7 @@ export const upsertActivity = async (activity: Activity): Promise<void> => {
 
     return;
   }
-  await db.insert(activities).values({
-    timestamp: activity.timestamp,
-    isFocusMode: activity.isFocusMode,
-    activityId: activity.activityId,
-    platform: activity.platform,
-    title: activity.title,
-    ownerPath: activity.ownerPath,
-    ownerProcessId: activity.ownerProcessId,
-    ownerBundleId: activity.ownerBundleId,
-    ownerName: activity.ownerName,
-    url: activity.url,
-    duration: activity.duration,
-    timeEntryId: activity.timeEntryId,
-    userId: activity.userId,
-    rating: activity.rating,
-  });
+  await db.insert(activities).values(activity);
 };
 
 /**
