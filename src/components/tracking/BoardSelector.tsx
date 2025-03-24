@@ -33,7 +33,14 @@ export function BoardSelector({ selectedItemId, onItemSelect }: BoardSelectorPro
     <div className="space-y-4">
       <div className="space-y-2">
         <label className="text-sm font-medium">Select Board</label>
-        <Select value={selectedBoardId ?? undefined} onValueChange={setSelectedBoardId}>
+        <Select
+          value={selectedBoardId ?? undefined}
+          onValueChange={(id) => {
+            setSelectedBoardId(id);
+
+            onItemSelect("");
+          }}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select a board" />
           </SelectTrigger>
@@ -49,10 +56,10 @@ export function BoardSelector({ selectedItemId, onItemSelect }: BoardSelectorPro
 
       {selectedBoard && (
         <div className="space-y-2">
-          <label className="text-sm font-medium">Select Item</label>
+          <label className="text-sm font-medium">Select Task</label>
           <Select value={selectedItemId} onValueChange={onItemSelect}>
             <SelectTrigger>
-              <SelectValue placeholder="Select an item" />
+              <SelectValue placeholder="Select a task" />
             </SelectTrigger>
             <SelectContent>
               {selectedBoard.items?.map((item) => (
