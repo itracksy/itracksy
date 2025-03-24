@@ -3,21 +3,18 @@
 import TimeRangeSelector from "@/components/TimeRangeSelector";
 import { SessionCard } from "./session-card";
 
-import { TimeRange } from "@/types/time";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { trpcClient } from "@/utils/trpc";
 import { useState } from "react";
+import { useAtom } from "jotai";
+
+import { selectedAchievementTimeRangeAtom } from "@/context/timeRange";
 
 interface SessionListProps {}
 
 export function SessionList({}: SessionListProps) {
   const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
-  const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>({
-    start: new Date(),
-    end: new Date(),
-
-    value: "today",
-  });
+  const [selectedTimeRange, setSelectedTimeRange] = useAtom(selectedAchievementTimeRangeAtom);
 
   const startTimestamp = selectedTimeRange.start.getTime();
   const endTimestamp = selectedTimeRange.end.getTime();

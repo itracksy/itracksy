@@ -2,7 +2,6 @@ import { eq, desc, and, isNull, isNotNull, sql, gte, lte } from "drizzle-orm";
 import { timeEntries, items, activities } from "../db/schema";
 import { nanoid } from "nanoid";
 import db from "../db";
-import { TimeRange } from "@/types/time";
 
 export type TimeEntry = typeof timeEntries.$inferSelect;
 export type TimeEntryInsert = typeof timeEntries.$inferInsert;

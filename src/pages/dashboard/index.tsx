@@ -1,15 +1,12 @@
-import { useState } from "react";
 import HourlyFocusChart from "./components/HourlyFocusChart";
 import ProjectTimeChart from "./components/ProjectTimeChart";
 import TimeRangeSelector from "@/components/TimeRangeSelector";
-import { TimeRange } from "@/types/time";
+
+import { useAtom } from "jotai";
+import { selectedAnalyticsTimeRangeAtom } from "@/context/timeRange";
 
 export default function DashboardPage() {
-  const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>({
-    start: new Date(),
-    end: new Date(),
-    value: "today",
-  });
+  const [selectedTimeRange, setSelectedTimeRange] = useAtom(selectedAnalyticsTimeRangeAtom);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-tracksy-blue/5 to-tracksy-gold/5 dark:from-tracksy-blue/10 dark:to-tracksy-gold/10">

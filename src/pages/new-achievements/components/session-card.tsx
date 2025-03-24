@@ -35,7 +35,7 @@ export function SessionCard({
     queryFn: () => trpcClient.timeEntry.getGroupActivitiesForTimeEntry.query(session.id),
     enabled: true,
   });
-  const { activities, groupedActivities } = data ?? {};
+  const { activities = null, groupedActivities } = data ?? {};
   // Mutation for setting activity rating
   const ratingMutation = useMutation({
     mutationFn: ({ timestamp, rating }: { timestamp: number; rating: number }) =>

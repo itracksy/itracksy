@@ -20,7 +20,7 @@ export const RootRoute = createRootRoute({
 
 function Root() {
   const matches = useMatches();
-  const isFullScreenRoute = matches.some(match => match.pathname === '/raining-letters');
+  const isFullScreenRoute = matches.some((match) => match.pathname === "/raining-letters");
 
   return (
     <ConfirmationDialogProvider>
