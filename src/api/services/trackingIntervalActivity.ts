@@ -19,6 +19,7 @@ import { eq, sql } from "drizzle-orm";
 import { formatDuration } from "../../utils/formatTime";
 import { getTray } from "../../main";
 import { extractUrlFromBrowserTitle } from "../../helpers/extractUrlFromBrowserTitle";
+import { findMatchingDistractingRules } from "./activityRules";
 
 let trackingIntervalId: NodeJS.Timeout | null = null;
 let notificationWindow: BrowserWindow | null = null;
@@ -118,29 +119,25 @@ export const startTracking = async (): Promise<void> => {
         userId,
       };
 
-      await upsertActivity(transformedActivities);
-
       const url = transformedActivities.url?.toLowerCase();
       const extractedDomain = url ? extractDomainWindows(url) : null;
 
       const appName = transformedActivities.ownerName.toLowerCase();
-      const isBlockedApp =
-        appName && blockedApps.some((app) => appName.includes(app.appName.toLowerCase()));
-      const isBlockedDomain =
-        extractedDomain &&
-        blockedDomains.some(({ domain }) =>
-          result.platform === "windows"
-            ? domain.includes(extractedDomain)
-            : urlContainsDomain(url, domain)
-        );
+      const rule = await findMatchingDistractingRules(transformedActivities);
 
+      const isBlocked = rule !== null;
+
+      await upsertActivity({ ...transformedActivities, rating: isBlocked ? 0 : 1 });
+      console.log("rule", rule);
+
+      const isBlockedDomain = rule?.ruleType === "domain";
       // Show notification in full-screen window
       if (
-        (isBlockedDomain || isBlockedApp) &&
+        isBlocked &&
         (!activeEntry.whiteListedActivities ||
           !activeEntry.whiteListedActivities
             .split(",")
-            .includes(isBlockedDomain ? extractedDomain : appName)) &&
+            .includes(isBlockedDomain ? (extractedDomain ?? "unknown") : appName)) &&
         Date.now() - lastNotificationTime >= NOTIFICATION_COOLDOWN
       ) {
         showNotificationWarningBlock({
@@ -148,7 +145,7 @@ export const startTracking = async (): Promise<void> => {
           detail: transformedActivities.ownerPath || "",
           userId,
           timeEntryId: activeEntry.id,
-          appOrDomain: isBlockedDomain ? extractedDomain : appName,
+          appOrDomain: isBlockedDomain ? (extractedDomain ?? "unknown") : appName,
         });
       }
     } catch (error) {

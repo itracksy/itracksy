@@ -61,6 +61,7 @@ export const upsertActivity = async (activity: Activity): Promise<void> => {
       .update(activities)
       .set({
         duration: existingActivity.duration + activity.duration,
+        rating: activity.rating,
       })
       .where(eq(activities.timestamp, existingActivity.timestamp));
 
@@ -80,6 +81,7 @@ export const upsertActivity = async (activity: Activity): Promise<void> => {
     duration: activity.duration,
     timeEntryId: activity.timeEntryId,
     userId: activity.userId,
+    rating: activity.rating,
   });
 };
 

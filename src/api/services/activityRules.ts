@@ -1,4 +1,4 @@
-import { eq, and } from "drizzle-orm";
+import { eq, and, or } from "drizzle-orm";
 import db from "../db";
 import { activityRules } from "../db/schema";
 import { nanoid } from "nanoid";
@@ -174,6 +174,25 @@ export async function getGroupActivities(activities: Activity[]) {
       appGroups[appName].activitiesWithoutUrl.push(activity);
     }
   }
-  console.log("appGroups", appGroups);
+
   return appGroups;
+}
+
+// find rules that match the activity
+export async function findMatchingDistractingRules(activity: Activity) {
+  const rule = await db.query.activityRules.findFirst({
+    where: (rules) => {
+      return and(
+        eq(rules.userId, activity.userId),
+        eq(rules.active, true),
+        eq(rules.rating, 0), // distracting
+        or(
+          and(eq(rules.ruleType, "app_name"), eq(rules.value, activity.ownerName)),
+          and(eq(rules.ruleType, "domain"), eq(rules.value, extractDomain(activity.url)))
+        )
+      );
+    },
+  });
+
+  return rule;
 }
