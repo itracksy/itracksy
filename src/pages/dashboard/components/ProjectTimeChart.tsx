@@ -18,22 +18,22 @@ function formatDuration(seconds: number) {
   return minutes === 0 ? `${hours}h` : `${hours}h ${minutes}m`;
 }
 
-// Generate a vibrant color palette for the pie chart
+// Generate a color palette that complements the brand colors
 const COLORS = [
-  "#FF6B6B", // Coral Red
-  "#4ECDC4", // Turquoise
-  "#45B7D1", // Sky Blue
-  "#96CEB4", // Mint
-  "#FFEEAD", // Cream Yellow
-  "#D4A5A5", // Dusty Rose
-  "#9B5DE5", // Purple
-  "#00BBF9", // Bright Blue
-  "#00F5D4", // Aqua
-  "#FEE440", // Yellow
-  "#F15BB5", // Pink
-  "#FB5607", // Orange
-  "#3A86FF", // Royal Blue
-  "#8338EC", // Violet
+  "#E5A853", // Primary gold
+  "#2B4474", // Secondary deep blue
+  "#5D7EB8", // Lighter blue
+  "#F0BC74", // Lighter gold
+  "#1D2F4F", // Darker blue
+  "#CB9036", // Darker gold
+  "#7593C6", // Even lighter blue
+  "#F5CA8F", // Even lighter gold
+  "#A37229", // Brown-gold
+  "#3E5E9E", // Medium blue
+  "#FFD699", // Pale gold
+  "#8BAAD6", // Pale blue
+  "#D99C41", // Medium gold
+  "#496BA9", // Medium-light blue
 ];
 
 // Define types for chart data
@@ -118,17 +118,19 @@ export default function ProjectTimeChart({ timeRange }: ProjectTimeChartProps) {
   return (
     <>
       <TimeEntryDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} />
-      <Card className="col-span-full">
-        <CardHeader>
+      <Card className="col-span-full border-[#E5A853]/20 shadow-md">
+        <CardHeader className="bg-[#2B4474]/5 pb-2">
           <CardTitle className="flex items-center justify-between">
-            <span>Project Time</span>
-            <span className="text-sm font-normal text-muted-foreground">{totalDuration} total</span>
+            <span className="text-[#2B4474]">Project Time</span>
+            <span className="rounded-full bg-[#E5A853] px-3 py-1 text-sm font-medium text-white">
+              {totalDuration} total
+            </span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           {hasData ? (
             <div className="flex h-[300px]">
-              <ResponsiveContainer width="60%" height="100%">
+              <ResponsiveContainer width="60%" height="110%">
                 <PieChart>
                   <Pie
                     data={chartData}
@@ -139,7 +141,7 @@ export default function ProjectTimeChart({ timeRange }: ProjectTimeChartProps) {
                     innerRadius={80}
                     outerRadius={130}
                     label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                    labelLine={{ stroke: "var(--muted-foreground)", strokeWidth: 0.5 }}
+                    labelLine={{ stroke: "#2B4474", strokeWidth: 0.5, strokeOpacity: 0.5 }}
                     paddingAngle={2}
                   >
                     {chartData.map((entry, index) => (
@@ -147,7 +149,7 @@ export default function ProjectTimeChart({ timeRange }: ProjectTimeChartProps) {
                         key={entry.name}
                         fill={COLORS[index % COLORS.length]}
                         stroke="var(--background)"
-                        strokeWidth={1}
+                        strokeWidth={1.5}
                       />
                     ))}
                   </Pie>
@@ -162,21 +164,24 @@ export default function ProjectTimeChart({ timeRange }: ProjectTimeChartProps) {
                         ];
 
                       return (
-                        <div className="rounded-lg border bg-background p-2 shadow-md">
+                        <div className="rounded-lg border border-[#E5A853]/20 bg-white p-3 shadow-lg">
                           <div className="flex items-center gap-2">
                             <div
                               className="h-3 w-3 rounded-full"
                               style={{ backgroundColor: color }}
                             />
-                            <p className="font-medium">{data.name}</p>
+                            <p className="font-medium text-[#2B4474]">{data.name}</p>
                           </div>
-                          <p className="text-sm text-muted-foreground">{data.displayDuration}</p>
+                          <p className="text-sm font-medium text-[#E5A853]">
+                            {data.displayDuration}
+                          </p>
                           {isProjectChartItem(data) && (
-                            <div className="mt-2">
-                              <p className="text-xs font-medium">Tasks:</p>
+                            <div className="mt-2 border-t border-[#E5A853]/10 pt-2">
+                              <p className="text-xs font-medium text-[#2B4474]">Tasks:</p>
                               {data.tasks.map((task) => (
-                                <p key={task.name} className="text-xs text-muted-foreground">
-                                  {task.name}: {task.duration}
+                                <p key={task.name} className="text-xs text-[#2B4474]/70">
+                                  {task.name}:{" "}
+                                  <span className="text-[#E5A853]">{task.duration}</span>
                                 </p>
                               ))}
                             </div>
@@ -188,30 +193,30 @@ export default function ProjectTimeChart({ timeRange }: ProjectTimeChartProps) {
                 </PieChart>
               </ResponsiveContainer>
               <div className="w-[40%] overflow-auto pl-4">
-                <h3 className="mb-2 font-medium">Project Breakdown</h3>
+                <h3 className="mb-3 font-medium text-[#2B4474]">Project Breakdown</h3>
                 {chartData.map((project, index) => (
-                  <div key={project.name} className="mb-3">
+                  <div
+                    key={project.name}
+                    className="mb-4 rounded-md border border-[#E5A853]/10 p-2 transition-all hover:border-[#E5A853]/30 hover:shadow-sm"
+                  >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div
                           className="h-3 w-3 rounded-full"
                           style={{ backgroundColor: COLORS[index % COLORS.length] }}
                         />
-                        <span className="font-medium">{project.name}</span>
+                        <span className="font-medium text-[#2B4474]">{project.name}</span>
                       </div>
-                      <span className="text-sm text-muted-foreground">
+                      <span className="rounded-md bg-[#E5A853]/10 px-2 py-0.5 text-sm font-medium text-[#E5A853]">
                         {project.displayDuration}
                       </span>
                     </div>
-                    <div className="ml-5 mt-1">
+                    <div className="ml-5 mt-2">
                       {isProjectChartItem(project) &&
                         project.tasks.map((task) => (
-                          <div
-                            key={task.name}
-                            className="flex justify-between text-sm text-muted-foreground"
-                          >
-                            <span>{task.name}</span>
-                            <span>{task.duration}</span>
+                          <div key={task.name} className="flex justify-between text-sm">
+                            <span className="text-[#2B4474]/80">{task.name}</span>
+                            <span className="text-[#E5A853]/80">{task.duration}</span>
                           </div>
                         ))}
                     </div>
@@ -220,14 +225,17 @@ export default function ProjectTimeChart({ timeRange }: ProjectTimeChartProps) {
               </div>
             </div>
           ) : (
-            <div className="flex h-[400px] flex-col items-center justify-center gap-4">
+            <div className="flex h-[400px] flex-col items-center justify-center gap-6 rounded-xl border border-dashed border-[#E5A853]/30 bg-[#2B4474]/5 p-8">
               <div className="text-center">
-                <h3 className="text-lg font-semibold">No Projects Tracked Yet</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <h3 className="text-xl font-semibold text-[#2B4474]">No Projects Tracked Yet</h3>
+                <p className="mt-2 text-sm text-[#2B4474]/70">
                   Track time on your projects to see your progress here!
                 </p>
               </div>
-              <Button onClick={() => setIsDialogOpen(true)} className="gap-2">
+              <Button
+                onClick={() => setIsDialogOpen(true)}
+                className="gap-2 bg-[#E5A853] hover:bg-[#d99a3d]"
+              >
                 <PlayCircle className="h-4 w-4" />
                 Start Working
               </Button>

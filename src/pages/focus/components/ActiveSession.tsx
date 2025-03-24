@@ -130,10 +130,10 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
     <>
       {/* Active Session Display */}
       <div className="text-center">
-        <h2 className="mb-4 text-xl font-medium text-gray-700">Current Session</h2>
-        <div className="rounded-lg bg-white p-4 shadow-sm">
-          <div className="flex items-center justify-center gap-2 text-gray-700">
-            <span className="h-2 w-2 rounded-full bg-green-400"></span>
+        <h2 className="mb-4 text-xl font-medium text-[#2B4474]">Current Session</h2>
+        <div className="rounded-lg border border-[#E5A853]/20 bg-white p-4 shadow-sm">
+          <div className="flex items-center justify-center gap-2 text-[#2B4474]">
+            <span className="h-2 w-2 rounded-full bg-[#E5A853]"></span>
             {getTitleTimeEntry(activeTimeEntry)}
           </div>
         </div>
@@ -141,20 +141,20 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
 
       {/* Timer Display */}
       <div className="relative mx-auto aspect-square w-64">
-        <div className="absolute inset-0 rounded-full border-[16px] border-pink-100"></div>
+        <div className="absolute inset-0 rounded-full border-[16px] border-[#E5A853]/20"></div>
         <div
-          className="absolute inset-0 rounded-full border-[16px] border-green-400"
+          className="absolute inset-0 rounded-full border-[16px] border-[#E5A853]"
           style={{
             clipPath: `polygon(50% 50%, 50% 0, ${50 + 50 * Math.cos(Math.PI / 2)}% ${50 - 50 * Math.sin(Math.PI / 2)}%)`,
           }}
         ></div>
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-          <span className="font-mono text-4xl font-medium text-gray-700">{duration}</span>
+          <span className="font-mono text-4xl font-medium text-[#2B4474]">{duration}</span>
           {isTimeExceeded && (
             <div className="flex flex-col items-center space-y-1">
-              <AlertTriangle className="h-5 w-5 animate-bounce text-red-500" />
+              <AlertTriangle className="h-5 w-5 animate-bounce text-[#E5A853]" />
               <span
-                className="text-sm font-medium text-red-500 transition-all duration-300"
+                className="text-sm font-medium text-[#E5A853] transition-all duration-300"
                 style={{
                   animation: "warning 2s infinite",
                 }}
@@ -170,7 +170,7 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
       <div className="mt-4 space-y-2">
         <button
           onClick={handleStopTimeEntry}
-          className="w-full rounded-lg bg-red-400 py-3 font-medium text-white shadow-sm transition hover:bg-red-500"
+          className="w-full rounded-lg bg-[#2B4474] py-3 font-medium text-white shadow-sm transition hover:bg-[#1e325a]"
         >
           STOP {activeTimeEntry.isFocusMode ? "FOCUS" : "BREAK"}
         </button>
@@ -178,7 +178,7 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
         {/* Extend Time Button */}
         <button
           onClick={handleExtendTime}
-          className="w-full rounded-lg border border-gray-200 bg-white py-3 font-medium text-gray-700 shadow-sm transition hover:bg-gray-50"
+          className="w-full rounded-lg border border-[#E5A853]/30 bg-[#E5A853] py-3 font-medium text-white shadow-sm transition hover:bg-[#d99a3d]"
         >
           +5 MINUTES
         </button>
@@ -188,15 +188,13 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
       {!activeTimeEntry.isFocusMode && (
         <button
           onClick={() => navigate({ to: "/raining-letters" })}
-          className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-lg bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 p-4 font-medium text-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-200/20"
+          className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-lg bg-gradient-to-r from-[#2B4474] to-[#E5A853] p-4 font-medium text-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-[#E5A853]/20"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#2B4474] to-[#E5A853] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
           <Cloud className="h-6 w-6 animate-bounce transition-transform duration-300 group-hover:scale-110" />
-          <span className="relative z-10 bg-gradient-to-r from-white via-blue-50 to-white bg-clip-text text-lg font-bold text-transparent">
-            Take a Magical Break
-          </span>
+          <span className="relative z-10 text-lg font-bold text-white">Take a Magical Break</span>
           <div className="absolute -inset-1 -z-10 animate-pulse opacity-25 blur">
-            <div className="h-full w-full bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400" />
+            <div className="h-full w-full bg-gradient-to-r from-[#2B4474] via-[#3d5990] to-[#E5A853]" />
           </div>
         </button>
       )}
