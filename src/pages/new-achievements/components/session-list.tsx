@@ -16,8 +16,8 @@ export function SessionList({}: SessionListProps) {
   const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
   const [selectedTimeRange, setSelectedTimeRange] = useAtom(selectedAchievementTimeRangeAtom);
 
-  const startTimestamp = selectedTimeRange.start.getTime();
-  const endTimestamp = selectedTimeRange.end.getTime();
+  const startTimestamp = selectedTimeRange.start;
+  const endTimestamp = selectedTimeRange.end;
 
   // Use useQuery with proper error handling
   const {

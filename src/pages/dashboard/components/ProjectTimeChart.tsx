@@ -3,7 +3,7 @@ import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recha
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpcClient } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
-import type { TimeRange } from "./TimeRangeSelector";
+import { TimeRange } from "@/types/time";
 import { Button } from "@/components/ui/button";
 import { PlayCircle } from "lucide-react";
 import { TimeEntryDialog } from "@/components/tracking/TimeEntryDialog";
@@ -49,14 +49,14 @@ type ProjectChartItem = {
   name: string;
   value: number;
   displayDuration: string;
-  tasks: { name: string; duration: string; }[];
+  tasks: { name: string; duration: string }[];
 };
 
 type ChartDataItem = TaskChartItem | ProjectChartItem;
 
 // Type guard function to check if an item is a ProjectChartItem
 function isProjectChartItem(item: ChartDataItem): item is ProjectChartItem {
-  return 'tasks' in item;
+  return "tasks" in item;
 }
 
 interface ProjectTimeChartProps {
@@ -69,8 +69,8 @@ export default function ProjectTimeChart({ timeRange }: ProjectTimeChartProps) {
     queryKey: ["dashboard.reportProjectByDay", timeRange.start, timeRange.end],
     queryFn: async () => {
       const data = await trpcClient.dashboard.reportProjectByDay.query({
-        startDate: timeRange.start.getTime(),
-        endDate: timeRange.end.getTime(),
+        startDate: timeRange.start,
+        endDate: timeRange.end,
       });
       return data;
     },
@@ -82,25 +82,29 @@ export default function ProjectTimeChart({ timeRange }: ProjectTimeChartProps) {
     // If there's only one project, show tasks with different colors
     if (report.projects.length === 1) {
       const project = report.projects[0];
-      return project.tasks.map((task): TaskChartItem => ({
-        name: task.title,
-        value: task.duration,
-        displayDuration: formatDuration(task.duration),
-        projectName: project.name,
-        isTask: true,
-      }));
+      return project.tasks.map(
+        (task): TaskChartItem => ({
+          name: task.title,
+          value: task.duration,
+          displayDuration: formatDuration(task.duration),
+          projectName: project.name,
+          isTask: true,
+        })
+      );
     }
 
     // Normal case - multiple projects
-    return report.projects.map((project): ProjectChartItem => ({
-      name: project.name,
-      value: project.totalDuration,
-      displayDuration: formatDuration(project.totalDuration),
-      tasks: project.tasks.map((task) => ({
-        name: task.title,
-        duration: formatDuration(task.duration),
-      })),
-    }));
+    return report.projects.map(
+      (project): ProjectChartItem => ({
+        name: project.name,
+        value: project.totalDuration,
+        displayDuration: formatDuration(project.totalDuration),
+        tasks: project.tasks.map((task) => ({
+          name: task.title,
+          duration: formatDuration(task.duration),
+        })),
+      })
+    );
   }, [report]);
 
   const hasData = chartData && chartData.length > 0;
@@ -200,15 +204,16 @@ export default function ProjectTimeChart({ timeRange }: ProjectTimeChartProps) {
                       </span>
                     </div>
                     <div className="ml-5 mt-1">
-                      {isProjectChartItem(project) && project.tasks.map((task) => (
-                        <div
-                          key={task.name}
-                          className="flex justify-between text-sm text-muted-foreground"
-                        >
-                          <span>{task.name}</span>
-                          <span>{task.duration}</span>
-                        </div>
-                      ))}
+                      {isProjectChartItem(project) &&
+                        project.tasks.map((task) => (
+                          <div
+                            key={task.name}
+                            className="flex justify-between text-sm text-muted-foreground"
+                          >
+                            <span>{task.name}</span>
+                            <span>{task.duration}</span>
+                          </div>
+                        ))}
                     </div>
                   </div>
                 ))}

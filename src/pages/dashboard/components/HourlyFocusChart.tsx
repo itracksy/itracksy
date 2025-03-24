@@ -19,8 +19,8 @@ export default function HourlyFocusChart({ timeRange }: HourlyFocusChartProps) {
     queryKey: ["dashboard.getFocusedTimeByHour"],
     queryFn: async () => {
       const data = await trpcClient.dashboard.getFocusedTimeByHour.query({
-        startDate: timeRange.start.getTime(),
-        endDate: timeRange.end.getTime(),
+        startDate: timeRange.start,
+        endDate: timeRange.end,
       });
 
       return data;

@@ -1,6 +1,6 @@
 export type TimeRange = {
-  start: Date;
-  end: Date;
+  start: number;
+  end: number;
 
   value: string;
 };

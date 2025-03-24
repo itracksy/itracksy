@@ -15,9 +15,8 @@ import { DateRange } from "react-day-picker";
 import { TimeRange } from "@/types/time";
 
 type TimeRangeSelectorProps = {
-  start: Date;
-  end: Date;
-
+  start: number; // Changed from Date to number (timestamp)
+  end: number; // Changed from Date to number (timestamp)
   value: string;
   onRangeChange: (range: TimeRange) => void;
 };
@@ -29,8 +28,8 @@ export default function TimeRangeSelector({
   onRangeChange,
 }: TimeRangeSelectorProps) {
   const dateRange: DateRange = {
-    from: start,
-    to: end,
+    from: new Date(start), // Convert timestamp to Date
+    to: new Date(end), // Convert timestamp to Date
   };
 
   const presets = {
@@ -95,9 +94,8 @@ export default function TimeRangeSelector({
     const { start: newStart, end: newEnd } = preset.range();
 
     onRangeChange({
-      start: newStart,
-      end: newEnd,
-
+      start: newStart.getTime(),
+      end: newEnd.getTime(),
       value,
     });
   };
@@ -106,9 +104,8 @@ export default function TimeRangeSelector({
     if (!range?.from || !range?.to) return;
 
     onRangeChange({
-      start: range.from,
-      end: range.to,
-
+      start: range.from.getTime(),
+      end: range.to.getTime(),
       value: "custom",
     });
   };
