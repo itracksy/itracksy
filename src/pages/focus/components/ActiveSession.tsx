@@ -1,4 +1,5 @@
 import { getTitleTimeEntry } from "@/api/db/timeEntryExt";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useUpdateTimeEntryMutation } from "@/hooks/useTimeEntryQueries";
 import { TimeEntryWithRelations } from "@/types/projects";
@@ -167,21 +168,14 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
       </div>
 
       {/* Action Buttons */}
-      <div className="mt-4 space-y-2">
-        <button
-          onClick={handleStopTimeEntry}
-          className="w-full rounded-lg bg-[#2B4474] py-3 font-medium text-white shadow-sm transition hover:bg-[#1e325a]"
-        >
-          STOP {activeTimeEntry.isFocusMode ? "FOCUS" : "BREAK"}
-        </button>
-
+      <div className="mt-4 flex space-x-4 pt-8">
         {/* Extend Time Button */}
-        <button
-          onClick={handleExtendTime}
-          className="w-full rounded-lg border border-[#E5A853]/30 bg-[#E5A853] py-3 font-medium text-white shadow-sm transition hover:bg-[#d99a3d]"
-        >
+        <Button onClick={handleExtendTime} variant="outline" className="flex-1">
           +5 MINUTES
-        </button>
+        </Button>
+        <Button onClick={handleStopTimeEntry} variant="default" className="flex-1">
+          STOP {activeTimeEntry.isFocusMode ? "FOCUS" : "BREAK"}
+        </Button>
       </div>
 
       {/* Raining Letters Button */}
