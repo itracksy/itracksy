@@ -173,6 +173,7 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="flex items-center gap-4">
           <Switch
+            disabled
             checked={activitySettings?.isBlockingOnFocusMode}
             onCheckedChange={onFocusChange}
             id="focus-mode"
@@ -195,6 +196,7 @@ export default function SettingsPage() {
               <p className="text-sm text-muted-foreground">Required to track active applications</p>
             </div>
             <Switch
+              disabled
               checked={activitySettings?.accessibilityPermission}
               onCheckedChange={async (checked) => {
                 await trpcClient.user.updateActivitySettings.mutate({
@@ -210,6 +212,7 @@ export default function SettingsPage() {
               <p className="text-sm text-muted-foreground">Required to track browser activity</p>
             </div>
             <Switch
+              disabled
               checked={activitySettings?.screenRecordingPermission}
               onCheckedChange={async (checked) => {
                 await trpcClient.user.updateActivitySettings.mutate({

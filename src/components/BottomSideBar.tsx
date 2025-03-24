@@ -18,9 +18,30 @@ import { useNavigate } from "@tanstack/react-router";
 import { get } from "http";
 import { getTitleTimeEntry } from "@/api/db/timeEntryExt";
 
+// Motivational phrases to encourage users to start working
+const motivationalPhrases = [
+  "Let's get rolling!",
+  "Time to crush it!",
+  "Ready to be productive?",
+  "Start something amazing!",
+  "Make today count!",
+  "Time to shine!",
+  "Focus mode: activate!",
+  "Let's make progress!",
+  "Achievement unlocked: Start!",
+  "Your future self thanks you!",
+];
+
+// Function to get a random motivational phrase
+const getRandomMotivationalPhrase = () => {
+  const randomIndex = Math.floor(Math.random() * motivationalPhrases.length);
+  return motivationalPhrases[randomIndex];
+};
+
 export function BottomSideBar() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [breakDuration, setBreakDuration] = useAtom(breakDurationAtom);
+  const [motivationalPhrase] = useState(getRandomMotivationalPhrase());
 
   const { data: activeTimeEntry, isLoading } = useActiveTimeEntry();
   const { data: lastTimeEntry } = useLastTimeEntry();
@@ -172,10 +193,10 @@ export function BottomSideBar() {
             <SidebarMenuButton
               onClick={() => navigate({ to: "/" })}
               className="hover:text-green-600"
-              tooltip="Let's get shit done! "
+              tooltip="Start tracking your work"
             >
               <PlayCircle className="h-6 w-6 text-green-600" />
-              <span className="text-base text-muted-foreground">Let's get shit done! </span>
+              <span className="text-base text-muted-foreground">{motivationalPhrase}</span>
             </SidebarMenuButton>
 
             {lastTimeEntry && (
