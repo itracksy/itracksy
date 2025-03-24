@@ -82,21 +82,17 @@ export const startTracking = async (): Promise<void> => {
       if (isAccessibilityError) {
         return;
       }
-      const activitySettings = await getUserSettings({ userId });
-      if (!activitySettings.isBlockingOnFocusMode) {
-        return;
-      }
 
       const getWindows = await import("get-windows");
       const blockedApps = await getUserBlockedApps(userId);
       const blockedDomains = await getUserBlockedDomains(userId);
       const result = await getWindows.activeWindow({
-        accessibilityPermission: activitySettings.accessibilityPermission,
-        screenRecordingPermission: activitySettings.screenRecordingPermission,
+        accessibilityPermission: true,
+        screenRecordingPermission: true,
       });
 
       if (!result) {
-        logger.warn("[startTracking] No active window result returned", { activitySettings });
+        logger.warn("[startTracking] No active window result returned");
         return;
       }
 
@@ -123,38 +119,37 @@ export const startTracking = async (): Promise<void> => {
       };
 
       await upsertActivity(transformedActivities);
-      if (activitySettings.isBlockingOnFocusMode) {
-        const url = transformedActivities.url?.toLowerCase();
-        const extractedDomain = url ? extractDomainWindows(url) : null;
 
-        const appName = transformedActivities.ownerName.toLowerCase();
-        const isBlockedApp =
-          appName && blockedApps.some((app) => appName.includes(app.appName.toLowerCase()));
-        const isBlockedDomain =
-          extractedDomain &&
-          blockedDomains.some(({ domain }) =>
-            result.platform === "windows"
-              ? domain.includes(extractedDomain)
-              : urlContainsDomain(url, domain)
-          );
+      const url = transformedActivities.url?.toLowerCase();
+      const extractedDomain = url ? extractDomainWindows(url) : null;
 
-        // Show notification in full-screen window
-        if (
-          (isBlockedDomain || isBlockedApp) &&
-          (!activeEntry.whiteListedActivities ||
-            !activeEntry.whiteListedActivities
-              .split(",")
-              .includes(isBlockedDomain ? extractedDomain : appName)) &&
-          Date.now() - lastNotificationTime >= NOTIFICATION_COOLDOWN
-        ) {
-          showNotificationWarningBlock({
-            title: transformedActivities.title,
-            detail: transformedActivities.ownerPath || "",
-            userId,
-            timeEntryId: activeEntry.id,
-            appOrDomain: isBlockedDomain ? extractedDomain : appName,
-          });
-        }
+      const appName = transformedActivities.ownerName.toLowerCase();
+      const isBlockedApp =
+        appName && blockedApps.some((app) => appName.includes(app.appName.toLowerCase()));
+      const isBlockedDomain =
+        extractedDomain &&
+        blockedDomains.some(({ domain }) =>
+          result.platform === "windows"
+            ? domain.includes(extractedDomain)
+            : urlContainsDomain(url, domain)
+        );
+
+      // Show notification in full-screen window
+      if (
+        (isBlockedDomain || isBlockedApp) &&
+        (!activeEntry.whiteListedActivities ||
+          !activeEntry.whiteListedActivities
+            .split(",")
+            .includes(isBlockedDomain ? extractedDomain : appName)) &&
+        Date.now() - lastNotificationTime >= NOTIFICATION_COOLDOWN
+      ) {
+        showNotificationWarningBlock({
+          title: transformedActivities.title,
+          detail: transformedActivities.ownerPath || "",
+          userId,
+          timeEntryId: activeEntry.id,
+          appOrDomain: isBlockedDomain ? extractedDomain : appName,
+        });
       }
     } catch (error) {
       // Check if the error is related to accessibility permissions

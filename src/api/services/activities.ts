@@ -6,8 +6,6 @@ import { LIMIT_TIME_APART } from "../../config/tracking";
 import db from "../db";
 import { activities } from "../db/schema";
 import { rateActivity } from "./activityRating";
-import { CreateRuleParams } from "./activityRules";
-import { generateRuleSuggestions } from "./activityRatingHelper";
 
 export const getActivities = async (date?: number): Promise<Activity[]> => {
   const fifteenMinutesAgo = Date.now() - 15 * 60 * 1000; // 15 minutes in milliseconds
