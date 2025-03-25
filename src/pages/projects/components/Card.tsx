@@ -183,7 +183,10 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
           }}
         >
           <h3 className="font-medium">{title}</h3>
-          <div className="mt-2 text-muted-foreground">{content || <>&nbsp;</>}</div>
+          <div
+            className="prose prose-sm mt-2 max-h-16 overflow-hidden text-muted-foreground"
+            dangerouslySetInnerHTML={{ __html: content || "&nbsp;" }}
+          />
           <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
             <TimerIcon className="h-4 w-4" />
             {activeTimeEntry?.itemId === id ? (

@@ -232,7 +232,7 @@ export function RichTextEditor({
       </div>
       <EditorContent
         editor={editor}
-        className="prose prose-sm min-h-[150px] max-w-none p-3 [&_.task-item_p]:my-0 [&_.task-list]:pl-0 [&_.task-list_li]:list-none"
+        className="prose prose-sm min-h-[150px] max-w-none p-3 focus-visible:outline-none [&_*:focus-visible]:outline-none [&_.task-item_p]:my-0 [&_.task-list]:pl-0 [&_.task-list_li]:list-none"
       />
     </div>
   );

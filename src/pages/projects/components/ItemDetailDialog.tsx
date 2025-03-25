@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+
 import { RichTextEditor } from "@/components/RichTextEditor";
 import {
   Table,
@@ -28,7 +28,6 @@ interface ItemDetailDialogProps {
 }
 
 export function ItemDetailDialog({ open, onOpenChange, item }: ItemDetailDialogProps) {
-  const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(item.title);
   const [content, setContent] = useState(item.content ?? "");
   const { confirm } = useConfirmationDialog();
@@ -38,8 +37,6 @@ export function ItemDetailDialog({ open, onOpenChange, item }: ItemDetailDialogP
 
   const deleteTimeEntryMutation = useDeleteTimeEntryMutation();
 
-  const contentRef = useRef<HTMLDivElement>(null);
-
   const handleSave = () => {
     updateCardMutation.mutate({
       id: item.id,
@@ -47,7 +44,8 @@ export function ItemDetailDialog({ open, onOpenChange, item }: ItemDetailDialogP
       title,
       content: content || null,
     });
-    setIsEditing(false);
+    // close the dialog
+    onOpenChange(false);
   };
 
   const handleDeleteTimeEntry = async (timeEntryId: string) => {
@@ -68,51 +66,29 @@ export function ItemDetailDialog({ open, onOpenChange, item }: ItemDetailDialogP
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
-            {isEditing ? (
-              <div className="flex w-full gap-2">
-                <Input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="flex-1"
-                />
-                <Button onClick={handleSave}>Save</Button>
-                <Button variant="ghost" onClick={() => setIsEditing(false)}>
-                  Cancel
-                </Button>
-              </div>
-            ) : (
-              <div className="flex w-full items-center justify-between">
-                <span>{item.title}</span>
-                <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)}>
-                  <Pencil2Icon className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
+            <div className="flex w-full gap-2">
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} className="flex-1" />
+              <Button onClick={handleSave}>Save</Button>
+            </div>
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
           <div className="space-y-2">
             <Label>Description</Label>
-            {isEditing ? (
+            <div className="max-h-[300px] overflow-y-auto rounded border">
               <RichTextEditor
                 value={content}
                 onChange={setContent}
                 placeholder="Add a description..."
               />
-            ) : (
-              <div
-                ref={contentRef}
-                className="prose prose-sm prose-a:text-primary max-w-none rounded-md border p-3 [&_.task-list]:pl-0 [&_.task-list_li]:list-none"
-                dangerouslySetInnerHTML={{ __html: content || "No description" }}
-              />
-            )}
+            </div>
           </div>
 
           <div className="space-y-2">
             <Label>Time Entries</Label>
             <div className="rounded-md border">
-              <div className="max-h-[300px] overflow-y-auto">
+              <div className="max-h-[200px] overflow-y-auto">
                 <Table>
                   <TableHeader className="sticky top-0 bg-background">
                     <TableRow>
