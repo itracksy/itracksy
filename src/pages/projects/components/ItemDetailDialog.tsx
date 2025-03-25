@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { format } from "date-fns";
 import { Cross2Icon, Pencil2Icon, TrashIcon } from "@radix-ui/react-icons";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -37,6 +37,8 @@ export function ItemDetailDialog({ open, onOpenChange, item }: ItemDetailDialogP
   const updateCardMutation = useUpdateItemMutation();
 
   const deleteTimeEntryMutation = useDeleteTimeEntryMutation();
+
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const handleSave = () => {
     updateCardMutation.mutate({
@@ -100,7 +102,8 @@ export function ItemDetailDialog({ open, onOpenChange, item }: ItemDetailDialogP
               />
             ) : (
               <div
-                className="prose prose-sm prose-a:text-primary max-w-none rounded-md border p-3"
+                ref={contentRef}
+                className="prose prose-sm prose-a:text-primary max-w-none rounded-md border p-3 [&_.task-list]:pl-0 [&_.task-list_li]:list-none"
                 dangerouslySetInnerHTML={{ __html: content || "No description" }}
               />
             )}

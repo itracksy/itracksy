@@ -2,6 +2,8 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Link from "@tiptap/extension-link";
+import TaskList from "@tiptap/extension-task-list";
+import TaskItem from "@tiptap/extension-task-item";
 import { Button } from "@/components/ui/button";
 import {
   Bold,
@@ -14,9 +16,10 @@ import {
   Undo,
   Redo,
   Link as LinkIcon,
+  CheckSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
@@ -43,13 +46,19 @@ export function RichTextEditor({
         placeholder,
       }),
       Link.configure({
-        openOnClick: true,
+        openOnClick: false, // Disable default behavior
         autolink: true, // Automatically detect links in pasted content
         linkOnPaste: true,
         HTMLAttributes: {
           class: "text-primary underline",
           rel: "noopener noreferrer",
-          target: "_blank",
+        },
+      }),
+      TaskList,
+      TaskItem.configure({
+        nested: true,
+        HTMLAttributes: {
+          class: "task-item",
         },
       }),
     ],
@@ -138,6 +147,15 @@ export function RichTextEditor({
           type="button"
           variant="ghost"
           size="sm"
+          onClick={() => editor.chain().focus().toggleTaskList().run()}
+          className={editor.isActive("taskList") ? "bg-muted" : ""}
+        >
+          <CheckSquare className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
           className={editor.isActive("codeBlock") ? "bg-muted" : ""}
         >
@@ -212,7 +230,10 @@ export function RichTextEditor({
           <Redo className="h-4 w-4" />
         </Button>
       </div>
-      <EditorContent editor={editor} className="prose prose-sm min-h-[150px] max-w-none p-3" />
+      <EditorContent
+        editor={editor}
+        className="prose prose-sm min-h-[150px] max-w-none p-3 [&_.task-item_p]:my-0 [&_.task-list]:pl-0 [&_.task-list_li]:list-none"
+      />
     </div>
   );
 }
