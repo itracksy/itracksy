@@ -168,17 +168,18 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Focus Mode</CardTitle>
-          <CardDescription>Control your focus mode settings</CardDescription>
+          <CardTitle>Warning Pop-up</CardTitle>
+          <CardDescription>
+            Enabling Focus Mode will show a warning pop-up when you are in a focus session.
+          </CardDescription>
         </CardHeader>
         <CardContent className="flex items-center gap-4">
           <Switch
-            disabled
             checked={activitySettings?.isBlockingOnFocusMode}
             onCheckedChange={onFocusChange}
             id="focus-mode"
           />
-          <label htmlFor="focus-mode">Enable Focus Mode</label>
+          <label htmlFor="focus-mode">Enable Warning Pop-up</label>
         </CardContent>
       </Card>
 
@@ -196,7 +197,7 @@ export default function SettingsPage() {
               <p className="text-sm text-muted-foreground">Required to track active applications</p>
             </div>
             <Switch
-              disabled
+              disabled={activitySettings?.accessibilityPermission === true}
               checked={activitySettings?.accessibilityPermission}
               onCheckedChange={async (checked) => {
                 await trpcClient.user.updateActivitySettings.mutate({
@@ -212,7 +213,7 @@ export default function SettingsPage() {
               <p className="text-sm text-muted-foreground">Required to track browser activity</p>
             </div>
             <Switch
-              disabled
+              disabled={activitySettings?.screenRecordingPermission === true}
               checked={activitySettings?.screenRecordingPermission}
               onCheckedChange={async (checked) => {
                 await trpcClient.user.updateActivitySettings.mutate({

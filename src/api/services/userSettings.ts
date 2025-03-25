@@ -1,7 +1,7 @@
 import db from "../db";
 import { blockedDomains, blockedApps } from "../db/schema";
 import { eq } from "drizzle-orm";
-
+import { app, shell, systemPreferences } from "electron";
 import { getValue, setValue, setMultipleValues } from "./localStorage";
 import { logger } from "../../helpers/logger";
 import { boards } from "../db/schema";
@@ -19,10 +19,82 @@ const USER_SETTINGS_KEYS = {
   isTracking: "user.isTracking",
 };
 
+// Check if the platform is macOS
+const isMacOS = process.platform === "darwin";
+
+/**
+ * Checks if accessibility permission is granted (macOS only)
+ * @returns boolean indicating if permission is granted, true for non-macOS platforms
+ */
+export function checkAccessibilityPermission(): boolean {
+  if (!isMacOS) return true;
+
+  try {
+    const hasPermission = systemPreferences.isTrustedAccessibilityClient(false);
+    console.log("Accessibility Permission:", hasPermission);
+    return hasPermission;
+  } catch (error) {
+    logger.error("[checkAccessibilityPermission] Error checking permission", { error });
+    return false;
+  }
+}
+
+/**
+ * Checks if screen recording permission is granted (macOS only)
+ * @returns boolean indicating if permission is granted, true for non-macOS platforms
+ */
+export function checkScreenRecordingPermission(): boolean {
+  if (!isMacOS) return true;
+
+  try {
+    return systemPreferences.getMediaAccessStatus("screen") === "granted";
+  } catch (error) {
+    logger.error("[checkScreenRecordingPermission] Error checking permission", { error });
+    return false;
+  }
+}
+
+/**
+ * Requests accessibility permission (macOS only)
+ * @returns Promise resolving to boolean indicating success
+ */
+export async function requestAccessibilityPermission(): Promise<boolean> {
+  if (!isMacOS) return true;
+
+  try {
+    // Open system preferences to the accessibility section
+    await shell.openExternal(
+      "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+    );
+    return checkAccessibilityPermission();
+  } catch (error) {
+    logger.error("[requestAccessibilityPermission] Error requesting permission", { error });
+    return false;
+  }
+}
+
+/**
+ * Requests screen recording permission (macOS only)
+ * @returns Promise resolving to boolean indicating success
+ */
+export async function requestScreenRecordingPermission(): Promise<boolean> {
+  if (!isMacOS) return true;
+
+  try {
+    shell.openExternal(
+      "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture"
+    );
+    return checkScreenRecordingPermission();
+  } catch (error) {
+    logger.error("[requestScreenRecordingPermission] Error requesting permission", { error });
+    return false;
+  }
+}
+
 export async function getUserSettings({ userId }: { userId: string }) {
   const [
-    accessibilityPermission,
-    screenRecordingPermission,
+    accessibilityPermissionSetting,
+    screenRecordingPermissionSetting,
     isFocusMode,
     currentTaskId,
     timeEntryId,
@@ -38,10 +110,18 @@ export async function getUserSettings({ userId }: { userId: string }) {
     getValue(USER_SETTINGS_KEYS.isTracking),
   ]);
 
+  // Get the actual status of permissions on macOS
+  const accessibilityPermissionGranted =
+    accessibilityPermissionSetting === "true" ? checkAccessibilityPermission() : false;
+  const screenRecordingPermissionGranted =
+    screenRecordingPermissionSetting === "true" ? checkScreenRecordingPermission() : false;
+
   return {
     userId,
-    accessibilityPermission: accessibilityPermission === "true",
-    screenRecordingPermission: screenRecordingPermission === "true",
+    accessibilityPermission: accessibilityPermissionSetting === "true",
+    accessibilityPermissionGranted,
+    screenRecordingPermission: screenRecordingPermissionSetting === "true",
+    screenRecordingPermissionGranted,
     isBlockingOnFocusMode: isFocusMode === "true",
     currentTaskId: currentTaskId || null,
     timeEntryId: timeEntryId || null,
@@ -177,10 +257,20 @@ export async function updateUserSettings(settings: {
   if (settings.accessibilityPermission !== undefined) {
     updates[USER_SETTINGS_KEYS.accessibilityPermission] =
       settings.accessibilityPermission.toString();
+
+    // If enabling permission, try to request it on macOS
+    if (settings.accessibilityPermission && isMacOS) {
+      await requestAccessibilityPermission();
+    }
   }
   if (settings.screenRecordingPermission !== undefined) {
     updates[USER_SETTINGS_KEYS.screenRecordingPermission] =
       settings.screenRecordingPermission.toString();
+
+    // If enabling permission, try to request it on macOS
+    if (settings.screenRecordingPermission && isMacOS) {
+      await requestScreenRecordingPermission();
+    }
   }
   if (settings.isFocusMode !== undefined) {
     updates[USER_SETTINGS_KEYS.isFocusMode] = settings.isFocusMode.toString();
