@@ -159,7 +159,7 @@ export async function getGroupActivities(activities: Activity[]) {
           .from(activityRules)
           .where(and(eq(activityRules.ruleType, "domain"), eq(activityRules.value, domain)))
           .get();
-        console.log(domain, rule);
+
         appGroups[appName].domains[domain] = {
           domain,
           activities: [],

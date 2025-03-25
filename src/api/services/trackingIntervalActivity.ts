@@ -85,12 +85,12 @@ export const startTracking = async (): Promise<void> => {
       }
 
       const getWindows = await import("get-windows");
-      const blockedApps = await getUserBlockedApps(userId);
-      const blockedDomains = await getUserBlockedDomains(userId);
+
       const result = await getWindows.activeWindow({
         accessibilityPermission: true,
         screenRecordingPermission: true,
       });
+      logger.info("result", result);
 
       if (!result) {
         logger.warn("[startTracking] No active window result returned");
@@ -196,19 +196,27 @@ function createNotificationWarningBlockWindow() {
   notificationWindow = new BrowserWindow({
     width,
     height,
-    frame: false,
+    frame: true, // Change to true to show the window frame with system controls
     transparent: true,
-    backgroundColor: "#00000000",
-    hasShadow: false,
+    backgroundColor: "rgba(0, 0, 0, 0.7)", // Semi-transparent black background
+    hasShadow: true, // Enable shadow for better visibility of the window
     alwaysOnTop: true,
     type: "panel",
-    skipTaskbar: true,
+    skipTaskbar: false, // Show in taskbar to allow users to find it
     show: false,
-    movable: false,
+    movable: false, // Allow the window to be moved
+    resizable: true, // Allow resizing
+    minimizable: true, // Allow minimizing
+    maximizable: true, // Allow maximizing
+    closable: true, // Allow closing
+    focusable: true, // Allow focusing the window
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
     },
+    vibrancy: "under-window", // Add vibrancy effect (macOS)
+    visualEffectState: "active", // Ensure visual effect is active
+    titleBarStyle: "hiddenInset", // Use hidden inset style for macOS (shows only the traffic lights)
   });
 
   // Set window to be always on top with highest level
@@ -216,8 +224,15 @@ function createNotificationWarningBlockWindow() {
   notificationWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   notificationWindow.moveTop();
 
+  notificationWindow.setTitle("iTracksy - Work Activity Alert");
+
   // Set window bounds to cover current display
   notificationWindow.setBounds(currentDisplay.bounds);
+
+  // Add blur effect for Windows and Linux (not needed for macOS as vibrancy handles it)
+  if (process.platform !== "darwin") {
+    notificationWindow.setBackgroundColor("rgba(0, 0, 0, 0.7)");
+  }
 
   return notificationWindow;
 }
@@ -245,6 +260,11 @@ function showNotificationWarningBlock({
   });
   if (!notificationWindow || notificationWindow.isDestroyed()) {
     notificationWindow = createNotificationWarningBlockWindow();
+  } else {
+    if (notificationWindow.isVisible()) {
+      // Window is already visible, don't show another notification
+      return;
+    }
   }
 
   // Update last notification time
@@ -265,7 +285,6 @@ function showNotificationWarningBlock({
       "⚠️ Return to Focus - Switch back to your primary task",
       "🕒 Take a Break - Pause tracking for 15 minutes",
     ],
-    cancelId: 1,
     defaultId: 0,
     noLink: true,
   };
