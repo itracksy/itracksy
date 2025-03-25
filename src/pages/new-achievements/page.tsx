@@ -54,7 +54,9 @@ export function FocusSessionsAchievement() {
   return (
     <div className="mx-auto max-w-4xl space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">Focus Sessions Achievement</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+          Focus Sessions Achievement
+        </h1>
         <RulesPanel rules={rules} onDeleteRule={deleteRule} />
       </div>
 

@@ -137,39 +137,41 @@ export function SessionCard({
       className={cn(
         "border transition-all duration-300",
         isExpanded ? "shadow-md" : "shadow-sm",
-        showCelebration ? "border-[#E5A853]" : "border-gray-200"
+        showCelebration ? "border-[#E5A853]" : "border-gray-200 dark:border-gray-700"
       )}
     >
       <CardHeader
         className={cn(
           "flex cursor-pointer flex-row items-center justify-between p-4",
-          isExpanded ? "border-b" : ""
+          isExpanded ? "border-b dark:border-gray-700" : ""
         )}
         onClick={onToggle}
       >
         <div className="flex items-center gap-4">
           <div className="flex flex-col">
-            <h3 className="font-medium text-gray-900">
+            <h3 className="font-medium text-gray-900 dark:text-gray-100">
               {format(new Date(session.startTime), "MMMM d, yyyy")}
             </h3>
-            <p className="text-sm text-gray-500">{formatTime(session.duration ?? 0)}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {formatTime(session.duration ?? 0)}
+            </p>
           </div>
 
           <div className="flex items-center gap-1.5">
             {classificationStatus === "complete" && (
-              <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+              <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
                 <CheckCircle className="mr-1 h-3.5 w-3.5" />
                 Fully Classified
               </span>
             )}
             {classificationStatus === "partial" && (
-              <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
+              <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
                 <AlertCircle className="mr-1 h-3.5 w-3.5" />
                 Partially Classified
               </span>
             )}
             {classificationStatus === "unclassified" && (
-              <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
+              <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-800 dark:text-gray-300">
                 <HelpCircle className="mr-1 h-3.5 w-3.5" />
                 Unclassified
               </span>
@@ -179,21 +181,21 @@ export function SessionCard({
 
         <div className="flex items-center gap-3">
           {classificationStatus !== "unclassified" && (
-            <div className="text-sm font-medium text-gray-700">
+            <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
               {productivityPercentage}% Productive
             </div>
           )}
           {isExpanded ? (
-            <ChevronUp className="h-5 w-5 text-gray-400" />
+            <ChevronUp className="h-5 w-5 text-gray-400 dark:text-gray-500" />
           ) : (
-            <ChevronDown className="h-5 w-5 text-gray-400" />
+            <ChevronDown className="h-5 w-5 text-gray-400 dark:text-gray-500" />
           )}
         </div>
       </CardHeader>
 
       {isExpanded && (
         <CardContent className="p-0">
-          <div className="divide-y">
+          <div className="divide-y dark:divide-gray-700">
             {Object.entries(groupedActivities).map(([appName, activities]) => (
               <ActivityGroup
                 key={`${session.id}-${appName}`}
@@ -207,32 +209,34 @@ export function SessionCard({
           </div>
 
           {showCelebration && (
-            <div className="border-t border-[#E5A853]/30 bg-[#E5A853]/10 p-4 text-center">
-              <p className="font-medium text-[#2B4474]">
+            <div className="border-t border-[#E5A853]/30 bg-[#E5A853]/10 p-4 text-center dark:bg-[#E5A853]/5">
+              <p className="font-medium text-[#2B4474] dark:text-[#3A5A9B]">
                 🎉 All activities classified! Your session is now {productivityPercentage}%
                 productive.
               </p>
             </div>
           )}
 
-          <div className="border-t bg-gray-50 p-4">
+          <div className="border-t bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-700">Session Summary</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Session Summary
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   {classifiedActivities} of {totalActivities} activities classified
                 </p>
               </div>
 
               {classificationStatus !== "unclassified" && (
                 <div className="flex items-center gap-2">
-                  <div className="h-2 w-24 overflow-hidden rounded-full bg-gray-200">
+                  <div className="h-2 w-24 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                     <div
                       className="h-full bg-[#E5A853]"
                       style={{ width: `${productivityPercentage}%` }}
                     />
                   </div>
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     {productivityPercentage}%
                   </span>
                 </div>

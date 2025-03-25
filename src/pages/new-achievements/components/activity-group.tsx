@@ -60,9 +60,9 @@ export function ActivityGroup({
   };
 
   return (
-    <div className="bg-white">
+    <div className="bg-white dark:bg-gray-800">
       <div
-        className="flex cursor-pointer items-center justify-between p-4 hover:bg-gray-50"
+        className="flex cursor-pointer items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50"
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex items-center gap-3">
@@ -71,19 +71,21 @@ export function ActivityGroup({
           </div>
 
           <div className="flex items-center gap-2">
-            <h4 className="font-medium text-gray-900">{appName}</h4>
+            <h4 className="font-medium text-gray-900 dark:text-gray-100">{appName}</h4>
             {appRule && !isBrowser && <RulesBadge isProductive={appRule.rating === 1} />}
           </div>
 
           <div>
-            <p className="text-sm text-gray-500">{formatTime(totalAppTime)}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{formatTime(totalAppTime)}</p>
           </div>
 
           {!allClassified && (
             <span
               className={cn(
                 "rounded-full px-2 py-0.5 text-xs",
-                anyClassified ? "bg-yellow-100 text-yellow-800" : "bg-gray-100 text-gray-800"
+                anyClassified
+                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
+                  : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
               )}
             >
               {anyClassified ? "Partially Classified" : "Unclassified"}
@@ -98,7 +100,9 @@ export function ActivityGroup({
                 pressed={allProductive}
                 onPressedChange={() => handleAppClassification(true)}
                 className={cn(
-                  appRule?.rating === 1 ? "border-green-200 bg-green-100 text-green-800" : "",
+                  appRule?.rating === 1
+                    ? "border-green-200 bg-green-100 text-green-800 dark:border-green-800 dark:bg-green-900/30 dark:text-green-300"
+                    : "",
                   "h-8 border px-2"
                 )}
                 aria-label="Mark all app activities as productive"
@@ -111,7 +115,9 @@ export function ActivityGroup({
                 pressed={allDistracted}
                 onPressedChange={() => handleAppClassification(false)}
                 className={cn(
-                  appRule?.rating === 0 ? "border-red-200 bg-red-100 text-red-800" : "",
+                  appRule?.rating === 0
+                    ? "border-red-200 bg-red-100 text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300"
+                    : "",
                   "h-8 border px-2"
                 )}
                 aria-label="Mark all app activities as distracting"
@@ -129,15 +135,15 @@ export function ActivityGroup({
           )}
 
           {expanded ? (
-            <ChevronUp className="h-5 w-5 text-gray-400" />
+            <ChevronUp className="h-5 w-5 text-gray-400 dark:text-gray-500" />
           ) : (
-            <ChevronDown className="h-5 w-5 text-gray-400" />
+            <ChevronDown className="h-5 w-5 text-gray-400 dark:text-gray-500" />
           )}
         </div>
       </div>
 
       {expanded && (
-        <div className="divide-y border-t pl-12">
+        <div className="divide-y border-t pl-12 dark:divide-gray-700 dark:border-gray-700">
           {Object.entries(domainGroups).map(([domain, domainActivities]) => (
             <DomainGroup
               key={`${sessionId}-${appName}-${domain}`}
@@ -152,7 +158,7 @@ export function ActivityGroup({
         </div>
       )}
       {expanded && (
-        <div className="divide-y border-t">
+        <div className="divide-y border-t dark:divide-gray-700 dark:border-gray-700">
           {activities.map((activity) => (
             <ActivityItem
               key={activity.timestamp}
@@ -210,7 +216,7 @@ function DomainGroup({
   return (
     <div>
       <div
-        className="flex cursor-pointer items-center justify-between p-4 hover:bg-gray-50"
+        className="flex cursor-pointer items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50"
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex items-center gap-3">
@@ -219,19 +225,25 @@ function DomainGroup({
           </div>
 
           <div className="flex items-center gap-2">
-            <h5 className="font-medium text-gray-900">{domain || "No Domain"}</h5>
+            <h5 className="font-medium text-gray-900 dark:text-gray-100">
+              {domain || "No Domain"}
+            </h5>
             {domainRule && <RulesBadge isProductive={domainRule.rating === 1} />}
           </div>
 
           <div>
-            <p className="text-sm text-gray-500">{formatTime(totalDomainTime)}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {formatTime(totalDomainTime)}
+            </p>
           </div>
 
           {!allClassified && (
             <span
               className={cn(
                 "rounded-full px-2 py-0.5 text-xs",
-                anyClassified ? "bg-yellow-100 text-yellow-800" : "bg-gray-100 text-gray-800"
+                anyClassified
+                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
+                  : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
               )}
             >
               {anyClassified ? "Partially Classified" : "Unclassified"}
@@ -245,7 +257,9 @@ function DomainGroup({
               pressed={allProductive}
               onPressedChange={() => handleDomainClassification(true)}
               className={cn(
-                rule?.rating === 1 ? "border-green-200 bg-green-100 text-green-800" : "",
+                rule?.rating === 1
+                  ? "border-green-200 bg-green-100 text-green-800 dark:border-green-800 dark:bg-green-900/30 dark:text-green-300"
+                  : "",
                 "h-8 border px-2"
               )}
               aria-label="Mark all domain activities as productive"
@@ -258,7 +272,9 @@ function DomainGroup({
               pressed={allDistracted}
               onPressedChange={() => handleDomainClassification(false)}
               className={cn(
-                rule?.rating === 0 ? "border-red-200 bg-red-100 text-red-800" : "",
+                rule?.rating === 0
+                  ? "border-red-200 bg-red-100 text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300"
+                  : "",
                 "h-8 border px-2"
               )}
               aria-label="Mark all domain activities as distracting"
@@ -271,15 +287,15 @@ function DomainGroup({
           </div>
 
           {expanded ? (
-            <ChevronUp className="h-5 w-5 text-gray-400" />
+            <ChevronUp className="h-5 w-5 text-gray-400 dark:text-gray-500" />
           ) : (
-            <ChevronDown className="h-5 w-5 text-gray-400" />
+            <ChevronDown className="h-5 w-5 text-gray-400 dark:text-gray-500" />
           )}
         </div>
       </div>
 
       {expanded && (
-        <div className="divide-y border-t">
+        <div className="divide-y border-t dark:divide-gray-700 dark:border-gray-700">
           {activities.map((activity) => (
             <ActivityItem
               key={activity.timestamp}
@@ -319,18 +335,21 @@ function ActivityItem({ sessionId, appName, domain, activity, onClassify }: Acti
   return (
     <div
       className={cn(
-        "flex items-center justify-between p-4 pl-12 hover:bg-gray-50",
-        activity.rating === null && "m-2 rounded-md border border-dashed border-gray-300 bg-gray-50"
+        "flex items-center justify-between p-4 pl-12 hover:bg-gray-50 dark:hover:bg-gray-700/50",
+        activity.rating === null &&
+          "m-2 rounded-md border border-dashed border-gray-300 bg-gray-50 dark:border-gray-600 dark:bg-gray-800/50"
       )}
     >
       <div className="flex items-center gap-3">
         <div>
-          <h6 className="font-medium text-gray-900">{activity.title}</h6>
-          <p className="text-sm text-gray-500">{formatTime(activity.duration)}</p>
+          <h6 className="font-medium text-gray-900 dark:text-gray-100">{activity.title}</h6>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {formatTime(activity.duration)}
+          </p>
         </div>
 
         {activity.rating === null && (
-          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-800">
+          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-800 dark:bg-gray-800 dark:text-gray-300">
             Unclassified
           </span>
         )}
@@ -341,7 +360,9 @@ function ActivityItem({ sessionId, appName, domain, activity, onClassify }: Acti
           pressed={activity.rating === 1}
           onPressedChange={() => handleActivityClassification(true)}
           className={cn(
-            activity.rating === 1 ? "border-green-200 bg-green-100 text-green-800" : "",
+            activity.rating === 1
+              ? "border-green-200 bg-green-100 text-green-800 dark:border-green-800 dark:bg-green-900/30 dark:text-green-300"
+              : "",
             "h-8 border px-2"
           )}
           aria-label="Mark activity as productive"
@@ -355,7 +376,7 @@ function ActivityItem({ sessionId, appName, domain, activity, onClassify }: Acti
           onPressedChange={() => handleActivityClassification(false)}
           className={cn(
             activity.rating !== null && activity.rating === 0
-              ? "border-red-200 bg-red-100 text-red-800"
+              ? "border-red-200 bg-red-100 text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300"
               : "",
             "h-8 border px-2"
           )}

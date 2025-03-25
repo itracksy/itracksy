@@ -11,6 +11,8 @@ export function formatTime(seconds: number): string {
   if (hours > 0) {
     return `${hours}h ${minutes}m`;
   }
-
-  return `${minutes}m`;
+  if (minutes > 0) {
+    return `${minutes}m`;
+  }
+  return `${seconds}s`;
 }

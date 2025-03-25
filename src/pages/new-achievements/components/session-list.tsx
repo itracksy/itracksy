@@ -47,7 +47,7 @@ export function SessionList({}: SessionListProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
           Your Focus Sessions
           <div className="mt-2 h-1 w-20 rounded bg-tracksy-gold dark:bg-tracksy-gold/70"></div>
         </h2>
@@ -59,8 +59,8 @@ export function SessionList({}: SessionListProps) {
         />
       </div>
       {!sessions || sessions.length === 0 ? (
-        <div className="rounded-lg border border-gray-200 bg-white py-8 text-center">
-          <p className="text-gray-500">No focus sessions recorded yet.</p>
+        <div className="rounded-lg border border-gray-200 bg-white py-8 text-center dark:border-gray-700 dark:bg-gray-800">
+          <p className="text-gray-500 dark:text-gray-400">No focus sessions recorded yet.</p>
         </div>
       ) : (
         <div className="space-y-4">

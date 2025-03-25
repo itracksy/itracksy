@@ -34,15 +34,19 @@ export function RulesPanel({ rules, onDeleteRule }: RulesPanelProps) {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2 border-[#2B4474]/20 text-[#2B4474]">
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2 border-[#2B4474]/20 text-[#2B4474] dark:border-[#2B4474]/40 dark:text-[#3A5A9B]"
+        >
           <Sparkles className="h-4 w-4 text-[#E5A853]" />
           View Classification Rules
         </Button>
       </SheetTrigger>
       <SheetContent className="w-full overflow-y-auto sm:max-w-md">
         <SheetHeader>
-          <SheetTitle>Classification Rules</SheetTitle>
-          <SheetDescription>
+          <SheetTitle className="text-gray-900 dark:text-gray-100">Classification Rules</SheetTitle>
+          <SheetDescription className="text-gray-500 dark:text-gray-400">
             Rules automatically classify future activities based on app or domain.
           </SheetDescription>
         </SheetHeader>

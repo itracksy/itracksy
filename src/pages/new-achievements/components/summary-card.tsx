@@ -83,14 +83,14 @@ export function SummaryCard({
         </div>
       </div>
 
-      <CardContent className="bg-white p-6">
+      <CardContent className="bg-white p-6 dark:bg-gray-800">
         <div className="flex items-start gap-3">
           <div className="mt-0.5 rounded-full bg-[#E5A853] p-2">
             <Tag className="h-5 w-5 text-white" />
           </div>
           <div className="flex-1">
-            <p className="text-gray-700">{getMotivationalMessage()}</p>
-            <div className="mt-3 flex items-center gap-2 text-sm text-gray-600">
+            <p className="text-gray-700 dark:text-gray-300">{getMotivationalMessage()}</p>
+            <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
               <Sparkles className="h-4 w-4 text-[#E5A853]" />
               <p>
                 Classification rules are automatically created when you classify apps or domains
