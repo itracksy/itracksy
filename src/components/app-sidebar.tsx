@@ -23,11 +23,7 @@ const items = [
     url: "/",
     isActive: true,
   },
-  {
-    title: "Analytics",
-    icon: BarChart,
-    url: "/dashboard",
-  },
+
   {
     title: "Projects",
     icon: FolderClosed,
@@ -37,6 +33,11 @@ const items = [
     title: "Achievements",
     icon: Trophy,
     url: "/achievements",
+  },
+  {
+    title: "Analytics",
+    icon: BarChart,
+    url: "/dashboard",
   },
   // {
   //   title: "Rule Book",

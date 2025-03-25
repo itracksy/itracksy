@@ -48,6 +48,17 @@ export async function createBoard(
   return newBoard[0];
 }
 
+export async function updateBoard(
+  id: string,
+  board: Partial<BoardInsert>,
+  userId: string
+): Promise<void> {
+  await db
+    .update(boards)
+    .set(board)
+    .where(and(eq(boards.id, id), eq(boards.userId, userId)));
+}
+
 export async function createColumn(column: Omit<ColumnInsert, "id">): Promise<Column> {
   const newColumn = await db
     .insert(columns)

@@ -128,6 +128,7 @@ export const startTracking = async (): Promise<void> => {
       const isBlockedDomain = rule?.ruleType === "domain";
       // Show notification in full-screen window
       if (
+        activeEntry.isFocusMode &&
         isBlocked &&
         (!activeEntry.whiteListedActivities ||
           !activeEntry.whiteListedActivities

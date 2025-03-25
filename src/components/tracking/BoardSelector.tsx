@@ -62,11 +62,13 @@ export function BoardSelector({ selectedItemId, onItemSelect }: BoardSelectorPro
               <SelectValue placeholder="Select a task" />
             </SelectTrigger>
             <SelectContent>
-              {selectedBoard.items?.map((item) => (
-                <SelectItem key={item.id} value={item.id}>
-                  {item.title}
-                </SelectItem>
-              ))}
+              {selectedBoard.items.length > 0
+                ? selectedBoard.items?.map((item) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      {item.title}
+                    </SelectItem>
+                  ))
+                : "No tasks found"}
             </SelectContent>
           </Select>
         </div>

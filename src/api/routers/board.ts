@@ -10,6 +10,7 @@ import {
   createItem,
   updateItem,
   deleteItem,
+  updateBoard,
 } from "../services/board";
 import { boards, columns, items } from "../db/schema";
 import { createInsertSchema } from "drizzle-zod";
@@ -31,6 +32,12 @@ export const boardRouter = t.router({
     .input(boardInsertSchema.omit({ id: true, userId: true }))
     .mutation(async ({ ctx, input }) => {
       return createBoard(input, ctx.userId);
+    }),
+
+  update: protectedProcedure
+    .input(boardInsertSchema.partial().extend({ id: z.string() }))
+    .mutation(async ({ ctx, input: { id, ...data } }) => {
+      return updateBoard(id, data, ctx.userId);
     }),
 
   createColumn: protectedProcedure

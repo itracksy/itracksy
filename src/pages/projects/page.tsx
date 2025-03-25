@@ -15,26 +15,8 @@ import {
   SelectValue,
   SelectSeparator,
 } from "@/components/ui/select";
-import { LayoutGrid, List, PlusCircle } from "lucide-react";
+import { LayoutGrid, List, PlusCircle, Settings } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.js";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-
 import {
   Table,
   TableBody,
@@ -46,6 +28,8 @@ import {
 import { useAtom } from "jotai";
 import { selectedBoardIdAtom } from "@/context/board";
 import { trpcClient } from "@/utils/trpc.js";
+import { useUpdateBoardMutation } from "@/hooks/useBoardQueries";
+import { BoardDialog } from "./components/BoardDialog";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -58,16 +42,8 @@ export function ProjectsPage() {
   const [selectedBoardId, setSelectedBoardId] = useAtom(selectedBoardIdAtom);
   const [viewMode, setViewMode] = useState<"board" | "list">("board");
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const queryClient = useQueryClient();
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      color: "#e0e0e0",
-      hourlyRate: undefined,
-      currency: "USD",
-    },
-  });
 
   const { data: board, isLoading: boardLoading } = useQuery({
     queryKey: ["board", selectedBoardId],
@@ -94,15 +70,25 @@ export function ProjectsPage() {
         currency: values.currency,
       });
     },
-    onSuccess: () => {
-      form.reset();
+    onSuccess: (data) => {
       setOpen(false);
       queryClient.invalidateQueries({ queryKey: ["boards"] });
+      setSelectedBoardId(data.id);
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    createBoardMutation.mutate(values);
+  const updateBoardMutation = useUpdateBoardMutation();
+
+  const handleSubmit = (values: z.infer<typeof formSchema>) => {
+    if (editOpen && selectedBoardId) {
+      updateBoardMutation.mutate({
+        id: selectedBoardId,
+        ...values,
+      });
+      setEditOpen(false);
+    } else {
+      createBoardMutation.mutate(values);
+    }
   };
 
   useEffect(() => {
@@ -148,6 +134,24 @@ export function ProjectsPage() {
               </SelectItem>
             </SelectContent>
           </Select>
+          {board && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setEditOpen(true)}
+                  aria-label="Edit board settings"
+                  className="border-tracksy-gold/30 bg-white text-tracksy-blue hover:border-tracksy-gold/50 hover:bg-tracksy-gold/10"
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Edit board settings</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -206,102 +210,25 @@ export function ProjectsPage() {
           </div>
         </div>
       )}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="border-tracksy-gold/20 bg-white sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle className="text-tracksy-blue">Create New Board</DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              Add a new board to organize your projects.
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-tracksy-blue">Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter board name"
-                        className="border-tracksy-gold/30 focus:border-tracksy-gold focus:ring-tracksy-gold/20"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-500" />
-                  </FormItem>
-                )}
-              />
 
-              <FormField
-                control={form.control}
-                name="hourlyRate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-tracksy-blue">Hourly Rate</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="Optional hourly rate"
-                        className="border-tracksy-gold/30 focus:border-tracksy-gold focus:ring-tracksy-gold/20"
-                        {...field}
-                        onChange={(e) =>
-                          field.onChange(e.target.value ? Number(e.target.value) : undefined)
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-500" />
-                  </FormItem>
-                )}
-              />
+      <BoardDialog open={open} onOpenChange={setOpen} onSubmit={handleSubmit} mode="create" />
 
-              <FormField
-                control={form.control}
-                name="currency"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-tracksy-blue">Currency</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="border-tracksy-gold/30 focus:border-tracksy-gold focus:ring-tracksy-gold/20">
-                          <SelectValue placeholder="Select currency" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="USD">USD</SelectItem>
-                        <SelectItem value="EUR">EUR</SelectItem>
-                        <SelectItem value="GBP">GBP</SelectItem>
-                        <SelectItem value="JPY">JPY</SelectItem>
-                        <SelectItem value="AUD">AUD</SelectItem>
-                        <SelectItem value="CAD">CAD</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage className="text-red-500" />
-                  </FormItem>
-                )}
-              />
-
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setOpen(false)}
-                  className="border-tracksy-gold/30 hover:bg-tracksy-gold/10 hover:text-tracksy-blue"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  className="bg-tracksy-gold text-white hover:bg-tracksy-gold/90"
-                >
-                  Create
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+      <BoardDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onSubmit={handleSubmit}
+        mode="edit"
+        initialData={
+          board
+            ? {
+                name: board.name,
+                color: board.color,
+                hourlyRate: board.hourlyRate,
+                currency: board.currency,
+              }
+            : undefined
+        }
+      />
     </div>
   );
 }

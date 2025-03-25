@@ -89,7 +89,13 @@ export function BottomSideBar() {
         id: activeTimeEntry.id,
         endTime: Date.now(),
       });
-
+      // create a break
+      createTimeEntry.mutate({
+        startTime: Date.now(),
+        isFocusMode: false,
+        targetDuration: breakDuration,
+        description: `Break for ${breakDuration} minutes`,
+      });
       // Show toast notification
       toast({
         title: `${breakDuration} minute break started! 🎉`,

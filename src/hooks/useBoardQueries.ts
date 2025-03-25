@@ -67,9 +67,20 @@ export function useUpdateColumnMutation() {
 
   return useMutation({
     mutationFn: trpcClient.board.updateColumn.mutate,
-
     onSettled: (data, error, { id, ...column }) => {
       queryClient.invalidateQueries({ queryKey: ["board", column.boardId] });
+    },
+  });
+}
+
+export function useUpdateBoardMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: trpcClient.board.update.mutate,
+    onSettled: (data, error, { id, ...board }) => {
+      queryClient.invalidateQueries({ queryKey: ["board", id] });
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
     },
   });
 }
