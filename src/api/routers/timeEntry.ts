@@ -11,6 +11,7 @@ import {
   getTimeEntries,
   getActivitiesForTimeEntry,
   getTimeEntriesByTimeRange,
+  calculateSessionProductivityMetrics,
 } from "../../api/services/timeEntry";
 import { timeEntries } from "../db/schema";
 import { createInsertSchema } from "drizzle-zod";
@@ -65,7 +66,8 @@ export const timeEntryRouter = t.router({
   getGroupActivitiesForTimeEntry: protectedProcedure.input(z.string()).query(async ({ input }) => {
     const activities = await getActivitiesForTimeEntry({ timeEntryId: input });
     const groupedActivities = await getGroupActivities(activities);
-    return { groupedActivities, activities };
+    const productivityMetrics = calculateSessionProductivityMetrics(activities);
+    return { groupedActivities, activities, productivityMetrics };
   }),
   create: protectedProcedure
     .input(timeEntryInsertSchema.omit({ id: true, userId: true }))

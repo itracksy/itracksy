@@ -2,6 +2,7 @@ import { eq, desc, and, isNull, isNotNull, sql, gte, lte } from "drizzle-orm";
 import { timeEntries, items, activities } from "../db/schema";
 import { nanoid } from "nanoid";
 import db from "../db";
+import { TimeEntryWithRelations } from "@/types/projects";
 
 export type TimeEntry = typeof timeEntries.$inferSelect;
 export type TimeEntryInsert = typeof timeEntries.$inferInsert;
@@ -189,7 +190,7 @@ export async function getTimeEntriesByTimeRange({
   userId: string;
   startTimestamp: number;
   endTimestamp: number;
-}): Promise<TimeEntry[]> {
+}): Promise<TimeEntryWithRelations[]> {
   const startOfDay = new Date(startTimestamp);
   startOfDay.setHours(0, 0, 0, 0);
 
@@ -217,4 +218,45 @@ export async function getActivitiesForTimeEntry({ timeEntryId }: { timeEntryId: 
     where: eq(activities.timeEntryId, timeEntryId),
     orderBy: [desc(activities.timestamp), desc(activities.duration)],
   });
+}
+
+export type ClassificationStatus = "unclassified" | "partial" | "complete";
+
+export type SessionProductivityMetrics = {
+  classificationStatus: ClassificationStatus;
+  totalActivities: number;
+  classifiedActivities: number;
+  productiveTime: number;
+  sessionDuration: number;
+  productivityPercentage: number;
+};
+
+export function calculateSessionProductivityMetrics(activityList: typeof activities.$inferSelect[]): SessionProductivityMetrics {
+  // Calculate classification status
+  const totalActivities = activityList.length;
+  const classifiedActivities = activityList.filter((a: typeof activities.$inferSelect) => a.rating !== null).length;
+
+  let classificationStatus: ClassificationStatus = "unclassified";
+  if (classifiedActivities === totalActivities && totalActivities > 0) {
+    classificationStatus = "complete";
+  } else if (classifiedActivities > 0) {
+    classificationStatus = "partial";
+  }
+
+  // Calculate productivity for this session
+  const productiveTime = activityList
+    .filter((activity: typeof activities.$inferSelect) => activity.rating === 1)
+    .reduce((total: number, activity: typeof activities.$inferSelect) => total + activity.duration, 0);
+  const sessionDuration = activityList.reduce((total: number, activity: typeof activities.$inferSelect) => total + activity.duration, 0);
+  const productivityPercentage =
+    sessionDuration > 0 ? Math.min(100, Math.round((productiveTime / sessionDuration) * 100)) : 0;
+
+  return {
+    classificationStatus,
+    totalActivities,
+    classifiedActivities,
+    productiveTime,
+    sessionDuration,
+    productivityPercentage,
+  };
 }

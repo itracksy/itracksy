@@ -6,16 +6,18 @@ import { ActivityGroup } from "./activity-group";
 
 import { formatTime } from "@/lib/utils";
 import { cn } from "@/lib/utils";
-import { TimeEntry } from "@/types/projects";
+import { TimeEntryWithRelations } from "@/types/projects";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcClient } from "@/utils/trpc";
 import { OnClassify } from "@/types/classify";
 
 import { useUpdateRule } from "@/hooks/use-update-rule";
 import { useCreateRule } from "@/hooks/use-create-rule";
+import { get } from "http";
+import { getTitleTimeEntry } from "@/api/db/timeEntryExt";
 
 interface SessionCardProps {
-  session: TimeEntry;
+  session: TimeEntryWithRelations;
 
   isExpanded: boolean;
   onToggle: () => void;
@@ -35,7 +37,7 @@ export function SessionCard({
     queryFn: () => trpcClient.timeEntry.getGroupActivitiesForTimeEntry.query(session.id),
     enabled: true,
   });
-  const { activities = null, groupedActivities } = data ?? {};
+  const { activities = null, groupedActivities, productivityMetrics } = data ?? {};
   // Mutation for setting activity rating
   const ratingMutation = useMutation({
     mutationFn: ({ timestamp, rating }: { timestamp: number; rating: number }) =>
@@ -113,24 +115,9 @@ export function SessionCard({
   if (!groupedActivities) {
     return <div>Failed to load grouped activities</div>;
   }
-  // Calculate classification status
-  const totalActivities = activities.length;
-  const classifiedActivities = activities.filter((a) => a.rating !== null).length;
-
-  let classificationStatus: "unclassified" | "partial" | "complete" = "unclassified";
-  if (classifiedActivities === totalActivities) {
-    classificationStatus = "complete";
-  } else if (classifiedActivities > 0) {
-    classificationStatus = "partial";
+  if (!productivityMetrics) {
+    return <div>Failed to load productivity metrics</div>;
   }
-
-  // Calculate productivity for this session
-  const productiveTime = activities
-    .filter((activity) => activity.rating === 1)
-    .reduce((total, activity) => total + activity.duration, 0);
-
-  const productivityPercentage =
-    (session.duration ?? 0) > 0 ? Math.round((productiveTime / (session.duration ?? 0)) * 100) : 0;
 
   return (
     <Card
@@ -150,27 +137,27 @@ export function SessionCard({
         <div className="flex items-center gap-4">
           <div className="flex flex-col">
             <h3 className="font-medium text-gray-900 dark:text-gray-100">
-              {format(new Date(session.startTime), "MMMM d, yyyy")}
+              {getTitleTimeEntry(session)}
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              {formatTime(session.duration ?? 0)}
+              {session.endTime ? formatTime(productivityMetrics.sessionDuration) : "Ongoing"}
             </p>
           </div>
 
           <div className="flex items-center gap-1.5">
-            {classificationStatus === "complete" && (
+            {productivityMetrics.classificationStatus === "complete" && (
               <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
                 <CheckCircle className="mr-1 h-3.5 w-3.5" />
                 Fully Classified
               </span>
             )}
-            {classificationStatus === "partial" && (
+            {productivityMetrics.classificationStatus === "partial" && (
               <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
                 <AlertCircle className="mr-1 h-3.5 w-3.5" />
                 Partially Classified
               </span>
             )}
-            {classificationStatus === "unclassified" && (
+            {productivityMetrics.classificationStatus === "unclassified" && (
               <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-800 dark:text-gray-300">
                 <HelpCircle className="mr-1 h-3.5 w-3.5" />
                 Unclassified
@@ -180,9 +167,9 @@ export function SessionCard({
         </div>
 
         <div className="flex items-center gap-3">
-          {classificationStatus !== "unclassified" && (
+          {productivityMetrics.classificationStatus !== "unclassified" && (
             <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {productivityPercentage}% Productive
+              {productivityMetrics.productivityPercentage}% Productive
             </div>
           )}
           {isExpanded ? (
@@ -211,8 +198,8 @@ export function SessionCard({
           {showCelebration && (
             <div className="border-t border-[#E5A853]/30 bg-[#E5A853]/10 p-4 text-center dark:bg-[#E5A853]/5">
               <p className="font-medium text-[#2B4474] dark:text-[#3A5A9B]">
-                🎉 All activities classified! Your session is now {productivityPercentage}%
-                productive.
+                🎉 All activities classified! Your session is now{" "}
+                {productivityMetrics.productivityPercentage}% productive.
               </p>
             </div>
           )}
@@ -224,20 +211,21 @@ export function SessionCard({
                   Session Summary
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {classifiedActivities} of {totalActivities} activities classified
+                  {productivityMetrics.classifiedActivities} of{" "}
+                  {productivityMetrics.totalActivities} activities classified
                 </p>
               </div>
 
-              {classificationStatus !== "unclassified" && (
+              {productivityMetrics.classificationStatus !== "unclassified" && (
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-24 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                     <div
                       className="h-full bg-[#E5A853]"
-                      style={{ width: `${productivityPercentage}%` }}
+                      style={{ width: `${productivityMetrics.productivityPercentage}%` }}
                     />
                   </div>
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {productivityPercentage}%
+                    {productivityMetrics.productivityPercentage}%
                   </span>
                 </div>
               )}
