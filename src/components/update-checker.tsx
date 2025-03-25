@@ -11,7 +11,7 @@ export function UpdateChecker() {
     const checkForUpdates = async () => {
       try {
         const result = await window.electronWindow.checkForUpdates();
-        
+
         if (result.hasUpdate) {
           toast({
             title: "Update Available",
@@ -19,10 +19,10 @@ export function UpdateChecker() {
             variant: "default",
             duration: 0, // Keep it visible until dismissed
             action: (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => window.open(result.downloadUrl, '_blank')}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open(result.downloadUrl, "_blank")}
                 className="flex items-center"
               >
                 <ExternalLinkIcon className="mr-2 h-4 w-4" />

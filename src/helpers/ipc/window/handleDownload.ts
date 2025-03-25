@@ -1,4 +1,4 @@
-import { buildAppLinks } from "@/config/app-links";
+import { buildAppLinks } from "../../../config/app-links";
 
 // Export a function to get platform-specific download URL without triggering download
 export const getPlatformDownloadUrl = (version: string): string => {

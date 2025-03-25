@@ -92,10 +92,13 @@ export function VersionChecker({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => window.open(versionInfo.downloadUrl, "_blank")}
+            onClick={() => {
+              if (versionInfo.downloadUrl) {
+                window.location.href = versionInfo.downloadUrl;
+              }
+            }}
             className="flex items-center"
           >
-            <ExternalLinkIcon className="mr-2 h-4 w-4" />
             Download
           </Button>
         ),
