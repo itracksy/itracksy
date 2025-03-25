@@ -1,6 +1,7 @@
 import { Activity } from "@/types/activity";
 import { RuleFormValues } from "@/components/rules/rule-dialog";
-import { extractDomain, doesActivityMatchRule, findActivitiesMatchingRule } from "./activityUtils";
+import { doesActivityMatchRule, findActivitiesMatchingRule } from "./activityUtils";
+import { extractDomain } from "./url";
 
 describe("extractDomain", () => {
   it("should extract domain from valid URLs", () => {

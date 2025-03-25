@@ -17,12 +17,12 @@ get_current_version() {
 increment_version() {
     local version=$1
     local increment_type=$2
-    
+
     IFS='.' read -ra VERSION_PARTS <<< "$version"
     local major=${VERSION_PARTS[0]}
     local minor=${VERSION_PARTS[1]}
     local patch=${VERSION_PARTS[2]}
-    
+
     case $increment_type in
         "major")
             major=$((major + 1))
@@ -37,9 +37,25 @@ increment_version() {
             patch=$((patch + 1))
             ;;
     esac
-    
+
     echo "${major}.${minor}.${patch}"
 }
+
+# Run type-check and ensure it succeeds
+run_type_check() {
+    echo "Running type check..."
+    npm run type-check
+
+    if [ $? -ne 0 ]; then
+        echo "Error: Type check failed. Release aborted."
+        exit 1
+    fi
+
+    echo "Type check passed. Proceeding with release..."
+}
+
+# Run type check first
+run_type_check
 
 # Get the current version
 CURRENT_VERSION=$(get_current_version)

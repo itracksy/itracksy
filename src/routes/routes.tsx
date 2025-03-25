@@ -5,7 +5,6 @@ import FocusPage from "@/pages/focus/index";
 import { ProjectsPage } from "@/pages/projects/page";
 import SettingsPage from "@/pages/settings-page/SettingsPage";
 import RainingLetters from "@/pages/rainning-letter/index";
-import AchievementsPage from "@/pages/achievements";
 import FullScreenLayout from "@/layouts/FullScreenLayout";
 import RuleBookPage from "@/pages/rule-book";
 import { FocusSessionsAchievement } from "@/pages/new-achievements/page";
