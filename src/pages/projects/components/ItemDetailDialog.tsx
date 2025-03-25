@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/RichTextEditor";
 import {
   Table,
   TableBody,
@@ -92,13 +93,16 @@ export function ItemDetailDialog({ open, onOpenChange, item }: ItemDetailDialogP
           <div className="space-y-2">
             <Label>Description</Label>
             {isEditing ? (
-              <Textarea
+              <RichTextEditor
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
-                className="min-h-[100px]"
+                onChange={setContent}
+                placeholder="Add a description..."
               />
             ) : (
-              <div className="rounded-md border p-3">{content || "No description"}</div>
+              <div
+                className="prose prose-sm prose-a:text-primary max-w-none rounded-md border p-3"
+                dangerouslySetInnerHTML={{ __html: content || "No description" }}
+              />
             )}
           </div>
 
