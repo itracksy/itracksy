@@ -12,6 +12,7 @@ import {
 import { safelyRegisterListener } from "../safelyRegisterListener";
 
 import { logger } from "../../../helpers/logger";
+import { getPlatformDownloadUrl } from "./handleDownload";
 
 let mainWindowRef: BrowserWindow | null = null;
 let trayRef: Tray | null = null;
@@ -33,7 +34,9 @@ export const addWindowEventListeners = (mainWindow: BrowserWindow, tray: Tray | 
       logger.info(`Current app version: ${currentVersion}`);
 
       // Fetch the latest release from GitHub
-      const response = await fetch("https://api.github.com/repos/hunght/itracksy/releases/latest");
+      const response = await fetch(
+        "https://api.github.com/repos/itracksy/itracksy/releases/latest"
+      );
 
       if (!response.ok) {
         logger.error(`Failed to fetch latest release: ${response.statusText}`);
@@ -46,7 +49,7 @@ export const addWindowEventListeners = (mainWindow: BrowserWindow, tray: Tray | 
 
       const release = await response.json();
       const latestVersion = release.tag_name.replace("v", "");
-      const downloadUrl = "https://www.itracksy.com/download";
+      const downloadUrl = getPlatformDownloadUrl(latestVersion);
 
       logger.info(`Latest version available: ${latestVersion}`);
 

@@ -52,8 +52,8 @@ export const startTracking = async (): Promise<void> => {
       // Update tray title with duration and mode
       const durationInSeconds = Math.floor((Date.now() - activeEntry.startTime) / 1000);
       const formattedDuration = formatDuration(durationInSeconds);
-      // Use a simple character prefix for mode (F=Focus, B=Break)
-      const modePrefix = activeEntry.isFocusMode ? "F" : "B";
+      // Use emoji for mode (🎯=Focus, 🚀=Break)
+      const modePrefix = activeEntry.isFocusMode ? "🎯" : "🚀";
 
       const tray = getTray();
       if (tray) {
