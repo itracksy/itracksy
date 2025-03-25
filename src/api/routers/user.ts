@@ -3,13 +3,15 @@ import { t, protectedProcedure } from "../trpc";
 import { blockedDomains, blockedApps } from "../db/schema";
 import { and, eq } from "drizzle-orm";
 import db from "../db";
-import { getUserSettings, updateUserSettings } from "../services/userSettings";
+import {
+  getPermissions,
+  getUserSettings,
+  setPermissions,
+  updateUserSettings,
+} from "../services/userSettings";
 
 const trackingSettingsSchema = z.object({
-  accessibilityPermission: z.boolean(),
-  screenRecordingPermission: z.boolean(),
-  isFocusMode: z.boolean(),
-  currentTaskId: z.string().optional(),
+  isWarningPopupEnable: z.boolean(),
 });
 
 const updateTrackingSettingsSchema = trackingSettingsSchema.partial();
@@ -24,6 +26,24 @@ export const userRouter = t.router({
     .input(updateTrackingSettingsSchema)
     .mutation(async ({ input }) => {
       return updateUserSettings(input);
+    }),
+  getPermissions: protectedProcedure.query(async ({ ctx }) => {
+    return getPermissions();
+  }),
+  setPermissions: protectedProcedure
+    .input(
+      z.object({
+        accessibilityPermission: z.boolean().optional(),
+        screenRecordingPermission: z.boolean().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      // Update permissions
+      await setPermissions({
+        accessibilityPermission: input.accessibilityPermission ?? false,
+        screenRecordingPermission: input.screenRecordingPermission ?? false,
+      });
+      return { success: true };
     }),
 
   getCurrrentUserId: protectedProcedure.query(async ({ ctx }) => {

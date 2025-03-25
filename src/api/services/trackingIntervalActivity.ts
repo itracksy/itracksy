@@ -2,14 +2,9 @@ import { Activity } from "@/types/activity";
 import { BrowserWindow, dialog, screen } from "electron";
 import { upsertActivity } from "./activities";
 import { TRACKING_INTERVAL } from "../../config/tracking";
-import { extractDomain, extractDomainWindows, urlContainsDomain } from "../../utils/url";
+import { extractDomainWindows, urlContainsDomain } from "../../utils/url";
 import { logger } from "../../helpers/logger";
-import {
-  getCurrentUserIdLocalStorage,
-  getUserBlockedApps,
-  getUserBlockedDomains,
-  getUserSettings,
-} from "./userSettings";
+import { getCurrentUserIdLocalStorage } from "./userSettings";
 import { createTimeEntry, getActiveTimeEntry, updateTimeEntry } from "./timeEntry";
 import { sendNotificationService, sendNotificationWhenNoActiveEntry } from "./notification";
 import { createNotification } from "./notifications";

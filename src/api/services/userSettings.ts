@@ -1,22 +1,18 @@
 import db from "../db";
 import { blockedDomains, blockedApps } from "../db/schema";
 import { eq } from "drizzle-orm";
-import { app, shell, systemPreferences } from "electron";
-import { getValue, setValue, setMultipleValues } from "./localStorage";
+import { shell, systemPreferences } from "electron";
+import { getValue, setValue } from "./localStorage";
 import { logger } from "../../helpers/logger";
 import { boards } from "../db/schema";
 import { createBoard, createColumn, createItem } from "../services/board";
 import { nanoid } from "nanoid";
 
 const USER_SETTINGS_KEYS = {
-  accessibilityPermission: "user.accessibilityPermission",
-  screenRecordingPermission: "user.screenRecordingPermission",
-  isFocusMode: "user.isFocusMode",
-  currentTaskId: "user.currentTaskId",
-  timeEntryId: "user.timeEntryId",
+  isWarningPopupEnable: "user.isWarningPopupEnable",
+
   lastUpdateActivity: "user.lastUpdateActivity",
   currentUserId: "user.currentUserId",
-  isTracking: "user.isTracking",
 };
 
 // Check if the platform is macOS
@@ -92,41 +88,14 @@ export async function requestScreenRecordingPermission(): Promise<boolean> {
 }
 
 export async function getUserSettings({ userId }: { userId: string }) {
-  const [
-    accessibilityPermissionSetting,
-    screenRecordingPermissionSetting,
-    isFocusMode,
-    currentTaskId,
-    timeEntryId,
-    lastUpdateActivity,
-    isTracking,
-  ] = await Promise.all([
-    getValue(USER_SETTINGS_KEYS.accessibilityPermission),
-    getValue(USER_SETTINGS_KEYS.screenRecordingPermission),
-    getValue(USER_SETTINGS_KEYS.isFocusMode),
-    getValue(USER_SETTINGS_KEYS.currentTaskId),
-    getValue(USER_SETTINGS_KEYS.timeEntryId),
+  const [isWarningPopupEnable, lastUpdateActivity] = await Promise.all([
+    getValue(USER_SETTINGS_KEYS.isWarningPopupEnable),
     getValue(USER_SETTINGS_KEYS.lastUpdateActivity),
-    getValue(USER_SETTINGS_KEYS.isTracking),
   ]);
 
-  // Get the actual status of permissions on macOS
-  const accessibilityPermissionGranted =
-    accessibilityPermissionSetting === "true" ? checkAccessibilityPermission() : false;
-  const screenRecordingPermissionGranted =
-    screenRecordingPermissionSetting === "true" ? checkScreenRecordingPermission() : false;
-
   return {
-    userId,
-    accessibilityPermission: accessibilityPermissionSetting === "true",
-    accessibilityPermissionGranted,
-    screenRecordingPermission: screenRecordingPermissionSetting === "true",
-    screenRecordingPermissionGranted,
-    isBlockingOnFocusMode: isFocusMode === "true",
-    currentTaskId: currentTaskId || null,
-    timeEntryId: timeEntryId || null,
+    isWarningPopupEnable: isWarningPopupEnable === "true",
     lastUpdateActivity: lastUpdateActivity ? parseInt(lastUpdateActivity) : null,
-    isTracking: isTracking === "true",
   };
 }
 
@@ -231,65 +200,36 @@ export async function setCurrentUserId(userId: string): Promise<string> {
     });
   }
 
-  const defaultSettings = {
-    [USER_SETTINGS_KEYS.accessibilityPermission]: "true",
-    [USER_SETTINGS_KEYS.screenRecordingPermission]: "true",
-    [USER_SETTINGS_KEYS.isFocusMode]: "true",
-    [USER_SETTINGS_KEYS.isTracking]: "true",
-  };
-
-  await setMultipleValues(defaultSettings);
+  await setValue(USER_SETTINGS_KEYS.isWarningPopupEnable, "true");
 
   return existingUserId;
 }
 
-export async function updateUserSettings(settings: {
-  accessibilityPermission?: boolean;
-  screenRecordingPermission?: boolean;
-  isFocusMode?: boolean;
-  currentTaskId?: string | null;
-  lastUpdateActivity?: number | null;
-  isTracking?: boolean;
-  timeEntryId?: string | null;
+export async function setPermissions({
+  accessibilityPermission,
+  screenRecordingPermission,
+}: {
+  accessibilityPermission: boolean;
+  screenRecordingPermission: boolean;
 }) {
-  const updates: Record<string, string> = {};
-
-  if (settings.accessibilityPermission !== undefined) {
-    updates[USER_SETTINGS_KEYS.accessibilityPermission] =
-      settings.accessibilityPermission.toString();
-
-    // If enabling permission, try to request it on macOS
-    if (settings.accessibilityPermission && isMacOS) {
-      await requestAccessibilityPermission();
-    }
+  if (accessibilityPermission === true) {
+    await requestAccessibilityPermission();
   }
-  if (settings.screenRecordingPermission !== undefined) {
-    updates[USER_SETTINGS_KEYS.screenRecordingPermission] =
-      settings.screenRecordingPermission.toString();
-
-    // If enabling permission, try to request it on macOS
-    if (settings.screenRecordingPermission && isMacOS) {
-      await requestScreenRecordingPermission();
-    }
+  if (screenRecordingPermission === true) {
+    await requestScreenRecordingPermission();
   }
-  if (settings.isFocusMode !== undefined) {
-    updates[USER_SETTINGS_KEYS.isFocusMode] = settings.isFocusMode.toString();
-  }
-  if (settings.currentTaskId !== undefined) {
-    updates[USER_SETTINGS_KEYS.currentTaskId] = settings.currentTaskId || "";
-  }
-  if (settings.timeEntryId !== undefined) {
-    updates[USER_SETTINGS_KEYS.timeEntryId] = settings.timeEntryId || "";
-  }
-  if (settings.lastUpdateActivity !== undefined) {
-    updates[USER_SETTINGS_KEYS.lastUpdateActivity] = settings.lastUpdateActivity?.toString() || "";
-  }
-  if (settings.isTracking !== undefined) {
-    updates[USER_SETTINGS_KEYS.isTracking] = settings.isTracking.toString();
-  }
-  if (Object.keys(updates).length > 0) {
-    await setMultipleValues(updates);
-  }
+}
+export async function getPermissions() {
+  const accessibilityPermission = checkAccessibilityPermission();
+  const screenRecordingPermission = checkScreenRecordingPermission();
+  return { accessibilityPermission, screenRecordingPermission };
+}
+export async function updateUserSettings(settings: { isWarningPopupEnable?: boolean }) {
+  const { isWarningPopupEnable } = settings;
+  await setValue(
+    USER_SETTINGS_KEYS.isWarningPopupEnable,
+    isWarningPopupEnable?.toString() || "false"
+  );
 }
 
 export const getUserBlockedApps = async (userId: string) => {

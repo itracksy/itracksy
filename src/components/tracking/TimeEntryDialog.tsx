@@ -39,11 +39,6 @@ export function TimeEntryDialog({ open, onOpenChange }: TimeEntryDialogProps) {
         targetDuration: targetMinutes,
       });
 
-      await trpcClient.user.updateActivitySettings.mutate({
-        currentTaskId: selectedItemId,
-        isFocusMode,
-      });
-
       toast({
         title: "Time entry started",
         description: isFocusMode

@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
-import { SunIcon, MoonIcon, Cross2Icon } from "@radix-ui/react-icons";
-import { useAtom } from "jotai";
+import { SunIcon, MoonIcon } from "@radix-ui/react-icons";
 
 import { setTheme, getCurrentTheme } from "../../helpers/theme_helpers";
 import { ThemeMode } from "@/lib/types/theme-mode";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+
 import { Switch } from "@/components/ui/switch";
 import { AboutSection } from "@/pages/settings-page/components/AboutSection";
 import {
@@ -57,6 +55,13 @@ export default function SettingsPage() {
       return data;
     },
   });
+  const { data: permissions = null } = useQuery({
+    queryKey: ["user.getPermissions"],
+    queryFn: async () => {
+      const data = await trpcClient.user.getPermissions.query();
+      return data;
+    },
+  });
 
   useEffect(() => {
     getCurrentTheme().then((theme) => {
@@ -99,7 +104,7 @@ export default function SettingsPage() {
 
   const onFocusChange = async () => {
     await trpcClient.user.updateActivitySettings.mutate({
-      isFocusMode: !activitySettings?.isBlockingOnFocusMode,
+      isWarningPopupEnable: !activitySettings?.isWarningPopupEnable,
     });
     queryClient.invalidateQueries({ queryKey: ["user.getActivitySettings"] });
   };
@@ -175,7 +180,7 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="flex items-center gap-4">
           <Switch
-            checked={activitySettings?.isBlockingOnFocusMode}
+            checked={activitySettings?.isWarningPopupEnable}
             onCheckedChange={onFocusChange}
             id="focus-mode"
           />
@@ -197,13 +202,13 @@ export default function SettingsPage() {
               <p className="text-sm text-muted-foreground">Required to track active applications</p>
             </div>
             <Switch
-              disabled={activitySettings?.accessibilityPermission === true}
-              checked={activitySettings?.accessibilityPermission}
+              disabled={permissions?.accessibilityPermission === true}
+              checked={permissions?.accessibilityPermission}
               onCheckedChange={async (checked) => {
-                await trpcClient.user.updateActivitySettings.mutate({
+                await trpcClient.user.setPermissions.mutate({
                   accessibilityPermission: checked,
                 });
-                queryClient.invalidateQueries({ queryKey: ["user.getActivitySettings"] });
+                queryClient.invalidateQueries({ queryKey: ["user.getPermissions"] });
               }}
             />
           </div>
@@ -213,13 +218,13 @@ export default function SettingsPage() {
               <p className="text-sm text-muted-foreground">Required to track browser activity</p>
             </div>
             <Switch
-              disabled={activitySettings?.screenRecordingPermission === true}
-              checked={activitySettings?.screenRecordingPermission}
+              disabled={permissions?.screenRecordingPermission === true}
+              checked={permissions?.screenRecordingPermission}
               onCheckedChange={async (checked) => {
-                await trpcClient.user.updateActivitySettings.mutate({
+                await trpcClient.user.setPermissions.mutate({
                   screenRecordingPermission: checked,
                 });
-                queryClient.invalidateQueries({ queryKey: ["user.getActivitySettings"] });
+                queryClient.invalidateQueries({ queryKey: ["user.getPermissions"] });
               }}
             />
           </div>
