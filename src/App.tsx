@@ -24,6 +24,8 @@ posthog.init(getConfig("posthogKey"), {
   property_blacklist: ["$password", "password", "secret"],
   // Disable features that might cause CSP issues
   disable_session_recording: true,
+
+  disable_surveys: true, // Explicitly disable surveys
   autocapture: false,
   capture_pageleave: false,
   debug: process.env.NODE_ENV === "development",
@@ -31,6 +33,8 @@ posthog.init(getConfig("posthogKey"), {
     // Disable additional features that might attempt to inject scripts
     if (ph.config) {
       ph.config.disable_session_recording = true;
+
+      ph.config.disable_surveys = true; // Explicitly disable surveys in config
       ph.config.autocapture = false;
     }
   },

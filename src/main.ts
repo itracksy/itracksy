@@ -193,7 +193,7 @@ app.whenReady().then(async () => {
         ...details.responseHeaders,
         "Content-Security-Policy": [
           "default-src 'self'; " +
-            "script-src 'self' 'unsafe-inline' https://us-assets.i.posthog.com; " +
+            "script-src 'self' 'unsafe-inline' https://*.posthog.com; " + // Allow all posthog.com subdomains
             "connect-src 'self' https://*.posthog.com; " +
             "img-src 'self' data: https://*.posthog.com; " +
             "style-src 'self' 'unsafe-inline';",
@@ -201,6 +201,21 @@ app.whenReady().then(async () => {
       },
     });
   });
+
+  // Filter and block specific PostHog requests that are not needed
+  session.defaultSession.webRequest.onBeforeRequest(
+    {
+      urls: [
+        "https://*.posthog.com/static/surveys.js*",
+        "https://*.posthog.com/static/toolbar.js*",
+        "https://*.posthog.com/static/recorder.js*",
+      ],
+    },
+    (details, callback) => {
+      // Block these specific requests
+      callback({ cancel: true });
+    }
+  );
 });
 
 // Handle app quit

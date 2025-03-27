@@ -1,4 +1,5 @@
 import posthog from "posthog-js";
+import { getConfig } from "../config/env";
 
 /**
  * Safe analytics interface that gracefully handles any PostHog errors
