@@ -5,10 +5,11 @@ import {
   useCreateTimeEntryMutation,
   useLastTimeEntry,
 } from "@/hooks/useTimeEntryQueries";
-import { PlayCircle, StopCircle, History, Coffee } from "lucide-react";
+import { PlayCircle, StopCircle, History, Coffee, MessageSquare } from "lucide-react";
 import { TimeEntryDialog } from "@/components/tracking/TimeEntryDialog";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
+import { FeedbackDialog } from "@/components/feedback/FeedbackDialog";
 
 import { trpcClient } from "@/utils/trpc";
 import { useAtom } from "jotai";
@@ -40,6 +41,7 @@ const getRandomMotivationalPhrase = () => {
 
 export function BottomSideBar() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
   const [breakDuration, setBreakDuration] = useAtom(breakDurationAtom);
   const [motivationalPhrase] = useState(getRandomMotivationalPhrase());
 
@@ -151,6 +153,7 @@ export function BottomSideBar() {
   return (
     <>
       <TimeEntryDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} />
+      <FeedbackDialog open={isFeedbackDialogOpen} onOpenChange={setIsFeedbackDialogOpen} />
 
       <>
         {activeTimeEntry ? (
@@ -219,6 +222,18 @@ export function BottomSideBar() {
             )}
           </>
         )}
+
+        {/* Feedback Button */}
+        <div className="mt-4 border-t border-tracksy-gold/20 pt-4">
+          <SidebarMenuButton
+            onClick={() => setIsFeedbackDialogOpen(true)}
+            className="hover:text-purple-600"
+            tooltip="Share your feedback"
+          >
+            <MessageSquare className="h-5 w-5 text-purple-600" />
+            <span className="text-base text-muted-foreground">Send Feedback</span>
+          </SidebarMenuButton>
+        </div>
       </>
     </>
   );

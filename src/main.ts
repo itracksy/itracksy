@@ -193,10 +193,11 @@ app.whenReady().then(async () => {
         ...details.responseHeaders,
         "Content-Security-Policy": [
           "default-src 'self'; " +
-            "script-src 'self' 'unsafe-inline' https://*.posthog.com; " + // Allow all posthog.com subdomains
+            "script-src 'self' 'unsafe-inline' https://*.posthog.com; " +
             "connect-src 'self' https://*.posthog.com; " +
             "img-src 'self' data: https://*.posthog.com; " +
-            "style-src 'self' 'unsafe-inline';",
+            "style-src 'self' 'unsafe-inline'; " +
+            "frame-src 'self' https://*.itracksy.com https://www.itracksy.com;",
         ],
       },
     });
