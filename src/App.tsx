@@ -14,7 +14,7 @@ import { getConfig } from "./config/env";
 import { VersionChecker } from "@/components/version-checker";
 import { getAppVersion } from "./helpers/version";
 
-// Initialize PostHog directly
+// Initialize PostHog with enhanced CSP compatibility
 posthog.init(getConfig("posthogKey"), {
   api_host: getConfig("posthogHost"),
   capture_pageview: false, // Disable automatic page views - we handle this in the router
@@ -22,6 +22,18 @@ posthog.init(getConfig("posthogKey"), {
     isIdentifiedID: true,
   },
   property_blacklist: ["$password", "password", "secret"],
+  // Disable features that might cause CSP issues
+  disable_session_recording: true,
+  autocapture: false,
+  capture_pageleave: false,
+  debug: process.env.NODE_ENV === "development",
+  loaded: (ph) => {
+    // Disable additional features that might attempt to inject scripts
+    if (ph.config) {
+      ph.config.disable_session_recording = true;
+      ph.config.autocapture = false;
+    }
+  },
 });
 
 // Set initial global properties

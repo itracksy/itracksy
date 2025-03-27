@@ -2,15 +2,13 @@ import { useToast } from "@/hooks/use-toast";
 import BaseLayout from "@/layouts/BaseLayout";
 import { Outlet, createRootRoute, useMatches } from "@tanstack/react-router";
 import { ConfirmationDialogProvider } from "@/components/providers/ConfirmationDialog";
-import posthog from "posthog-js";
+import { analytics } from "@/helpers/analytics";
 
 export const RootRoute = createRootRoute({
   component: Root,
   beforeLoad: ({ location }) => {
-    // Track page view before the route loads
-    posthog.capture("$pageview", {
-      $current_url: location.pathname,
-      view_name: location.pathname.split("/").pop() || "home",
+    // Track page view using the safer analytics helper
+    analytics.pageView(location.pathname, {
       params: location.search ? Object.fromEntries(new URLSearchParams(location.search)) : {},
     });
   },
@@ -19,8 +17,8 @@ export const RootRoute = createRootRoute({
     const err = error as Error;
     console.log("show toast", err);
 
-    // Track error events in PostHog
-    posthog.capture("navigation_error", {
+    // Track error events using the safer analytics helper
+    analytics.track("navigation_error", {
       error_message: err.message,
       path: window.location.pathname,
     });

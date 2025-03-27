@@ -1,6 +1,6 @@
 import * as path from "path";
 
-import { app, BrowserWindow, Tray, Menu, nativeImage, Notification } from "electron";
+import { app, BrowserWindow, Tray, Menu, nativeImage, Notification, session } from "electron";
 import { createIPCHandler } from "electron-trpc/main";
 import registerListeners from "./helpers/ipc/listeners-register";
 import { router } from "./api";
@@ -186,6 +186,21 @@ app.whenReady().then(async () => {
 
   await createTray();
   createWindow();
+  // Modify CSP to allow scripts from PostHog and inline scripts
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        "Content-Security-Policy": [
+          "default-src 'self'; " +
+            "script-src 'self' 'unsafe-inline' https://us-assets.i.posthog.com; " +
+            "connect-src 'self' https://*.posthog.com; " +
+            "img-src 'self' data: https://*.posthog.com; " +
+            "style-src 'self' 'unsafe-inline';",
+        ],
+      },
+    });
+  });
 });
 
 // Handle app quit
