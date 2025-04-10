@@ -9,7 +9,6 @@ import { PlayCircle, StopCircle, History, Coffee, MessageSquare } from "lucide-r
 import { TimeEntryDialog } from "@/components/tracking/TimeEntryDialog";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
-import { FeedbackDialog } from "@/components/feedback/FeedbackDialog";
 
 import { trpcClient } from "@/utils/trpc";
 import { useAtom } from "jotai";
@@ -18,6 +17,7 @@ import { breakDurationAtom } from "@/context/board";
 import { useNavigate } from "@tanstack/react-router";
 import { get } from "http";
 import { getTitleTimeEntry } from "@/api/db/timeEntryExt";
+import { trpc } from "trpc";
 
 // Motivational phrases to encourage users to start working
 const motivationalPhrases = [
@@ -41,7 +41,6 @@ const getRandomMotivationalPhrase = () => {
 
 export function BottomSideBar() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
   const [breakDuration, setBreakDuration] = useAtom(breakDurationAtom);
   const [motivationalPhrase] = useState(getRandomMotivationalPhrase());
 
@@ -150,10 +149,16 @@ export function BottomSideBar() {
     );
   };
 
+  const openFeedbackLink = () => {
+    // Open the feedback URL in a new browser window
+    trpcClient.utils.openExternalUrl.mutate({
+      url: "https://itracksy.com/feedback",
+    });
+  };
+
   return (
     <>
       <TimeEntryDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} />
-      <FeedbackDialog open={isFeedbackDialogOpen} onOpenChange={setIsFeedbackDialogOpen} />
 
       <>
         {activeTimeEntry ? (
@@ -226,7 +231,7 @@ export function BottomSideBar() {
         {/* Feedback Button */}
         <div className="mt-4 border-t border-tracksy-gold/20 pt-4">
           <SidebarMenuButton
-            onClick={() => setIsFeedbackDialogOpen(true)}
+            onClick={openFeedbackLink}
             className="hover:text-purple-600"
             tooltip="Share your feedback"
           >
