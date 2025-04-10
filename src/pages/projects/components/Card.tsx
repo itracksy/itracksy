@@ -15,8 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useConfirmationDialog } from "@/components/providers/ConfirmationDialog";
 import { ItemDetailDialog } from "./ItemDetailDialog";
-import { trpcClient } from "@/utils/trpc";
-import { useQuery } from "@tanstack/react-query";
+
 import { targetMinutesAtom } from "@/context/board";
 import { useAtomValue } from "jotai";
 
@@ -46,14 +45,6 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
     const { data: timeEntries = [] } = useTimeEntriesForItem(id);
     const { toast } = useToast();
     const { confirm } = useConfirmationDialog();
-
-    const { data: activitySettings, isLoading } = useQuery({
-      queryKey: ["user.getActivitySettings"],
-      queryFn: async () => {
-        const data = await trpcClient.user.getActivitySettings.query();
-        return data;
-      },
-    });
 
     useEffect(() => {
       if (!timeEntries.length) return;

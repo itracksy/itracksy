@@ -32,6 +32,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Archive, ArchiveRestore } from "lucide-react";
+import { useConfirmationDialog } from "@/components/providers/ConfirmationDialog";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -68,6 +69,7 @@ export function BoardDialog({
   mode,
 }: BoardDialogProps) {
   const isArchived = initialData?.deletedAt !== null && initialData?.deletedAt !== undefined;
+  const { confirm } = useConfirmationDialog();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -111,9 +113,21 @@ export function BoardDialog({
   };
 
   const handleArchiveToggle = () => {
+    onOpenChange(false);
     if (onArchive) {
-      onArchive(!isArchived);
-      onOpenChange(false);
+      confirm({
+        title: isArchived ? "Restore Board" : "Archive Board",
+        description: isArchived
+          ? "Are you sure you want to restore this board? It will be moved back to the active boards."
+          : "Are you sure you want to archive this board? It will be moved to the archived boards. You can restore it later.",
+        confirmText: isArchived ? "Restore" : "Archive",
+        variant: "destructive",
+      }).then((confirmed) => {
+        if (confirmed) {
+          // Call the onArchive function with the opposite of the current state
+          onArchive(!isArchived);
+        }
+      });
     }
   };
 
