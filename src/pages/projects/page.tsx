@@ -80,6 +80,22 @@ export function ProjectsPage() {
 
   const updateBoardMutation = useUpdateBoardMutation();
 
+  const updateItemMutation = useMutation({
+    mutationFn: async ({ itemId, columnId }: { itemId: string; columnId: string }) => {
+      return await trpcClient.board.updateItem.mutate({
+        id: itemId,
+        columnId,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["board", selectedBoardId] });
+    },
+  });
+
+  const handleStatusChange = (itemId: string, columnId: string) => {
+    updateItemMutation.mutate({ itemId, columnId });
+  };
+
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
     if (editOpen && selectedBoardId) {
       updateBoardMutation.mutate({
@@ -196,9 +212,25 @@ export function ProjectsPage() {
                     <TableRow key={item.id} className="hover:bg-tracksy-gold/5">
                       <TableCell className="font-medium text-tracksy-blue">{item.title}</TableCell>
                       <TableCell>
-                        <span className="rounded-full bg-tracksy-gold/10 px-2 py-1 text-sm text-tracksy-blue">
-                          {column?.name || "No Status"}
-                        </span>
+                        <Select
+                          value={item.columnId}
+                          onValueChange={(columnId) => handleStatusChange(item.id, columnId)}
+                        >
+                          <SelectTrigger className="w-full border-tracksy-gold/30 bg-white text-tracksy-blue hover:border-tracksy-gold/50 dark:border-tracksy-gold/20 dark:bg-gray-900">
+                            <SelectValue placeholder={column?.name || "No Status"} />
+                          </SelectTrigger>
+                          <SelectContent className="border-tracksy-gold/30 bg-white dark:border-tracksy-gold/20 dark:bg-gray-900">
+                            {board.columns.map((col) => (
+                              <SelectItem
+                                key={col.id}
+                                value={col.id}
+                                className="text-tracksy-blue hover:bg-tracksy-gold/5 dark:text-white dark:hover:bg-tracksy-gold/10"
+                              >
+                                {col.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                       <TableCell className="max-w-md truncate text-muted-foreground">
                         {item.content || "No description"}
