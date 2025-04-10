@@ -39,11 +39,11 @@ const items = [
     icon: BarChart,
     url: "/dashboard",
   },
-  // {
-  //   title: "Rule Book",
-  //   icon: BookOpen,
-  //   url: "/rule-book",
-  // },
+  {
+    title: "Rule Book",
+    icon: BookOpen,
+    url: "/rule-book",
+  },
   {
     title: "Settings",
     icon: Settings,

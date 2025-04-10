@@ -21,6 +21,7 @@ import { toast } from "@/hooks/use-toast";
 import { RuleDialog, RuleFormValues } from "@/components/rules/rule-dialog";
 import { useCreateRule } from "@/hooks/use-create-rule";
 import { useUpdateRule } from "@/hooks/use-update-rule";
+import { useConfirmationDialog } from "@/components/providers/ConfirmationDialog";
 
 export default function RuleBookPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -33,6 +34,7 @@ export default function RuleBookPage() {
     queryFn: () => trpcClient.activity.getUserRules.query(),
   });
 
+  const { confirm } = useConfirmationDialog();
   const createMutation = useCreateRule({
     activities: null,
     onSuccess: () => {
@@ -61,14 +63,6 @@ export default function RuleBookPage() {
         title: "Rule deleted",
         description: "Your productivity rule has been deleted",
       });
-    },
-  });
-
-  const toggleMutation = useMutation({
-    mutationFn: ({ id, active }: { id: string; active: boolean }) =>
-      trpcClient.activity.toggleRuleActive.mutate({ id, active }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["activityRules"] });
     },
   });
 
@@ -152,7 +146,6 @@ export default function RuleBookPage() {
               <TableHead>Type</TableHead>
               <TableHead>Condition</TableHead>
               <TableHead>Classification</TableHead>
-              <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -183,14 +176,6 @@ export default function RuleBookPage() {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Switch
-                    checked={rule.active}
-                    onCheckedChange={(checked) =>
-                      toggleMutation.mutate({ id: rule.id, active: checked })
-                    }
-                  />
-                </TableCell>
-                <TableCell>
                   <div className="flex gap-2">
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(rule)}>
                       <Edit className="h-4 w-4" />
@@ -198,7 +183,16 @@ export default function RuleBookPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => deleteMutation.mutate(rule.id)}
+                      onClick={() => {
+                        confirm({
+                          title: "Delete Rule",
+                          description: "Are you sure you want to delete this rule?",
+                        }).then((confirmed) => {
+                          if (confirmed) {
+                            deleteMutation.mutate(rule.id);
+                          }
+                        });
+                      }}
                       className="text-destructive"
                     >
                       <Trash className="h-4 w-4" />

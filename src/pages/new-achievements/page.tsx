@@ -1,6 +1,5 @@
 import { SummaryCard } from "./components/summary-card";
 import { SessionList } from "./components/session-list";
-import { RulesPanel } from "./components/rules-panel";
 
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -57,7 +56,6 @@ export function FocusSessionsAchievement() {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
           Focus Sessions Achievement
         </h1>
-        <RulesPanel rules={rules} onDeleteRule={deleteRule} />
       </div>
 
       <SummaryCard

@@ -13,7 +13,7 @@ import { OnClassify } from "@/types/classify";
 
 import { useUpdateRule } from "@/hooks/use-update-rule";
 import { useCreateRule } from "@/hooks/use-create-rule";
-import { get } from "http";
+
 import { getTitleTimeEntry } from "@/api/db/timeEntryExt";
 
 interface SessionCardProps {
@@ -30,7 +30,7 @@ export function SessionCard({
   onToggle,
 }: SessionCardProps) {
   const [showCelebration, setShowCelebration] = useState(false);
-  const [prevClassifiedCount, setPrevClassifiedCount] = useState(0);
+
   const queryClient = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["activities", session.id],
@@ -87,7 +87,7 @@ export function SessionCard({
           name: `Rule for ${domainName}`,
           description: `Created from activity`,
           ruleType: "domain",
-          condition: "contains",
+          condition: "equals",
           value: domainName,
           rating: isProductive ? 1 : 0,
           active: true,
@@ -97,7 +97,7 @@ export function SessionCard({
           name: `Rule for ${appName}`,
           description: `Created from activity`,
           ruleType: "app_name",
-          condition: "contains",
+          condition: "equals",
           value: appName,
           rating: isProductive ? 1 : 0,
           active: true,
