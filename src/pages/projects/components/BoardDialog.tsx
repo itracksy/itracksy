@@ -1,6 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -53,13 +54,33 @@ interface BoardDialogProps {
 export function BoardDialog({ open, onOpenChange, onSubmit, initialData, mode }: BoardDialogProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      color: "#e0e0e0",
-      hourlyRate: undefined,
-      currency: "USD",
-    },
+    defaultValues: initialData
+      ? {
+          name: initialData.name,
+          color: initialData.color ?? "#e0e0e0",
+          hourlyRate: initialData.hourlyRate ?? undefined,
+          currency: initialData.currency ?? "USD",
+        }
+      : {
+          name: "",
+          color: "#e0e0e0",
+          hourlyRate: undefined,
+          currency: "USD",
+        },
   });
+
+  useEffect(() => {
+    if (initialData && open) {
+      form.reset({
+        name: initialData.name,
+        color: initialData.color || "#e0e0e0",
+        hourlyRate: initialData.hourlyRate || undefined,
+        currency: initialData.currency || "USD",
+      });
+    } else if (!open) {
+      form.reset();
+    }
+  }, [form, initialData, open]);
 
   const handleSubmit = (values: FormValues) => {
     onSubmit(values);
@@ -112,7 +133,7 @@ export function BoardDialog({ open, onOpenChange, onSubmit, initialData, mode }:
                       className="border-tracksy-gold/30 focus:border-tracksy-gold focus:ring-tracksy-gold/20"
                       {...field}
                       onChange={(e) =>
-                        field.onChange(e.target.value ? Number(e.target.value) : undefined)
+                        field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
                       }
                     />
                   </FormControl>

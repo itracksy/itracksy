@@ -34,7 +34,7 @@ import { BoardDialog } from "./components/BoardDialog";
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
   color: z.string(),
-  hourlyRate: z.number().optional(),
+  hourlyRate: z.number().int("Hourly rate must be a whole number").optional(),
   currency: z.string().optional(),
 });
 
