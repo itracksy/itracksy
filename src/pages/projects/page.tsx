@@ -36,6 +36,7 @@ const formSchema = z.object({
   color: z.string(),
   hourlyRate: z.number().int("Hourly rate must be a whole number").optional(),
   currency: z.string().optional(),
+  createDefaultColumns: z.boolean().default(true),
 });
 
 export function ProjectsPage() {
@@ -63,11 +64,11 @@ export function ProjectsPage() {
 
   const createBoardMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
+      const { createDefaultColumns, ...boardData } = values;
       return await trpcClient.board.create.mutate({
-        name: values.name.trim(),
-        color: values.color,
-        hourlyRate: values.hourlyRate,
-        currency: values.currency,
+        ...boardData,
+        name: boardData.name.trim(),
+        createDefaultColumns,
       });
     },
     onSuccess: (data) => {

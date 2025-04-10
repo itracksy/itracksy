@@ -11,6 +11,7 @@ import {
   updateItem,
   deleteItem,
   updateBoard,
+  createDefaultKanbanColumns,
 } from "../services/board";
 import { boards, columns, items } from "../db/schema";
 import { createInsertSchema } from "drizzle-zod";
@@ -29,9 +30,20 @@ export const boardRouter = t.router({
   }),
 
   create: protectedProcedure
-    .input(boardInsertSchema.omit({ id: true, userId: true }))
+    .input(
+      boardInsertSchema.omit({ id: true, userId: true }).extend({
+        createDefaultColumns: z.boolean().default(false),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
-      return createBoard(input, ctx.userId);
+      const { createDefaultColumns, ...boardData } = input;
+      const newBoard = await createBoard(boardData, ctx.userId);
+
+      if (createDefaultColumns) {
+        await createDefaultKanbanColumns(newBoard.id);
+      }
+
+      return newBoard;
     }),
 
   update: protectedProcedure

@@ -20,6 +20,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import {
   Select,
@@ -28,12 +29,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
   color: z.string(),
   hourlyRate: z.number().optional(),
   currency: z.string().optional(),
+  createDefaultColumns: z.boolean().default(true),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -60,12 +63,14 @@ export function BoardDialog({ open, onOpenChange, onSubmit, initialData, mode }:
           color: initialData.color ?? "#e0e0e0",
           hourlyRate: initialData.hourlyRate ?? undefined,
           currency: initialData.currency ?? "USD",
+          createDefaultColumns: false, // Don't create columns when editing
         }
       : {
           name: "",
           color: "#e0e0e0",
           hourlyRate: undefined,
           currency: "USD",
+          createDefaultColumns: true, // Default to true for new boards
         },
   });
 
@@ -76,6 +81,7 @@ export function BoardDialog({ open, onOpenChange, onSubmit, initialData, mode }:
         color: initialData.color || "#e0e0e0",
         hourlyRate: initialData.hourlyRate || undefined,
         currency: initialData.currency || "USD",
+        createDefaultColumns: false, // Don't create columns when editing
       });
     } else if (!open) {
       form.reset();
@@ -167,6 +173,31 @@ export function BoardDialog({ open, onOpenChange, onSubmit, initialData, mode }:
                 </FormItem>
               )}
             />
+
+            {mode === "create" && (
+              <FormField
+                control={form.control}
+                name="createDefaultColumns"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border border-tracksy-gold/20 p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        className="data-[state=checked]:border-tracksy-gold data-[state=checked]:bg-tracksy-gold"
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="text-tracksy-blue">Create default columns</FormLabel>
+                      <FormDescription>
+                        Automatically create "ToDo", "In Progress", and "Done" columns for this
+                        board
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            )}
 
             <DialogFooter>
               <Button

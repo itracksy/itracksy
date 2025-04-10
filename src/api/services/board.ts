@@ -48,6 +48,33 @@ export async function createBoard(
   return newBoard[0];
 }
 
+/**
+ * Creates default KanBan columns (ToDo, In Progress, Done) for a board
+ * @param boardId - The ID of the board to create columns for
+ * @returns - An array of the created columns
+ */
+export async function createDefaultKanbanColumns(boardId: string): Promise<Column[]> {
+  const columnsToCreate = [
+    { name: "ToDo", order: 0 },
+    { name: "In Progress", order: 1 },
+    { name: "Done", order: 2 },
+  ];
+
+  const createdColumns: Column[] = [];
+
+  for (const column of columnsToCreate) {
+    const newColumn = await createColumn({
+      name: column.name,
+      boardId,
+      order: column.order,
+    });
+
+    createdColumns.push(newColumn);
+  }
+
+  return createdColumns;
+}
+
 export async function updateBoard(
   id: string,
   board: Partial<BoardInsert>,
