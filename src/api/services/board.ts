@@ -86,6 +86,15 @@ export async function updateBoard(
     .where(and(eq(boards.id, id), eq(boards.userId, userId)));
 }
 
+export async function archiveBoard(id: string, userId: string, archive: boolean): Promise<void> {
+  await db
+    .update(boards)
+    .set({
+      deletedAt: archive ? Date.now() : null,
+    })
+    .where(and(eq(boards.id, id), eq(boards.userId, userId)));
+}
+
 export async function createColumn(column: Omit<ColumnInsert, "id">): Promise<Column> {
   const newColumn = await db
     .insert(columns)

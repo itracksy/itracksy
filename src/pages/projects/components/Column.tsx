@@ -18,6 +18,7 @@ import { PlusIcon, TrashIcon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Item } from "@/types/projects";
+import { useToast } from "@/hooks/use-toast";
 
 interface ColumnProps {
   name: string;
@@ -35,7 +36,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
     const [acceptCardDrop, setAcceptCardDrop] = useState(false);
     const editState = useState(false);
     const { confirm } = useConfirmationDialog();
-
+    const { toast } = useToast();
     const [acceptColumnDrop, setAcceptColumnDrop] = useState<"none" | "left" | "right">("none");
 
     const [edit, setEdit] = useState(false);
@@ -73,11 +74,11 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
       try {
         await deleteColumnMutation.mutateAsync(columnId);
       } catch (error) {
-        // toast({
-        //   variant: "destructive",
-        //   title: "Error",
-        //   description: error instanceof Error ? error.message : "Failed to delete column",
-        // });
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error instanceof Error ? error.message : "Failed to delete column",
+        });
       }
     };
 

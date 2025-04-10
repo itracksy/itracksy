@@ -68,6 +68,7 @@ export function useUpdateColumnMutation() {
   return useMutation({
     mutationFn: trpcClient.board.updateColumn.mutate,
     onSettled: (data, error, { id, ...column }) => {
+      console.log("column", column.boardId);
       queryClient.invalidateQueries({ queryKey: ["board", column.boardId] });
     },
   });
@@ -79,6 +80,18 @@ export function useUpdateBoardMutation() {
   return useMutation({
     mutationFn: trpcClient.board.update.mutate,
     onSettled: (data, error, { id, ...board }) => {
+      queryClient.invalidateQueries({ queryKey: ["board", id] });
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
+    },
+  });
+}
+
+export function useArchiveBoardMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: trpcClient.board.archive.mutate,
+    onSettled: (data, error, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["board", id] });
       queryClient.invalidateQueries({ queryKey: ["boards"] });
     },

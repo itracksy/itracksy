@@ -57,6 +57,13 @@
       "when": 1744258403951,
       "tag": "0007_breezy_screwball",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1744267522328,
+      "tag": "0008_kind_darkstar",
+      "breakpoints": true
     }
   ]
 }

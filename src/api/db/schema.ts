@@ -15,6 +15,7 @@ export const boards = sqliteTable("boards", {
   name: text("name").notNull(),
   color: text("color"),
   createdAt: integer("created_at"),
+  deletedAt: integer("deleted_at"), // Field to track when a board was archived
   currency: text("currency"),
   hourlyRate: real("hourly_rate"),
   userId: text("user_id").notNull(),

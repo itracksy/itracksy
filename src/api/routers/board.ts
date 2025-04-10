@@ -12,6 +12,7 @@ import {
   deleteItem,
   updateBoard,
   createDefaultKanbanColumns,
+  archiveBoard,
 } from "../services/board";
 import { boards, columns, items } from "../db/schema";
 import { createInsertSchema } from "drizzle-zod";
@@ -81,4 +82,15 @@ export const boardRouter = t.router({
   deleteItem: protectedProcedure.input(z.string()).mutation(async ({ input }) => {
     return deleteItem(input);
   }),
+
+  archive: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        archive: z.boolean(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      return archiveBoard(input.id, ctx.userId, input.archive);
+    }),
 });

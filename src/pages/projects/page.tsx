@@ -15,7 +15,7 @@ import {
   SelectValue,
   SelectSeparator,
 } from "@/components/ui/select";
-import { LayoutGrid, List, PlusCircle, Settings } from "lucide-react";
+import { Archive, LayoutGrid, List, MoreVertical, PlusCircle, Settings } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.js";
 import {
   Table,
@@ -25,11 +25,20 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useAtom } from "jotai";
 import { selectedBoardIdAtom } from "@/context/board";
 import { trpcClient } from "@/utils/trpc.js";
-import { useUpdateBoardMutation } from "@/hooks/useBoardQueries";
+import { useUpdateBoardMutation, useArchiveBoardMutation } from "@/hooks/useBoardQueries";
 import { BoardDialog } from "./components/BoardDialog";
+import { ArchivedBoardsDialog } from "./components/ArchivedBoardsDialog";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -44,6 +53,7 @@ export function ProjectsPage() {
   const [viewMode, setViewMode] = useState<"board" | "list">("board");
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [archivedBoardsDialogOpen, setArchivedBoardsDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: board, isLoading: boardLoading } = useQuery({
@@ -62,6 +72,12 @@ export function ProjectsPage() {
     },
   });
 
+  // Filter boards to show only active (non-archived) boards
+  const activeBoards = boards?.filter((board) => board.deletedAt === null);
+
+  // Get all archived boards for the dialog
+  const archivedBoards = boards?.filter((board) => board.deletedAt !== null) || [];
+
   const createBoardMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
       const { createDefaultColumns, ...boardData } = values;
@@ -79,6 +95,7 @@ export function ProjectsPage() {
   });
 
   const updateBoardMutation = useUpdateBoardMutation();
+  const archiveBoardMutation = useArchiveBoardMutation();
 
   const updateItemMutation = useMutation({
     mutationFn: async ({ itemId, columnId }: { itemId: string; columnId: string }) => {
@@ -108,11 +125,23 @@ export function ProjectsPage() {
     }
   };
 
+  const handleArchiveBoard = (archive: boolean) => {
+    if (!selectedBoardId) return;
+
+    archiveBoardMutation.mutate({
+      id: selectedBoardId,
+      archive,
+    });
+  };
+
   useEffect(() => {
-    if (boards && boards.length > 0 && !selectedBoardId) {
-      setSelectedBoardId(boards[0].id);
+    if (activeBoards && activeBoards.length > 0 && !selectedBoardId) {
+      setSelectedBoardId(activeBoards[0].id);
+    } else if (activeBoards && activeBoards.length === 0 && selectedBoardId) {
+      // If there are no active boards but a board is selected
+      setSelectedBoardId("");
     }
-  }, [boards, selectedBoardId]);
+  }, [activeBoards, selectedBoardId, setSelectedBoardId]);
 
   if (boardLoading || boardsLoading) return <Loader />;
 
@@ -134,7 +163,7 @@ export function ProjectsPage() {
               <SelectValue placeholder="Select a board" />
             </SelectTrigger>
             <SelectContent className="border-tracksy-gold/30 bg-white dark:border-tracksy-gold/20 dark:bg-gray-900">
-              {boards?.map((board) => (
+              {activeBoards?.map((board) => (
                 <SelectItem
                   key={board.id}
                   value={board.id}
@@ -151,6 +180,7 @@ export function ProjectsPage() {
               </SelectItem>
             </SelectContent>
           </Select>
+
           {board && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -170,26 +200,65 @@ export function ProjectsPage() {
             </Tooltip>
           )}
         </div>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setViewMode(viewMode === "board" ? "list" : "board")}
-              aria-label={viewMode === "board" ? "Switch to list view" : "Switch to board view"}
-              className="border-tracksy-gold/30 bg-white text-tracksy-blue hover:border-tracksy-gold/50 hover:bg-tracksy-gold/10"
+        <div className="flex items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setViewMode(viewMode === "board" ? "list" : "board")}
+                aria-label={viewMode === "board" ? "Switch to list view" : "Switch to board view"}
+                className="border-tracksy-gold/30 bg-white text-tracksy-blue hover:border-tracksy-gold/50 hover:bg-tracksy-gold/10"
+              >
+                {viewMode === "board" ? (
+                  <List className="h-4 w-4" />
+                ) : (
+                  <LayoutGrid className="h-4 w-4" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{viewMode === "board" ? "Switch to list view" : "Switch to board view"}</p>
+            </TooltipContent>
+          </Tooltip>
+
+          {/* Three-dot menu dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="border-tracksy-gold/30 bg-white text-tracksy-blue hover:border-tracksy-gold/50 hover:bg-tracksy-gold/10"
+              >
+                <MoreVertical className="h-4 w-4" />
+                <span className="sr-only">More options</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="border-tracksy-gold/20 dark:border-tracksy-gold/10 dark:bg-gray-900"
             >
-              {viewMode === "board" ? (
-                <List className="h-4 w-4" />
-              ) : (
-                <LayoutGrid className="h-4 w-4" />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{viewMode === "board" ? "Switch to list view" : "Switch to board view"}</p>
-          </TooltipContent>
-        </Tooltip>
+              <DropdownMenuLabel className="text-tracksy-blue dark:text-tracksy-gold">
+                Options
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-tracksy-gold/20 dark:bg-tracksy-gold/10" />
+              <DropdownMenuItem
+                onClick={() => setArchivedBoardsDialogOpen(true)}
+                className="flex cursor-pointer items-center text-tracksy-blue hover:bg-tracksy-gold/5 dark:text-white dark:hover:bg-tracksy-gold/10"
+              >
+                <Archive className="mr-2 h-4 w-4" />
+                Show Archived Boards
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setOpen(true)}
+                className="flex cursor-pointer items-center text-tracksy-blue hover:bg-tracksy-gold/5 dark:text-white dark:hover:bg-tracksy-gold/10"
+              >
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Create New Board
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {board && viewMode === "board" && <BoardView board={board} />}
@@ -262,6 +331,7 @@ export function ProjectsPage() {
         onOpenChange={setEditOpen}
         onSubmit={handleSubmit}
         mode="edit"
+        onArchive={handleArchiveBoard}
         initialData={
           board
             ? {
@@ -269,9 +339,17 @@ export function ProjectsPage() {
                 color: board.color,
                 hourlyRate: board.hourlyRate,
                 currency: board.currency,
+                deletedAt: board.deletedAt,
               }
             : undefined
         }
+      />
+
+      {/* Archived Boards Dialog */}
+      <ArchivedBoardsDialog
+        open={archivedBoardsDialogOpen}
+        onOpenChange={setArchivedBoardsDialogOpen}
+        archivedBoards={archivedBoards}
       />
     </div>
   );

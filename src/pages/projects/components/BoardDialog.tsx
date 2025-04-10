@@ -30,6 +30,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { Archive, ArchiveRestore } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -37,6 +39,7 @@ const formSchema = z.object({
   hourlyRate: z.number().optional(),
   currency: z.string().optional(),
   createDefaultColumns: z.boolean().default(true),
+  isArchived: z.boolean().default(false),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -45,16 +48,27 @@ interface BoardDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: FormValues) => void;
+  onArchive?: (archive: boolean) => void;
   initialData?: {
     name: string;
     color: string | null;
     hourlyRate: number | null;
     currency: string | null;
+    deletedAt: number | null;
   };
   mode: "create" | "edit";
 }
 
-export function BoardDialog({ open, onOpenChange, onSubmit, initialData, mode }: BoardDialogProps) {
+export function BoardDialog({
+  open,
+  onOpenChange,
+  onSubmit,
+  onArchive,
+  initialData,
+  mode,
+}: BoardDialogProps) {
+  const isArchived = initialData?.deletedAt !== null && initialData?.deletedAt !== undefined;
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData
@@ -64,6 +78,7 @@ export function BoardDialog({ open, onOpenChange, onSubmit, initialData, mode }:
           hourlyRate: initialData.hourlyRate ?? undefined,
           currency: initialData.currency ?? "USD",
           createDefaultColumns: false, // Don't create columns when editing
+          isArchived: isArchived,
         }
       : {
           name: "",
@@ -71,6 +86,7 @@ export function BoardDialog({ open, onOpenChange, onSubmit, initialData, mode }:
           hourlyRate: undefined,
           currency: "USD",
           createDefaultColumns: true, // Default to true for new boards
+          isArchived: false,
         },
   });
 
@@ -82,15 +98,23 @@ export function BoardDialog({ open, onOpenChange, onSubmit, initialData, mode }:
         hourlyRate: initialData.hourlyRate || undefined,
         currency: initialData.currency || "USD",
         createDefaultColumns: false, // Don't create columns when editing
+        isArchived: isArchived,
       });
     } else if (!open) {
       form.reset();
     }
-  }, [form, initialData, open]);
+  }, [form, initialData, open, isArchived]);
 
   const handleSubmit = (values: FormValues) => {
     onSubmit(values);
     form.reset();
+  };
+
+  const handleArchiveToggle = () => {
+    if (onArchive) {
+      onArchive(!isArchived);
+      onOpenChange(false);
+    }
   };
 
   return (
@@ -206,6 +230,26 @@ export function BoardDialog({ open, onOpenChange, onSubmit, initialData, mode }:
             )}
 
             <DialogFooter>
+              {mode === "edit" && onArchive && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleArchiveToggle}
+                  className={`mr-auto ${isArchived ? "text-green-600 hover:text-green-700" : "text-red-600 hover:text-red-700"} border-tracksy-gold/30 hover:bg-tracksy-gold/10 dark:border-tracksy-gold/20 dark:hover:bg-tracksy-gold/20`}
+                >
+                  {isArchived ? (
+                    <>
+                      <ArchiveRestore className="mr-1 h-4 w-4" />
+                      Restore Board
+                    </>
+                  ) : (
+                    <>
+                      <Archive className="mr-1 h-4 w-4" />
+                      Archive Board
+                    </>
+                  )}
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="outline"
