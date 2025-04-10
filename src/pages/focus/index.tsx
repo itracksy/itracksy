@@ -133,21 +133,21 @@ export default function FocusPage() {
                     </TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="focus" className="space-y-4 pt-4">
-                    {/* Timer Display */}
-                    <div className="relative mx-auto aspect-square w-48">
-                      <div className="absolute inset-0 rounded-full border-[16px] border-gray-100"></div>
-                      <div className="absolute inset-0 rounded-full border-[16px] border-[#E5A853]"></div>
+                  <TabsContent value="focus" className="space-y-3 pt-2">
+                    {/* Timer Display - Reduced size */}
+                    <div className="relative mx-auto aspect-square w-36">
+                      <div className="absolute inset-0 rounded-full border-[12px] border-gray-100"></div>
+                      <div className="absolute inset-0 rounded-full border-[12px] border-[#E5A853]"></div>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="font-mono text-4xl font-medium text-gray-700 dark:text-white">
+                        <span className="font-mono text-3xl font-medium text-gray-700 dark:text-white">
                           {duration}
                         </span>
                       </div>
                     </div>
 
-                    {/* Duration Slider */}
-                    <Card>
-                      <CardContent className="pt-6">
+                    {/* Duration Slider - More compact */}
+                    <Card className="shadow-sm">
+                      <CardContent className="px-4 py-3">
                         <div className="flex items-center justify-between">
                           <Label className="text-sm font-medium">Focus Duration</Label>
                           <span className="font-mono text-sm text-gray-500">
@@ -160,7 +160,7 @@ export default function FocusPage() {
                           min={5}
                           max={60}
                           step={1}
-                          className="py-4"
+                          className="py-2"
                         />
                         <div className="flex justify-between text-xs text-gray-500">
                           <span>5m</span>
@@ -169,26 +169,26 @@ export default function FocusPage() {
                       </CardContent>
                     </Card>
 
-                    {/* Task Selection */}
-                    <Card>
-                      <CardHeader className="pb-2">
+                    {/* Task Selection - Simplified */}
+                    <Card className="shadow-sm">
+                      <CardHeader className="pb-1 pt-3">
                         <CardTitle className="text-sm font-medium">
                           What are you working on?
                         </CardTitle>
                       </CardHeader>
-                      <CardContent className="space-y-4">
+                      <CardContent className="space-y-2">
                         <BoardSelector
                           selectedItemId={selectedItemId}
                           onItemSelect={setSelectedItemId}
                         />
 
-                        <div className="flex items-center gap-2 py-1">
+                        <div className="flex items-center gap-2 py-0.5">
                           <Separator className="flex-1" />
                           <span className="text-xs text-gray-500">OR</span>
                           <Separator className="flex-1" />
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-1">
                           <Label className="text-xs text-gray-500">
                             Intention (for quick focus without task)
                           </Label>
@@ -196,7 +196,7 @@ export default function FocusPage() {
                             placeholder="What do you want to focus on?"
                             value={intention}
                             onChange={(e) => setIntention(e.target.value)}
-                            className="w-full"
+                            className="h-8 w-full text-sm"
                           />
                         </div>
                       </CardContent>
