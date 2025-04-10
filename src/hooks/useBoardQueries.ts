@@ -67,8 +67,17 @@ export function useUpdateColumnMutation() {
 
   return useMutation({
     mutationFn: trpcClient.board.updateColumn.mutate,
+    onMutate: async ({ id, ...column }) => {
+      // For reordering columns, ensure we're using integer values
+      console.log("Updating column", id, column);
+      if (column.order !== undefined) {
+        column.order = Math.floor(column.order);
+      }
+      return { id, ...column };
+    },
     onSettled: (data, error, { id, ...column }) => {
-      console.log("column", column.boardId);
+      // Ensure we invalidate the board query so the UI reflects the column order change
+      console.log("Invalidating board query for column update", column);
       queryClient.invalidateQueries({ queryKey: ["board", column.boardId] });
     },
   });

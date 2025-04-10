@@ -139,13 +139,48 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
           invariant(transfer.id, "missing transfer.id");
 
           const droppedOrder = acceptColumnDrop === "left" ? previousOrder : nextOrder;
-          const moveOrder = (droppedOrder + order) / 2;
+          // Calculate new order and ensure it's an integer
+          const moveOrder = Math.floor((droppedOrder + order) / 2);
+          console.log(
+            "Moving column",
+            transfer.id,
+            "to order",
+            moveOrder,
+            "droppedOrder",
+            droppedOrder,
+            "order",
+            order
+          );
 
+          // Update the dragged column's order
           updateColumnMutation.mutate({
             boardId,
             id: transfer.id,
             order: moveOrder,
           });
+
+          // Update other columns if necessary to maintain proper order
+          // If a column is dropped between two existing columns, we may need to adjust orders
+          // to avoid collisions and ensure proper spacing
+          if (moveOrder === order) {
+            // Handle exact order collision - shift the target column
+            updateColumnMutation.mutate({
+              boardId,
+              id: columnId,
+              order: order + 1,
+            });
+          } else if (moveOrder > previousOrder && moveOrder < order) {
+            // Column dropped to the left of current column
+            // Current column might need to be shifted right
+            updateColumnMutation.mutate({
+              boardId,
+              id: columnId,
+              order: order + 1,
+            });
+          } else if (moveOrder > order && moveOrder < nextOrder) {
+            // Column dropped to the right of current column
+            // No need to update current column
+          }
 
           setAcceptColumnDrop("none");
         }}
