@@ -5,6 +5,7 @@ import posthog from "posthog-js";
 
 import "./localization/i18n";
 import { updateAppLanguage } from "./helpers/language_helpers";
+import { syncThemeWithLocal } from "./helpers/theme_helpers";
 import { router } from "./routes/router";
 import { RouterProvider } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -61,6 +62,9 @@ posthog.register({
 })();
 
 const queryClient = new QueryClient({});
+
+// Initialize theme based on saved preference
+syncThemeWithLocal().catch(console.error);
 
 function AuthenticatedApp() {
   const { i18n } = useTranslation();
