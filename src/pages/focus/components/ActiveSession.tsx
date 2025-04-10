@@ -131,9 +131,9 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
     <>
       {/* Active Session Display */}
       <div className="text-center">
-        <h2 className="mb-4 text-xl font-medium text-[#2B4474]">Current Session</h2>
-        <div className="rounded-lg border border-[#E5A853]/20 bg-white p-4 shadow-sm">
-          <div className="flex items-center justify-center gap-2 text-[#2B4474]">
+        <h2 className="mb-4 text-xl font-medium text-[#2B4474] dark:text-white">Current Session</h2>
+        <div className="rounded-lg border border-[#E5A853]/20 bg-white p-4 shadow-sm dark:bg-gray-800">
+          <div className="flex items-center justify-center gap-2 text-[#2B4474] dark:text-white">
             <span className="h-2 w-2 rounded-full bg-[#E5A853]"></span>
             {getTitleTimeEntry(activeTimeEntry)}
           </div>
@@ -150,7 +150,9 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
           }}
         ></div>
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-          <span className="font-mono text-4xl font-medium text-[#2B4474]">{duration}</span>
+          <span className="font-mono text-4xl font-medium text-[#2B4474] dark:text-white">
+            {duration}
+          </span>
           {isTimeExceeded && (
             <div className="flex flex-col items-center space-y-1">
               <AlertTriangle className="h-5 w-5 animate-bounce text-[#E5A853]" />

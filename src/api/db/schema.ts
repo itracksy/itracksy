@@ -39,7 +39,7 @@ export const items = sqliteTable("items", {
     .references(() => boards.id),
   columnId: text("column_id")
     .notNull()
-    .references(() => columns.id),
+    .references(() => columns.id, { onDelete: "cascade" }),
   order: integer("order").notNull(),
   createdAt: integer("created_at"),
 });
@@ -54,7 +54,7 @@ export const timeEntries = sqliteTable("time_entries", {
   isFocusMode: integer("is_focus_mode", { mode: "boolean" }), // we have focus / break mode
   autoStopEnabled: integer("auto_stop_enabled", { mode: "boolean" }).default(true),
   boardId: text("board_id").references(() => boards.id),
-  itemId: text("item_id").references(() => items.id),
+  itemId: text("item_id").references(() => items.id, { onDelete: "cascade" }),
   userId: text("user_id").notNull(),
   invoiceId: text("invoice_id"),
   createdAt: integer("created_at"),

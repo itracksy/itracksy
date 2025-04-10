@@ -139,7 +139,7 @@ export default function FocusPage() {
                       <div className="absolute inset-0 rounded-full border-[16px] border-gray-100"></div>
                       <div className="absolute inset-0 rounded-full border-[16px] border-[#E5A853]"></div>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="font-mono text-4xl font-medium text-gray-700">
+                        <span className="font-mono text-4xl font-medium text-gray-700 dark:text-white">
                           {duration}
                         </span>
                       </div>
@@ -209,7 +209,7 @@ export default function FocusPage() {
                       <div className="absolute inset-0 rounded-full border-[16px] border-gray-100"></div>
                       <div className="absolute inset-0 rounded-full border-[16px] border-[#2B4474]"></div>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="font-mono text-4xl font-medium text-gray-700">
+                        <span className="font-mono text-4xl font-medium text-gray-700 dark:text-white">
                           {duration}
                         </span>
                       </div>

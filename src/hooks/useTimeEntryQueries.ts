@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { TimeEntry, TimeEntryInsert } from "@/types/projects";
 
 import { trpcClient } from "@/utils/trpc";
+import { useToast } from "./use-toast";
 
 export function useActiveTimeEntry() {
   return useQuery({
@@ -48,13 +48,24 @@ export function useUpdateTimeEntryMutation() {
 
 export function useDeleteTimeEntryMutation() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: trpcClient.timeEntry.delete.mutate,
-
-    onSettled: (data, error, itemId) => {
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Time entry deleted successfully",
+      });
       queryClient.invalidateQueries({
-        queryKey: ["timeEntries", "item", itemId],
+        queryKey: ["timeEntries"],
       });
     },
   });
