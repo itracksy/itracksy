@@ -147,7 +147,13 @@ function createWindow(): void {
       nodeIntegrationInSubFrames: false,
       preload: preload,
     },
-    titleBarStyle: "hidden",
+    // Apply different title bar styles based on the OS
+    ...(process.platform === "darwin"
+      ? { titleBarStyle: "hidden" }
+      : {
+          frame: false, // Use frameless window on Windows
+          titleBarStyle: "default", // Default title bar style for Windows
+        }),
   });
 
   createIPCHandler({
