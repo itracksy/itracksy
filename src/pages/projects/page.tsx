@@ -195,13 +195,19 @@ export function ProjectsPage() {
       {board && viewMode === "board" && <BoardView board={board} />}
       {board && viewMode === "list" && (
         <div className="p-6">
-          <div className="rounded-lg border border-tracksy-gold/20 bg-white shadow-lg">
+          <div className="rounded-lg border border-tracksy-gold/20 bg-white shadow-lg dark:border-tracksy-gold/10 dark:bg-gray-900">
             <Table>
               <TableHeader>
-                <TableRow className="border-b border-tracksy-gold/20 hover:bg-tracksy-gold/5">
-                  <TableHead className="text-tracksy-blue">Title</TableHead>
-                  <TableHead className="text-tracksy-blue">Status</TableHead>
-                  <TableHead className="text-tracksy-blue">Description</TableHead>
+                <TableRow className="border-b border-tracksy-gold/20 hover:bg-tracksy-gold/5 dark:border-tracksy-gold/10 dark:hover:bg-tracksy-gold/10">
+                  <TableHead className="text-tracksy-blue dark:text-tracksy-gold/90">
+                    Title
+                  </TableHead>
+                  <TableHead className="text-tracksy-blue dark:text-tracksy-gold/90">
+                    Status
+                  </TableHead>
+                  <TableHead className="text-tracksy-blue dark:text-tracksy-gold/90">
+                    Description
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -209,17 +215,22 @@ export function ProjectsPage() {
                   const column = board.columns.find((col) => col.id === item.columnId);
 
                   return (
-                    <TableRow key={item.id} className="hover:bg-tracksy-gold/5">
-                      <TableCell className="font-medium text-tracksy-blue">{item.title}</TableCell>
+                    <TableRow
+                      key={item.id}
+                      className="hover:bg-tracksy-gold/5 dark:border-tracksy-gold/10 dark:hover:bg-tracksy-gold/10"
+                    >
+                      <TableCell className="font-medium text-tracksy-blue dark:text-white">
+                        {item.title}
+                      </TableCell>
                       <TableCell>
                         <Select
                           value={item.columnId}
                           onValueChange={(columnId) => handleStatusChange(item.id, columnId)}
                         >
-                          <SelectTrigger className="w-full border-tracksy-gold/30 bg-white text-tracksy-blue hover:border-tracksy-gold/50 dark:border-tracksy-gold/20 dark:bg-gray-900">
+                          <SelectTrigger className="w-full border-tracksy-gold/30 bg-white text-tracksy-blue hover:border-tracksy-gold/50 dark:border-tracksy-gold/20 dark:bg-gray-800 dark:text-white dark:hover:border-tracksy-gold/40">
                             <SelectValue placeholder={column?.name || "No Status"} />
                           </SelectTrigger>
-                          <SelectContent className="border-tracksy-gold/30 bg-white dark:border-tracksy-gold/20 dark:bg-gray-900">
+                          <SelectContent className="border-tracksy-gold/30 bg-white dark:border-tracksy-gold/20 dark:bg-gray-800">
                             {board.columns.map((col) => (
                               <SelectItem
                                 key={col.id}
@@ -232,7 +243,7 @@ export function ProjectsPage() {
                           </SelectContent>
                         </Select>
                       </TableCell>
-                      <TableCell className="max-w-md truncate text-muted-foreground">
+                      <TableCell className="max-w-md truncate text-muted-foreground dark:text-gray-300">
                         {item.content || "No description"}
                       </TableCell>
                     </TableRow>
