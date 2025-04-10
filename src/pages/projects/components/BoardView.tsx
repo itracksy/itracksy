@@ -8,15 +8,6 @@ import { BoardWithRelations, Column, Item } from "@/types/projects";
 export function BoardView({ board }: { board: BoardWithRelations }) {
   const newColumnAddedRef = useRef(false);
 
-  // scroll right when new columns are added
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const columnRef = useCallback((_node: HTMLElement | null) => {
-    if (scrollContainerRef.current && newColumnAddedRef.current) {
-      newColumnAddedRef.current = false;
-      scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth;
-    }
-  }, []);
-
   const itemsById = useMemo(
     () => new Map(board.items?.map((item) => [item.id, item]) || []),
     [board.items]
@@ -42,10 +33,22 @@ export function BoardView({ board }: { board: BoardWithRelations }) {
     return [...columnsMap.values()].sort((a, b) => a.order - b.order);
   }, [board.columns, itemsById]);
 
+  // Calculate container width based on number of columns
+  const containerWidth = useMemo(() => {
+    const columnCount = columns.length + 1; // Add 1 for the NewColumn component
+    if (columnCount <= 3) {
+      return "w-fit"; // Default width for 3 or fewer columns
+    }
+    // Calculate width for more than 3 columns (approx 320px per column with gap)
+    return `w-[${columnCount * 320}px]`;
+  }, [columns.length]);
+
   return (
     <div className="flex h-full flex-col">
-      <div className="flex min-h-0 flex-grow flex-col" ref={scrollContainerRef}>
-        <div className="flex h-full min-h-0 w-fit flex-grow items-start gap-4 overflow-x-auto p-6">
+      <div className="flex min-h-0 flex-grow flex-col">
+        <div
+          className={`flex h-full min-h-0 ${containerWidth} flex-grow items-start gap-4 overflow-x-auto p-6`}
+        >
           {columns.map((col, index) => (
             <ColumnComponent
               key={col.id}
