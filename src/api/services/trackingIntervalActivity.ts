@@ -154,22 +154,6 @@ export const startTracking = async (): Promise<void> => {
           error.stdout.includes("permission")
       );
 
-      if (isAccessibilityError) {
-        const { response } = await dialog.showMessageBox({
-          type: "error",
-          title: "Permission Required",
-          message: "Accessibility Permission Required",
-          detail:
-            "iTracksy requires accessibility permission to track window activity.\n\nPlease enable it in System Settings › Privacy & Security › Accessibility.",
-          buttons: ["Open Settings", "Cancel"],
-        });
-        if (response === 0) {
-          // Open System Preferences to the Security & Privacy pane
-          require("child_process").exec(
-            "open x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
-          );
-        }
-      }
       logger.error("[startTracking] Error occurred while tracking", { error });
       throw error;
     }

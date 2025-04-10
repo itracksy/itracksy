@@ -95,9 +95,9 @@ export function BoardDialog({ open, onOpenChange, onSubmit, initialData, mode }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-tracksy-gold/20 bg-white sm:max-w-[425px]">
+      <DialogContent className="border-tracksy-gold/20 bg-background dark:border-tracksy-gold/10 dark:bg-card">
         <DialogHeader>
-          <DialogTitle className="text-tracksy-blue">
+          <DialogTitle className="text-tracksy-blue dark:text-tracksy-gold">
             {mode === "create" ? "Create New Board" : "Edit Board Settings"}
           </DialogTitle>
           <DialogDescription className="text-muted-foreground">
@@ -113,15 +113,15 @@ export function BoardDialog({ open, onOpenChange, onSubmit, initialData, mode }:
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-tracksy-blue">Name</FormLabel>
+                  <FormLabel className="text-tracksy-blue dark:text-tracksy-gold">Name</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Enter board name"
-                      className="border-tracksy-gold/30 focus:border-tracksy-gold focus:ring-tracksy-gold/20"
+                      className="border-tracksy-gold/30 focus:border-tracksy-gold focus:ring-tracksy-gold/20 dark:border-tracksy-gold/20 dark:bg-card dark:text-foreground dark:focus:border-tracksy-gold/40 dark:focus:ring-tracksy-gold/30"
                       {...field}
                     />
                   </FormControl>
-                  <FormMessage className="text-red-500" />
+                  <FormMessage className="text-red-500 dark:text-red-400" />
                 </FormItem>
               )}
             />
@@ -131,19 +131,21 @@ export function BoardDialog({ open, onOpenChange, onSubmit, initialData, mode }:
               name="hourlyRate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-tracksy-blue">Hourly Rate</FormLabel>
+                  <FormLabel className="text-tracksy-blue dark:text-tracksy-gold">
+                    Hourly Rate
+                  </FormLabel>
                   <FormControl>
                     <Input
                       type="number"
                       placeholder="Optional hourly rate"
-                      className="border-tracksy-gold/30 focus:border-tracksy-gold focus:ring-tracksy-gold/20"
+                      className="border-tracksy-gold/30 focus:border-tracksy-gold focus:ring-tracksy-gold/20 dark:border-tracksy-gold/20 dark:bg-card dark:text-foreground dark:focus:border-tracksy-gold/40 dark:focus:ring-tracksy-gold/30"
                       {...field}
                       onChange={(e) =>
                         field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
                       }
                     />
                   </FormControl>
-                  <FormMessage className="text-red-500" />
+                  <FormMessage className="text-red-500 dark:text-red-400" />
                 </FormItem>
               )}
             />
@@ -153,14 +155,16 @@ export function BoardDialog({ open, onOpenChange, onSubmit, initialData, mode }:
               name="currency"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-tracksy-blue">Currency</FormLabel>
+                  <FormLabel className="text-tracksy-blue dark:text-tracksy-gold">
+                    Currency
+                  </FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger className="border-tracksy-gold/30 focus:border-tracksy-gold focus:ring-tracksy-gold/20">
+                      <SelectTrigger className="border-tracksy-gold/30 focus:border-tracksy-gold focus:ring-tracksy-gold/20 dark:border-tracksy-gold/20 dark:bg-card dark:text-foreground dark:focus:border-tracksy-gold/40 dark:focus:ring-tracksy-gold/30">
                         <SelectValue placeholder="Select currency" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="dark:bg-card dark:text-foreground">
                       <SelectItem value="USD">USD</SelectItem>
                       <SelectItem value="EUR">EUR</SelectItem>
                       <SelectItem value="GBP">GBP</SelectItem>
@@ -169,7 +173,7 @@ export function BoardDialog({ open, onOpenChange, onSubmit, initialData, mode }:
                       <SelectItem value="CAD">CAD</SelectItem>
                     </SelectContent>
                   </Select>
-                  <FormMessage className="text-red-500" />
+                  <FormMessage className="text-red-500 dark:text-red-400" />
                 </FormItem>
               )}
             />
@@ -179,17 +183,19 @@ export function BoardDialog({ open, onOpenChange, onSubmit, initialData, mode }:
                 control={form.control}
                 name="createDefaultColumns"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border border-tracksy-gold/20 p-4">
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border border-tracksy-gold/20 p-4 dark:border-tracksy-gold/10">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
                         onCheckedChange={field.onChange}
-                        className="data-[state=checked]:border-tracksy-gold data-[state=checked]:bg-tracksy-gold"
+                        className="data-[state=checked]:border-tracksy-gold data-[state=checked]:bg-tracksy-gold dark:border-tracksy-gold/40"
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel className="text-tracksy-blue">Create default columns</FormLabel>
-                      <FormDescription>
+                      <FormLabel className="text-tracksy-blue dark:text-tracksy-gold">
+                        Create default columns
+                      </FormLabel>
+                      <FormDescription className="dark:text-muted-foreground">
                         Automatically create "ToDo", "In Progress", and "Done" columns for this
                         board
                       </FormDescription>
@@ -204,11 +210,14 @@ export function BoardDialog({ open, onOpenChange, onSubmit, initialData, mode }:
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                className="border-tracksy-gold/30 hover:bg-tracksy-gold/10 hover:text-tracksy-blue"
+                className="border-tracksy-gold/30 hover:bg-tracksy-gold/10 hover:text-tracksy-blue dark:border-tracksy-gold/20 dark:hover:bg-tracksy-gold/20 dark:hover:text-tracksy-gold"
               >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-tracksy-gold text-white hover:bg-tracksy-gold/90">
+              <Button
+                type="submit"
+                className="bg-tracksy-gold text-white hover:bg-tracksy-gold/90 dark:bg-tracksy-gold/90 dark:hover:bg-tracksy-gold"
+              >
                 {mode === "create" ? "Create" : "Save Changes"}
               </Button>
             </DialogFooter>
