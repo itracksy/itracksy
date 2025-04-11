@@ -8,6 +8,7 @@ import {
   real,
   unique,
 } from "drizzle-orm/sqlite-core";
+import { title } from "process";
 
 // Tables
 export const boards = sqliteTable("boards", {
@@ -104,11 +105,14 @@ export const activityRules = sqliteTable(
     id: text("id").primaryKey(),
     name: text("name").notNull(),
     description: text("description"),
-    appName: text("app_name").default(""), // Optional app name
+    appName: text("app_name").notNull(), // Optional app name
     domain: text("domain").default(""), // Optional domain
-    ruleType: text("rule_type").notNull(), // 'duration', 'app_name', 'domain', etc.
-    condition: text("condition").notNull(), // '>', '<', '=', 'contains', etc.
-    value: text("value").notNull(), // The value to compare against
+
+    titleCondition: text("condition").default(""), // '>', '<', '=', 'contains', etc.
+    title: text("title").default(""), // The title of the activity
+
+    duration: integer("duration").default(0), // Duration in seconds
+    durationCondition: text("duration_condition"), // '>', '<', '=', 'contains', etc.
     rating: integer("rating").notNull(), // 0 = bad, 1 = good
     userId: text("user_id").notNull(),
     createdAt: integer("created_at").notNull(),
@@ -116,15 +120,16 @@ export const activityRules = sqliteTable(
   },
   (table) => [
     index("activity_rules_user_id_idx").on(table.userId),
-    index("activity_rules_rule_type_idx").on(table.ruleType),
+
     index("activity_rules_active_idx").on(table.active),
     index("activity_rules_rating_idx").on(table.rating),
     // Add a unique composite key to ensure no duplicate rules
     unique().on(
       table.userId,
-      table.ruleType,
-      table.condition,
-      table.value,
+      table.duration,
+      table.durationCondition,
+      table.titleCondition,
+      table.title,
       table.appName,
       table.domain
     ),

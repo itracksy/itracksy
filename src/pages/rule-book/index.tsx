@@ -160,13 +160,7 @@ export default function RuleBookPage() {
                     )}
                   </div>
                 </TableCell>
-                <TableCell>
-                  <Badge variant="outline">{rule.ruleType}</Badge>
-                </TableCell>
-                <TableCell>
-                  {rule.condition} "{rule.value.substring(0, 25)}
-                  {rule.value.length > 25 ? "..." : ""}"
-                </TableCell>
+
                 <TableCell>
                   <Badge
                     variant={rule.rating === 1 ? "default" : "destructive"}
