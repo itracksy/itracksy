@@ -6,7 +6,6 @@ import { Activity, ActivityRule } from "@/types/activity";
 import { extractDomain } from "../../utils/url";
 
 export type RuleCondition = ">" | "<" | "=" | ">=" | "<=" | "contains" | "startsWith" | "endsWith";
-export type RuleType = "duration" | "app_name" | "domain" | "title" | "url";
 
 export interface RatingResult {
   activityId: number;
@@ -59,33 +58,37 @@ export async function rateActivity(activityData: Activity): Promise<RatingResult
  */
 function evaluateRules(activity: Activity, rules: ActivityRule[]): ActivityRule[] {
   return rules.filter((rule) => {
-    switch (rule.ruleType) {
-      case "duration":
-        return evaluateDurationRule(activity.duration, rule.condition as RuleCondition, rule.value);
-
-      case "app_name":
-        return evaluateStringRule(activity.ownerName, rule.condition as RuleCondition, rule.value);
-
-      case "domain":
-        return activity.url
-          ? evaluateStringRule(
-              extractDomain(activity.url) ?? "",
-              rule.condition as RuleCondition,
-              rule.value
-            )
-          : false;
-
-      case "title":
-        return evaluateStringRule(activity.title, rule.condition as RuleCondition, rule.value);
-
-      case "url":
-        return activity.url
-          ? evaluateStringRule(activity.url, rule.condition as RuleCondition, rule.value)
-          : false;
-
-      default:
-        return false;
+    // Duration rules
+    if (rule.duration && rule.durationCondition) {
+      return evaluateDurationRule(
+        activity.duration,
+        rule.durationCondition as RuleCondition,
+        rule.duration.toString()
+      );
     }
+
+    // Title rules
+    if (rule.title && rule.titleCondition) {
+      return evaluateStringRule(activity.title, rule.titleCondition as RuleCondition, rule.title);
+    }
+
+    // App name rules
+    if (rule.appName && rule.appName.trim() !== "") {
+      // If no condition is specified, use equality
+      const condition = "=";
+      return evaluateStringRule(activity.ownerName, condition as RuleCondition, rule.appName);
+    }
+
+    // Domain rules
+    if (rule.domain && rule.domain.trim() !== "") {
+      if (!activity.url) return false;
+      const extractedDomain = extractDomain(activity.url) ?? "";
+      // If no condition is specified, use equality
+      const condition = "=";
+      return evaluateStringRule(extractedDomain, condition as RuleCondition, rule.domain);
+    }
+
+    return false;
   });
 }
 

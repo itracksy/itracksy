@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { trpcClient } from "@/utils/trpc";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Activity } from "@/types/activity";
+import { Activity, ActivityRule } from "@/types/activity";
 import {
   Table,
   TableBody,
@@ -25,7 +25,7 @@ import { useConfirmationDialog } from "@/components/providers/ConfirmationDialog
 
 export default function RuleBookPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingRule, setEditingRule] = useState<any | null>(null);
+  const [editingRule, setEditingRule] = useState<ActivityRule | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -74,7 +74,7 @@ export default function RuleBookPage() {
     }
   }
 
-  function handleEdit(rule: any) {
+  function handleEdit(rule: ActivityRule) {
     setEditingRule(rule);
     setIsDialogOpen(true);
   }
@@ -97,13 +97,15 @@ export default function RuleBookPage() {
     return {
       name: editingRule.name,
       description: editingRule.description || "",
-      ruleType: editingRule.ruleType,
-      condition: editingRule.condition,
-      value: editingRule.value,
+
       rating: editingRule.rating,
       active: editingRule.active,
       appName: editingRule.appName,
       domain: editingRule.domain,
+      titleCondition: editingRule.titleCondition as any,
+      title: editingRule.title || "",
+      duration: editingRule.duration || 0,
+      durationCondition: editingRule.durationCondition as any,
     };
   };
 
@@ -160,7 +162,25 @@ export default function RuleBookPage() {
                     )}
                   </div>
                 </TableCell>
-
+                <TableCell>
+                  <Badge variant="outline">
+                    {rule.appName}/{rule.domain}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {rule.title && rule.titleCondition ? (
+                    <span>
+                      Title {rule.titleCondition} "{rule.title.substring(0, 25)}
+                      {rule.title.length > 25 ? "..." : ""}"
+                    </span>
+                  ) : rule.duration && rule.durationCondition ? (
+                    <span>
+                      Duration {rule.durationCondition} {rule.duration}s
+                    </span>
+                  ) : (
+                    <span>-</span>
+                  )}
+                </TableCell>
                 <TableCell>
                   <Badge
                     variant={rule.rating === 1 ? "default" : "destructive"}

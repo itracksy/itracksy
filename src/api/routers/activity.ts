@@ -8,10 +8,8 @@ import {
   setActivityRating,
 } from "../services/activities";
 import {
-  createDefaultRules,
   createRule,
   deleteRule,
-  getGroupActivities,
   getUserRules,
   toggleRuleActive,
   updateRule,
@@ -129,12 +127,6 @@ export const activityRouter = t.router({
       const userId = ctx.userId;
       return toggleRuleActive(input.id, userId, input.active);
     }),
-
-  createDefaultRules: protectedProcedure.mutation(async ({ ctx }) => {
-    const userId = ctx.userId;
-    await createDefaultRules(userId);
-    return { success: true };
-  }),
 
   rateUnratedActivities: protectedProcedure.mutation(async ({ ctx }) => {
     const userId = ctx.userId;

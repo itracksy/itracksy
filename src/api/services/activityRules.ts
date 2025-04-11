@@ -2,28 +2,15 @@ import { eq, and, or } from "drizzle-orm";
 import db from "../db";
 import { activityRules } from "../db/schema";
 import { nanoid } from "nanoid";
-import { RuleCondition, RuleType } from "./activityRating";
+
 import { Activity, ActivityRule, GroupActivity } from "@/types/activity";
 
 import { extractDomain } from "../../utils/url";
 
-export interface CreateRuleParams {
-  name: string;
-  description?: string;
-  ruleType: RuleType;
-  condition: RuleCondition;
-  value: string;
-  rating: number; // 0 = bad, 1 = good
-  userId: string;
-  active?: boolean;
-  appName?: string;
-  domain?: string;
-}
-
 /**
  * Create a new activity rule
  */
-export async function createRule(params: CreateRuleParams) {
+export async function createRule(params: Omit<ActivityRule, "id" | "createdAt">) {
   const now = Date.now();
 
   const rule = await db
@@ -32,9 +19,12 @@ export async function createRule(params: CreateRuleParams) {
       id: nanoid(),
       name: params.name,
       description: params.description || null,
-      ruleType: params.ruleType,
-      condition: params.condition,
-      value: params.value,
+      appName: params.appName,
+      domain: params.domain || "",
+      title: params.title || "",
+      titleCondition: params.titleCondition || "",
+      duration: params.duration || 0,
+      durationCondition: params.durationCondition || null,
       rating: params.rating,
       userId: params.userId,
       createdAt: now,
@@ -61,7 +51,7 @@ export async function getUserRules(userId: string) {
 export async function updateRule(
   ruleId: string,
   userId: string,
-  updates: Partial<Omit<CreateRuleParams, "userId">>
+  updates: Partial<Omit<ActivityRule, "userId">>
 ) {
   const result = await db
     .update(activityRules)
@@ -91,36 +81,6 @@ export async function toggleRuleActive(ruleId: string, userId: string, active: b
     .where(and(eq(activityRules.id, ruleId), eq(activityRules.userId, userId)));
 }
 
-/**
- * Create default rules for new users
- */
-export async function createDefaultRules(userId: string) {
-  const defaultRules: CreateRuleParams[] = [
-    {
-      name: "Long activity",
-      description: "Activities lasting over 25 minutes are productive",
-      ruleType: "duration",
-      condition: ">",
-      value: "1500", // 25 * 60 seconds
-      rating: 1, // good
-      userId,
-    },
-    {
-      name: "Very short activity",
-      description: "Activities under 30 seconds are likely distractions",
-      ruleType: "duration",
-      condition: "<",
-      value: "30",
-      rating: 0, // bad
-      userId,
-    },
-  ];
-
-  for (const rule of defaultRules) {
-    await createRule(rule);
-  }
-}
-
 export async function getGroupActivities(activities: Activity[]) {
   const appGroups: Record<string, GroupActivity> = {};
 
@@ -132,9 +92,9 @@ export async function getGroupActivities(activities: Activity[]) {
       const rule = await db
         .select()
         .from(activityRules)
-        .where(and(eq(activityRules.ruleType, "app_name"), eq(activityRules.value, appName)))
+        .where(and(eq(activityRules.appName, appName)))
         .get();
-      console.log(appName, rule);
+
       appGroups[appName] = {
         appName,
         totalDuration: 0,
@@ -157,7 +117,7 @@ export async function getGroupActivities(activities: Activity[]) {
         const rule = await db
           .select()
           .from(activityRules)
-          .where(and(eq(activityRules.ruleType, "domain"), eq(activityRules.value, domain)))
+          .where(and(eq(activityRules.domain, domain)))
           .get();
 
         appGroups[appName].domains[domain] = {
@@ -186,8 +146,8 @@ export async function findMatchingDistractingRules(activity: Activity) {
         eq(rules.userId, activity.userId),
         eq(rules.active, true),
         activity.url
-          ? and(eq(rules.ruleType, "domain"), eq(rules.value, extractDomain(activity.url)))
-          : and(eq(rules.ruleType, "app_name"), eq(rules.value, activity.ownerName))
+          ? eq(rules.domain, extractDomain(activity.url) || "")
+          : eq(rules.appName, activity.ownerName)
       );
     },
   });

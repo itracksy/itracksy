@@ -106,7 +106,7 @@ export const activityRules = sqliteTable(
     name: text("name").notNull(),
     description: text("description"),
     appName: text("app_name").notNull(), // Optional app name
-    domain: text("domain").default(""), // Optional domain
+    domain: text("domain").default("").notNull(), // Optional domain
 
     titleCondition: text("condition").default(""), // '>', '<', '=', 'contains', etc.
     title: text("title").default(""), // The title of the activity

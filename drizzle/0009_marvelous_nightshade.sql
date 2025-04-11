@@ -15,8 +15,25 @@ CREATE TABLE `__new_activity_rules` (
 	`active` integer DEFAULT true NOT NULL
 );
 --> statement-breakpoint
-INSERT INTO `__new_activity_rules`("id", "name", "description", "condition", "rating", "user_id", "created_at", "active", "app_name", "domain")
-SELECT "id", "name", "description", "condition", "rating", "user_id", "created_at", "active", COALESCE("app_name", ''), "domain"
+INSERT INTO `__new_activity_rules`("id", "name", "description", "condition", "rating", "user_id", "created_at", "active", "app_name", "domain", "title", "duration", "duration_condition")
+SELECT
+  "id",
+  "name",
+  "description",
+  "condition",
+  "rating",
+  "user_id",
+  "created_at",
+  "active",
+  CASE
+    WHEN "rule_type" = 'app_name' THEN "value"
+    WHEN "app_name" IS NOT NULL AND "app_name" != '' THEN "app_name"
+    ELSE ''
+  END as "app_name",
+  "domain",
+  CASE WHEN "rule_type" = 'title' THEN "value" ELSE '' END as "title",
+  CASE WHEN "rule_type" = 'duration' THEN CAST("value" AS INTEGER) ELSE 0 END as "duration",
+  CASE WHEN "rule_type" = 'duration' THEN "condition" ELSE NULL END as "duration_condition"
 FROM `activity_rules`;--> statement-breakpoint
 DROP TABLE `activity_rules`;--> statement-breakpoint
 ALTER TABLE `__new_activity_rules` RENAME TO `activity_rules`;--> statement-breakpoint

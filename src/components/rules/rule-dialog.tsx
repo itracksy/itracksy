@@ -56,9 +56,7 @@ export function RuleDialog({
     defaultValues: defaultValues || {
       name: "",
       description: "",
-      ruleType: "app_name",
-      condition: "=",
-      value: "",
+
       rating: 0,
       active: true,
     },
@@ -118,25 +116,13 @@ export function RuleDialog({
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="ruleType"
+                name="appName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Rule Type</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a rule type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="app_name">Application</SelectItem>
-                        <SelectItem value="domain">Domain</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Application Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Chrome" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -144,10 +130,26 @@ export function RuleDialog({
 
               <FormField
                 control={form.control}
-                name="condition"
+                name="domain"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Condition</FormLabel>
+                    <FormLabel>Domain (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., facebook.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="titleCondition"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title Condition</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
@@ -159,52 +161,114 @@ export function RuleDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {form.watch("ruleType") === "duration" ? (
-                          <>
-                            <SelectItem value=">">Greater than</SelectItem>
-                            <SelectItem value="<">Less than</SelectItem>
-                            <SelectItem value="=">Equal to</SelectItem>
-                            <SelectItem value=">=">Greater than or equal</SelectItem>
-                            <SelectItem value="<=">Less than or equal</SelectItem>
-                          </>
-                        ) : (
-                          <>
-                            <SelectItem value="=">Equals</SelectItem>
-                            <SelectItem value="contains">Contains</SelectItem>
-                            <SelectItem value="startsWith">Starts with</SelectItem>
-                            <SelectItem value="endsWith">Ends with</SelectItem>
-                          </>
-                        )}
+                        <SelectItem value="contains">Contains</SelectItem>
+                        <SelectItem value="startsWith">Starts with</SelectItem>
+                        <SelectItem value="endsWith">Ends with</SelectItem>
+                        <SelectItem value="equals">Equals</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., News Feed" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
-            <FormField
-              control={form.control}
-              name="value"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Value</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder={
-                        form.watch("ruleType") === "duration"
-                          ? "Duration in seconds (e.g., 300 for 5 minutes)"
-                          : form.watch("ruleType") === "domain"
-                            ? "e.g., facebook.com"
-                            : "Value to match against"
-                      }
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="durationCondition"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Duration Condition</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select condition" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value=">">Greater than</SelectItem>
+                        <SelectItem value="<">Less than</SelectItem>
+                        <SelectItem value="=">Equal to</SelectItem>
+                        <SelectItem value=">=">Greater than or equal</SelectItem>
+                        <SelectItem value="<=">Less than or equal</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="duration"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Duration (Optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="Duration in seconds"
+                        {...field}
+                        onChange={(e) =>
+                          field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+              <FormField
+                control={form.control}
+                name="rating"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Productivity Rating</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(parseInt(value))}
+                      defaultValue={field.value.toString()}
+                      value={field.value.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select rating" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="1">Productive</SelectItem>
+                        <SelectItem value="0">Distracting</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      How to classify activities that match this rule
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
