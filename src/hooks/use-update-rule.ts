@@ -37,11 +37,18 @@ export function useUpdateRule(
       if (activities?.length && data) {
         // Find activities that match the updated rule and update their ratings
         const activitiesToRate = findActivitiesMatchingRule(activities, {
-          ruleType: data.ruleType,
-          condition: data.condition,
-          value: data.value,
+          appName: data.appName,
+          domain: data.domain,
+          titleCondition: data.titleCondition as any,
+          title: data.title || "",
+          durationCondition: data.durationCondition as any,
+
+          duration: data.duration || 0,
           rating: data.rating,
-        } as RuleFormValues);
+          name: data.name,
+          description: data.description || "",
+          active: data.active,
+        });
 
         activitiesToRate.forEach((activity) => {
           trpcClient.activity.setActivityRating.mutate({

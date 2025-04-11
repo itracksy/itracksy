@@ -86,21 +86,27 @@ export function SessionCard({
         createRuleMutation.mutate({
           name: `Rule for ${domainName}`,
           description: `Created from activity`,
-          ruleType: "domain",
-          condition: "equals",
-          value: domainName,
+          domain: domainName,
+          appName: appName,
           rating: isProductive ? 1 : 0,
           active: true,
+          duration: 0,
+          title: "",
+          titleCondition: "",
+          durationCondition: "",
         });
       } else {
         createRuleMutation.mutate({
           name: `Rule for ${appName}`,
           description: `Created from activity`,
-          ruleType: "app_name",
-          condition: "equals",
-          value: appName,
+          appName: appName,
           rating: isProductive ? 1 : 0,
           active: true,
+          duration: 0,
+          title: "",
+          titleCondition: "",
+          durationCondition: "",
+          domain: "",
         });
       }
     }

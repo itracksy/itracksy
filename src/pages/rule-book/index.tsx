@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { trpcClient } from "@/utils/trpc";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Activity, ActivityRule } from "@/types/activity";
@@ -26,6 +26,7 @@ import { useConfirmationDialog } from "@/components/providers/ConfirmationDialog
 export default function RuleBookPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<ActivityRule | null>(null);
+  const [prefillValues, setPrefillValues] = useState<Partial<RuleFormValues> | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -44,6 +45,7 @@ export default function RuleBookPage() {
         description: "Your productivity rule has been created successfully",
       });
       setIsDialogOpen(false);
+      setPrefillValues(null);
     },
   });
 
@@ -52,6 +54,7 @@ export default function RuleBookPage() {
     onSuccess: () => {
       setIsDialogOpen(false);
       setEditingRule(null);
+      setPrefillValues(null);
     },
   });
 
@@ -66,6 +69,45 @@ export default function RuleBookPage() {
     },
   });
 
+  // Parse URL parameters on component mount
+  useEffect(() => {
+    // Check URL for prefill parameters
+    const params = new URLSearchParams(window.location.search);
+    const createRule = params.get("createRule");
+
+    if (createRule === "true") {
+      const appName = params.get("appName");
+      const domain = params.get("domain");
+      const title = params.get("title");
+      const titleCondition = params.get("titleCondition");
+
+      if (appName || domain || title) {
+        // Create prefill object with available parameters
+        const prefill: Partial<RuleFormValues> = {
+          name: title
+            ? `Rule for "${title.substring(0, 30)}${title.length > 30 ? "..." : ""}"`
+            : "",
+          description: "",
+          active: true,
+          rating: 0,
+        };
+
+        if (appName) prefill.appName = appName;
+        if (domain) prefill.domain = domain;
+        if (title) prefill.title = title;
+        if (titleCondition) prefill.titleCondition = titleCondition as any;
+
+        // Open the dialog with prefilled values
+        setPrefillValues(prefill);
+        setIsDialogOpen(true);
+
+        // Clean URL by removing query parameters
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+    }
+  }, []);
+
   function onSubmit(values: RuleFormValues) {
     if (editingRule) {
       updateMutation.mutate({ ...values, id: editingRule.id });
@@ -76,11 +118,13 @@ export default function RuleBookPage() {
 
   function handleEdit(rule: ActivityRule) {
     setEditingRule(rule);
+    setPrefillValues(null);
     setIsDialogOpen(true);
   }
 
   function handleCreateNew() {
     setEditingRule(null);
+    setPrefillValues(null);
     setIsDialogOpen(true);
   }
 
@@ -88,25 +132,42 @@ export default function RuleBookPage() {
     if (!open) {
       setIsDialogOpen(false);
       setEditingRule(null);
+      setPrefillValues(null);
     }
   }
 
   const getDefaultValues = (): RuleFormValues | undefined => {
-    if (!editingRule) return undefined;
+    if (editingRule) {
+      return {
+        name: editingRule.name,
+        description: editingRule.description || "",
+        rating: editingRule.rating,
+        active: editingRule.active,
+        appName: editingRule.appName,
+        domain: editingRule.domain,
+        titleCondition: editingRule.titleCondition as any,
+        title: editingRule.title || "",
+        duration: editingRule.duration || 0,
+        durationCondition: editingRule.durationCondition as any,
+      };
+    }
 
-    return {
-      name: editingRule.name,
-      description: editingRule.description || "",
+    if (prefillValues) {
+      return {
+        name: prefillValues.name || "",
+        description: prefillValues.description || "",
+        rating: prefillValues.rating !== undefined ? prefillValues.rating : 0,
+        active: prefillValues.active !== undefined ? prefillValues.active : true,
+        appName: prefillValues.appName || "",
+        domain: prefillValues.domain || "",
+        titleCondition: prefillValues.titleCondition || "contains",
+        title: prefillValues.title || "",
+        duration: prefillValues.duration || 0,
+        durationCondition: prefillValues.durationCondition || ">",
+      };
+    }
 
-      rating: editingRule.rating,
-      active: editingRule.active,
-      appName: editingRule.appName,
-      domain: editingRule.domain,
-      titleCondition: editingRule.titleCondition as any,
-      title: editingRule.title || "",
-      duration: editingRule.duration || 0,
-      durationCondition: editingRule.durationCondition as any,
-    };
+    return undefined;
   };
 
   return (
@@ -164,7 +225,7 @@ export default function RuleBookPage() {
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline">
-                    {rule.appName}/{rule.domain}
+                    {rule.domain ? `${rule.appName}/${rule.domain}` : rule.appName}
                   </Badge>
                 </TableCell>
                 <TableCell>

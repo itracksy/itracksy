@@ -9,46 +9,46 @@ import { extractDomain } from "./url";
  * @returns true if the activity matches the rule, false otherwise
  */
 export function doesActivityMatchRule(activity: Activity, rule: RuleFormValues): boolean {
-  if (rule.ruleType === "app_name") {
-    return activity.ownerName === rule.value;
-  } else if (rule.ruleType === "domain" && activity.url) {
-    return extractDomain(activity.url) === rule.value;
-  } else if (rule.ruleType === "url" && activity.url) {
-    if (rule.condition === "contains") {
-      return activity.url.includes(rule.value);
-    } else if (rule.condition === "=") {
-      return activity.url === rule.value;
-    } else if (rule.condition === "startsWith") {
-      return activity.url.startsWith(rule.value);
-    } else if (rule.condition === "endsWith") {
-      return activity.url.endsWith(rule.value);
-    }
-  } else if (rule.ruleType === "title" && activity.title) {
-    if (rule.condition === "contains") {
-      return activity.title.includes(rule.value);
-    } else if (rule.condition === "=") {
-      return activity.title === rule.value;
-    } else if (rule.condition === "startsWith") {
-      return activity.title.startsWith(rule.value);
-    } else if (rule.condition === "endsWith") {
-      return activity.title.endsWith(rule.value);
-    }
-  } else if (rule.ruleType === "duration") {
-    const durationValue = parseFloat(rule.value);
-    if (isNaN(durationValue)) return false;
+  // Match by app name
+  if (rule.appName && rule.appName.trim() !== "") {
+    return activity.ownerName === rule.appName;
+  }
 
-    if (rule.condition === ">") {
+  // Match by domain
+  else if (rule.domain && rule.domain.trim() !== "" && activity.url) {
+    return extractDomain(activity.url) === rule.domain;
+  }
+
+  // Match by title
+  else if (rule.titleCondition && rule.title && rule.title.trim() !== "" && activity.title) {
+    if (rule.titleCondition === "contains") {
+      return activity.title.includes(rule.title);
+    } else if (rule.titleCondition === "equals") {
+      return activity.title === rule.title;
+    } else if (rule.titleCondition === "startsWith") {
+      return activity.title.startsWith(rule.title);
+    } else if (rule.titleCondition === "endsWith") {
+      return activity.title.endsWith(rule.title);
+    }
+  }
+
+  // Match by duration
+  else if (rule.durationCondition && rule.duration) {
+    const durationValue = rule.duration;
+
+    if (rule.durationCondition === ">") {
       return activity.duration > durationValue;
-    } else if (rule.condition === "<") {
+    } else if (rule.durationCondition === "<") {
       return activity.duration < durationValue;
-    } else if (rule.condition === "=") {
+    } else if (rule.durationCondition === "=") {
       return activity.duration === durationValue;
-    } else if (rule.condition === ">=") {
+    } else if (rule.durationCondition === ">=") {
       return activity.duration >= durationValue;
-    } else if (rule.condition === "<=") {
+    } else if (rule.durationCondition === "<=") {
       return activity.duration <= durationValue;
     }
   }
+
   return false;
 }
 

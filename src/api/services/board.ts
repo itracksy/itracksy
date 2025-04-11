@@ -16,7 +16,9 @@ export async function getBoard(id: string, userId: string) {
     where: and(eq(boards.id, id), eq(boards.userId, userId)),
     with: {
       columns: true,
-      items: true,
+      items: {
+        orderBy: desc(items.createdAt),
+      },
     },
   });
 
