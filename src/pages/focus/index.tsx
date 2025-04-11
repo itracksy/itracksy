@@ -11,6 +11,7 @@ import {
   autoStopEnabledsAtom,
   breakDurationAtom,
   selectedBoardIdAtom,
+  selectedItemIdAtom,
   targetMinutesAtom,
 } from "@/context/board";
 
@@ -25,11 +26,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Brain, Coffee } from "lucide-react";
 import { ActiveSession } from "./components/ActiveSession";
+import { trpcClient } from "@/utils/trpc";
 
 export default function FocusPage() {
   const [intention, setIntention] = useState("");
-  const [selectedItemId, setSelectedItemId] = useState("");
-  const [selectedBoardId] = useAtom(selectedBoardIdAtom);
+
+  const [selectedBoardId, setSelectedBoardId] = useAtom(selectedBoardIdAtom);
   const [targetMinutes, setTargetMinutes] = useAtom(targetMinutesAtom);
   const [breakMinutes, setBreakMinutes] = useAtom(breakDurationAtom);
   const [duration, setDuration] = useState<string>(`${targetMinutes}:00`);
@@ -39,6 +41,29 @@ export default function FocusPage() {
   const createTimeEntry = useCreateTimeEntryMutation();
   const { data: lastTimeEntry } = useLastTimeEntry();
   const { toast } = useToast();
+  const [selectedItemId, setSelectedItemId] = useAtom(selectedItemIdAtom);
+  // Validate that the persisted selectedItemId still exists when component loads
+  useEffect(() => {
+    if (selectedItemId && selectedBoardId) {
+      // Check if the saved item ID is still valid for the current board
+      trpcClient.board.get
+        .query(selectedBoardId)
+        .then((board) => {
+          if (!board) {
+            setSelectedItemId(""); // Reset if the board no longer exists
+            setSelectedBoardId(""); // Reset the board ID as well
+            return;
+          }
+          const itemExists = board.items.some((item) => item.id === selectedItemId);
+          if (!itemExists) {
+            setSelectedItemId(""); // Reset if the item no longer exists
+          }
+        })
+        .catch(() => {
+          setSelectedItemId(""); // Reset on error
+        });
+    }
+  }, [open, selectedBoardId, selectedItemId, setSelectedItemId]);
 
   useEffect(() => {
     if (!activeTimeEntry) {

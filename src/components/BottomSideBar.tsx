@@ -6,7 +6,7 @@ import {
   useLastTimeEntry,
 } from "@/hooks/useTimeEntryQueries";
 import { PlayCircle, StopCircle, History, Coffee, MessageSquare } from "lucide-react";
-import { TimeEntryDialog } from "@/components/tracking/TimeEntryDialog";
+
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 
@@ -40,7 +40,6 @@ const getRandomMotivationalPhrase = () => {
 };
 
 export function BottomSideBar() {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [breakDuration, setBreakDuration] = useAtom(breakDurationAtom);
   const [motivationalPhrase] = useState(getRandomMotivationalPhrase());
 
@@ -158,8 +157,6 @@ export function BottomSideBar() {
 
   return (
     <>
-      <TimeEntryDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} />
-
       <>
         {activeTimeEntry ? (
           <>

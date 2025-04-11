@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useCreateTimeEntryMutation } from "@/hooks/useTimeEntryQueries";
 import { useToast } from "@/hooks/use-toast";
-import { useAtomValue } from "jotai";
-import { selectedBoardIdAtom, targetMinutesAtom } from "@/context/board";
+import { useAtom, useAtomValue } from "jotai";
+import { selectedBoardIdAtom, selectedItemIdAtom, targetMinutesAtom } from "@/context/board";
 import { trpcClient } from "@/utils/trpc";
 import { Focus } from "lucide-react";
 import { BoardSelector } from "./BoardSelector";
@@ -15,11 +15,34 @@ interface TimeEntryDialogProps {
 }
 
 export function TimeEntryDialog({ open, onOpenChange }: TimeEntryDialogProps) {
-  const [selectedItemId, setSelectedItemId] = useState<string>("");
+  const [selectedItemId, setSelectedItemId] = useAtom(selectedItemIdAtom);
   const selectedBoardId = useAtomValue(selectedBoardIdAtom);
   const createTimeEntry = useCreateTimeEntryMutation();
   const { toast } = useToast();
   const targetMinutes = useAtomValue(targetMinutesAtom);
+
+  // Validate that the persisted selectedItemId still exists when component loads
+  useEffect(() => {
+    if (open && selectedItemId && selectedBoardId) {
+      // Check if the saved item ID is still valid for the current board
+      trpcClient.board.get
+        .query(selectedBoardId)
+        .then((board) => {
+          if (!board) {
+            setSelectedItemId(""); // Reset if the board no longer exists
+            return;
+          }
+          const itemExists = board.items.some((item) => item.id === selectedItemId);
+          if (!itemExists) {
+            setSelectedItemId(""); // Reset if the item no longer exists
+          }
+        })
+        .catch(() => {
+          setSelectedItemId(""); // Reset on error
+        });
+    }
+  }, [open, selectedBoardId, selectedItemId, setSelectedItemId]);
+
   const handleCreateTimeEntry = async (isFocusMode: boolean = false) => {
     if (!selectedItemId || !selectedBoardId) {
       toast({
@@ -66,8 +89,7 @@ export function TimeEntryDialog({ open, onOpenChange }: TimeEntryDialogProps) {
         <div className="grid gap-4 py-4">
           <BoardSelector selectedItemId={selectedItemId} onItemSelect={setSelectedItemId} />
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => handleCreateTimeEntry(true)} className="gap-2">
-              <Focus className="h-4 w-4" />
+            <Button onClick={() => handleCreateTimeEntry(true)} className="gap-2">
               Start
             </Button>
           </div>

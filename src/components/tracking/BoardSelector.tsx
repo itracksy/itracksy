@@ -2,13 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { selectedBoardIdAtom } from "@/context/board";
 import { trpcClient } from "@/utils/trpc";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { VirtualizedSelect } from "@/components/virtualized-select";
+import { useMemo } from "react";
 
 interface BoardSelectorProps {
   selectedItemId: string;
@@ -29,48 +24,50 @@ export function BoardSelector({ selectedItemId, onItemSelect }: BoardSelectorPro
     enabled: !!selectedBoardId,
   });
 
+  const boardOptions = useMemo(() => {
+    if (!boards) return [];
+    return boards.map((board) => ({
+      value: board.id,
+      label: board.name,
+    }));
+  }, [boards]);
+
+  const taskOptions = useMemo(() => {
+    if (!selectedBoard || !selectedBoard.items) return [];
+    return selectedBoard.items.map((item) => ({
+      value: item.id,
+      label: item.title,
+    }));
+  }, [selectedBoard]);
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
         <label className="text-sm font-medium">Select Board</label>
-        <Select
-          value={selectedBoardId ?? undefined}
-          onValueChange={(id) => {
+        <VirtualizedSelect
+          options={boardOptions}
+          value={selectedBoardId || ""}
+          onChange={(id) => {
             setSelectedBoardId(id);
-
             onItemSelect("");
           }}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select a board" />
-          </SelectTrigger>
-          <SelectContent>
-            {boards?.map((board) => (
-              <SelectItem key={board.id} value={board.id}>
-                {board.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          placeholder="Select a board"
+          enableSearch={true}
+          isDisabled={!boards?.length}
+        />
       </div>
 
       {selectedBoard && (
         <div className="space-y-2">
           <label className="text-sm font-medium">Select Task</label>
-          <Select value={selectedItemId} onValueChange={onItemSelect}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select a task" />
-            </SelectTrigger>
-            <SelectContent>
-              {selectedBoard.items.length > 0
-                ? selectedBoard.items?.map((item) => (
-                    <SelectItem key={item.id} value={item.id}>
-                      {item.title}
-                    </SelectItem>
-                  ))
-                : "No tasks found"}
-            </SelectContent>
-          </Select>
+          <VirtualizedSelect
+            options={taskOptions}
+            value={selectedItemId}
+            onChange={onItemSelect}
+            placeholder="Select a task"
+            enableSearch={true}
+            isDisabled={!taskOptions.length}
+          />
         </div>
       )}
     </div>
