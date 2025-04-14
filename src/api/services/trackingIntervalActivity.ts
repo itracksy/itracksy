@@ -268,7 +268,7 @@ function showNotificationWarningBlock({
       "⚠️ Return to Focus - Switch back to your primary task",
       "🕒 Take a Break - Pause tracking for 15 minutes",
     ],
-    defaultId: 0,
+    defaultId: 1,
     noLink: true,
   };
 
