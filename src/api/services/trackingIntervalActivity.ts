@@ -118,15 +118,18 @@ export const startTracking = async (): Promise<void> => {
       const extractedDomain = url ? extractDomainWindows(url) : null;
 
       const appName = transformedActivities.ownerName.toLowerCase();
+
+      // Define rule with a default value to avoid reference errors
+
       const rule = await findMatchingDistractingRules(transformedActivities);
 
       const isBlocked = rule && rule.rating === 0;
 
       await upsertActivity({ ...transformedActivities, rating: rule ? rule.rating : null });
-      console.log("rule", rule);
 
       // Check if this is a domain-based rule (rule has a non-empty domain property)
       const isBlockedDomain = rule?.domain && rule.domain.trim() !== "";
+
       // Show notification in full-screen window
       if (
         activeEntry.isFocusMode &&
@@ -139,7 +142,7 @@ export const startTracking = async (): Promise<void> => {
       ) {
         showNotificationWarningBlock({
           title: transformedActivities.title,
-          detail: transformedActivities.ownerPath || "",
+          detail: `Blocked by rule: ${rule?.name || "Unknown"}`,
           userId,
           timeEntryId: activeEntry.id,
           appOrDomain: isBlockedDomain ? (extractedDomain ?? "unknown") : appName,

@@ -6,6 +6,7 @@ import { nanoid } from "nanoid";
 import { Activity, ActivityRule, GroupActivity } from "@/types/activity";
 
 import { extractDomain } from "../../utils/url";
+import { doesActivityMatchRule } from "../../utils/activityUtils";
 
 /**
  * Create a new activity rule
@@ -163,8 +164,10 @@ export async function getGroupActivities(activities: Activity[]) {
 }
 
 // find rules that match the activity
-export async function findMatchingDistractingRules(activity: Activity) {
-  const rule = await db.query.activityRules.findFirst({
+export async function findMatchingDistractingRules(
+  activity: Activity
+): Promise<ActivityRule | null> {
+  const rules = await db.query.activityRules.findMany({
     where: (rules) => {
       return and(
         eq(rules.userId, activity.userId),
@@ -176,5 +179,25 @@ export async function findMatchingDistractingRules(activity: Activity) {
     },
   });
 
-  return rule;
+  for (let index = 0; index < rules.length; index++) {
+    const r = rules[index];
+    if (
+      r.rating === 0 &&
+      doesActivityMatchRule(activity, {
+        appName: r.appName || "",
+        title: r.title || "",
+        duration: r.duration || 0,
+        titleCondition: r.titleCondition as any,
+        durationCondition: r.durationCondition as any,
+        name: r.name,
+        rating: r.rating,
+        description: r.description || "",
+        domain: r.domain || "",
+        active: r.active !== undefined ? r.active : true,
+      })
+    ) {
+      return r;
+    }
+  }
+  return null;
 }

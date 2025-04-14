@@ -1,6 +1,7 @@
 import { Activity } from "@/types/activity";
 import { RuleFormValues } from "@/components/rules/rule-dialog";
 import { extractDomain } from "./url";
+import { isEmpty } from "./value-checks";
 
 /**
  * Checks if an activity matches a rule based on the rule's criteria
@@ -9,47 +10,57 @@ import { extractDomain } from "./url";
  * @returns true if the activity matches the rule, false otherwise
  */
 export function doesActivityMatchRule(activity: Activity, rule: RuleFormValues): boolean {
-  // Match by app name
-  if (rule.appName && rule.appName.trim() !== "") {
-    return activity.ownerName === rule.appName;
-  }
-
-  // Match by domain
-  else if (rule.domain && rule.domain.trim() !== "" && activity.url) {
-    return extractDomain(activity.url) === rule.domain;
-  }
-
-  // Match by title
-  else if (rule.titleCondition && rule.title && rule.title.trim() !== "" && activity.title) {
-    if (rule.titleCondition === "contains") {
-      return activity.title.includes(rule.title);
-    } else if (rule.titleCondition === "equals") {
-      return activity.title === rule.title;
-    } else if (rule.titleCondition === "startsWith") {
-      return activity.title.startsWith(rule.title);
-    } else if (rule.titleCondition === "endsWith") {
-      return activity.title.endsWith(rule.title);
+  const isDurationValid = ({
+    duration,
+    condition,
+  }: {
+    duration: number;
+    condition: string;
+  }): boolean => {
+    if (duration <= 0) {
+      return true;
     }
-  }
-
-  // Match by duration
-  else if (rule.durationCondition && rule.duration) {
-    const durationValue = rule.duration;
-
-    if (rule.durationCondition === ">") {
-      return activity.duration > durationValue;
-    } else if (rule.durationCondition === "<") {
-      return activity.duration < durationValue;
-    } else if (rule.durationCondition === "=") {
-      return activity.duration === durationValue;
-    } else if (rule.durationCondition === ">=") {
-      return activity.duration >= durationValue;
-    } else if (rule.durationCondition === "<=") {
-      return activity.duration <= durationValue;
+    if (condition === ">") {
+      return activity.duration > duration;
+    } else if (condition === "<") {
+      return activity.duration < duration;
+    } else if (condition === "=") {
+      return activity.duration === duration;
     }
-  }
+    return false;
+  };
+  const isTitleValid = ({ title, condition }: { title: string; condition: string }): boolean => {
+    if (isEmpty(title)) {
+      return true;
+    }
+    if (condition === "contains") {
+      return activity.title.includes(title);
+    } else if (condition === "equals") {
+      return activity.title === title;
+    } else if (condition === "startsWith") {
+      return activity.title.startsWith(title);
+    } else if (condition === "endsWith") {
+      return activity.title.endsWith(title);
+    }
+    return false;
+  };
 
-  return false;
+  const isAppNameValid = (appName: string): boolean => {
+    return activity.ownerName === appName;
+  };
+  const isDomainValid = (domain: string): boolean => {
+    if (isEmpty(domain)) {
+      return true;
+    }
+    return extractDomain(activity.url) === domain;
+  };
+
+  return (
+    isAppNameValid(rule.appName) &&
+    isDomainValid(rule.domain) &&
+    isTitleValid({ title: rule.title, condition: rule.titleCondition }) &&
+    isDurationValid({ duration: rule.duration, condition: rule.durationCondition })
+  );
 }
 
 /**

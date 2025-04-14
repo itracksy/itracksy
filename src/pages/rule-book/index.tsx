@@ -36,7 +36,7 @@ export default function RuleBookPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<ActivityRule | null>(null);
   const [prefillValues, setPrefillValues] = useState<Partial<RuleFormValues> | null>(null);
-  
+
   // Sorting and filtering state
   const [searchQuery, setSearchQuery] = useState("");
   const [sortField, setSortField] = useState<keyof ActivityRule>("name");
@@ -196,16 +196,16 @@ export default function RuleBookPage() {
       setSortDirection("asc");
     }
   };
-  
+
   // Function to get sorted and filtered rules
   const getSortedAndFilteredRules = () => {
     if (!rules) return [];
-    
+
     // Apply search filter
-    let filteredRules = rules.filter(rule => {
+    let filteredRules = rules.filter((rule) => {
       const searchLower = searchQuery.toLowerCase();
       if (!searchLower) return true;
-      
+
       return (
         rule.name.toLowerCase().includes(searchLower) ||
         (rule.description?.toLowerCase() || "").includes(searchLower) ||
@@ -214,26 +214,26 @@ export default function RuleBookPage() {
         (rule.title?.toLowerCase() || "").includes(searchLower)
       );
     });
-    
+
     // Apply rating filter
     if (ratingFilter !== null) {
-      filteredRules = filteredRules.filter(rule => rule.rating === ratingFilter);
+      filteredRules = filteredRules.filter((rule) => rule.rating === ratingFilter);
     }
-    
+
     // Apply sorting
     return filteredRules.sort((a, b) => {
       const aValue = a[sortField];
       const bValue = b[sortField];
-      
+
       if (aValue === null || aValue === undefined) return sortDirection === "asc" ? -1 : 1;
       if (bValue === null || bValue === undefined) return sortDirection === "asc" ? 1 : -1;
-      
+
       if (typeof aValue === "string" && typeof bValue === "string") {
-        return sortDirection === "asc" 
-          ? aValue.localeCompare(bValue) 
+        return sortDirection === "asc"
+          ? aValue.localeCompare(bValue)
           : bValue.localeCompare(aValue);
       }
-      
+
       // For numbers and booleans
       if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
       if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
@@ -314,44 +314,47 @@ export default function RuleBookPage() {
           <TableCaption>Your activity classification rules</TableCaption>
           <TableHeader>
             <TableRow>
-              <TableHead 
-                onClick={() => handleSortToggle("name")} 
+              <TableHead
+                onClick={() => handleSortToggle("name")}
                 className="cursor-pointer hover:bg-muted/50"
               >
                 <div className="flex items-center">
                   Rule
-                  {sortField === "name" && (
-                    sortDirection === "asc" 
-                      ? <ChevronUp className="ml-1 h-4 w-4" /> 
-                      : <ChevronDown className="ml-1 h-4 w-4" />
-                  )}
+                  {sortField === "name" &&
+                    (sortDirection === "asc" ? (
+                      <ChevronUp className="ml-1 h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="ml-1 h-4 w-4" />
+                    ))}
                 </div>
               </TableHead>
-              <TableHead 
-                onClick={() => handleSortToggle("appName")} 
+              <TableHead
+                onClick={() => handleSortToggle("appName")}
                 className="cursor-pointer hover:bg-muted/50"
               >
                 <div className="flex items-center">
                   Type
-                  {sortField === "appName" && (
-                    sortDirection === "asc" 
-                      ? <ChevronUp className="ml-1 h-4 w-4" /> 
-                      : <ChevronDown className="ml-1 h-4 w-4" />
-                  )}
+                  {sortField === "appName" &&
+                    (sortDirection === "asc" ? (
+                      <ChevronUp className="ml-1 h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="ml-1 h-4 w-4" />
+                    ))}
                 </div>
               </TableHead>
               <TableHead>Condition</TableHead>
-              <TableHead 
-                onClick={() => handleSortToggle("rating")} 
+              <TableHead
+                onClick={() => handleSortToggle("rating")}
                 className="cursor-pointer hover:bg-muted/50"
               >
                 <div className="flex items-center">
                   Classification
-                  {sortField === "rating" && (
-                    sortDirection === "asc" 
-                      ? <ChevronUp className="ml-1 h-4 w-4" /> 
-                      : <ChevronDown className="ml-1 h-4 w-4" />
-                  )}
+                  {sortField === "rating" &&
+                    (sortDirection === "asc" ? (
+                      <ChevronUp className="ml-1 h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="ml-1 h-4 w-4" />
+                    ))}
                 </div>
               </TableHead>
               <TableHead>Actions</TableHead>
