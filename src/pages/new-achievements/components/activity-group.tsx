@@ -262,10 +262,7 @@ export function ActivityGroup({
               }}
               key={activity.timestamp}
               isParentDistracting={appRule?.rating === 0}
-              appName={appName}
-              domain={null}
               activity={activity}
-              onClassify={onClassify}
             />
           ))}
         </div>

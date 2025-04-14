@@ -9,32 +9,19 @@ import { OnClassify } from "@/types/classify";
 
 interface ActivityItemProps {
   isParentDistracting: boolean;
-  appName: string;
-  domain: string | null;
+
   activity: Activity;
-  onClassify: OnClassify;
+
   onUpsertRule: (ruleId: string | null) => void;
 }
 
 export function ActivityItem({
   isParentDistracting,
-  appName,
-  domain,
+
   activity,
-  onClassify,
+
   onUpsertRule,
 }: ActivityItemProps) {
-  // Handle activity-level classification
-  const handleActivityClassification = (isProductive: boolean) => {
-    onClassify({
-      ruleId: null,
-      appName,
-      domain,
-      activityId: activity.timestamp,
-      isProductive,
-    });
-  };
-
   return (
     <div
       className={cn(
@@ -56,21 +43,15 @@ export function ActivityItem({
             Unclassified
           </span>
         )}
-
-        {activity.activityRuleId && (
-          <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-            Has Rule
-          </span>
-        )}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col items-center">
         {activity.activityRuleId && (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   onClick={() => {
                     onUpsertRule(activity.activityRuleId ?? null);
                   }}
@@ -78,7 +59,17 @@ export function ActivityItem({
                   className="flex items-center gap-1"
                 >
                   <Settings className="h-4 w-4" />
-                  <span>Edit Rule</span>
+                  <span
+                    className={
+                      activity.rating === 1
+                        ? "text-green-500 dark:text-green-400"
+                        : activity.rating === 0
+                          ? "text-red-500 dark:text-red-400"
+                          : "text-gray-500 dark:text-gray-400"
+                    }
+                  >
+                    Edit Rule
+                  </span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
@@ -94,12 +85,22 @@ export function ActivityItem({
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
-                  onClick={() => onUpsertRule(null)}
+                  onClick={() => {
+                    onUpsertRule(null);
+                  }}
                   size="sm"
                   className="flex items-center gap-1"
                 >
                   <Settings className="h-4 w-4" />
-                  <span>{isParentDistracting ? "Not distracting?" : "Not productive?"}</span>
+                  <span
+                    className={
+                      !isParentDistracting
+                        ? "text-red-500 dark:text-red-400"
+                        : "text-green-500 dark:text-green-400"
+                    }
+                  >
+                    {isParentDistracting ? "Not distracting?" : "Not productive?"}
+                  </span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>

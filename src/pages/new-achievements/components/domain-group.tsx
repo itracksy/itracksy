@@ -135,10 +135,7 @@ export function DomainGroup({
               key={activity.timestamp}
               onUpsertRule={() => onUpsertRule(activity)}
               isParentDistracting={rule?.rating === 0}
-              appName={appName}
-              domain={domain}
               activity={activity}
-              onClassify={onClassify}
             />
           ))}
         </div>
