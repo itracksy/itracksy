@@ -134,7 +134,7 @@ export function DomainGroup({
             <ActivityItem
               key={activity.timestamp}
               onUpsertRule={() => onUpsertRule(activity)}
-              isParentDistracting={rule?.rating === 0}
+              ruleRating={rule?.rating ?? null}
               activity={activity}
             />
           ))}

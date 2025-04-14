@@ -4,6 +4,7 @@ import { RuleFormValues } from "@/components/rules/rule-dialog";
 import { Activity } from "@/types/activity";
 import { toast } from "@/hooks/use-toast";
 import { findActivitiesMatchingRule } from "@/utils/activityUtils";
+import { isNonEmptyString } from "@/utils/value-checks";
 
 interface UseCreateRuleOptions {
   onSuccess?: (values: RuleFormValues) => void;
@@ -41,18 +42,19 @@ export function useCreateRule(
       }
     },
     onSuccess: (createdRule) => {
+      console.log("Created rule:", createdRule);
       // when a rule is created, find all activities that match the rule and set their rating
       if (activities?.length && createdRule) {
         const activitiesToRate = findActivitiesMatchingRule(
           activities,
           createdRule as RuleFormValues
         );
-        console.log("Activities to rate:", activitiesToRate);
+
         activitiesToRate.forEach((activity) => {
           trpcClient.activity.setActivityRating.mutate({
             timestamp: activity.timestamp,
             rating: createdRule.rating,
-            ruleId: createdRule.id, // Set the rule ID reference
+            ...(isNonEmptyString(createdRule.title) ? { ruleId: createdRule.id } : {}), // Add ruleId only if title is not empty
           });
         });
       }

@@ -261,7 +261,7 @@ export function ActivityGroup({
                 }
               }}
               key={activity.timestamp}
-              isParentDistracting={appRule?.rating === 0}
+              ruleRating={appRule?.rating ?? null}
               activity={activity}
             />
           ))}

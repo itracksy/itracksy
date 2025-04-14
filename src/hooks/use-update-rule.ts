@@ -4,6 +4,7 @@ import { toast } from "@/hooks/use-toast";
 import { Activity } from "@/types/activity";
 import { findActivitiesMatchingRule } from "@/utils/activityUtils";
 import { RuleFormValues } from "@/components/rules/rule-dialog";
+import { isNonEmptyString } from "@/utils/value-checks";
 
 interface UseUpdateRuleOptions {
   onSuccess?: (data: any) => void;
@@ -35,6 +36,7 @@ export function useUpdateRule(
     onSuccess: (data) => {
       // Handle updating activities that match the rule
       if (activities?.length && data) {
+        console.log("Updated rule:", data);
         // Find activities that match the updated rule and update their ratings
         const activitiesToRate = findActivitiesMatchingRule(activities, {
           appName: data.appName,
@@ -53,7 +55,7 @@ export function useUpdateRule(
           trpcClient.activity.setActivityRating.mutate({
             timestamp: activity.timestamp,
             rating: data.rating,
-            ruleId: data.id, // Set the rule ID reference
+            ...(isNonEmptyString(data.title) ? { ruleId: data.id } : {}), // Add ruleId only if title is not empty
           });
         });
       }

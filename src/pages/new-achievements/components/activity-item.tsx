@@ -5,10 +5,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils";
 import { formatTime } from "@/lib/utils";
 import { Activity } from "@/types/activity";
-import { OnClassify } from "@/types/classify";
 
 interface ActivityItemProps {
-  isParentDistracting: boolean;
+  ruleRating: number | null;
 
   activity: Activity;
 
@@ -16,7 +15,7 @@ interface ActivityItemProps {
 }
 
 export function ActivityItem({
-  isParentDistracting,
+  ruleRating,
 
   activity,
 
@@ -79,7 +78,7 @@ export function ActivityItem({
           </TooltipProvider>
         )}
 
-        {!activity.activityRuleId && (
+        {!activity.activityRuleId && ruleRating !== null && (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -94,18 +93,18 @@ export function ActivityItem({
                   <Settings className="h-4 w-4" />
                   <span
                     className={
-                      !isParentDistracting
-                        ? "text-red-500 dark:text-red-400"
-                        : "text-green-500 dark:text-green-400"
+                      ruleRating === 0
+                        ? "text-green-500 dark:text-green-400"
+                        : "text-red-500 dark:text-red-400"
                     }
                   >
-                    {isParentDistracting ? "Not distracting?" : "Not productive?"}
+                    {ruleRating === 0 ? "Not distracting?" : "Not productive?"}
                   </span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
                 <p>
-                  {isParentDistracting
+                  {ruleRating === 0
                     ? "Is it not distracting? Set specific rule for this activity"
                     : "Create custom rule for this activity"}
                 </p>
