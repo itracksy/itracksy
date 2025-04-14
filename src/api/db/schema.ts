@@ -81,7 +81,9 @@ export const activities = sqliteTable(
     userId: text("user_id").notNull(),
     isFocusMode: integer("is_focus_mode", { mode: "boolean" }),
     rating: integer("rating"), // null = unrated, 0 = bad, 1 = good
-    activityRuleId: text("activity_rule_id").references(() => activityRules.id),
+    activityRuleId: text("activity_rule_id").references(() => activityRules.id, {
+      onDelete: "set null",
+    }),
   },
   (table) => [
     primaryKey({ columns: [table.timestamp] }),

@@ -85,7 +85,6 @@ export const startTracking = async (): Promise<void> => {
         accessibilityPermission: true,
         screenRecordingPermission: true,
       });
-      logger.info("result", result);
 
       if (!result) {
         logger.warn("[startTracking] No active window result returned");
@@ -124,7 +123,7 @@ export const startTracking = async (): Promise<void> => {
       const rule = await findMatchingRules(transformedActivities);
 
       const isBlocked = rule && rule.rating === 0;
-
+      console.log("isBlocked", isBlocked);
       await upsertActivity({ ...transformedActivities, rating: rule ? rule.rating : null });
 
       // Check if this is a domain-based rule (rule has a non-empty domain property)
