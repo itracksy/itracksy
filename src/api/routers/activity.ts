@@ -10,6 +10,7 @@ import {
 import {
   createRule,
   deleteRule,
+  getRuleById,
   getUserRules,
   toggleRuleActive,
   updateRule,
@@ -57,11 +58,12 @@ export const activityRouter = t.router({
       z.object({
         timestamp: z.number(),
         rating: z.number().nullable(),
+        ruleId: z.string().optional(), // Add optional ruleId parameter
       })
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.userId;
-      return setActivityRating(input.timestamp, userId, input.rating);
+      return setActivityRating(input.timestamp, userId, input.rating, input.ruleId);
     }),
 
   getProductivityStats: protectedProcedure
@@ -81,6 +83,13 @@ export const activityRouter = t.router({
     const userId = ctx.userId;
     return getUserRules(userId);
   }),
+  getRuleById: protectedProcedure
+    .input(z.object({ ruleId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.userId;
+
+      return getRuleById({ ruleId: input.ruleId, userId });
+    }),
 
   createRule: protectedProcedure.input(ruleFormSchema).mutation(async ({ ctx, input }) => {
     const userId = ctx.userId;

@@ -16,9 +16,11 @@ import { RuleDialog, RuleFormValues } from "@/components/rules/rule-dialog";
 import { useCreateRule } from "@/hooks/use-create-rule";
 import { DomainGroup } from "./domain-group";
 import { ActivityItem } from "./activity-item";
+import { trpcClient } from "@/utils/trpc";
 
 interface RuleDialogState {
   isOpen: boolean;
+  acitivityId: number | null;
   prefillValues: RuleFormValues | undefined;
 }
 
@@ -73,6 +75,7 @@ export function ActivityGroup({
   const [ruleDialog, setRuleDialog] = useState<RuleDialogState>({
     isOpen: false,
     prefillValues: undefined,
+    acitivityId: null,
   });
 
   const queryClient = useQueryClient();
@@ -85,7 +88,7 @@ export function ActivityGroup({
     ],
     onSuccess: () => {
       // Close dialog and refresh data
-      setRuleDialog({ isOpen: false, prefillValues: undefined });
+      setRuleDialog({ isOpen: false, acitivityId: null, prefillValues: undefined });
       queryClient.invalidateQueries({ queryKey: ["activities"] });
     },
   });
@@ -94,27 +97,6 @@ export function ActivityGroup({
   const handleRuleSubmit = (values: RuleFormValues) => {
     createRuleMutation.mutate(values);
   };
-
-  // Add event listener to handle custom event from activity items
-  useEffect(() => {
-    const handleOpenRuleDialog = (event: CustomEvent<{ prefillValues: RuleFormValues }>) => {
-      setRuleDialog({
-        isOpen: true,
-        prefillValues: event.detail.prefillValues,
-      });
-    };
-
-    const container = document.querySelector("[data-activitygroup]");
-    if (container) {
-      container.addEventListener("openRuleDialog", handleOpenRuleDialog as EventListener);
-    }
-
-    return () => {
-      if (container) {
-        container.removeEventListener("openRuleDialog", handleOpenRuleDialog as EventListener);
-      }
-    };
-  }, []);
 
   return (
     <div className="bg-white dark:bg-gray-800" data-activitygroup>
@@ -204,7 +186,25 @@ export function ActivityGroup({
           {Object.entries(domainGroups).map(([domain, domainActivities]) => (
             <DomainGroup
               key={`${sessionId}-${appName}-${domain}`}
-              sessionId={sessionId}
+              onUpsertRule={(activity) => {
+                setRuleDialog({
+                  isOpen: true,
+                  acitivityId: activity.timestamp,
+                  prefillValues: {
+                    appName,
+
+                    title: activity.title,
+                    duration: 0,
+                    rating: domainActivities.rule?.rating === 1 ? 0 : 1,
+                    name: activity.title,
+                    description: "",
+                    titleCondition: "contains",
+                    durationCondition: "",
+                    domain: domain,
+                    active: true,
+                  },
+                });
+              }}
               appName={appName}
               domain={domain}
               activities={domainActivities.activities}
@@ -218,8 +218,50 @@ export function ActivityGroup({
         <div className="divide-y border-t dark:divide-gray-700 dark:border-gray-700">
           {activities.map((activity) => (
             <ActivityItem
+              onUpsertRule={(ruleId) => {
+                if (ruleId) {
+                  // If ruleId has value, fetch rule details from trpcClient
+                  trpcClient.activity.getRuleById.query({ ruleId }).then((rule) => {
+                    if (rule) {
+                      setRuleDialog({
+                        isOpen: true,
+                        acitivityId: activity.timestamp,
+                        prefillValues: {
+                          appName: rule.appName,
+                          title: rule.title || activity.title,
+                          duration: rule.duration || 0,
+                          rating: rule.rating,
+                          name: rule.name,
+                          description: rule.description || "",
+                          titleCondition: (rule.titleCondition as any) || "contains",
+                          durationCondition: (rule.durationCondition as any) || "",
+                          domain: rule.domain || "",
+                          active: rule.active,
+                        },
+                      });
+                    }
+                  });
+                } else {
+                  setRuleDialog({
+                    isOpen: true,
+                    acitivityId: activity.timestamp,
+                    prefillValues: {
+                      appName,
+                      title: activity.title,
+                      duration: 0,
+                      rating: appRule?.rating === 1 ? 0 : 1,
+                      name: activity.title,
+                      description: "",
+                      titleCondition: "contains",
+                      durationCondition: "",
+                      domain: "",
+                      active: true,
+                    },
+                  });
+                }
+              }}
               key={activity.timestamp}
-              sessionId={sessionId}
+              isParentDistracting={appRule?.rating === 0}
               appName={appName}
               domain={null}
               activity={activity}
@@ -234,13 +276,14 @@ export function ActivityGroup({
         onOpenChange={(open) =>
           setRuleDialog({
             isOpen: open,
+            acitivityId: open ? ruleDialog.acitivityId : null,
             prefillValues: open ? ruleDialog.prefillValues : undefined,
           })
         }
         onSubmit={handleRuleSubmit}
         defaultValues={ruleDialog.prefillValues}
         isSubmitting={createRuleMutation.isPending}
-        mode="create"
+        mode={ruleDialog.acitivityId ? "edit" : "create"}
       />
     </div>
   );

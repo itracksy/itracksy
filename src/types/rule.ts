@@ -19,4 +19,5 @@ export const ruleFormSchema = z.object({
   // Common fields
   rating: z.number().min(0).max(1),
   active: z.boolean().default(true),
+  activityId: z.number().optional(),
 });

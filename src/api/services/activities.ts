@@ -136,10 +136,18 @@ export async function getUserActivities({
 /**
  * Manually set a rating for an activity
  */
-export async function setActivityRating(timestamp: number, userId: string, rating: number | null) {
+export async function setActivityRating(
+  timestamp: number,
+  userId: string,
+  rating: number | null,
+  activityRuleId?: string
+) {
   const updatedActivities = await db
     .update(activities)
-    .set({ rating })
+    .set({
+      rating,
+      ...(activityRuleId && { activityRuleId }), // Only include activityRuleId in the update if it's provided
+    })
     .where(and(eq(activities.timestamp, timestamp), eq(activities.userId, userId)))
     .returning();
 

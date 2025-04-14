@@ -8,19 +8,21 @@ import { Activity } from "@/types/activity";
 import { OnClassify } from "@/types/classify";
 
 interface ActivityItemProps {
-  sessionId: string;
+  isParentDistracting: boolean;
   appName: string;
   domain: string | null;
   activity: Activity;
   onClassify: OnClassify;
+  onUpsertRule: (ruleId: string | null) => void;
 }
 
 export function ActivityItem({
-  sessionId,
+  isParentDistracting,
   appName,
   domain,
   activity,
   onClassify,
+  onUpsertRule,
 }: ActivityItemProps) {
   // Handle activity-level classification
   const handleActivityClassification = (isProductive: boolean) => {
@@ -31,33 +33,6 @@ export function ActivityItem({
       activityId: activity.timestamp,
       isProductive,
     });
-  };
-
-  // Function to open rule dialog with pre-filled values
-  const handleCreateRule = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent event bubbling
-    const parentComponent = document.querySelector("[data-activitygroup]");
-    if (!parentComponent) return;
-
-    const event = new CustomEvent("openRuleDialog", {
-      detail: {
-        prefillValues: {
-          name: `Rule for "${activity.title.substring(0, 30)}${
-            activity.title.length > 30 ? "..." : ""
-          }"`,
-          description: "",
-          active: true,
-          rating: 0,
-          appName,
-          domain: domain || "",
-          title: activity.title,
-          titleCondition: "contains",
-        },
-      },
-      bubbles: true,
-    });
-
-    parentComponent.dispatchEvent(event);
   };
 
   return (
@@ -81,59 +56,62 @@ export function ActivityItem({
             Unclassified
           </span>
         )}
+
+        {activity.activityRuleId && (
+          <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+            Has Rule
+          </span>
+        )}
       </div>
 
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-2">
-          <Toggle
-            pressed={activity.rating === 1}
-            onPressedChange={() => handleActivityClassification(true)}
-            className={cn(
-              activity.rating === 1
-                ? "border-green-200 bg-green-100 text-green-800 dark:border-green-800 dark:bg-green-900/30 dark:text-green-300"
-                : "",
-              "h-8 border px-2"
-            )}
-            aria-label="Mark activity as productive"
-          >
-            <CheckCircle className="mr-1 h-4 w-4" />
-            Productive
-          </Toggle>
+        {activity.activityRuleId && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    onUpsertRule(activity.activityRuleId ?? null);
+                  }}
+                  size="sm"
+                  className="flex items-center gap-1"
+                >
+                  <Settings className="h-4 w-4" />
+                  <span>Edit Rule</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>View or edit the rule that classified this activity</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
 
-          <Toggle
-            pressed={activity.rating === 0}
-            onPressedChange={() => handleActivityClassification(false)}
-            className={cn(
-              activity.rating === 0
-                ? "border-red-200 bg-red-100 text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300"
-                : "",
-              "h-8 border px-2"
-            )}
-            aria-label="Mark activity as distracting"
-          >
-            <XCircle className="mr-1 h-4 w-4" />
-            Distracting
-          </Toggle>
-        </div>
-
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleCreateRule}
-                className="h-8 w-8 rounded-full"
-              >
-                <Settings className="h-4 w-4" />
-                <span className="sr-only">Create rule for this activity</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Create rule for "{activity.title}"</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        {!activity.activityRuleId && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  onClick={() => onUpsertRule(null)}
+                  size="sm"
+                  className="flex items-center gap-1"
+                >
+                  <Settings className="h-4 w-4" />
+                  <span>{isParentDistracting ? "Not distracting?" : "Not productive?"}</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>
+                  {isParentDistracting
+                    ? "Is it not distracting? Set specific rule for this activity"
+                    : "Create custom rule for this activity"}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </div>
     </div>
   );

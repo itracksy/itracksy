@@ -40,24 +40,21 @@ export function useCreateRule(
         onError(error);
       }
     },
-    onSuccess: (values) => {
+    onSuccess: (createdRule) => {
       // when a rule is created, find all activities that match the rule and set their rating
-      if (activities?.length) {
-        const unRatedActivities = activities.filter((activity) => activity.rating === null);
-
-        if (unRatedActivities?.length) {
-          const activitiesToRate = findActivitiesMatchingRule(
-            unRatedActivities,
-            values as RuleFormValues
-          );
-
-          activitiesToRate.forEach((activity) => {
-            trpcClient.activity.setActivityRating.mutate({
-              timestamp: activity.timestamp,
-              rating: values.rating,
-            });
+      if (activities?.length && createdRule) {
+        const activitiesToRate = findActivitiesMatchingRule(
+          activities,
+          createdRule as RuleFormValues
+        );
+        console.log("Activities to rate:", activitiesToRate);
+        activitiesToRate.forEach((activity) => {
+          trpcClient.activity.setActivityRating.mutate({
+            timestamp: activity.timestamp,
+            rating: createdRule.rating,
+            ruleId: createdRule.id, // Set the rule ID reference
           });
-        }
+        });
       }
 
       // Invalidate necessary queries
@@ -73,7 +70,7 @@ export function useCreateRule(
 
       // Call custom onSuccess if provided
       if (onSuccess) {
-        onSuccess(values as RuleFormValues);
+        onSuccess(createdRule as RuleFormValues);
       }
     },
   });

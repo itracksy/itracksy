@@ -42,7 +42,6 @@ export function useUpdateRule(
           titleCondition: data.titleCondition as any,
           title: data.title || "",
           durationCondition: data.durationCondition as any,
-
           duration: data.duration || 0,
           rating: data.rating,
           name: data.name,
@@ -54,6 +53,7 @@ export function useUpdateRule(
           trpcClient.activity.setActivityRating.mutate({
             timestamp: activity.timestamp,
             rating: data.rating,
+            ruleId: data.id, // Set the rule ID reference
           });
         });
       }

@@ -10,7 +10,7 @@ import { RulesBadge } from "./rules-badge";
 import { ActivityItem } from "./activity-item";
 
 interface DomainGroupProps {
-  sessionId: string;
+  onUpsertRule: (activity: Activity) => void;
   appName: string;
   domain: string | null;
   activities: Activity[];
@@ -19,7 +19,7 @@ interface DomainGroupProps {
 }
 
 export function DomainGroup({
-  sessionId,
+  onUpsertRule,
   appName,
   domain,
   activities,
@@ -133,7 +133,8 @@ export function DomainGroup({
           {activities.map((activity) => (
             <ActivityItem
               key={activity.timestamp}
-              sessionId={sessionId}
+              onUpsertRule={() => onUpsertRule(activity)}
+              isParentDistracting={rule?.rating === 0}
               appName={appName}
               domain={domain}
               activity={activity}

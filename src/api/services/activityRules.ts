@@ -30,6 +30,23 @@ export async function createRule(params: Omit<ActivityRule, "id" | "createdAt">)
       createdAt: now,
       active: params.active !== undefined ? params.active : true,
     })
+    .onConflictDoUpdate({
+      target: [
+        activityRules.userId,
+        activityRules.title,
+        activityRules.appName,
+        activityRules.domain,
+      ],
+      set: {
+        name: params.name,
+        description: params.description || null,
+        titleCondition: params.titleCondition || "",
+        duration: params.duration || 0,
+        durationCondition: params.durationCondition || null,
+        rating: params.rating,
+        active: params.active !== undefined ? params.active : true,
+      },
+    })
     .returning();
 
   return rule[0];
@@ -45,6 +62,13 @@ export async function getUserRules(userId: string) {
   });
 }
 
+export async function getRuleById({ ruleId, userId }: { ruleId: string; userId: string }) {
+  return await db
+    .select()
+    .from(activityRules)
+    .where(and(eq(activityRules.id, ruleId), eq(activityRules.userId, userId)))
+    .get();
+}
 /**
  * Update an existing rule
  */

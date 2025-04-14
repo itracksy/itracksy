@@ -81,6 +81,7 @@ export const activities = sqliteTable(
     userId: text("user_id").notNull(),
     isFocusMode: integer("is_focus_mode", { mode: "boolean" }),
     rating: integer("rating"), // null = unrated, 0 = bad, 1 = good
+    activityRuleId: text("activity_rule_id").references(() => activityRules.id),
   },
   (table) => [
     primaryKey({ columns: [table.timestamp] }),
@@ -124,15 +125,7 @@ export const activityRules = sqliteTable(
     index("activity_rules_active_idx").on(table.active),
     index("activity_rules_rating_idx").on(table.rating),
     // Add a unique composite key to ensure no duplicate rules
-    unique().on(
-      table.userId,
-      table.duration,
-      table.durationCondition,
-      table.titleCondition,
-      table.title,
-      table.appName,
-      table.domain
-    ),
+    unique().on(table.userId, table.title, table.appName, table.domain),
   ]
 );
 
@@ -240,6 +233,10 @@ export const activitiesRelations = relations(activities, ({ one }) => ({
   timeEntry: one(timeEntries, {
     fields: [activities.timeEntryId],
     references: [timeEntries.id],
+  }),
+  activityRule: one(activityRules, {
+    fields: [activities.activityRuleId],
+    references: [activityRules.id],
   }),
 }));
 

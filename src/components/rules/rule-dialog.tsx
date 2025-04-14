@@ -414,28 +414,6 @@ export function RuleDialog({
                             </FormItem>
                           )}
                         />
-
-                        <FormField
-                          control={form.control}
-                          name="active"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-md border p-2">
-                              <div>
-                                <FormLabel className="text-xs">Rule Status</FormLabel>
-                                <FormDescription className="text-[10px]">
-                                  Activate or deactivate
-                                </FormDescription>
-                              </div>
-                              <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                  aria-readonly
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
                       </CardContent>
                     </Card>
                   </TabsContent>
