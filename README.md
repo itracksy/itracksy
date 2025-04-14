@@ -10,6 +10,8 @@ iTracksy is a powerful desktop application for tracking your activities and mana
 - **Activity Tracking**: Automatically tracks window activities and provides detailed insights about your application usage
 - **Project Management**: Organize your work with kanban boards, lists, and cards
 - **Time Analytics**: View detailed breakdowns of time spent on different applications, domains, and tasks
+- **Achievements**: Track your productivity goals with focus sessions and receive recognition for your progress
+- **Rule-Based Classification**: Customize how activities are categorized with a flexible rule system
 - **Dark/Light Mode**: Supports system theme as well as manual light/dark mode switching
 - **Cross-Platform**: Built with Electron for seamless experience across operating systems
 
@@ -65,6 +67,25 @@ export const router = t.router({
 // In renderer process
 const activities = await trpcClient.getActivities.query();
 ```
+
+## Achievements System
+
+iTracksy includes a powerful achievements system that helps you visualize and celebrate your productivity milestones:
+
+- **Focus Session Tracking**: Monitor your dedicated work sessions and see your improvement over time
+- **Productivity Percentage**: Get insights into how productive your time usage is based on your own classification rules
+- **Activity Classification**: Track what percentage of your activities have been classified
+- **Time-Range Selection**: View achievements across different time periods (daily, weekly, monthly)
+
+### Rule-Based Classification
+
+The rule system allows you to classify your activities automatically:
+
+- **Custom Rules**: Create personalized rules to categorize applications and websites as productive, neutral, or distracting
+- **Pattern Matching**: Rules can match by application name, window title, or domain
+- **Priority System**: Rules are applied in order of specificity, with more specific rules taking precedence
+- **Rule Management**: Easily create, edit, and delete rules through the intuitive interface
+
 
 ## Getting Started
 
