@@ -14,7 +14,7 @@ import { eq, sql } from "drizzle-orm";
 import { formatDuration } from "../../utils/formatTime";
 import { getTray } from "../../main";
 import { extractUrlFromBrowserTitle } from "../../helpers/extractUrlFromBrowserTitle";
-import { findMatchingDistractingRules } from "./activityRules";
+import { findMatchingRules } from "./activityRules";
 
 let trackingIntervalId: NodeJS.Timeout | null = null;
 let notificationWindow: BrowserWindow | null = null;
@@ -121,7 +121,7 @@ export const startTracking = async (): Promise<void> => {
 
       // Define rule with a default value to avoid reference errors
 
-      const rule = await findMatchingDistractingRules(transformedActivities);
+      const rule = await findMatchingRules(transformedActivities);
 
       const isBlocked = rule && rule.rating === 0;
 

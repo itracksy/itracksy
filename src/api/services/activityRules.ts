@@ -163,10 +163,9 @@ export async function getGroupActivities(activities: Activity[]) {
   return appGroups;
 }
 
-// find rules that match the activity
-export async function findMatchingDistractingRules(
-  activity: Activity
-): Promise<ActivityRule | null> {
+// find rules that match the activity with prioritization
+export async function findMatchingRules(activity: Activity): Promise<ActivityRule | null> {
+  // Fetch all potentially matching rules
   const rules = await db.query.activityRules.findMany({
     where: (rules) => {
       return and(
@@ -179,25 +178,61 @@ export async function findMatchingDistractingRules(
     },
   });
 
-  for (let index = 0; index < rules.length; index++) {
-    const r = rules[index];
-    if (
-      r.rating === 0 &&
-      doesActivityMatchRule(activity, {
-        appName: r.appName || "",
-        title: r.title || "",
-        duration: r.duration || 0,
-        titleCondition: r.titleCondition as any,
-        durationCondition: r.durationCondition as any,
-        name: r.name,
-        rating: r.rating,
-        description: r.description || "",
-        domain: r.domain || "",
-        active: r.active !== undefined ? r.active : true,
-      })
-    ) {
-      return r;
-    }
+  // Find all rules that match the activity
+  const matchingRules = rules.filter((r) =>
+    doesActivityMatchRule(activity, {
+      appName: r.appName || "",
+      title: r.title || "",
+      duration: r.duration || 0,
+      titleCondition: r.titleCondition as any,
+      durationCondition: r.durationCondition as any,
+      name: r.name,
+      rating: r.rating,
+      description: r.description || "",
+      domain: r.domain || "",
+      active: r.active,
+    })
+  );
+
+  if (matchingRules.length === 0) {
+    return null;
   }
-  return null;
+
+  // Sort rules by specificity:
+  // 1. Rules with title and duration (most specific)
+  // 2. Rules with just title
+  // 3. Rules with just duration
+  // 4. Rules with neither (most generic)
+  const sortedRules = matchingRules.sort((a, b) => {
+    const aHasTitle = Boolean(
+      a.title && a.title.trim() !== "" && a.titleCondition !== null && a.titleCondition !== ""
+    );
+    const bHasTitle = Boolean(
+      b.title && b.title.trim() !== "" && b.titleCondition !== null && b.titleCondition !== ""
+    );
+    const aHasDuration = Boolean(
+      a.duration && a.durationCondition !== null && a.durationCondition !== ""
+    );
+    const bHasDuration = Boolean(
+      b.duration && b.durationCondition !== null && b.durationCondition !== ""
+    );
+
+    // First priority: Rules with title
+    if (aHasTitle && !bHasTitle) return -1;
+    if (!aHasTitle && bHasTitle) return 1;
+
+    // Second priority: Rules with duration
+    if (aHasDuration && !bHasDuration) return -1;
+    if (!aHasDuration && bHasDuration) return 1;
+
+    // If both have the same specificity, prioritize blocking rules (rating === 0)
+    if (a.rating === 0 && b.rating !== 0) return -1;
+    if (a.rating !== 0 && b.rating === 0) return 1;
+
+    // If still tied, use creation time (newer rules first)
+    return b.createdAt - a.createdAt;
+  });
+
+  // Return the highest priority rule
+  return sortedRules[0];
 }
