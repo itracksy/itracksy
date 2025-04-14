@@ -12,8 +12,7 @@ iTracksy is a powerful desktop application for tracking your activities and mana
 - **Time Analytics**: View detailed breakdowns of time spent on different applications, domains, and tasks
 - **Achievements**: Track your productivity goals with focus sessions and receive recognition for your progress
 - **Rule-Based Classification**: Customize how activities are categorized with a flexible rule system
-- **Dark/Light Mode**: Supports system theme as well as manual light/dark mode switching
-- **Cross-Platform**: Built with Electron for seamless experience across operating systems
+
 
 ## Technology Stack
 
