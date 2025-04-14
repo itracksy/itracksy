@@ -14,7 +14,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Trash, Edit } from "lucide-react";
+import { Plus, Trash, Edit, Search, ChevronDown, ChevronUp, Filter } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
@@ -22,11 +22,26 @@ import { RuleDialog, RuleFormValues } from "@/components/rules/rule-dialog";
 import { useCreateRule } from "@/hooks/use-create-rule";
 import { useUpdateRule } from "@/hooks/use-update-rule";
 import { useConfirmationDialog } from "@/components/providers/ConfirmationDialog";
+import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function RuleBookPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<ActivityRule | null>(null);
   const [prefillValues, setPrefillValues] = useState<Partial<RuleFormValues> | null>(null);
+  
+  // Sorting and filtering state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortField, setSortField] = useState<keyof ActivityRule>("name");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [ratingFilter, setRatingFilter] = useState<number | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -170,6 +185,62 @@ export default function RuleBookPage() {
     return undefined;
   };
 
+  // Function to handle sorting toggle for table headers
+  const handleSortToggle = (field: keyof ActivityRule) => {
+    if (sortField === field) {
+      // If already sorting by this field, toggle direction
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      // If sorting by a new field, default to ascending
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+  
+  // Function to get sorted and filtered rules
+  const getSortedAndFilteredRules = () => {
+    if (!rules) return [];
+    
+    // Apply search filter
+    let filteredRules = rules.filter(rule => {
+      const searchLower = searchQuery.toLowerCase();
+      if (!searchLower) return true;
+      
+      return (
+        rule.name.toLowerCase().includes(searchLower) ||
+        (rule.description?.toLowerCase() || "").includes(searchLower) ||
+        (rule.appName?.toLowerCase() || "").includes(searchLower) ||
+        (rule.domain?.toLowerCase() || "").includes(searchLower) ||
+        (rule.title?.toLowerCase() || "").includes(searchLower)
+      );
+    });
+    
+    // Apply rating filter
+    if (ratingFilter !== null) {
+      filteredRules = filteredRules.filter(rule => rule.rating === ratingFilter);
+    }
+    
+    // Apply sorting
+    return filteredRules.sort((a, b) => {
+      const aValue = a[sortField];
+      const bValue = b[sortField];
+      
+      if (aValue === null || aValue === undefined) return sortDirection === "asc" ? -1 : 1;
+      if (bValue === null || bValue === undefined) return sortDirection === "asc" ? 1 : -1;
+      
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        return sortDirection === "asc" 
+          ? aValue.localeCompare(bValue) 
+          : bValue.localeCompare(aValue);
+      }
+      
+      // For numbers and booleans
+      if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+  };
+
   return (
     <div className="container mx-auto py-6">
       <div className="my-6 flex items-center justify-between">
@@ -183,6 +254,44 @@ export default function RuleBookPage() {
           <Plus className="mr-2 h-4 w-4" /> Add Rule
         </Button>
       </div>
+
+      {/* Search and Filter Controls */}
+      {rules && rules.length > 0 && (
+        <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative w-full sm:max-w-xs">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search rules..."
+              className="pl-8"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="flex gap-1">
+                  <Filter className="h-4 w-4" />
+                  {ratingFilter !== null ? (
+                    <span>{ratingFilter === 1 ? "Productive" : "Distracting"}</span>
+                  ) : (
+                    <span>All ratings</span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Filter by rating</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => setRatingFilter(null)}>
+                  All ratings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setRatingFilter(1)}>Productive</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setRatingFilter(0)}>Distracting</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex justify-center py-8">
@@ -205,15 +314,51 @@ export default function RuleBookPage() {
           <TableCaption>Your activity classification rules</TableCaption>
           <TableHeader>
             <TableRow>
-              <TableHead>Rule</TableHead>
-              <TableHead>Type</TableHead>
+              <TableHead 
+                onClick={() => handleSortToggle("name")} 
+                className="cursor-pointer hover:bg-muted/50"
+              >
+                <div className="flex items-center">
+                  Rule
+                  {sortField === "name" && (
+                    sortDirection === "asc" 
+                      ? <ChevronUp className="ml-1 h-4 w-4" /> 
+                      : <ChevronDown className="ml-1 h-4 w-4" />
+                  )}
+                </div>
+              </TableHead>
+              <TableHead 
+                onClick={() => handleSortToggle("appName")} 
+                className="cursor-pointer hover:bg-muted/50"
+              >
+                <div className="flex items-center">
+                  Type
+                  {sortField === "appName" && (
+                    sortDirection === "asc" 
+                      ? <ChevronUp className="ml-1 h-4 w-4" /> 
+                      : <ChevronDown className="ml-1 h-4 w-4" />
+                  )}
+                </div>
+              </TableHead>
               <TableHead>Condition</TableHead>
-              <TableHead>Classification</TableHead>
+              <TableHead 
+                onClick={() => handleSortToggle("rating")} 
+                className="cursor-pointer hover:bg-muted/50"
+              >
+                <div className="flex items-center">
+                  Classification
+                  {sortField === "rating" && (
+                    sortDirection === "asc" 
+                      ? <ChevronUp className="ml-1 h-4 w-4" /> 
+                      : <ChevronDown className="ml-1 h-4 w-4" />
+                  )}
+                </div>
+              </TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rules?.map((rule) => (
+            {getSortedAndFilteredRules().map((rule) => (
               <TableRow key={rule.id}>
                 <TableCell>
                   <div>
