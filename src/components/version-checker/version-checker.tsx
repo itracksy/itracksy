@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { ExternalLinkIcon, RefreshCwIcon } from "lucide-react";
+import { DownloadIcon, ExternalLinkIcon, RefreshCwIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { trpcClient } from "@/utils/trpc";
 
 export interface VersionInfo {
   currentVersion: string;
@@ -80,6 +81,15 @@ export function VersionChecker({
     }
   }, [versionInfo, onVersionInfo]);
 
+  // Handle opening download URL in browser
+  const handleOpenDownloadLink = async () => {
+    try {
+      await trpcClient.utils.openExternalUrl.mutate({ url: "https://itracksy.com/download" });
+    } catch (error) {
+      console.error("Failed to open download URL:", error);
+    }
+  };
+
   // Show toast when update is available
   useEffect(() => {
     if (versionInfo?.hasUpdate) {
@@ -89,18 +99,34 @@ export function VersionChecker({
         variant: "default",
         duration: 10000, // Show for 10 seconds
         action: (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              if (versionInfo.downloadUrl) {
-                window.location.href = versionInfo.downloadUrl;
-              }
-            }}
-            className="flex items-center"
-          >
-            Download
-          </Button>
+          <div className="flex flex-col gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (versionInfo.downloadUrl) {
+                  window.location.href = versionInfo.downloadUrl;
+                }
+              }}
+              className="flex items-center"
+            >
+              <DownloadIcon className="h-2 w-2" />
+              Download
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (versionInfo.downloadUrl) {
+                  handleOpenDownloadLink();
+                }
+              }}
+              className="flex items-center"
+            >
+              <ExternalLinkIcon className="h-2 w-2" />
+              Open
+            </Button>
+          </div>
         ),
       });
     }
