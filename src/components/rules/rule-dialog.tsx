@@ -28,11 +28,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
+
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { HelpCircle, Focus, Globe, Tag } from "lucide-react";
 import { ruleFormSchema } from "@/types/rule";
@@ -186,11 +186,13 @@ export function RuleDialog({
                             name="titleCondition"
                             render={({ field }) => (
                               <FormItem className="space-y-1">
-                                <FormLabel className="text-xs">Title Condition</FormLabel>
+                                <FormLabel className="text-xs">
+                                  Title Condition (Optional)
+                                </FormLabel>
                                 <Select
                                   onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                  value={field.value}
+                                  defaultValue={field.value || ""}
+                                  value={field.value || ""}
                                 >
                                   <FormControl>
                                     <SelectTrigger className="h-8 text-sm">
@@ -202,6 +204,7 @@ export function RuleDialog({
                                     <SelectItem value="startsWith">Starts with</SelectItem>
                                     <SelectItem value="endsWith">Ends with</SelectItem>
                                     <SelectItem value="equals">Equals</SelectItem>
+                                    <SelectItem value="=">Equals (=)</SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <FormMessage className="text-[10px]" />
@@ -244,11 +247,11 @@ export function RuleDialog({
                             name="durationCondition"
                             render={({ field }) => (
                               <FormItem className="space-y-1">
-                                <FormLabel className="text-xs">Condition</FormLabel>
+                                <FormLabel className="text-xs">Condition (Optional)</FormLabel>
                                 <Select
                                   onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                  value={field.value}
+                                  defaultValue={field.value || ""}
+                                  value={field.value || ""}
                                 >
                                   <FormControl>
                                     <SelectTrigger className="h-8 text-sm">

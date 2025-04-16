@@ -1,13 +1,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpcClient } from "@/utils/trpc";
 import { toast } from "@/hooks/use-toast";
-import { Activity } from "@/types/activity";
+import { Activity, ActivityRule } from "@/types/activity";
 import { findActivitiesMatchingRule } from "@/utils/activityUtils";
 import { RuleFormValues } from "@/components/rules/rule-dialog";
 import { isNonEmptyString } from "@/utils/value-checks";
 
 interface UseUpdateRuleOptions {
-  onSuccess?: (data: any) => void;
+  onSuccess?: (data: ActivityRule) => void;
   onError?: (error: Error) => void;
   timeEntryId?: string;
   activities: Activity[] | null;
@@ -19,8 +19,8 @@ export function useUpdateRule(
   const queryClient = useQueryClient();
 
   const updateRuleMutation = useMutation({
-    mutationFn: ({ id, rating }: { id: string; rating: number }) => {
-      return trpcClient.activity.updateRule.mutate({ id, rating });
+    mutationFn: ({ id, ...rest }: { id: string } & Partial<RuleFormValues>) => {
+      return trpcClient.activity.updateRule.mutate({ id, ...rest });
     },
     onError: (error) => {
       toast({
