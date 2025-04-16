@@ -3,8 +3,9 @@ import { trpcClient } from "@/utils/trpc";
 import { toast } from "@/hooks/use-toast";
 import { Activity, ActivityRule } from "@/types/activity";
 import { findActivitiesMatchingRule } from "@/utils/activityUtils";
-import { RuleFormValues } from "@/components/rules/rule-dialog";
+
 import { isNonEmptyString } from "@/utils/value-checks";
+import { RuleFormValues } from "@/types/rule";
 
 interface UseUpdateRuleOptions {
   onSuccess?: (data: ActivityRule) => void;

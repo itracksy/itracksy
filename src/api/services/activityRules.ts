@@ -7,11 +7,12 @@ import { Activity, ActivityRule, GroupActivity } from "@/types/activity";
 
 import { extractDomain } from "../../utils/url";
 import { doesActivityMatchRule } from "../../utils/activityUtils";
+import { RuleFormValues } from "@/types/rule";
 
 /**
  * Create a new activity rule
  */
-export async function createRule(params: Omit<ActivityRule, "id" | "createdAt">) {
+export async function createRule(userId: string, params: RuleFormValues) {
   const now = Date.now();
 
   const rule = await db
@@ -27,7 +28,7 @@ export async function createRule(params: Omit<ActivityRule, "id" | "createdAt">)
       duration: params.duration || 0,
       durationCondition: params.durationCondition || null,
       rating: params.rating,
-      userId: params.userId,
+      userId: userId,
       createdAt: now,
       active: params.active !== undefined ? params.active : true,
     })

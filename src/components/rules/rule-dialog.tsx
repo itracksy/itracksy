@@ -35,10 +35,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { HelpCircle, Focus, Globe, Tag } from "lucide-react";
-import { ruleFormSchema } from "@/types/rule";
+import { ruleFormSchema, RuleFormValues } from "@/types/rule";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-export type RuleFormValues = z.infer<typeof ruleFormSchema>;
 
 type RuleDialogProps = {
   open: boolean;

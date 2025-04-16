@@ -93,11 +93,8 @@ export const activityRouter = t.router({
 
   createRule: protectedProcedure.input(ruleFormSchema).mutation(async ({ ctx, input }) => {
     const userId = ctx.userId;
-    console.log("createRule", input);
-    return createRule({
-      ...input,
-      userId,
-    });
+
+    return createRule(userId, input);
   }),
 
   updateRule: protectedProcedure

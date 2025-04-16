@@ -12,11 +12,12 @@ import { RulesInfo } from "./rules-info";
 import { ActivityRule, GroupActivity } from "@/types/activity";
 import { OnClassify } from "@/types/classify";
 import { isNonEmptyObject } from "@/utils/value-checks";
-import { RuleDialog, RuleFormValues } from "@/components/rules/rule-dialog";
+import { RuleDialog } from "@/components/rules/rule-dialog";
 import { useCreateRule } from "@/hooks/use-create-rule";
 import { DomainGroup } from "./domain-group";
 import { ActivityItem } from "./activity-item";
 import { trpcClient } from "@/utils/trpc";
+import { RuleFormValues } from "@/types/rule";
 
 interface RuleDialogState {
   isOpen: boolean;

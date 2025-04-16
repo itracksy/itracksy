@@ -1,7 +1,8 @@
 import { Activity } from "@/types/activity";
-import { RuleFormValues } from "@/components/rules/rule-dialog";
+
 import { extractDomain } from "./url";
 import { isEmpty } from "./value-checks";
+import { RuleFormValues } from "@/types/rule";
 
 /**
  * Checks if an activity matches a rule based on the rule's criteria
@@ -14,10 +15,10 @@ export function doesActivityMatchRule(activity: Activity, rule: RuleFormValues):
     duration,
     condition,
   }: {
-    duration: number;
-    condition: string;
+    duration?: number;
+    condition?: string | null;
   }): boolean => {
-    if (duration <= 0) {
+    if (duration == null || duration <= 0) {
       return true;
     }
     if (condition === ">") {
@@ -29,8 +30,14 @@ export function doesActivityMatchRule(activity: Activity, rule: RuleFormValues):
     }
     return false;
   };
-  const isTitleValid = ({ title, condition }: { title: string; condition: string }): boolean => {
-    if (isEmpty(title)) {
+  const isTitleValid = ({
+    title,
+    condition,
+  }: {
+    title?: string;
+    condition?: string | null;
+  }): boolean => {
+    if (!title || isEmpty(title)) {
       return true;
     }
     if (condition === "contains") {
@@ -48,7 +55,7 @@ export function doesActivityMatchRule(activity: Activity, rule: RuleFormValues):
   const isAppNameValid = (appName: string): boolean => {
     return activity.ownerName === appName;
   };
-  const isDomainValid = (domain: string): boolean => {
+  const isDomainValid = (domain?: string): boolean => {
     if (isEmpty(domain)) {
       return true;
     }

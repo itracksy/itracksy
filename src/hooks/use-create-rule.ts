@@ -1,10 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpcClient } from "@/utils/trpc";
-import { RuleFormValues } from "@/components/rules/rule-dialog";
+
 import { Activity } from "@/types/activity";
 import { toast } from "@/hooks/use-toast";
 import { findActivitiesMatchingRule } from "@/utils/activityUtils";
 import { isNonEmptyString } from "@/utils/value-checks";
+import { RuleFormValues } from "@/types/rule";
 
 interface UseCreateRuleOptions {
   onSuccess?: (values: RuleFormValues) => void;

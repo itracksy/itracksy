@@ -18,7 +18,7 @@ import { Plus, Trash, Edit, Search, ChevronDown, ChevronUp, Filter } from "lucid
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { RuleDialog, RuleFormValues } from "@/components/rules/rule-dialog";
+import { RuleDialog } from "@/components/rules/rule-dialog";
 import { useCreateRule } from "@/hooks/use-create-rule";
 import { useUpdateRule } from "@/hooks/use-update-rule";
 import { useConfirmationDialog } from "@/components/providers/ConfirmationDialog";
@@ -31,6 +31,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { RuleFormValues } from "@/types/rule";
 
 export default function RuleBookPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
