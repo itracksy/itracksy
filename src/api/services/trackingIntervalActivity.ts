@@ -265,8 +265,8 @@ function showNotificationWarningBlock({
     detail: `${detail}\n\nPlease choose how you want to proceed with your current activity. Your choice helps us better track your work patterns and productivity.\n\nNote: Your response affects how iTracksy monitors your future activities.`,
     buttons: [
       "✓ Continue Working - This activity is work-related",
-      "⚠️ Return to Focus - Switch back to your primary task",
-      "🕒 Take a Break - Pause tracking for 15 minutes",
+      "🕒 Return to Focus - Switch back to your primary task",
+      "⚠️ Take a Break - Pause tracking for 15 minutes",
     ],
     defaultId: 1,
     noLink: true,
