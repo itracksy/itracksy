@@ -40,7 +40,7 @@ export default function RuleBookPage() {
 
   // Sorting and filtering state
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortField, setSortField] = useState<keyof ActivityRule>("name");
+  const [sortField, setSortField] = useState<keyof ActivityRule>("rating");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [ratingFilter, setRatingFilter] = useState<number | null>(null);
 

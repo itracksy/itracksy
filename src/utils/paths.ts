@@ -6,8 +6,7 @@ export const getDatabasePath = () => {
     // In development
     return "file:local.db";
   }
-  if (app && app.isPackaged) {
-    // In production, store in user data directory
-    return `file:${path.join(app.getPath("userData"), "local.db")}`;
-  }
+
+  // In production, store in user data directory
+  return `file:${path.join(app.getPath("userData"), "local.db")}`;
 };
