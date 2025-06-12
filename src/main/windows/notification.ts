@@ -18,13 +18,22 @@ export function createNotificationWindow(): BrowserWindow {
   const preload = path.join(__dirname, "./preload/notification.js");
   console.log("Notification: Preload path:", preload);
   console.log("Creating new notification window");
+
+  // Get the primary display to position the notification
+  const { screen } = require("electron");
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
+
   notificationWindow = new BrowserWindow({
-    width: 400,
-    height: 300,
+    width: 380,
+    height: 150,
+    x: screenWidth - 400, // Position 20px from right edge
+    y: 20, // Position 20px from top
     frame: false,
     alwaysOnTop: true,
     skipTaskbar: true,
-    resizable: true,
+    resizable: false,
+    transparent: true,
     webPreferences: {
       preload: preload,
       contextIsolation: true,

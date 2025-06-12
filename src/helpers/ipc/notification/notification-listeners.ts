@@ -27,15 +27,20 @@ export const addNotificationEventListeners = () => {
   });
 
   // Close notification handler
-  safelyRegisterListener(NOTIFICATION_CLOSE_CHANNEL, () => {
+  safelyRegisterListener(NOTIFICATION_CLOSE_CHANNEL, async () => {
     try {
       logger.debug("Closing notification window");
       const notificationWindow = getNotificationWindow();
-      if (notificationWindow) {
+      if (notificationWindow && !notificationWindow.isDestroyed()) {
+        logger.debug("Notification window found, closing...");
         notificationWindow.close();
+        logger.debug("Notification window close command sent");
+      } else {
+        logger.warn("Notification window not found or already destroyed");
       }
     } catch (error) {
       logger.error("Failed to close notification window", { error });
+      throw error; // Re-throw so the IPC call fails appropriately
     }
   });
 

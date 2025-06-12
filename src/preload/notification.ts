@@ -9,15 +9,20 @@ import {
 console.log("Notification preload script initializing");
 
 // Expose protected APIs to the renderer process
-contextBridge.exposeInMainWorld("electronAPI", {
+contextBridge.exposeInMainWorld("electronNotification", {
   // Function to close the notification window
-  closeNotification: () => {
+  close: async () => {
     console.log("Sending close-notification event");
-    ipcRenderer.invoke(NOTIFICATION_CLOSE_CHANNEL);
+    try {
+      await ipcRenderer.invoke(NOTIFICATION_CLOSE_CHANNEL);
+      console.log("Close notification request sent successfully");
+    } catch (error) {
+      console.error("Failed to close notification:", error);
+    }
   },
 
   // Function to handle notification action
-  notificationAction: () => {
+  action: () => {
     console.log("Sending notification-action event");
     ipcRenderer.invoke(NOTIFICATION_ACTION_CHANNEL);
   },
