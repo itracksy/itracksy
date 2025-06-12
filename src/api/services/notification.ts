@@ -9,48 +9,28 @@ import { nanoid } from "nanoid";
 import db from "../db";
 import { getLastNotification } from "./notifications";
 import { getTitleTimeEntry } from "../db/timeEntryExt";
+import { sendNotificationToWindow } from "../../helpers/notification/notification-window-utils";
 
 export const sendNotification = async (
   options: Omit<NotificationInsert, "id">,
-  timeoutMs?: number
+  timeoutMs?: number,
+  autoDismiss?: boolean
 ) => {
   try {
-    // Check if notifications are supported
-    if (!Notification.isSupported()) {
-      logger.warn("System notifications are not supported on this platform");
-      return false;
-    }
-
-    const notification = new Notification({
-      title: options.title,
-      body: options.body,
-      icon: "./resources/icon.png",
-    });
-
     // Store notification in database
     await db.insert(notifications).values({
       ...options,
       id: nanoid(),
     });
 
-    // Handle notification click
-    notification.on("click", () => {
-      // Focus the main window
-      const mainWindow = BrowserWindow.getAllWindows()[0];
-      if (mainWindow) {
-        if (mainWindow.isMinimized()) mainWindow.restore();
-        mainWindow.show();
-        mainWindow.focus();
-      }
+    // Use custom notification window instead of native OS notifications
+    const success = await sendNotificationToWindow({
+      title: options.title,
+      body: options.body,
+      autoDismiss: autoDismiss ?? false, // Default is false (no auto dismiss)
     });
 
-    if (timeoutMs) {
-      setTimeout(() => notification.show(), timeoutMs);
-    } else {
-      notification.show();
-    }
-
-    return true;
+    return success;
   } catch (error) {
     console.error("Failed to send notification:", error);
     return false;
@@ -103,14 +83,18 @@ export const sendNotificationWhenNoActiveEntry = async (userId: string) => {
   const message = messages[Math.floor(Math.random() * messages.length)];
 
   if (message) {
-    await sendNotification({
-      title: "Time for a New Focus Session!",
-      body: `${message}\n\nLast session: ${sessionMinutesDuration} minutes focused on "${taskTitle}" 🎯`,
-      userId: userId,
-      type: "remind_last_time_entry",
-      timeEntryId: lastTimeEntry.id,
-      createdAt: Date.now(),
-    });
+    await sendNotification(
+      {
+        title: "Time for a New Focus Session!",
+        body: `${message}\n\nLast session: ${sessionMinutesDuration} minutes focused on "${taskTitle}" 🎯`,
+        userId: userId,
+        type: "remind_last_time_entry",
+        timeEntryId: lastTimeEntry.id,
+        createdAt: Date.now(),
+      },
+      undefined,
+      true
+    ); // Enable auto-dismiss for motivational messages
   }
 };
 
@@ -132,14 +116,18 @@ export const sendNotificationService = async (
     });
 
     try {
-      sendNotification({
-        title,
-        body,
-        userId: timeEntry.userId,
-        type: "engagement_time_entry",
-        timeEntryId: timeEntry.id,
-        createdAt: Date.now(),
-      });
+      sendNotification(
+        {
+          title,
+          body,
+          userId: timeEntry.userId,
+          type: "engagement_time_entry",
+          timeEntryId: timeEntry.id,
+          createdAt: Date.now(),
+        },
+        undefined,
+        false
+      ); // Keep engagement notifications persistent (no auto-dismiss)
       const notificationSentAt = (timeEntry.notificationSentAt ?? 0) + 1;
 
       await updateTimeEntry(timeEntry.id, { notificationSentAt });

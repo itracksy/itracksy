@@ -5,7 +5,7 @@ import {
   createNotificationWindow,
   closeNotificationWindow as closeWindow,
 } from "../../main/windows/notification";
-import { NOTIFICATION_SHOW_CHANNEL } from "../../helpers/ipc/notification/notification-channels";
+import { sendNotificationToWindow } from "../../helpers/notification/notification-window-utils";
 
 export const utilsRouter = t.router({
   openExternalUrl: protectedProcedure
@@ -25,29 +25,22 @@ export const utilsRouter = t.router({
         .object({
           title: z.string(),
           description: z.string(),
+          autoDismiss: z.boolean().optional(), // Optional auto-dismiss setting
         })
         .optional()
     )
-    .mutation(({ input }) => {
+    .mutation(async ({ input }) => {
       try {
         const window = createNotificationWindow();
 
         // If data is provided, send it to the notification window
         if (input && window) {
-          // Wait for the window to be ready before sending the message
-          if (window.webContents.isLoading()) {
-            window.webContents.once("did-finish-load", () => {
-              window.webContents.send(NOTIFICATION_SHOW_CHANNEL, {
-                title: input.title,
-                body: input.description,
-              });
-            });
-          } else {
-            window.webContents.send(NOTIFICATION_SHOW_CHANNEL, {
-              title: input.title,
-              body: input.description,
-            });
-          }
+          const success = await sendNotificationToWindow({
+            title: input.title,
+            body: input.description,
+            autoDismiss: input.autoDismiss ?? false, // Default is false
+          });
+          return { success };
         }
 
         return { success: !!window };
@@ -73,30 +66,18 @@ export const utilsRouter = t.router({
       z.object({
         title: z.string(),
         description: z.string(),
+        autoDismiss: z.boolean().optional(), // Optional auto-dismiss setting
       })
     )
-    .mutation(({ input }) => {
+    .mutation(async ({ input }) => {
       try {
-        const window = createNotificationWindow();
+        const success = await sendNotificationToWindow({
+          title: input.title,
+          body: input.description,
+          autoDismiss: input.autoDismiss ?? false, // Default is false
+        });
 
-        if (window) {
-          // Wait for the window to be ready before sending the message
-          if (window.webContents.isLoading()) {
-            window.webContents.once("did-finish-load", () => {
-              window.webContents.send(NOTIFICATION_SHOW_CHANNEL, {
-                title: input.title,
-                body: input.description,
-              });
-            });
-          } else {
-            window.webContents.send(NOTIFICATION_SHOW_CHANNEL, {
-              title: input.title,
-              body: input.description,
-            });
-          }
-        }
-
-        return { success: !!window };
+        return { success };
       } catch (error) {
         console.error("Failed to send notification:", error);
         return { success: false, error: String(error) };

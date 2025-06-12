@@ -1,9 +1,5 @@
+import { NotificationData } from "@/helpers/notification/notification-window-utils";
 import React, { useState, useEffect } from "react";
-
-interface NotificationData {
-  title: string;
-  body: string;
-}
 
 const NotificationApp: React.FC = () => {
   const [notificationData, setNotificationData] = useState<NotificationData | null>(null);
@@ -18,6 +14,7 @@ const NotificationApp: React.FC = () => {
         setNotificationData({
           title: "Test Notification",
           body: "This is a test notification to verify the UI works",
+          autoDismiss: false, // Default is no auto dismiss
         });
       }
     }, 2000);
@@ -38,7 +35,10 @@ const NotificationApp: React.FC = () => {
       const handleNotification = (data: NotificationData) => {
         console.log("Notification received in component:", data);
         setNotificationData(data);
-        setTimeLeft(5); // Reset timer when new notification arrives
+        // Reset timer when new notification arrives (only if autoDismiss is enabled)
+        if (data.autoDismiss) {
+          setTimeLeft(5);
+        }
       };
 
       window.electronNotification.onNotification(handleNotification);
@@ -53,15 +53,15 @@ const NotificationApp: React.FC = () => {
     }
   }, []);
 
-  // Auto-close timer
+  // Auto-close timer (only if autoDismiss is enabled)
   useEffect(() => {
-    if (notificationData && timeLeft > 0) {
+    if (notificationData && notificationData.autoDismiss && timeLeft > 0) {
       const timer = setTimeout(() => {
         setTimeLeft(timeLeft - 1);
       }, 1000);
 
       return () => clearTimeout(timer);
-    } else if (notificationData && timeLeft === 0) {
+    } else if (notificationData && notificationData.autoDismiss && timeLeft === 0) {
       // Auto-close when timer reaches 0
       closeNotification();
     }
@@ -150,7 +150,7 @@ const NotificationApp: React.FC = () => {
           </p>
         </div>
 
-        {/* Auto-close countdown */}
+        {/* Auto-close countdown - only show if autoDismiss is enabled */}
         {notificationData && (
           <div
             style={{
@@ -160,15 +160,27 @@ const NotificationApp: React.FC = () => {
               marginTop: "12px",
             }}
           >
-            <p
-              style={{
-                margin: "0",
-                fontSize: "12px",
-                color: "#999",
-              }}
-            >
-              Auto-closing in {timeLeft}s
-            </p>
+            {notificationData.autoDismiss ? (
+              <p
+                style={{
+                  margin: "0",
+                  fontSize: "12px",
+                  color: "#999",
+                }}
+              >
+                Auto-closing in {timeLeft}s
+              </p>
+            ) : (
+              <p
+                style={{
+                  margin: "0",
+                  fontSize: "12px",
+                  color: "#666",
+                }}
+              >
+                Click dismiss to close
+              </p>
+            )}
 
             <button
               onClick={closeNotification}

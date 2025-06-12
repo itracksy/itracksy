@@ -1,27 +1,22 @@
-import { ipcMain } from "electron";
 import {
   NOTIFICATION_SEND_CHANNEL,
   NOTIFICATION_CLOSE_CHANNEL,
   NOTIFICATION_ACTION_CHANNEL,
-  NOTIFICATION_SHOW_CHANNEL,
 } from "./notification-channels";
 
 import { safelyRegisterListener } from "../safelyRegisterListener";
-import {
-  createNotificationWindow,
-  getNotificationWindow,
-} from "../../../main/windows/notification";
+import { getNotificationWindow } from "../../../main/windows/notification";
+import { sendNotificationToWindow } from "../../notification/notification-window-utils";
 import { logger } from "../../logger";
 
 export const addNotificationEventListeners = () => {
   logger.debug("NotificationListeners: Adding notification listeners");
 
   // Send notification handler
-  safelyRegisterListener(NOTIFICATION_SEND_CHANNEL, (_event, data) => {
+  safelyRegisterListener(NOTIFICATION_SEND_CHANNEL, async (_event, data) => {
     try {
       logger.debug("Notification requested", data);
-      const notificationWindow = createNotificationWindow();
-      notificationWindow.webContents.send(NOTIFICATION_SHOW_CHANNEL, data);
+      await sendNotificationToWindow(data);
     } catch (error) {
       logger.error("Failed to send notification", { error, data });
     }
