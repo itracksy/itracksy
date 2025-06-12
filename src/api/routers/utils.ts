@@ -5,6 +5,7 @@ import {
   createNotificationWindow,
   closeNotificationWindow as closeWindow,
 } from "../../main/windows/notification";
+import { NOTIFICATION_SHOW_CHANNEL } from "../../helpers/ipc/notification/notification-channels";
 
 export const utilsRouter = t.router({
   openExternalUrl: protectedProcedure
@@ -33,10 +34,20 @@ export const utilsRouter = t.router({
 
         // If data is provided, send it to the notification window
         if (input && window) {
-          window.webContents.send("show-notification", {
-            title: input.title,
-            body: input.description,
-          });
+          // Wait for the window to be ready before sending the message
+          if (window.webContents.isLoading()) {
+            window.webContents.once("did-finish-load", () => {
+              window.webContents.send(NOTIFICATION_SHOW_CHANNEL, {
+                title: input.title,
+                body: input.description,
+              });
+            });
+          } else {
+            window.webContents.send(NOTIFICATION_SHOW_CHANNEL, {
+              title: input.title,
+              body: input.description,
+            });
+          }
         }
 
         return { success: !!window };
@@ -69,10 +80,20 @@ export const utilsRouter = t.router({
         const window = createNotificationWindow();
 
         if (window) {
-          window.webContents.send("show-notification", {
-            title: input.title,
-            body: input.description,
-          });
+          // Wait for the window to be ready before sending the message
+          if (window.webContents.isLoading()) {
+            window.webContents.once("did-finish-load", () => {
+              window.webContents.send(NOTIFICATION_SHOW_CHANNEL, {
+                title: input.title,
+                body: input.description,
+              });
+            });
+          } else {
+            window.webContents.send(NOTIFICATION_SHOW_CHANNEL, {
+              title: input.title,
+              body: input.description,
+            });
+          }
         }
 
         return { success: !!window };

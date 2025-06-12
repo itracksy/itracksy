@@ -3,6 +3,7 @@ import {
   NOTIFICATION_SEND_CHANNEL,
   NOTIFICATION_CLOSE_CHANNEL,
   NOTIFICATION_ACTION_CHANNEL,
+  NOTIFICATION_SHOW_CHANNEL,
 } from "./notification-channels";
 
 import { safelyRegisterListener } from "../safelyRegisterListener";
@@ -20,7 +21,7 @@ export const addNotificationEventListeners = () => {
     try {
       logger.debug("Notification requested", data);
       const notificationWindow = createNotificationWindow();
-      notificationWindow.webContents.send("show-notification", data);
+      notificationWindow.webContents.send(NOTIFICATION_SHOW_CHANNEL, data);
     } catch (error) {
       logger.error("Failed to send notification", { error, data });
     }

@@ -3,6 +3,7 @@ import {
   NOTIFICATION_SEND_CHANNEL,
   NOTIFICATION_CLOSE_CHANNEL,
   NOTIFICATION_ACTION_CHANNEL,
+  NOTIFICATION_SHOW_CHANNEL,
 } from "./notification-channels";
 
 export function exposeNotificationContext() {
@@ -27,7 +28,7 @@ export function exposeNotificationContext() {
 
     // Function to listen for show-notification events
     onNotification: (callback: (data: any) => void) => {
-      ipcRenderer.on("show-notification", (_event, data) => {
+      ipcRenderer.on(NOTIFICATION_SHOW_CHANNEL, (_event, data) => {
         console.log("Received show-notification event", data);
         callback(data);
       });
