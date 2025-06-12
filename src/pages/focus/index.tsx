@@ -101,6 +101,7 @@ export default function FocusPage() {
       });
 
       const mode = activeTab === "focus" ? "Focus" : "Break";
+      trpcClient.utils.openNotificationWindow.mutate();
       toast({
         title: `${mode} Session Started`,
         description: `Your ${minutes}-minute ${mode.toLowerCase()} session has begun.`,

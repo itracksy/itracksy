@@ -1,6 +1,15 @@
 import * as path from "path";
 
-import { app, BrowserWindow, Tray, Menu, nativeImage, Notification, session } from "electron";
+import {
+  app,
+  BrowserWindow,
+  Tray,
+  Menu,
+  nativeImage,
+  Notification,
+  session,
+  ipcMain,
+} from "electron";
 import { createIPCHandler } from "electron-trpc/main";
 import registerListeners from "./helpers/ipc/listeners-register";
 import { router } from "./api";
@@ -9,6 +18,8 @@ import { createContext } from "./api/trpc";
 
 import { logger } from "./helpers/logger";
 import { startTracking } from "./api/services/trackingIntervalActivity";
+import { createNotificationWindow, getNotificationWindow } from "./main/windows/notification";
+import { debug } from "console";
 
 const inDevelopment: boolean = process.env.NODE_ENV === "development";
 let mainWindow: BrowserWindow | null = null;
@@ -135,6 +146,7 @@ async function createTray() {
 
 function createWindow(): void {
   const preload = path.join(__dirname, "preload.js");
+  console.log("Main: Preload path:", preload);
   const iconPath = path.join(__dirname, "../resources/icon.ico");
   mainWindow = new BrowserWindow({
     width: 1400,
@@ -192,6 +204,26 @@ app.whenReady().then(async () => {
 
   await createTray();
   createWindow();
+  // Set up IPC handlers
+  ipcMain.on("send-notification", (_event, data) => {
+    console.log("Notification requested", data);
+    const notificationWindow = createNotificationWindow();
+    notificationWindow.webContents.send("show-notification", data);
+  });
+
+  ipcMain.on("close-notification", () => {
+    console.log("Closing notification window");
+    const notificationWindow = getNotificationWindow();
+    if (notificationWindow) {
+      notificationWindow.close();
+    }
+  });
+
+  ipcMain.on("notification-action", () => {
+    console.log("Notification action triggered");
+    // You can add custom action handling here
+  });
+
   // Modify CSP to allow scripts from PostHog and inline scripts
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
