@@ -1,4 +1,4 @@
-import { BrowserWindow, app, dialog, ipcMain, screen, Tray } from "electron";
+import { BrowserWindow, app, Tray } from "electron";
 import {
   WIN_CLOSE_CHANNEL,
   WIN_MAXIMIZE_CHANNEL,
@@ -14,12 +14,11 @@ import { safelyRegisterListener } from "../safelyRegisterListener";
 import { logger } from "../../../helpers/logger";
 import { getPlatformDownloadUrl } from "./handleDownload";
 
-let mainWindowRef: BrowserWindow | null = null;
 let trayRef: Tray | null = null;
 
 export const addWindowEventListeners = (mainWindow: BrowserWindow, tray: Tray | null) => {
   logger.debug("WindowListeners: Adding listeners", { hasTray: !!tray });
-  mainWindowRef = mainWindow;
+
   trayRef = tray;
   // Register window event handlers
   safelyRegisterListener(WIN_MINIMIZE_CHANNEL, () => mainWindow?.minimize());

@@ -4,4 +4,10 @@ interface Window {
     getAppVersion: () => Promise<string>;
     // Add other Electron API methods as needed
   };
+  electronNotification?: {
+    send: (data: any) => Promise<void>;
+    close: () => Promise<void>;
+    action: () => Promise<void>;
+    onNotification: (callback: (data: any) => void) => void;
+  };
 }

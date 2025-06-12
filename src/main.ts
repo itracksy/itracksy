@@ -204,25 +204,6 @@ app.whenReady().then(async () => {
 
   await createTray();
   createWindow();
-  // Set up IPC handlers
-  ipcMain.on("send-notification", (_event, data) => {
-    console.log("Notification requested", data);
-    const notificationWindow = createNotificationWindow();
-    notificationWindow.webContents.send("show-notification", data);
-  });
-
-  ipcMain.on("close-notification", () => {
-    console.log("Closing notification window");
-    const notificationWindow = getNotificationWindow();
-    if (notificationWindow) {
-      notificationWindow.close();
-    }
-  });
-
-  ipcMain.on("notification-action", () => {
-    console.log("Notification action triggered");
-    // You can add custom action handling here
-  });
 
   // Modify CSP to allow scripts from PostHog and inline scripts
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {

@@ -1,4 +1,9 @@
 import { contextBridge, ipcRenderer } from "electron";
+import {
+  NOTIFICATION_SEND_CHANNEL,
+  NOTIFICATION_CLOSE_CHANNEL,
+  NOTIFICATION_ACTION_CHANNEL,
+} from "../helpers/ipc/notification/notification-channels";
 
 // Add debug logging to preload script
 console.log("Notification preload script initializing");
@@ -8,13 +13,13 @@ contextBridge.exposeInMainWorld("electronAPI", {
   // Function to close the notification window
   closeNotification: () => {
     console.log("Sending close-notification event");
-    ipcRenderer.send("close-notification");
+    ipcRenderer.invoke(NOTIFICATION_CLOSE_CHANNEL);
   },
 
   // Function to handle notification action
   notificationAction: () => {
     console.log("Sending notification-action event");
-    ipcRenderer.send("notification-action");
+    ipcRenderer.invoke(NOTIFICATION_ACTION_CHANNEL);
   },
 
   // Function to listen for show-notification events
