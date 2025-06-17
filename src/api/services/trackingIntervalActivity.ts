@@ -16,6 +16,7 @@ import { getTray } from "../../main";
 import { extractUrlFromBrowserTitle } from "../../helpers/extractUrlFromBrowserTitle";
 import { findMatchingRules } from "./activityRules";
 import { showBlockingNotification } from "./blocking-notification-service";
+import { sendClockUpdate } from "../../helpers/ipc/clock/clock-listeners";
 
 let trackingIntervalId: NodeJS.Timeout | null = null;
 let lastNotificationTime: number = 0;
@@ -60,6 +61,13 @@ export const startTracking = async (): Promise<void> => {
         // Format: F 12:34 or B 12:34
         tray.setTitle(`${modePrefix} ${formattedDuration}`);
       }
+
+      // Send update to clock window
+      sendClockUpdate({
+        activeEntry,
+        currentTime: Date.now(),
+        elapsedSeconds: durationInSeconds,
+      });
 
       const timeExceeded =
         Math.floor((Date.now() - activeEntry.startTime) / 1000) -

@@ -18,6 +18,7 @@ import { createContext } from "./api/trpc";
 
 import { logger } from "./helpers/logger";
 import { startTracking } from "./api/services/trackingIntervalActivity";
+import { toggleClockWindow } from "./main/windows/clock";
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -118,6 +119,13 @@ async function createTray() {
         }
       },
     },
+    {
+      label: "Show Clock",
+      click: () => {
+        toggleClockWindow();
+      },
+    },
+    { type: "separator" },
     {
       label: "Quit",
       click: () => {
