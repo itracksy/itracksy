@@ -18,10 +18,7 @@ import { createContext } from "./api/trpc";
 
 import { logger } from "./helpers/logger";
 import { startTracking } from "./api/services/trackingIntervalActivity";
-import { createNotificationWindow, getNotificationWindow } from "./main/windows/notification";
-import { debug } from "console";
 
-const inDevelopment: boolean = process.env.NODE_ENV === "development";
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let isQuiting: boolean = false;

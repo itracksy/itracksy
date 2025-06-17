@@ -15,10 +15,9 @@ import { formatDuration } from "../../utils/formatTime";
 import { getTray } from "../../main";
 import { extractUrlFromBrowserTitle } from "../../helpers/extractUrlFromBrowserTitle";
 import { findMatchingRules } from "./activityRules";
+import { showBlockingNotification } from "./blocking-notification-service";
 
 let trackingIntervalId: NodeJS.Timeout | null = null;
-let notificationWindow: BrowserWindow | null = null;
-
 let lastNotificationTime: number = 0;
 
 let isAccessibilityError: boolean = false;
@@ -170,55 +169,8 @@ const stopTracking = (): void => {
   }
 };
 
-function createNotificationWarningBlockWindow() {
-  // Get the current mouse position to determine active screen
-  const mousePoint = screen.getCursorScreenPoint();
-  const currentDisplay = screen.getDisplayNearestPoint(mousePoint);
-  const { width, height } = currentDisplay.workAreaSize;
-
-  notificationWindow = new BrowserWindow({
-    width,
-    height,
-    frame: true, // Change to true to show the window frame with system controls
-    transparent: true,
-    backgroundColor: "rgba(0, 0, 0, 0.7)", // Semi-transparent black background
-    hasShadow: true, // Enable shadow for better visibility of the window
-    alwaysOnTop: true,
-    type: "panel",
-    skipTaskbar: false, // Show in taskbar to allow users to find it
-    show: false,
-    movable: false, // Allow the window to be moved
-    resizable: true, // Allow resizing
-    minimizable: true, // Allow minimizing
-    maximizable: true, // Allow maximizing
-    closable: true, // Allow closing
-    focusable: true, // Allow focusing the window
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-    },
-    vibrancy: "under-window", // Add vibrancy effect (macOS)
-    visualEffectState: "active", // Ensure visual effect is active
-    titleBarStyle: "hiddenInset", // Use hidden inset style for macOS (shows only the traffic lights)
-  });
-
-  // Set window to be always on top with highest level
-  notificationWindow.setAlwaysOnTop(true, "screen-saver");
-  notificationWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  notificationWindow.moveTop();
-
-  notificationWindow.setTitle("iTracksy - Work Activity Alert");
-
-  // Set window bounds to cover current display
-  notificationWindow.setBounds(currentDisplay.bounds);
-
-  // Add blur effect for Windows and Linux (not needed for macOS as vibrancy handles it)
-  if (process.platform !== "darwin") {
-    notificationWindow.setBackgroundColor("rgba(0, 0, 0, 0.7)");
-  }
-
-  return notificationWindow;
-}
+// No longer needed as we're using sendBlockingNotificationToWindow
+// function createNotificationWarningBlockWindow() has been removed
 
 function showNotificationWarningBlock({
   title,
@@ -241,41 +193,21 @@ function showNotificationWarningBlock({
     createdAt: Date.now(),
     timeEntryId,
   });
-  if (!notificationWindow || notificationWindow.isDestroyed()) {
-    notificationWindow = createNotificationWarningBlockWindow();
-  } else {
-    if (notificationWindow.isVisible()) {
-      // Window is already visible, don't show another notification
-      return;
-    }
-  }
 
-  // Update last notification time
-  lastNotificationTime = Date.now();
+  // Send blocking notification to a dedicated window
+  showBlockingNotification({
+    title,
+    detail,
+    userId,
+    timeEntryId,
+    appOrDomain,
+  })
+    .then(async (response: number) => {
+      lastNotificationTime = Date.now();
 
-  // Ensure window is at the front
-  notificationWindow.moveTop();
-  notificationWindow.show();
-  notificationWindow.focus();
-
-  const options = {
-    type: "question" as const,
-    title: "iTracksy - Work Activity Alert",
-    message: `Activity Detection: ${title}`,
-    detail: `${detail}\n\nPlease choose how you want to proceed with your current activity. Your choice helps us better track your work patterns and productivity.\n\nNote: Your response affects how iTracksy monitors your future activities.`,
-    buttons: [
-      "✓ Continue Working - This activity is work-related",
-      "🕒 Return to Focus - Switch back to your primary task",
-      "⚠️ Take a Break - Pause tracking for 15 minutes",
-    ],
-    defaultId: 1,
-    noLink: true,
-  };
-
-  dialog.showMessageBox(notificationWindow, options).then(async (value) => {
-    switch (value.response) {
-      case 0: // This is part of my work
-        // Update whitelisted activities by appending new app/domain
+      // Handle response based on button clicked
+      if (response === 0) {
+        // User chose "Continue Working"
         await db
           .update(timeEntries)
           .set({
@@ -285,12 +217,11 @@ function showNotificationWarningBlock({
             END`,
           })
           .where(eq(timeEntries.id, timeEntryId));
-        break;
-      case 1: // You are on focus mode, come back to it!
+      } else if (response === 1) {
+        // User chose "Return to Focus"
         // Continue showing notifications after cooldown
-
-        break;
-      case 2: // Break in 15 min
+      } else if (response === 2) {
+        // User chose "Take a Break"
         const userId = await getCurrentUserIdLocalStorage();
         if (!userId) {
           return;
@@ -311,12 +242,13 @@ function showNotificationWarningBlock({
           },
           userId
         );
-        break;
-    }
-
-    // Hide the window after dialog is closed
-    if (notificationWindow && !notificationWindow.isDestroyed()) {
-      notificationWindow.hide();
-    }
-  });
+      } else if (response === -1) {
+        // User dismissed the notification without making a choice
+        logger.info("[showNotificationWarningBlock] Notification dismissed without action");
+        // Similar to "Return to Focus" - continue showing notifications after cooldown
+      }
+    })
+    .catch((error: Error) => {
+      logger.error("[showNotificationWarningBlock] Error showing blocking notification", { error });
+    });
 }

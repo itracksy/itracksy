@@ -1,4 +1,7 @@
-import { NotificationData } from "@/helpers/notification/notification-window-utils";
+import {
+  NotificationData,
+  NotificationAction,
+} from "@/helpers/notification/notification-window-utils";
 import React, { useState, useEffect } from "react";
 
 const NotificationApp: React.FC = () => {
@@ -81,6 +84,15 @@ const NotificationApp: React.FC = () => {
     }
   };
 
+  const handleAction = async (action: () => Promise<void>) => {
+    try {
+      await action();
+      closeNotification();
+    } catch (error) {
+      console.error("Failed to execute notification action:", error);
+    }
+  };
+
   return (
     <div
       style={{
@@ -95,8 +107,8 @@ const NotificationApp: React.FC = () => {
     >
       <div
         style={{
-          width: "350px",
-          padding: "16px",
+          width: "400px",
+          padding: "20px",
           background: "rgba(255, 255, 255, 0.95)",
           backdropFilter: "blur(10px)",
           border: "1px solid rgba(255, 255, 255, 0.2)",
@@ -124,14 +136,17 @@ const NotificationApp: React.FC = () => {
                 opacity: 1;
               }
             }
+            .action-button:hover {
+              opacity: 0.9;
+            }
           `}
         </style>
 
-        <div style={{ marginBottom: "12px" }}>
+        <div style={{ marginBottom: "16px" }}>
           <h3
             style={{
-              margin: "0 0 6px 0",
-              fontSize: "16px",
+              margin: "0 0 8px 0",
+              fontSize: "18px",
               fontWeight: "600",
               color: "#1a1a1a",
             }}
@@ -142,16 +157,50 @@ const NotificationApp: React.FC = () => {
             style={{
               margin: "0",
               fontSize: "14px",
-              lineHeight: "1.4",
+              lineHeight: "1.5",
               color: "#666",
+              whiteSpace: "pre-line",
             }}
           >
             {notificationData?.body || "This is a notification window."}
           </p>
         </div>
 
+        {notificationData?.actions && (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+              marginTop: "16px",
+            }}
+          >
+            {notificationData.actions.map((action: NotificationAction, index: number) => (
+              <button
+                key={index}
+                onClick={() => handleAction(action.action)}
+                className="action-button"
+                style={{
+                  padding: "10px 16px",
+                  background: index === 0 ? "#4CAF50" : index === 1 ? "#2196F3" : "#FF9800",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  textAlign: "left",
+                  transition: "opacity 0.2s",
+                }}
+              >
+                {action.label}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Auto-close countdown - only show if autoDismiss is enabled */}
-        {notificationData && (
+        {notificationData?.autoDismiss && (
           <div
             style={{
               display: "flex",
@@ -160,50 +209,15 @@ const NotificationApp: React.FC = () => {
               marginTop: "12px",
             }}
           >
-            {notificationData.autoDismiss ? (
-              <p
-                style={{
-                  margin: "0",
-                  fontSize: "12px",
-                  color: "#999",
-                }}
-              >
-                Auto-closing in {timeLeft}s
-              </p>
-            ) : (
-              <p
-                style={{
-                  margin: "0",
-                  fontSize: "12px",
-                  color: "#666",
-                }}
-              >
-                Click dismiss to close
-              </p>
-            )}
-
-            <button
-              onClick={closeNotification}
+            <p
               style={{
-                padding: "6px 12px",
-                backgroundColor: "#f0f0f0",
-                color: "#666",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
+                margin: "0",
                 fontSize: "12px",
-                fontWeight: "500",
-                transition: "background-color 0.2s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "#e0e0e0";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "#f0f0f0";
+                color: "#999",
               }}
             >
-              Dismiss
-            </button>
+              Auto-closing in {timeLeft}s
+            </p>
           </div>
         )}
       </div>

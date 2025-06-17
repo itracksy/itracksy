@@ -2,10 +2,16 @@ import { createNotificationWindow } from "../../main/windows/notification";
 import { NOTIFICATION_SHOW_CHANNEL } from "../ipc/notification/notification-channels";
 import { logger } from "../logger";
 
+export interface NotificationAction {
+  label: string;
+  action: () => Promise<void>;
+}
+
 export interface NotificationData {
   title: string;
   body: string;
   autoDismiss?: boolean; // Default is false (turn off auto dismiss)
+  actions?: NotificationAction[];
 }
 
 /**
