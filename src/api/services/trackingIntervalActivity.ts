@@ -5,7 +5,12 @@ import { TRACKING_INTERVAL } from "../../config/tracking";
 import { extractDomainWindows, urlContainsDomain } from "../../utils/url";
 import { logger } from "../../helpers/logger";
 import { getCurrentUserIdLocalStorage } from "./userSettings";
-import { createTimeEntry, getActiveTimeEntry, updateTimeEntry } from "./timeEntry";
+import {
+  createTimeEntry,
+  getActiveTimeEntry,
+  updateTimeEntry,
+  getLastSessionByMode,
+} from "./timeEntry";
 import { sendNotificationService, sendNotificationWhenNoActiveEntry } from "./notification";
 import { createNotification } from "./notifications";
 import db from "../db";
@@ -78,6 +83,27 @@ export const startTracking = async (): Promise<void> => {
         if (activeEntry.autoStopEnabled) {
           //stop the session when time is exceeded
           await updateTimeEntry(activeEntry.id, { endTime: Date.now() });
+
+          // Auto-start new session with opposite mode
+          const newMode = !activeEntry.isFocusMode; // Switch mode
+
+          // Get duration from last session of the new mode
+          const lastSessionOfNewMode = await getLastSessionByMode(userId, newMode);
+          const defaultDuration = newMode ? 25 : 15; // Fallback defaults
+          const targetDuration = lastSessionOfNewMode?.targetDuration ?? defaultDuration;
+          const description = newMode ? "Focus Time" : "Break Time";
+
+          await createTimeEntry(
+            {
+              isFocusMode: newMode,
+              startTime: Date.now(),
+              targetDuration: targetDuration,
+              description: description,
+              autoStopEnabled: activeEntry.autoStopEnabled, // Preserve auto-stop setting
+            },
+            userId
+          );
+
           return;
         }
       }

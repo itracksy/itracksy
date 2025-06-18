@@ -89,11 +89,11 @@ export function DailyProgressCard() {
               {formatTime(progress.targetMinutes * 60)}
             </span>
             <span className="font-bold text-tracksy-blue">
-              {Math.round(progress.progressPercentage)}%
+              {Math.round(progress.progressPercentage || 0)}%
             </span>
           </div>
           <Progress
-            value={progress.progressPercentage}
+            value={Math.max(0, Math.min(100, progress.progressPercentage || 0))}
             className="h-3"
             indicatorClassName={getProgressColor()}
           />

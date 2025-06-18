@@ -153,6 +153,22 @@ export async function getLastWorkingTimeEntry(userId: string) {
   return entry ?? null; // Ensure we always return null instead of undefined
 }
 
+export async function getLastSessionByMode(userId: string, isFocusMode: boolean) {
+  const entry = await db.query.timeEntries.findFirst({
+    where: and(
+      eq(timeEntries.userId, userId),
+      eq(timeEntries.isFocusMode, isFocusMode),
+      isNotNull(timeEntries.endTime)
+    ),
+    orderBy: desc(timeEntries.startTime),
+    with: {
+      item: true,
+    },
+  });
+
+  return entry ?? null;
+}
+
 export async function getTimeEntries({
   userId,
   boardId,

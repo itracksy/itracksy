@@ -3,7 +3,6 @@ import path from "path";
 
 // Declare the Vite environment variables for notification window
 declare const NOTIFICATION_WINDOW_VITE_DEV_SERVER_URL: string;
-declare const NOTIFICATION_WINDOW_VITE_NAME: string;
 
 let notificationWindow: BrowserWindow | null = null;
 
@@ -25,19 +24,25 @@ export function createNotificationWindow(): BrowserWindow {
   const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
 
   notificationWindow = new BrowserWindow({
-    width: 380,
-    height: 150,
-    x: screenWidth - 400, // Position 20px from right edge
+    width: 500,
+    height: 300,
+    minWidth: 400,
+    minHeight: 200,
+    maxWidth: 800,
+    maxHeight: 600,
+    x: screenWidth - 520, // Position 20px from right edge
     y: 20, // Position 20px from top
     frame: false,
     alwaysOnTop: true,
     skipTaskbar: true,
-    resizable: false,
+    resizable: true,
     transparent: true,
     webPreferences: {
       preload: preload,
       contextIsolation: true,
       nodeIntegration: false,
+      webSecurity: true,
+      scrollBounce: false, // Disable scroll bouncing on macOS
     },
   });
 
@@ -49,6 +54,32 @@ export function createNotificationWindow(): BrowserWindow {
     console.log("Loading notification from file");
     notificationWindow.loadFile(path.join(__dirname, `../renderer/notification/index.html`));
   }
+
+  // Inject CSS to hide scrollbars and ensure proper content sizing
+  notificationWindow.webContents.on("did-finish-load", () => {
+    console.log("Notification window loaded, injecting CSS for scrollbar prevention");
+    notificationWindow?.webContents.insertCSS(`
+      ::-webkit-scrollbar {
+        display: none !important;
+      }
+
+      body {
+        overflow: hidden !important;
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+      }
+
+      html {
+        overflow: hidden !important;
+        scrollbar-width: none !important;
+      }
+
+      * {
+        overflow-x: hidden !important;
+        overflow-y: hidden !important;
+      }
+    `);
+  });
 
   notificationWindow.on("closed", () => {
     console.log("Notification window closed");

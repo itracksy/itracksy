@@ -144,7 +144,13 @@ export async function getTodaysFocusProgress(userId: string): Promise<DailyProgr
     );
 
   const completedMinutes = Math.floor((todaysActivities[0]?.totalDuration || 0) / 60);
-  const progressPercentage = Math.min(100, (completedMinutes / target.targetMinutes) * 100);
+
+  // Ensure safe calculation of progress percentage
+  const progressPercentage =
+    target.targetMinutes > 0
+      ? Math.min(100, Math.max(0, (completedMinutes / target.targetMinutes) * 100))
+      : 0;
+
   const remainingMinutes = Math.max(0, target.targetMinutes - completedMinutes);
   const isCompleted = completedMinutes >= target.targetMinutes;
   const sessionsToday = todaysActivities[0]?.sessionCount || 0;
@@ -152,7 +158,7 @@ export async function getTodaysFocusProgress(userId: string): Promise<DailyProgr
   return {
     targetMinutes: target.targetMinutes,
     completedMinutes,
-    progressPercentage,
+    progressPercentage: Number.isFinite(progressPercentage) ? progressPercentage : 0,
     remainingMinutes,
     isCompleted,
     sessionsToday,

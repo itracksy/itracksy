@@ -19,7 +19,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { MotivationBooster } from "./MotivationBooster";
 
 export function FocusTargetWidget() {
   const { toast } = useToast();
@@ -93,6 +92,14 @@ export function FocusTargetWidget() {
       enableReminders,
       reminderIntervalMinutes,
     });
+  };
+
+  const getProgressColor = () => {
+    if (!progress) return "bg-tracksy-blue";
+    if (progress.isCompleted) return "bg-green-500";
+    if (progress.progressPercentage >= 75) return "bg-tracksy-gold";
+    if (progress.progressPercentage >= 50) return "bg-blue-500";
+    return "bg-tracksy-blue";
   };
 
   const formatTimeShort = (minutes: number): string => {
@@ -323,13 +330,13 @@ export function FocusTargetWidget() {
                   {formatTimeShort(progress.targetMinutes)}
                 </span>
                 <span className="font-semibold text-tracksy-blue">
-                  {Math.round(progress.progressPercentage)}%
+                  {Math.round(progress.progressPercentage || 0)}%
                 </span>
               </div>
               <Progress
-                value={progress.progressPercentage}
-                className="h-2"
-                indicatorClassName={progress.isCompleted ? "bg-green-500" : "bg-tracksy-blue"}
+                value={Math.max(0, Math.min(100, Number(progress.progressPercentage) || 0))}
+                className="h-3"
+                indicatorClassName={getProgressColor()}
               />
             </div>
 
