@@ -7,17 +7,13 @@ import {
 } from "./clock-channels";
 
 import { safelyRegisterListener } from "../safelyRegisterListener";
-import {
-  showClockWindow,
-  hideClockWindow,
-  getClockWindow,
-} from "../../../main/windows/clock";
+import { showClockWindow, hideClockWindow, getClockWindow } from "../../../main/windows/clock";
 import { logger } from "../../logger";
 import { getCurrentUserIdLocalStorage } from "../../../api/services/userSettings";
-import { 
-  createTimeEntry, 
-  getActiveTimeEntry, 
-  updateTimeEntry 
+import {
+  createTimeEntry,
+  getActiveTimeEntry,
+  updateTimeEntry,
 } from "../../../api/services/timeEntry";
 
 export const addClockEventListeners = () => {
@@ -51,55 +47,61 @@ export const addClockEventListeners = () => {
   safelyRegisterListener(CLOCK_CONTROL_CHANNEL, async (_event, { action, data }) => {
     try {
       logger.debug("Clock control action", { action, data });
-      
+
       const userId = await getCurrentUserIdLocalStorage();
       if (!userId) {
         throw new Error("No user ID available");
       }
 
       let result;
-      
+
       switch (action) {
-        case 'start':
+        case "start":
           // Start a new time entry
-          result = await createTimeEntry({
-            isFocusMode: data?.isFocusMode ?? true,
-            startTime: Date.now(),
-            targetDuration: data?.targetDuration ?? 25, // Default 25 minutes
-            description: data?.description ?? "Focus Session",
-          }, userId);
+          result = await createTimeEntry(
+            {
+              isFocusMode: data?.isFocusMode ?? true,
+              startTime: Date.now(),
+              targetDuration: data?.targetDuration ?? 25, // Default 25 minutes
+              description: data?.description ?? "Focus Session",
+            },
+            userId
+          );
           break;
-          
-        case 'pause':
+
+        case "pause":
           // Pause current time entry
           const activeEntry = await getActiveTimeEntry(userId);
           if (activeEntry) {
-            result = await updateTimeEntry(activeEntry.id, { 
-              endTime: Date.now() 
+            result = await updateTimeEntry(activeEntry.id, {
+              endTime: Date.now(),
             });
           }
           break;
-          
-        case 'stop':
+
+        case "stop":
           // Stop current time entry
           const currentEntry = await getActiveTimeEntry(userId);
           if (currentEntry) {
-            result = await updateTimeEntry(currentEntry.id, { 
-              endTime: Date.now() 
+            result = await updateTimeEntry(currentEntry.id, {
+              endTime: Date.now(),
             });
           }
           break;
-          
-        case 'resume':
+
+        case "resume":
           // Resume with a new entry (since we don't have pause/resume in current schema)
-          result = await createTimeEntry({
-            isFocusMode: data?.isFocusMode ?? true,
-            startTime: Date.now(),
-            targetDuration: data?.targetDuration ?? 25,
-            description: data?.description ?? "Resumed Session",
-          }, userId);
+          result = await createTimeEntry(
+            {
+              isFocusMode: data?.isFocusMode ?? true,
+              startTime: Date.now(),
+              targetDuration: data?.targetDuration ?? 25,
+              description: data?.description ?? "Resumed Session",
+            },
+            userId
+          );
           break;
-          
+
         default:
           throw new Error(`Unknown clock action: ${action}`);
       }

@@ -25,7 +25,7 @@ const ClockApp: React.FC = () => {
   // Update current time every second
   useEffect(() => {
     const interval = setInterval(() => {
-      setClockState(prev => ({ ...prev, currentTime: Date.now() }));
+      setClockState((prev) => ({ ...prev, currentTime: Date.now() }));
     }, 1000);
 
     return () => clearInterval(interval);
@@ -34,15 +34,12 @@ const ClockApp: React.FC = () => {
   // Listen for updates from main process
   useEffect(() => {
     console.log("ClockApp: Component mounted");
-    console.log(
-      "ClockApp: window.electronClock available:",
-      !!(window as any).electronClock
-    );
+    console.log("ClockApp: window.electronClock available:", !!(window as any).electronClock);
 
     if ((window as any).electronClock) {
       const handleUpdate = (data: any) => {
         console.log("Clock update received:", data);
-        setClockState(prev => ({
+        setClockState((prev) => ({
           ...prev,
           activeEntry: data.activeEntry,
           isRunning: !!data.activeEntry && !data.activeEntry.endTime,
@@ -59,7 +56,7 @@ const ClockApp: React.FC = () => {
 
   const handleControl = useCallback(async (action: string, data?: any) => {
     console.log("Clock control:", action, data);
-    
+
     if ((window as any).electronClock) {
       try {
         await (window as any).electronClock.control(action, data);
@@ -72,7 +69,7 @@ const ClockApp: React.FC = () => {
 
   const handleHide = useCallback(async () => {
     console.log("Hiding clock window");
-    
+
     if ((window as any).electronClock) {
       try {
         await (window as any).electronClock.hide();
@@ -84,7 +81,7 @@ const ClockApp: React.FC = () => {
 
   const handleSettings = useCallback(async () => {
     console.log("Opening settings");
-    
+
     if ((window as any).electronClock) {
       try {
         await (window as any).electronClock.openSettings();
@@ -97,7 +94,7 @@ const ClockApp: React.FC = () => {
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   const getElapsedTime = (): number => {
@@ -120,23 +117,23 @@ const ClockApp: React.FC = () => {
   };
 
   const startFocusSession = () => {
-    handleControl('start', {
+    handleControl("start", {
       isFocusMode: true,
       targetDuration: 25,
-      description: "Focus Session"
+      description: "Focus Session",
     });
   };
 
   const startBreak = () => {
-    handleControl('start', {
+    handleControl("start", {
       isFocusMode: false,
       targetDuration: 5,
-      description: "Break Time"
+      description: "Break Time",
     });
   };
 
   const stopSession = () => {
-    handleControl('stop');
+    handleControl("stop");
   };
 
   const { activeEntry, isRunning } = clockState;
@@ -162,11 +159,9 @@ const ClockApp: React.FC = () => {
             </button>
           </div>
         </div>
-        
+
         <div className="clock-body">
-          <div className="clock-idle">
-            Start your productivity session
-          </div>
+          <div className="clock-idle">Start your productivity session</div>
           <div className="clock-actions">
             <button className="action-btn primary" onClick={startFocusSession}>
               🎯 Focus
@@ -181,9 +176,9 @@ const ClockApp: React.FC = () => {
   }
 
   // Active session state
-  const mode = activeEntry.isFocusMode ? 'focus' : 'break';
-  const modeIcon = activeEntry.isFocusMode ? '🎯' : '☕';
-  const modeName = activeEntry.isFocusMode ? 'Focus' : 'Break';
+  const mode = activeEntry.isFocusMode ? "focus" : "break";
+  const modeIcon = activeEntry.isFocusMode ? "🎯" : "☕";
+  const modeName = activeEntry.isFocusMode ? "Focus" : "Break";
 
   return (
     <div className="clock-container">
@@ -201,19 +196,18 @@ const ClockApp: React.FC = () => {
           </button>
         </div>
       </div>
-      
+
       <div className="clock-body">
-        <div className={`clock-time ${mode} ${isRunning ? 'running' : ''} ${overtime ? 'overtime' : ''}`}>
+        <div
+          className={`clock-time ${mode} ${isRunning ? "running" : ""} ${overtime ? "overtime" : ""}`}
+        >
           {formatTime(elapsedTime)}
         </div>
-        
+
         <div className="clock-progress">
-          <div 
-            className={`clock-progress-bar ${mode}`}
-            style={{ width: `${progress}%` }}
-          />
+          <div className={`clock-progress-bar ${mode}`} style={{ width: `${progress}%` }} />
         </div>
-        
+
         <div className="clock-actions">
           <button className="action-btn" onClick={stopSession}>
             ⏹️ Stop

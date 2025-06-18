@@ -101,7 +101,7 @@ export function showClockWindow(): void {
   if (!clockWindow || clockWindow.isDestroyed()) {
     createClockWindow();
   }
-  
+
   if (clockWindow) {
     console.log("Showing clock window");
     clockWindow.show();
