@@ -7,6 +7,16 @@ import db from "../db";
 import { activities } from "../db/schema";
 import { rateActivity } from "./activityRating";
 
+/**
+ * TIMESTAMP AND TIMEZONE PATTERNS
+ * ===============================
+ * This file contains the reference implementations for timestamp and timezone handling.
+ * See docs/TIMESTAMP_CONVENTIONS.md for detailed documentation.
+ *
+ * Key functions that establish patterns:
+ * - getProductivityStats() - Primary reference for timestamp queries
+ */
+
 export const getActivities = async (date?: number): Promise<Activity[]> => {
   const fifteenMinutesAgo = Date.now() - 15 * 60 * 1000; // 15 minutes in milliseconds
 
@@ -157,6 +167,23 @@ export async function setActivityRating(
 
 /**
  * Get productivity stats based on activity ratings
+ *
+ * REFERENCE IMPLEMENTATION FOR TIMESTAMP/TIMEZONE PATTERNS:
+ * This function establishes the canonical patterns for handling timestamps and timezones
+ * across the application. Other services should follow these same patterns:
+ *
+ * TIMESTAMP HANDLING:
+ * - Database stores timestamps in MILLISECONDS
+ * - Use sql template literals: sql`${activities.timestamp} >= ${startTime}`
+ * - Always use getTime() to get millisecond timestamps
+ *
+ * TIMEZONE HANDLING:
+ * - Use LOCAL TIME for day boundaries (setHours, not setUTCHours)
+ * - Start of day: setHours(0, 0, 0, 0)
+ * - End of day: setHours(23, 59, 59, 999)
+ *
+ * @param params - Object containing userId, startTime, and optional endTime
+ * @returns Object with productivity statistics for the time period
  */
 export async function getProductivityStats({
   userId,

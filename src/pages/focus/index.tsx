@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Brain, Coffee } from "lucide-react";
 import { ActiveSession } from "./components/ActiveSession";
+import { FocusTargetWidget } from "./components/FocusTargetWidget";
 
 export default function FocusPage() {
   const [selectedBoardId, setSelectedBoardId] = useAtom(selectedBoardIdAtom);
@@ -94,6 +95,9 @@ export default function FocusPage() {
   return (
     <div className="flex min-h-screen flex-col items-center bg-transparent p-4">
       <div className="w-full max-w-md space-y-6">
+        {/* Focus Target Widget - always shown */}
+        <FocusTargetWidget />
+
         {activeTimeEntry ? (
           <ActiveSession activeTimeEntry={activeTimeEntry} />
         ) : (

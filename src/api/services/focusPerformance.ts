@@ -73,13 +73,11 @@ export const getFocusPerformanceByPeriod = async (
     const productiveTime = Number(item.productiveTime || 0);
     const totalSessions = Number(item.totalSessions || 0);
 
-    const productivityPercentage = totalFocusTime > 0 
-      ? Math.round((productiveTime / totalFocusTime) * 100) 
-      : 0;
+    const productivityPercentage =
+      totalFocusTime > 0 ? Math.round((productiveTime / totalFocusTime) * 100) : 0;
 
-    const averageSessionDuration = totalSessions > 0 
-      ? Math.round(totalFocusTime / totalSessions) 
-      : 0;
+    const averageSessionDuration =
+      totalSessions > 0 ? Math.round(totalFocusTime / totalSessions) : 0;
 
     return {
       date: String(item.date),
@@ -104,15 +102,15 @@ export const generateDateRange = (
 
   if (period === "daily") {
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      dates.push(d.toISOString().split('T')[0]);
+      dates.push(d.toISOString().split("T")[0]);
     }
   } else if (period === "weekly") {
     // Get Monday of the week for start date
     const startOfWeek = new Date(start);
     startOfWeek.setDate(start.getDate() - start.getDay() + 1);
-    
+
     for (let d = new Date(startOfWeek); d <= end; d.setDate(d.getDate() + 7)) {
-      dates.push(d.toISOString().split('T')[0]);
+      dates.push(d.toISOString().split("T")[0]);
     }
   } else if (period === "monthly") {
     const startYear = start.getFullYear();
@@ -123,9 +121,9 @@ export const generateDateRange = (
     for (let year = startYear; year <= endYear; year++) {
       const monthStart = year === startYear ? startMonth : 0;
       const monthEnd = year === endYear ? endMonth : 11;
-      
+
       for (let month = monthStart; month <= monthEnd; month++) {
-        dates.push(`${year}-${(month + 1).toString().padStart(2, '0')}`);
+        dates.push(`${year}-${(month + 1).toString().padStart(2, "0")}`);
       }
     }
   }
@@ -141,16 +139,18 @@ export const fillMissingDates = (
   period: FocusPerformancePeriod
 ): FocusPerformanceDataPoint[] => {
   const allDates = generateDateRange(startDate, endDate, period);
-  const dataMap = new Map(data.map(item => [item.date, item]));
+  const dataMap = new Map(data.map((item) => [item.date, item]));
 
-  return allDates.map(date => {
-    return dataMap.get(date) || {
-      date,
-      totalFocusTime: 0,
-      productiveTime: 0,
-      totalSessions: 0,
-      productivityPercentage: 0,
-      averageSessionDuration: 0,
-    };
+  return allDates.map((date) => {
+    return (
+      dataMap.get(date) || {
+        date,
+        totalFocusTime: 0,
+        productiveTime: 0,
+        totalSessions: 0,
+        productivityPercentage: 0,
+        averageSessionDuration: 0,
+      }
+    );
   });
 };

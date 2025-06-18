@@ -186,6 +186,23 @@ export const notifications = sqliteTable(
   ]
 );
 
+export const focusTargets = sqliteTable(
+  "focus_targets",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    targetMinutes: integer("target_minutes").notNull(), // Daily focus target in minutes
+    enableReminders: integer("enable_reminders", { mode: "boolean" }).notNull().default(true),
+    reminderIntervalMinutes: integer("reminder_interval_minutes").notNull().default(60), // Reminder frequency
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    index("focus_targets_user_id_idx").on(table.userId),
+    unique().on(table.userId), // Only one target per user
+  ]
+);
+
 // Relations
 export const boardsRelations = relations(boards, ({ many }) => ({
   columns: many(columns),

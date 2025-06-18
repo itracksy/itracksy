@@ -54,21 +54,21 @@ function formatDuration(seconds: number): string {
 
 function formatDate(dateStr: string, period: PeriodType): string {
   const date = new Date(dateStr);
-  
+
   switch (period) {
     case "daily":
-      return date.toLocaleDateString("en-US", { 
-        month: "short", 
-        day: "numeric" 
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
       });
     case "weekly":
       const endOfWeek = new Date(date);
       endOfWeek.setDate(date.getDate() + 6);
       return `${date.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${endOfWeek.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
     case "monthly":
-      return date.toLocaleDateString("en-US", { 
-        year: "numeric", 
-        month: "long" 
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
       });
     default:
       return dateStr;
@@ -120,11 +120,15 @@ export default function FocusPerformanceChart({ timeRange }: FocusPerformanceCha
     const totalFocusTime = performanceData.reduce((sum, item) => sum + item.totalFocusTime, 0);
     const totalProductiveTime = performanceData.reduce((sum, item) => sum + item.productiveTime, 0);
     const totalSessions = performanceData.reduce((sum, item) => sum + item.totalSessions, 0);
-    const averageProductivity = totalFocusTime > 0 ? Math.round((totalProductiveTime / totalFocusTime) * 100) : 0;
-    
-    const bestDay = performanceData.reduce((best, current) => {
-      return current.totalFocusTime > (best?.totalFocusTime || 0) ? current : best;
-    }, null as FocusPerformanceData | null);
+    const averageProductivity =
+      totalFocusTime > 0 ? Math.round((totalProductiveTime / totalFocusTime) * 100) : 0;
+
+    const bestDay = performanceData.reduce(
+      (best, current) => {
+        return current.totalFocusTime > (best?.totalFocusTime || 0) ? current : best;
+      },
+      null as FocusPerformanceData | null
+    );
 
     return {
       totalFocusTime,
@@ -186,7 +190,7 @@ export default function FocusPerformanceChart({ timeRange }: FocusPerformanceCha
               </Select>
             </div>
           </div>
-          
+
           {hasData && (
             <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
               <div className="flex items-center gap-2 rounded-lg bg-white/50 p-3 dark:bg-gray-800/50">
@@ -228,7 +232,7 @@ export default function FocusPerformanceChart({ timeRange }: FocusPerformanceCha
             </div>
           )}
         </CardHeader>
-        
+
         <CardContent className="pt-6">
           {!hasData ? (
             <div className="flex h-[400px] flex-col items-center justify-center gap-6 rounded-xl border border-dashed border-[#E5A853]/30 bg-[#2B4474]/5 p-8">
@@ -254,8 +258,8 @@ export default function FocusPerformanceChart({ timeRange }: FocusPerformanceCha
                 {chartType === "line" ? (
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#E5A853" strokeOpacity={0.1} />
-                    <XAxis 
-                      dataKey="formattedDate" 
+                    <XAxis
+                      dataKey="formattedDate"
                       stroke="#888888"
                       fontSize={12}
                       tickLine={false}
@@ -287,17 +291,21 @@ export default function FocusPerformanceChart({ timeRange }: FocusPerformanceCha
                           const data = payload[0].payload;
                           return (
                             <div className="rounded-lg border border-[#E5A853]/20 bg-white p-4 shadow-lg dark:bg-gray-800">
-                              <p className="font-medium text-[#2B4474] dark:text-white mb-2">
+                              <p className="mb-2 font-medium text-[#2B4474] dark:text-white">
                                 {label}
                               </p>
                               <div className="space-y-1 text-sm">
                                 <div className="flex items-center justify-between gap-4">
                                   <span className="text-muted-foreground">Focus Time:</span>
-                                  <span className="font-medium text-[#E5A853]">{data.focusTime}m</span>
+                                  <span className="font-medium text-[#E5A853]">
+                                    {data.focusTime}m
+                                  </span>
                                 </div>
                                 <div className="flex items-center justify-between gap-4">
                                   <span className="text-muted-foreground">Productive Time:</span>
-                                  <span className="font-medium text-green-600">{data.productiveTime}m</span>
+                                  <span className="font-medium text-green-600">
+                                    {data.productiveTime}m
+                                  </span>
                                 </div>
                                 <div className="flex items-center justify-between gap-4">
                                   <span className="text-muted-foreground">Sessions:</span>
@@ -305,7 +313,9 @@ export default function FocusPerformanceChart({ timeRange }: FocusPerformanceCha
                                 </div>
                                 <div className="flex items-center justify-between gap-4">
                                   <span className="text-muted-foreground">Productivity:</span>
-                                  <span className="font-medium text-blue-600">{data.productivity}%</span>
+                                  <span className="font-medium text-blue-600">
+                                    {data.productivity}%
+                                  </span>
                                 </div>
                                 <div className="flex items-center justify-between gap-4">
                                   <span className="text-muted-foreground">Avg Session:</span>
@@ -352,7 +362,7 @@ export default function FocusPerformanceChart({ timeRange }: FocusPerformanceCha
                 ) : (
                   <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#E5A853" strokeOpacity={0.1} />
-                    <XAxis 
+                    <XAxis
                       dataKey="formattedDate"
                       stroke="#888888"
                       fontSize={12}
@@ -375,17 +385,21 @@ export default function FocusPerformanceChart({ timeRange }: FocusPerformanceCha
                           const data = payload[0].payload;
                           return (
                             <div className="rounded-lg border border-[#E5A853]/20 bg-white p-4 shadow-lg dark:bg-gray-800">
-                              <p className="font-medium text-[#2B4474] dark:text-white mb-2">
+                              <p className="mb-2 font-medium text-[#2B4474] dark:text-white">
                                 {label}
                               </p>
                               <div className="space-y-1 text-sm">
                                 <div className="flex items-center justify-between gap-4">
                                   <span className="text-muted-foreground">Focus Time:</span>
-                                  <span className="font-medium text-[#E5A853]">{data.focusTime}m</span>
+                                  <span className="font-medium text-[#E5A853]">
+                                    {data.focusTime}m
+                                  </span>
                                 </div>
                                 <div className="flex items-center justify-between gap-4">
                                   <span className="text-muted-foreground">Productive Time:</span>
-                                  <span className="font-medium text-green-600">{data.productiveTime}m</span>
+                                  <span className="font-medium text-green-600">
+                                    {data.productiveTime}m
+                                  </span>
                                 </div>
                                 <div className="flex items-center justify-between gap-4">
                                   <span className="text-muted-foreground">Sessions:</span>
@@ -393,7 +407,9 @@ export default function FocusPerformanceChart({ timeRange }: FocusPerformanceCha
                                 </div>
                                 <div className="flex items-center justify-between gap-4">
                                   <span className="text-muted-foreground">Productivity:</span>
-                                  <span className="font-medium text-blue-600">{data.productivity}%</span>
+                                  <span className="font-medium text-blue-600">
+                                    {data.productivity}%
+                                  </span>
                                 </div>
                               </div>
                             </div>
