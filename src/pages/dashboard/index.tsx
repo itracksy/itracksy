@@ -1,5 +1,6 @@
 import HourlyFocusChart from "./components/HourlyFocusChart";
 import ProjectTimeChart from "./components/ProjectTimeChart";
+import FocusPerformanceChart from "./components/FocusPerformanceChart";
 import TimeRangeSelector from "@/components/TimeRangeSelector";
 
 import { useAtom } from "jotai";
@@ -23,6 +24,10 @@ export default function DashboardPage() {
               value={selectedTimeRange.value}
               onRangeChange={setSelectedTimeRange}
             />
+          </div>
+
+          <div className="grid grid-cols-1 gap-6">
+            <FocusPerformanceChart timeRange={selectedTimeRange} />
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
