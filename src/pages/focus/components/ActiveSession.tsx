@@ -5,8 +5,12 @@ import { useUpdateTimeEntryMutation } from "@/hooks/useTimeEntryQueries";
 import { TimeEntryWithRelations } from "@/types/projects";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { Cloud, Clock, AlertTriangle } from "lucide-react";
+import { Cloud, Clock, AlertTriangle, Tag } from "lucide-react";
 import { useEffect, useState } from "react";
+import { BoardSelector } from "@/components/tracking/BoardSelector";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAtom } from "jotai";
+import { selectedBoardIdAtom, selectedItemIdAtom } from "@/context/board";
 
 const warningMessages = [
   "⏰ Tick tock! Time's flying!",
@@ -30,6 +34,9 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
   const [duration, setDuration] = useState<string>("00:00");
   const [isTimeExceeded, setIsTimeExceeded] = useState(false);
   const [warningMessage, setWarningMessage] = useState(warningMessages[0]);
+  const [showTaskAssignment, setShowTaskAssignment] = useState(false);
+  const [selectedBoardId, setSelectedBoardId] = useAtom(selectedBoardIdAtom);
+  const [selectedItemId, setSelectedItemId] = useAtom(selectedItemIdAtom);
   const queryClient = useQueryClient();
 
   const handleExtendTime = async () => {
@@ -72,6 +79,37 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
     } catch (error) {
       toast({
         title: "Failed to stop session",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAssignTask = async () => {
+    if (!selectedItemId) {
+      toast({
+        title: "No task selected",
+        description: "Please select a task to assign to this session.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await updateTimeEntry.mutateAsync({
+        id: activeTimeEntry.id,
+        boardId: selectedBoardId,
+        itemId: selectedItemId,
+      });
+
+      toast({
+        title: "Task Assigned",
+        description: "Task has been successfully assigned to this session.",
+      });
+      setShowTaskAssignment(false);
+    } catch (error) {
+      toast({
+        title: "Failed to assign task",
         description: error instanceof Error ? error.message : "An error occurred",
         variant: "destructive",
       });
@@ -194,6 +232,60 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
           </div>
         </button>
       )}
+
+      {/* Task Assignment Section */}
+      {activeTimeEntry.isFocusMode && (
+        <Card className="shadow-sm">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                <Tag className="h-4 w-4" />
+                {activeTimeEntry.itemId ? "Current Task" : "Task Assignment"}
+              </CardTitle>
+              {activeTimeEntry.itemId ? (
+                <div className="space-y-2">
+                  <div className="text-xs text-gray-500">
+                    Assigned to: {activeTimeEntry.item?.title || "Unknown Task"}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowTaskAssignment(!showTaskAssignment)}
+                  >
+                    {showTaskAssignment ? "Cancel" : "Change Task"}
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowTaskAssignment(!showTaskAssignment)}
+                >
+                  {showTaskAssignment ? "Cancel" : "Assign Task"}
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          {showTaskAssignment && (
+            <CardContent className="space-y-3">
+              <BoardSelector selectedItemId={selectedItemId} onItemSelect={setSelectedItemId} />
+              <div className="flex gap-2">
+                <Button onClick={handleAssignTask} className="flex-1">
+                  Assign Task
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowTaskAssignment(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </CardContent>
+          )}
+        </Card>
+      )}
+
       <style>{`
         @keyframes warning {
           0% {

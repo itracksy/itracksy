@@ -11,26 +11,19 @@ import {
   autoStopEnabledsAtom,
   breakDurationAtom,
   selectedBoardIdAtom,
-  selectedItemIdAtom,
   targetMinutesAtom,
 } from "@/context/board";
 
-import { BoardSelector } from "@/components/tracking/BoardSelector";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Brain, Coffee } from "lucide-react";
 import { ActiveSession } from "./components/ActiveSession";
-import { trpcClient } from "@/utils/trpc";
 
 export default function FocusPage() {
-  const [intention, setIntention] = useState("");
-
   const [selectedBoardId, setSelectedBoardId] = useAtom(selectedBoardIdAtom);
   const [targetMinutes, setTargetMinutes] = useAtom(targetMinutesAtom);
   const [breakMinutes, setBreakMinutes] = useAtom(breakDurationAtom);
@@ -41,29 +34,6 @@ export default function FocusPage() {
   const createTimeEntry = useCreateTimeEntryMutation();
   const { data: lastTimeEntry } = useLastTimeEntry();
   const { toast } = useToast();
-  const [selectedItemId, setSelectedItemId] = useAtom(selectedItemIdAtom);
-  // Validate that the persisted selectedItemId still exists when component loads
-  useEffect(() => {
-    if (selectedItemId && selectedBoardId) {
-      // Check if the saved item ID is still valid for the current board
-      trpcClient.board.get
-        .query(selectedBoardId)
-        .then((board) => {
-          if (!board) {
-            setSelectedItemId(""); // Reset if the board no longer exists
-            setSelectedBoardId(""); // Reset the board ID as well
-            return;
-          }
-          const itemExists = board.items.some((item) => item.id === selectedItemId);
-          if (!itemExists) {
-            setSelectedItemId(""); // Reset if the item no longer exists
-          }
-        })
-        .catch(() => {
-          setSelectedItemId(""); // Reset on error
-        });
-    }
-  }, [open, selectedBoardId, selectedItemId, setSelectedItemId]);
 
   useEffect(() => {
     if (!activeTimeEntry) {
@@ -77,16 +47,6 @@ export default function FocusPage() {
   }, [targetMinutes, breakMinutes, activeTab, activeTimeEntry, lastTimeEntry]);
 
   const handleStartSession = async () => {
-    if (activeTab === "focus" && !intention && !selectedItemId) {
-      toast({
-        title: "Please set an intention or select a task",
-        description:
-          "Enter what you want to focus on or choose a task before starting the session.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     const minutes = activeTab === "focus" ? targetMinutes : breakMinutes;
     const { description, boardId, itemId } = getTimeEntryData();
     try {
@@ -119,17 +79,11 @@ export default function FocusPage() {
       description: string | undefined;
     } {
       if (activeTab === "focus") {
-        if (intention) {
-          return {
-            boardId: undefined,
-            itemId: undefined,
-            description: intention,
-          };
-        }
+        // Default case - no task selected, just start focus session
         return {
-          boardId: selectedBoardId,
-          itemId: selectedItemId,
-          description: undefined,
+          boardId: undefined,
+          itemId: undefined,
+          description: "Focus Session",
         };
       }
 
@@ -190,39 +144,6 @@ export default function FocusPage() {
                         <div className="flex justify-between text-xs text-gray-500">
                           <span>5m</span>
                           <span>60m</span>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Task Selection - Simplified */}
-                    <Card className="shadow-sm">
-                      <CardHeader className="pb-1 pt-3">
-                        <CardTitle className="text-sm font-medium">
-                          What are you working on?
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        <BoardSelector
-                          selectedItemId={selectedItemId}
-                          onItemSelect={setSelectedItemId}
-                        />
-
-                        <div className="flex items-center gap-2 py-0.5">
-                          <Separator className="flex-1" />
-                          <span className="text-xs text-gray-500">OR</span>
-                          <Separator className="flex-1" />
-                        </div>
-
-                        <div className="space-y-1">
-                          <Label className="text-xs text-gray-500">
-                            Intention (for quick focus without task)
-                          </Label>
-                          <Input
-                            placeholder="What do you want to focus on?"
-                            value={intention}
-                            onChange={(e) => setIntention(e.target.value)}
-                            className="h-8 w-full text-sm"
-                          />
                         </div>
                       </CardContent>
                     </Card>

@@ -8,23 +8,6 @@ const NotificationApp: React.FC = () => {
   const [notificationData, setNotificationData] = useState<NotificationData | null>(null);
   const [timeLeft, setTimeLeft] = useState<number>(5); // Auto-close after 5 seconds
 
-  // Test with some initial data to verify UI works
-  useEffect(() => {
-    console.log("NotificationApp: Setting test data after 2 seconds");
-    const testTimer = setTimeout(() => {
-      if (!notificationData) {
-        console.log("NotificationApp: Setting test notification data");
-        setNotificationData({
-          title: "Test Notification",
-          body: "This is a test notification to verify the UI works",
-          autoDismiss: false, // Default is no auto dismiss
-        });
-      }
-    }, 2000);
-
-    return () => clearTimeout(testTimer);
-  }, [notificationData]);
-
   useEffect(() => {
     console.log("NotificationApp: Component mounted");
     console.log(
@@ -92,7 +75,9 @@ const NotificationApp: React.FC = () => {
       console.error("Failed to execute notification action:", error);
     }
   };
-
+  if (!notificationData) {
+    return null;
+  }
   return (
     <div
       style={{

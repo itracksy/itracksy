@@ -3,6 +3,8 @@ import { timeEntries, items, activities } from "../db/schema";
 import { nanoid } from "nanoid";
 import db from "../db";
 import { TimeEntryWithRelations } from "@/types/projects";
+import { sendClockUpdate } from "../../helpers/ipc/clock/clock-listeners";
+import { getTray } from "../../main";
 
 export type TimeEntry = typeof timeEntries.$inferSelect;
 export type TimeEntryInsert = typeof timeEntries.$inferInsert;
@@ -76,6 +78,28 @@ export async function updateTimeEntry(
     .set(timeEntry)
     .where(eq(timeEntries.id, id))
     .returning();
+
+  // If endTime is set (session stopped), send update to clock window
+  if (timeEntry.endTime) {
+    try {
+      // Send clock update to notify that the session has stopped
+      sendClockUpdate({
+        activeEntry: null, // No active entry since it was stopped
+        currentTime: Date.now(),
+        action: "stop",
+        timestamp: Date.now(),
+      });
+
+      // Clear tray title when session stops
+      const tray = getTray();
+      if (tray) {
+        tray.setTitle("");
+      }
+    } catch (error) {
+      console.error("Failed to send clock update:", error);
+      // Don't throw error here to avoid breaking the time entry update
+    }
+  }
 
   return updated[0];
 }
@@ -231,10 +255,14 @@ export type SessionProductivityMetrics = {
   productivityPercentage: number;
 };
 
-export function calculateSessionProductivityMetrics(activityList: typeof activities.$inferSelect[]): SessionProductivityMetrics {
+export function calculateSessionProductivityMetrics(
+  activityList: (typeof activities.$inferSelect)[]
+): SessionProductivityMetrics {
   // Calculate classification status
   const totalActivities = activityList.length;
-  const classifiedActivities = activityList.filter((a: typeof activities.$inferSelect) => a.rating !== null).length;
+  const classifiedActivities = activityList.filter(
+    (a: typeof activities.$inferSelect) => a.rating !== null
+  ).length;
 
   let classificationStatus: ClassificationStatus = "unclassified";
   if (classifiedActivities === totalActivities && totalActivities > 0) {
@@ -246,8 +274,14 @@ export function calculateSessionProductivityMetrics(activityList: typeof activit
   // Calculate productivity for this session
   const productiveTime = activityList
     .filter((activity: typeof activities.$inferSelect) => activity.rating === 1)
-    .reduce((total: number, activity: typeof activities.$inferSelect) => total + activity.duration, 0);
-  const sessionDuration = activityList.reduce((total: number, activity: typeof activities.$inferSelect) => total + activity.duration, 0);
+    .reduce(
+      (total: number, activity: typeof activities.$inferSelect) => total + activity.duration,
+      0
+    );
+  const sessionDuration = activityList.reduce(
+    (total: number, activity: typeof activities.$inferSelect) => total + activity.duration,
+    0
+  );
   const productivityPercentage =
     sessionDuration > 0 ? Math.min(100, Math.round((productiveTime / sessionDuration) * 100)) : 0;
 
