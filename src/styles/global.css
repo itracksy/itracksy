@@ -149,6 +149,14 @@
     @apply bg-background;
     -webkit-app-region: drag;
   }
+
+  /* Ensure buttons and interactive elements in drag region are clickable */
+  .draglayer button,
+  .draglayer input,
+  .draglayer select,
+  .draglayer a {
+    -webkit-app-region: no-drag;
+  }
 }
 
 @layer base {

@@ -157,6 +157,7 @@ function createWindow(): void {
     width: 1400,
     height: 1000,
     icon: iconPath,
+    movable: true,
     webPreferences: {
       devTools: true,
       contextIsolation: true,
