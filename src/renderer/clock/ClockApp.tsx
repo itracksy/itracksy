@@ -97,21 +97,23 @@ const ClockApp: React.FC = () => {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const getElapsedTime = (): number => {
+  const getRemainingTime = (): number => {
     if (!clockState.activeEntry || clockState.activeEntry.endTime) return 0;
-    return Math.floor((clockState.currentTime - clockState.activeEntry.startTime) / 1000);
+    const elapsed = Math.floor((clockState.currentTime - clockState.activeEntry.startTime) / 1000);
+    const target = clockState.activeEntry.targetDuration * 60; // Convert to seconds
+    return Math.max(target - elapsed, 0);
   };
 
   const getProgress = (): number => {
     if (!clockState.activeEntry) return 0;
-    const elapsed = getElapsedTime();
+    const elapsed = Math.floor((clockState.currentTime - clockState.activeEntry.startTime) / 1000);
     const target = clockState.activeEntry.targetDuration * 60; // Convert to seconds
     return Math.min((elapsed / target) * 100, 100);
   };
 
   const isOvertime = (): boolean => {
     if (!clockState.activeEntry) return false;
-    const elapsed = getElapsedTime();
+    const elapsed = Math.floor((clockState.currentTime - clockState.activeEntry.startTime) / 1000);
     const target = clockState.activeEntry.targetDuration * 60;
     return elapsed > target;
   };
@@ -137,7 +139,7 @@ const ClockApp: React.FC = () => {
   };
 
   const { activeEntry, isRunning } = clockState;
-  const elapsedTime = getElapsedTime();
+  const remainingTime = getRemainingTime();
   const progress = getProgress();
   const overtime = isOvertime();
 
@@ -201,7 +203,7 @@ const ClockApp: React.FC = () => {
         <div
           className={`clock-time ${mode} ${isRunning ? "running" : ""} ${overtime ? "overtime" : ""}`}
         >
-          {formatTime(elapsedTime)}
+          {formatTime(remainingTime)}
         </div>
 
         <div className="clock-progress">
