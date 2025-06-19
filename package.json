@@ -1,14 +1,14 @@
 {
   "name": "itracksy",
   "productName": "itracksy",
-  "version": "1.0.177",
+  "version": "1.0.178",
   "description": "A productivity app that tracks time, boosts focus, and provides insights into work habits, helping you manage time effectively and stay productive.",
   "main": ".vite/build/main.js",
   "scripts": {
     "rebuild": "./node_modules/.bin/electron-rebuild; npm rebuild",
     "clear": "rm -rf .vite dist out node_modules",
     "type-check": "tsc --noEmit",
-    "start": "electron-forge start",
+    "dev": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
     "win-make": "npm run clean:out && npm run debug-make",
