@@ -1,7 +1,5 @@
 import { SummaryCard } from "./components/summary-card";
 import { SessionList } from "./components/session-list";
-import { FocusTargetSettings } from "./components/focus-target-settings";
-import { DailyProgressCard } from "./components/daily-progress-card";
 
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -66,12 +64,6 @@ export function FocusSessionsAchievement() {
         productivityPercentage={productivityPercentage}
         classificationProgress={classificationProgress}
       />
-
-      {/* Daily Focus Target and Progress Section */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <DailyProgressCard />
-        <FocusTargetSettings />
-      </div>
 
       <SessionList />
       <div className="h-20" />
