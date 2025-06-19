@@ -6,7 +6,7 @@ export default defineConfig({
   root: resolve(__dirname, "src/renderer/notification"),
   plugins: [react()],
   build: {
-    outDir: resolve(__dirname, ".vite/build/renderer/notification"),
+    outDir: resolve(__dirname, ".vite/build/renderer/notification_window"),
     rollupOptions: {
       input: resolve(__dirname, "src/renderer/notification/index.html"),
     },
