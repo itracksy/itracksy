@@ -65,7 +65,7 @@ export function createBlockingNotificationWindow(): BrowserWindow {
   } else {
     console.log("Loading blocking notification from file");
     blockingNotificationWindow.loadFile(
-      path.join(__dirname, `../renderer/blocking-notification/index.html`)
+      path.join(__dirname, `../renderer/${BLOCKING_NOTIFICATION_WINDOW_VITE_NAME}/index.html`)
     );
   }
 

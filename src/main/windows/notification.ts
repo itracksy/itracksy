@@ -3,6 +3,7 @@ import path from "path";
 
 // Declare the Vite environment variables for notification window
 declare const NOTIFICATION_WINDOW_VITE_DEV_SERVER_URL: string;
+declare const NOTIFICATION_WINDOW_VITE_NAME: string;
 
 let notificationWindow: BrowserWindow | null = null;
 
@@ -52,7 +53,9 @@ export function createNotificationWindow(): BrowserWindow {
     notificationWindow.loadURL(NOTIFICATION_WINDOW_VITE_DEV_SERVER_URL);
   } else {
     console.log("Loading notification from file");
-    notificationWindow.loadFile(path.join(__dirname, `../renderer/notification/index.html`));
+    notificationWindow.loadFile(
+      path.join(__dirname, `../renderer/${NOTIFICATION_WINDOW_VITE_NAME}/index.html`)
+    );
   }
 
   // Inject CSS to hide scrollbars and ensure proper content sizing

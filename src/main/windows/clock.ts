@@ -65,7 +65,7 @@ export function createClockWindow(): BrowserWindow {
     clockWindow.loadURL(CLOCK_WINDOW_VITE_DEV_SERVER_URL);
   } else {
     console.log("Loading clock from file");
-    clockWindow.loadFile(path.join(__dirname, `../renderer/clock/index.html`));
+    clockWindow.loadFile(path.join(__dirname, `../renderer/${CLOCK_WINDOW_VITE_NAME}/index.html`));
   }
 
   // Handle window events
