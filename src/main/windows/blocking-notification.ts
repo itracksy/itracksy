@@ -1,9 +1,6 @@
+/// <reference path="../../../forge.env.d.ts" />
 import { BrowserWindow, screen } from "electron";
 import path from "path";
-
-// Declare the Vite environment variables for blocking notification window
-declare const BLOCKING_NOTIFICATION_WINDOW_VITE_DEV_SERVER_URL: string;
-declare const BLOCKING_NOTIFICATION_WINDOW_VITE_NAME: string;
 
 let blockingNotificationWindow: BrowserWindow | null = null;
 

@@ -6,7 +6,7 @@ export default defineConfig({
   root: resolve(__dirname, "src/renderer/clock"),
   plugins: [react()],
   build: {
-    outDir: resolve(__dirname, ".vite/build/renderer/clock_window"),
+    outDir: resolve(__dirname, ".vite/renderer/clock_window"),
     rollupOptions: {
       input: resolve(__dirname, "src/renderer/clock/index.html"),
     },

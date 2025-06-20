@@ -1,9 +1,7 @@
+/// <reference path="../../../forge.env.d.ts" />
+import { logger } from "@/helpers/logger";
 import { BrowserWindow, screen } from "electron";
 import path from "path";
-
-// Declare the Vite environment variables for clock window
-declare const CLOCK_WINDOW_VITE_DEV_SERVER_URL: string;
-declare const CLOCK_WINDOW_VITE_NAME: string;
 
 let clockWindow: BrowserWindow | null = null;
 let isClockVisible = false;
@@ -64,8 +62,10 @@ export function createClockWindow(): BrowserWindow {
     console.log(`Loading clock URL: ${CLOCK_WINDOW_VITE_DEV_SERVER_URL}`);
     clockWindow.loadURL(CLOCK_WINDOW_VITE_DEV_SERVER_URL);
   } else {
-    console.log("Loading clock from file");
-    clockWindow.loadFile(path.join(__dirname, `../renderer/${CLOCK_WINDOW_VITE_NAME}/index.html`));
+    logger.info("CLOCK_WINDOW_VITE_NAME:", CLOCK_WINDOW_VITE_NAME);
+    const rendererDir =
+      CLOCK_WINDOW_VITE_NAME === "clock" ? "clock_window" : CLOCK_WINDOW_VITE_NAME;
+    clockWindow.loadFile(path.join(__dirname, `../renderer/${rendererDir}/index.html`));
   }
 
   // Handle window events

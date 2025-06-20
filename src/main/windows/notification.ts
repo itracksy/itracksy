@@ -1,9 +1,6 @@
-import { BrowserWindow } from "electron";
+/// <reference path="../../../forge.env.d.ts" />
+import { BrowserWindow, screen } from "electron";
 import path from "path";
-
-// Declare the Vite environment variables for notification window
-declare const NOTIFICATION_WINDOW_VITE_DEV_SERVER_URL: string;
-declare const NOTIFICATION_WINDOW_VITE_NAME: string;
 
 let notificationWindow: BrowserWindow | null = null;
 

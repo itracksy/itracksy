@@ -6,7 +6,7 @@ export default defineConfig({
   root: resolve(__dirname, "src/renderer/blocking-notification"),
   plugins: [react()],
   build: {
-    outDir: resolve(__dirname, ".vite/build/renderer/blocking_notification_window"),
+    outDir: resolve(__dirname, ".vite/renderer/blocking_notification_window"),
     rollupOptions: {
       input: resolve(__dirname, "src/renderer/blocking-notification/index.html"),
     },

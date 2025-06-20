@@ -185,7 +185,10 @@ function createWindow(): void {
     // Open DevTools automatically in development
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
+    const mainPath = path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`);
+    logger.info("Main: Loading main window from:", mainPath);
+    logger.info("Main: MAIN_WINDOW_VITE_NAME:", MAIN_WINDOW_VITE_NAME);
+    mainWindow.loadFile(mainPath);
   }
 
   registerListeners(mainWindow, tray);
