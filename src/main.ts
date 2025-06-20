@@ -32,6 +32,18 @@ export function getTray(): Tray | null {
   return tray;
 }
 
+/**
+ * Show and focus the main window
+ */
+export function showMainWindow(): void {
+  if (!mainWindow) {
+    createWindow();
+  } else {
+    mainWindow.show();
+    mainWindow.focus();
+  }
+}
+
 async function createTray() {
   // Request notification permission on macOS
   if (process.platform === "darwin") {

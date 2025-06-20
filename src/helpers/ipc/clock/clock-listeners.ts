@@ -3,11 +3,12 @@ import {
   CLOCK_HIDE_CHANNEL,
   CLOCK_UPDATE_CHANNEL,
   CLOCK_CONTROL_CHANNEL,
-  CLOCK_SETTINGS_CHANNEL,
+  CLOCK_SHOW_MAIN_CHANNEL,
 } from "./clock-channels";
 
 import { safelyRegisterListener } from "../safelyRegisterListener";
 import { showClockWindow, hideClockWindow, getClockWindow } from "../../../main/windows/clock";
+import { showMainWindow } from "../../../main";
 import { logger } from "../../logger";
 import { getCurrentUserIdLocalStorage } from "../../../api/services/userSettings";
 import {
@@ -39,6 +40,18 @@ export const addClockEventListeners = () => {
       return { success: true };
     } catch (error) {
       logger.error("Failed to hide clock", { error });
+      throw error;
+    }
+  });
+
+  // Show main window handler
+  safelyRegisterListener(CLOCK_SHOW_MAIN_CHANNEL, async (_event) => {
+    try {
+      logger.debug("Show main window requested from clock");
+      showMainWindow();
+      return { success: true };
+    } catch (error) {
+      logger.error("Failed to show main window", { error });
       throw error;
     }
   });
@@ -120,18 +133,6 @@ export const addClockEventListeners = () => {
       return { success: true, result };
     } catch (error) {
       logger.error("Failed to handle clock control", { error, action, data });
-      throw error;
-    }
-  });
-
-  // Settings handler
-  safelyRegisterListener(CLOCK_SETTINGS_CHANNEL, async (_event) => {
-    try {
-      logger.debug("Clock settings requested");
-      // TODO: Open main window settings or create a mini settings dialog
-      return { success: true };
-    } catch (error) {
-      logger.error("Failed to open settings from clock", { error });
       throw error;
     }
   });

@@ -112,6 +112,7 @@
   padding-left: 8px;
   padding-right: 8px;
   gap: 2px;
+  -webkit-app-region: no-drag;
 }
 
 .clock-time {

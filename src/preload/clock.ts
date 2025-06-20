@@ -1,11 +1,11 @@
+import {
+  CLOCK_CONTROL_CHANNEL,
+  CLOCK_HIDE_CHANNEL,
+  CLOCK_UPDATE_CHANNEL,
+  CLOCK_SHOW_CHANNEL,
+  CLOCK_SHOW_MAIN_CHANNEL,
+} from "@/helpers/ipc/clock/clock-channels";
 import { contextBridge, ipcRenderer } from "electron";
-
-// Clock specific channels
-const CLOCK_SHOW_CHANNEL = "show-clock";
-const CLOCK_HIDE_CHANNEL = "hide-clock";
-const CLOCK_UPDATE_CHANNEL = "clock-update";
-const CLOCK_CONTROL_CHANNEL = "clock-control";
-const CLOCK_SETTINGS_CHANNEL = "clock-settings";
 
 console.log("Clock preload script initializing");
 
@@ -17,16 +17,16 @@ contextBridge.exposeInMainWorld("electronClock", {
     return ipcRenderer.invoke(CLOCK_CONTROL_CHANNEL, { action, data });
   },
 
-  // Function to access settings
-  openSettings: () => {
-    console.log("Opening settings from clock");
-    return ipcRenderer.invoke(CLOCK_SETTINGS_CHANNEL);
-  },
-
   // Function to hide the clock window
   hide: () => {
     console.log("Hiding clock window");
     return ipcRenderer.invoke(CLOCK_HIDE_CHANNEL);
+  },
+
+  // Function to show the main window
+  showMain: () => {
+    console.log("Showing main window");
+    return ipcRenderer.invoke(CLOCK_SHOW_MAIN_CHANNEL);
   },
 
   // Function to listen for timer updates

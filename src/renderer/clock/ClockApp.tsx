@@ -54,19 +54,6 @@ const ClockApp: React.FC = () => {
     }
   }, []);
 
-  const handleControl = useCallback(async (action: string, data?: any) => {
-    console.log("Clock control:", action, data);
-
-    if ((window as any).electronClock) {
-      try {
-        await (window as any).electronClock.control(action, data);
-        console.log("Control action sent successfully");
-      } catch (error) {
-        console.error("Failed to send control action:", error);
-      }
-    }
-  }, []);
-
   const handleHide = useCallback(async () => {
     console.log("Hiding clock window");
 
@@ -79,15 +66,24 @@ const ClockApp: React.FC = () => {
     }
   }, []);
 
-  const handleSettings = useCallback(async () => {
-    console.log("Opening settings");
+  const handleShowMain = useCallback(async (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    console.log("handleShowMain called - Showing main window");
 
     if ((window as any).electronClock) {
       try {
-        await (window as any).electronClock.openSettings();
+        console.log(
+          "electronClock.showMain is available:",
+          typeof (window as any).electronClock.showMain
+        );
+        await (window as any).electronClock.showMain();
+        console.log("Main window show request sent successfully");
       } catch (error) {
-        console.error("Failed to open settings:", error);
+        console.error("Failed to show main window:", error);
       }
+    } else {
+      console.error("electronClock is not available");
     }
   }, []);
 
@@ -118,26 +114,6 @@ const ClockApp: React.FC = () => {
     return elapsed > target;
   };
 
-  const startFocusSession = () => {
-    handleControl("start", {
-      isFocusMode: true,
-      targetDuration: 25,
-      description: "Focus Session",
-    });
-  };
-
-  const startBreak = () => {
-    handleControl("start", {
-      isFocusMode: false,
-      targetDuration: 5,
-      description: "Break Time",
-    });
-  };
-
-  const stopSession = () => {
-    handleControl("stop");
-  };
-
   const { activeEntry, isRunning } = clockState;
   const remainingTime = getRemainingTime();
   const progress = getProgress();
@@ -153,25 +129,21 @@ const ClockApp: React.FC = () => {
             Ready
           </div>
           <div className="clock-controls">
-            <button className="control-btn" onClick={handleSettings} title="Settings">
-              ⚙️
-            </button>
             <button className="control-btn" onClick={handleHide} title="Hide">
               ✕
             </button>
           </div>
         </div>
 
-        <div className="clock-body">
+        <div
+          className="clock-body"
+          onClick={handleShowMain}
+          onMouseEnter={() => console.log("Mouse entered clock body")}
+          onMouseLeave={() => console.log("Mouse left clock body")}
+          style={{ cursor: "pointer !important", userSelect: "none" }}
+          title="Click to show main window"
+        >
           <div className="clock-idle">Start your productivity session</div>
-          <div className="clock-actions">
-            <button className="action-btn primary" onClick={startFocusSession}>
-              🎯 Focus
-            </button>
-            <button className="action-btn secondary" onClick={startBreak}>
-              ☕ Break
-            </button>
-          </div>
         </div>
       </div>
     );
@@ -190,16 +162,20 @@ const ClockApp: React.FC = () => {
           {modeName}
         </div>
         <div className="clock-controls">
-          <button className="control-btn" onClick={handleSettings} title="Settings">
-            ⚙️
-          </button>
           <button className="control-btn" onClick={handleHide} title="Hide">
             ✕
           </button>
         </div>
       </div>
 
-      <div className="clock-body">
+      <div
+        className="clock-body"
+        onClick={handleShowMain}
+        onMouseEnter={() => console.log("Mouse entered active clock body")}
+        onMouseLeave={() => console.log("Mouse left active clock body")}
+        style={{ cursor: "pointer !important", userSelect: "none" }}
+        title="Click to show main window"
+      >
         <div
           className={`clock-time ${mode} ${isRunning ? "running" : ""} ${overtime ? "overtime" : ""}`}
         >
@@ -208,21 +184,6 @@ const ClockApp: React.FC = () => {
 
         <div className="clock-progress">
           <div className={`clock-progress-bar ${mode}`} style={{ width: `${progress}%` }} />
-        </div>
-
-        <div className="clock-actions">
-          <button className="action-btn" onClick={stopSession}>
-            ⏹️ Stop
-          </button>
-          {activeEntry.isFocusMode ? (
-            <button className="action-btn secondary" onClick={startBreak}>
-              ☕ Break
-            </button>
-          ) : (
-            <button className="action-btn primary" onClick={startFocusSession}>
-              🎯 Focus
-            </button>
-          )}
         </div>
       </div>
     </div>
