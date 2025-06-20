@@ -24,7 +24,7 @@ export function createClockWindow(): BrowserWindow {
 
   // Clock window dimensions - consistent for both idle and active states
   const windowWidth = 96;
-  const windowHeight = 38;
+  const windowHeight = 34;
 
   // Position in top-right corner with some margin
   const x = screenWidth - windowWidth - 20;

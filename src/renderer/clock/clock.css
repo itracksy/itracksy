@@ -11,9 +11,9 @@
   position: relative;
   cursor: pointer;
   transition: all 0.2s ease;
-  -webkit-app-region: no-drag;
   user-select: none;
   overflow: visible;
+  -webkit-app-region: drag;
 }
 
 .clock-container:hover {
@@ -188,17 +188,19 @@
   color: #666;
   font-size: 10px;
   cursor: pointer;
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
   -webkit-app-region: no-drag;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   z-index: 10;
+  pointer-events: auto;
+  opacity: 0;
 }
 
 .clock-container:hover .close-btn {
-  display: flex;
+  opacity: 1;
 }
 
 .close-btn:hover {
@@ -215,13 +217,4 @@
 
 .clock-container.active .clock-time {
   animation: pulse-minimal 3s infinite;
-}
-
-/* Ensure draggable window */
-.clock-container {
-  -webkit-app-region: drag;
-}
-
-.clock-container * {
-  -webkit-app-region: no-drag;
 }
