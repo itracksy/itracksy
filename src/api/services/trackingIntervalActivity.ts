@@ -68,7 +68,7 @@ export const startTracking = async (): Promise<void> => {
       }
 
       // Send update to clock window
-      sendClockUpdate({
+      await sendClockUpdate({
         activeEntry,
         currentTime: Date.now(),
         elapsedSeconds: durationInSeconds,

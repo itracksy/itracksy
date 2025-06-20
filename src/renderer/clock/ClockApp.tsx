@@ -9,10 +9,31 @@ interface TimeEntry {
   description: string;
 }
 
+interface FocusTarget {
+  id: string;
+  userId: string;
+  targetMinutes: number;
+  enableReminders: boolean;
+  reminderIntervalMinutes: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+interface DailyProgress {
+  targetMinutes: number;
+  completedMinutes: number;
+  progressPercentage: number;
+  remainingMinutes: number;
+  isCompleted: boolean;
+  sessionsToday: number;
+}
+
 interface ClockState {
   activeEntry: TimeEntry | null;
   currentTime: number;
   isRunning: boolean;
+  focusTarget: FocusTarget | null;
+  dailyProgress: DailyProgress | null;
 }
 
 const ClockApp: React.FC = () => {
@@ -20,6 +41,8 @@ const ClockApp: React.FC = () => {
     activeEntry: null,
     currentTime: Date.now(),
     isRunning: false,
+    focusTarget: null,
+    dailyProgress: null,
   });
 
   // Update current time every second
@@ -43,6 +66,8 @@ const ClockApp: React.FC = () => {
           ...prev,
           activeEntry: data.activeEntry,
           isRunning: !!data.activeEntry && !data.activeEntry.endTime,
+          focusTarget: data.focusTarget || prev.focusTarget,
+          dailyProgress: data.dailyProgress || prev.dailyProgress,
         }));
       };
 
@@ -54,7 +79,9 @@ const ClockApp: React.FC = () => {
     }
   }, []);
 
-  const handleHide = useCallback(async () => {
+  const handleHide = useCallback(async (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
     console.log("Hiding clock window");
 
     if ((window as any).electronClock) {
@@ -114,37 +141,59 @@ const ClockApp: React.FC = () => {
     return elapsed > target;
   };
 
-  const { activeEntry, isRunning } = clockState;
+  const formatMinutes = (minutes: number): string => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours === 0) return `${mins}m`;
+    if (mins === 0) return `${hours}h`;
+    return `${hours}h${mins}m`;
+  };
+
+  const { activeEntry, isRunning, focusTarget, dailyProgress } = clockState;
   const remainingTime = getRemainingTime();
   const progress = getProgress();
   const overtime = isOvertime();
 
   if (!activeEntry || activeEntry.endTime) {
-    // Idle state
-    return (
-      <div className="clock-container">
-        <div className="clock-header">
-          <div className="clock-mode">
-            <span className="clock-mode-icon">⏱️</span>
-            Ready
-          </div>
-          <div className="clock-controls">
-            <button className="control-btn" onClick={handleHide} title="Hide">
-              ✕
-            </button>
-          </div>
-        </div>
+    // Idle state - show daily target and progress
+    const hasTarget = focusTarget && dailyProgress;
+    const dailyProgressPercent = dailyProgress?.progressPercentage || 0;
 
-        <div
-          className="clock-body"
-          onClick={handleShowMain}
-          onMouseEnter={() => console.log("Mouse entered clock body")}
-          onMouseLeave={() => console.log("Mouse left clock body")}
-          style={{ cursor: "pointer !important", userSelect: "none" }}
-          title="Click to show main window"
-        >
-          <div className="clock-idle">Start your productivity session</div>
+    return (
+      <div className="clock-container idle" onClick={handleShowMain} title="Click to start session">
+        <div className="clock-content">
+          {hasTarget ? (
+            <>
+              <div className="clock-target">
+                <span className="clock-title">Target</span>
+                <span className="target-icon">🎯</span>
+                <span className="target-text">{formatMinutes(focusTarget.targetMinutes)}</span>
+              </div>
+              <div className="clock-daily-progress">
+                <div className="progress-info">
+                  <span className="progress-text">
+                    {formatMinutes(dailyProgress.completedMinutes)} /{" "}
+                    {formatMinutes(dailyProgress.targetMinutes)}
+                  </span>
+                </div>
+                <div className="progress-bar-container">
+                  <div
+                    className="progress-bar-fill"
+                    style={{ width: `${Math.min(dailyProgressPercent, 100)}%` }}
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <span className="clock-icon">⏱️</span>
+              <span className="clock-status">Ready</span>
+            </>
+          )}
         </div>
+        <button className="close-btn" onClick={handleHide} title="Hide">
+          ✕
+        </button>
       </div>
     );
   }
@@ -152,40 +201,25 @@ const ClockApp: React.FC = () => {
   // Active session state
   const mode = activeEntry.isFocusMode ? "focus" : "break";
   const modeIcon = activeEntry.isFocusMode ? "🎯" : "☕";
-  const modeName = activeEntry.isFocusMode ? "Focus" : "Break";
 
   return (
-    <div className="clock-container">
-      <div className="clock-header">
-        <div className={`clock-mode ${mode}`}>
-          <span className="clock-mode-icon">{modeIcon}</span>
-          {modeName}
-        </div>
-        <div className="clock-controls">
-          <button className="control-btn" onClick={handleHide} title="Hide">
-            ✕
-          </button>
-        </div>
-      </div>
-
-      <div
-        className="clock-body"
-        onClick={handleShowMain}
-        onMouseEnter={() => console.log("Mouse entered active clock body")}
-        onMouseLeave={() => console.log("Mouse left active clock body")}
-        style={{ cursor: "pointer !important", userSelect: "none" }}
-        title="Click to show main window"
-      >
-        <div
-          className={`clock-time ${mode} ${isRunning ? "running" : ""} ${overtime ? "overtime" : ""}`}
-        >
-          {formatTime(remainingTime)}
-        </div>
-
-        <div className="clock-progress">
-          <div className={`clock-progress-bar ${mode}`} style={{ width: `${progress}%` }} />
+    <div
+      className={`clock-container active ${mode}`}
+      onClick={handleShowMain}
+      title="Click to show main window"
+    >
+      <div className="clock-content">
+        <span className="clock-icon">{modeIcon}</span>
+        <div className="clock-info">
+          <div className="clock-time">{formatTime(remainingTime)}</div>
+          <div className="clock-progress">
+            <div className="clock-progress-bar" style={{ width: `${progress}%` }} />
+          </div>
         </div>
       </div>
+      <button className="close-btn" onClick={handleHide} title="Hide">
+        ✕
+      </button>
     </div>
   );
 };

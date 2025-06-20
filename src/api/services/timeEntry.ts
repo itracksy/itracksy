@@ -94,7 +94,7 @@ export async function updateTimeEntry(
   if (timeEntry.endTime) {
     try {
       // Send clock update to notify that the session has stopped
-      sendClockUpdate({
+      await sendClockUpdate({
         activeEntry: null, // No active entry since it was stopped
         currentTime: Date.now(),
         action: "stop",

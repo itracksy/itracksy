@@ -22,9 +22,9 @@ export function createClockWindow(): BrowserWindow {
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
 
-  // Clock window dimensions
-  const windowWidth = 280;
-  const windowHeight = 120;
+  // Clock window dimensions - consistent for both idle and active states
+  const windowWidth = 96;
+  const windowHeight = 38;
 
   // Position in top-right corner with some margin
   const x = screenWidth - windowWidth - 20;
@@ -37,7 +37,7 @@ export function createClockWindow(): BrowserWindow {
     y,
     frame: false,
     transparent: true,
-    backgroundColor: "rgba(0, 0, 0, 0)",
+    backgroundColor: "rgba(0, 0, 0, 0)", // Fully transparent background
     alwaysOnTop: true,
     skipTaskbar: true,
     resizable: false,
@@ -47,11 +47,12 @@ export function createClockWindow(): BrowserWindow {
     closable: true,
     focusable: true,
     show: false,
-    hasShadow: true,
+    hasShadow: false, // Disable shadow for cleaner transparent look
     webPreferences: {
       preload: preload,
       contextIsolation: true,
       nodeIntegration: false,
+      backgroundThrottling: false, // Prevent throttling for smooth animations
     },
     vibrancy: "under-window", // macOS vibrancy effect
     visualEffectState: "active",

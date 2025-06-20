@@ -16,6 +16,7 @@ import {
   getActiveTimeEntry,
   updateTimeEntry,
 } from "../../../api/services/timeEntry";
+import { getFocusTarget, getTodaysFocusProgress } from "../../../api/services/focusTargets";
 
 export const addClockEventListeners = () => {
   logger.debug("ClockListeners: Adding clock listeners");
@@ -120,15 +121,12 @@ export const addClockEventListeners = () => {
       }
 
       // Send update to clock window
-      const clockWindow = getClockWindow();
-      if (clockWindow) {
-        const updatedEntry = await getActiveTimeEntry(userId);
-        clockWindow.webContents.send(CLOCK_UPDATE_CHANNEL, {
-          activeEntry: updatedEntry,
-          action,
-          timestamp: Date.now(),
-        });
-      }
+      const updatedEntry = await getActiveTimeEntry(userId);
+      await sendClockUpdate({
+        activeEntry: updatedEntry,
+        action,
+        timestamp: Date.now(),
+      });
 
       return { success: true, result };
     } catch (error) {
@@ -139,9 +137,34 @@ export const addClockEventListeners = () => {
 };
 
 // Function to send updates to clock window
-export const sendClockUpdate = (data: any) => {
+export const sendClockUpdate = async (data: any) => {
   const clockWindow = getClockWindow();
   if (clockWindow && !clockWindow.isDestroyed()) {
-    clockWindow.webContents.send(CLOCK_UPDATE_CHANNEL, data);
+    try {
+      // Get current user ID
+      const userId = await getCurrentUserIdLocalStorage();
+
+      let focusTarget = null;
+      let dailyProgress = null;
+
+      if (userId) {
+        // Get focus target and daily progress
+        focusTarget = await getFocusTarget(userId);
+        dailyProgress = await getTodaysFocusProgress(userId);
+      }
+
+      // Include focus data in the update
+      const updateData = {
+        ...data,
+        focusTarget,
+        dailyProgress,
+      };
+
+      clockWindow.webContents.send(CLOCK_UPDATE_CHANNEL, updateData);
+    } catch (error) {
+      logger.error("Failed to get focus data for clock update", { error });
+      // Fallback: send original data without focus info
+      clockWindow.webContents.send(CLOCK_UPDATE_CHANNEL, data);
+    }
   }
 };
