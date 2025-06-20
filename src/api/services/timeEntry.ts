@@ -4,6 +4,7 @@ import { nanoid } from "nanoid";
 import db from "../db";
 import { TimeEntryWithRelations } from "@/types/projects";
 import { sendClockUpdate } from "../../helpers/ipc/clock/clock-listeners";
+import { showClockWindow } from "../../main/windows/clock";
 import { getTray } from "../../main";
 
 export type TimeEntry = typeof timeEntries.$inferSelect;
@@ -47,6 +48,16 @@ export async function createTimeEntry(
       set: entry,
     })
     .returning();
+
+  // Show clock window when a new session starts (only if it doesn't have an endTime)
+  if (!entry.endTime) {
+    try {
+      showClockWindow();
+    } catch (error) {
+      console.error("Failed to show clock window:", error);
+      // Don't throw error here to avoid breaking the time entry creation
+    }
+  }
 
   return created[0];
 }
