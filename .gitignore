@@ -100,7 +100,7 @@ out/
 /blob-report/
 /playwright/.cache/
 
-.env.*
+
 
 # SQLite database
 data/database.sqlite
@@ -112,5 +112,6 @@ local.db
 .vscode/*
 
 .env.local
+.env
 logs.txt
 screenshots/
