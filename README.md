@@ -8,11 +8,30 @@ iTracksy is a powerful desktop application for tracking your activities and mana
 ## Features
 
 - **Activity Tracking**: Automatically tracks window activities and provides detailed insights about your application usage
+- **Browser URL Tracking**: Captures browser URLs for detailed website analytics (requires macOS permissions)
 - **Project Management**: Organize your work with kanban boards, lists, and cards
 - **Time Analytics**: View detailed breakdowns of time spent on different applications, domains, and tasks
 - **Achievements**: Track your productivity goals with focus sessions and receive recognition for your progress
 - **Rule-Based Classification**: Customize how activities are categorized with a flexible rule system
 
+## macOS Permissions
+
+For full functionality on macOS, iTracksy requires system permissions to track browser URLs:
+
+- **Accessibility Permission**: Required to detect active applications and window information
+- **Screen Recording Permission**: Required to access browser URLs and detailed window content
+
+### Quick Setup
+1. Launch iTracksy - it will automatically prompt for permissions
+2. Follow the guided setup to open System Settings
+3. Grant both Accessibility and Screen Recording permissions
+4. Restart iTracksy for changes to take effect
+
+### Manual Setup
+See [`docs/MACOS_PERMISSIONS.md`](docs/MACOS_PERMISSIONS.md) for detailed instructions.
+
+### Test Permissions
+Run `npm run test-permissions` to verify your permission setup.
 
 ## Technology Stack
 

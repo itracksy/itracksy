@@ -224,6 +224,47 @@ export async function getPermissions() {
   const screenRecordingPermission = checkScreenRecordingPermission();
   return { accessibilityPermission, screenRecordingPermission };
 }
+
+/**
+ * Get detailed permission status with explanations
+ */
+export function getDetailedPermissionStatus(): {
+  accessibility: {
+    granted: boolean;
+    required: boolean;
+    description: string;
+    systemPreferencesPath: string;
+  };
+  screenRecording: {
+    granted: boolean;
+    required: boolean;
+    description: string;
+    systemPreferencesPath: string;
+  };
+  allGranted: boolean;
+  platform: string;
+} {
+  const accessibilityGranted = checkAccessibilityPermission();
+  const screenRecordingGranted = checkScreenRecordingPermission();
+
+  return {
+    accessibility: {
+      granted: accessibilityGranted,
+      required: isMacOS,
+      description: "Required to track active applications and window information",
+      systemPreferencesPath: "System Settings > Privacy & Security > Accessibility",
+    },
+    screenRecording: {
+      granted: screenRecordingGranted,
+      required: isMacOS,
+      description: "Required to access browser URLs and window content for detailed tracking",
+      systemPreferencesPath: "System Settings > Privacy & Security > Screen Recording",
+    },
+    allGranted: accessibilityGranted && screenRecordingGranted,
+    platform: process.platform,
+  };
+}
+
 export async function updateUserSettings(settings: { isWarningPopupEnable?: boolean }) {
   const { isWarningPopupEnable } = settings;
   await setValue(

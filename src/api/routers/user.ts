@@ -8,6 +8,7 @@ import {
   getUserSettings,
   setPermissions,
   updateUserSettings,
+  getDetailedPermissionStatus,
 } from "../services/userSettings";
 
 const trackingSettingsSchema = z.object({
@@ -29,6 +30,9 @@ export const userRouter = t.router({
     }),
   getPermissions: protectedProcedure.query(async ({ ctx }) => {
     return getPermissions();
+  }),
+  getDetailedPermissionStatus: protectedProcedure.query(async ({ ctx }) => {
+    return getDetailedPermissionStatus();
   }),
   setPermissions: protectedProcedure
     .input(

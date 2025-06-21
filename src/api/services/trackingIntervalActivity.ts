@@ -1,5 +1,4 @@
 import { Activity } from "@/types/activity";
-import { BrowserWindow, dialog, screen } from "electron";
 import { upsertActivity } from "./activities";
 import { TRACKING_INTERVAL } from "../../config/tracking";
 import { extractDomainWindows, urlContainsDomain } from "../../utils/url";
