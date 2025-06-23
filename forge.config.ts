@@ -54,25 +54,64 @@ const packagerConfig: ForgePackagerOptions = {
   extraResource: ["./resources"],
 };
 
-// Configure codesigning and notarization for macOS builds
-if (process.env["NODE_ENV"] === "production") {
-  packagerConfig.osxSign = {
-    // Options for codesigning the application
-    optionsForFile: (filePath: string) => ({
-      app: "com.itracksy.app",
-      entitlements: path.join(__dirname, "entitlements.plist"),
-      "entitlements-inherit": path.join(__dirname, "entitlements.plist"),
-      hardenedRuntime: true,
-      "gatekeeper-assess": false,
-    }),
+// Configure macOS-specific settings (both development and production)
+if (process.platform === "darwin") {
+  // Add Info.plist keys for Apple Events usage
+  packagerConfig.extendInfo = {
+    NSAppleEventsUsageDescription:
+      "iTracksy needs access to browser applications to track website URLs for time management and productivity analysis. This helps provide detailed insights into your browsing activity.",
+    // Additional Info.plist keys for better permission handling
+    NSAppleScriptEnabled: true,
+    OSAScriptingDefinition: "com.itracksy.app.sdef",
   };
-  packagerConfig.osxNotarize = {
-    //@ts-ignore
-    tool: "notarytool",
-    appleId: process.env.APPLE_ID || "",
-    appleIdPassword: process.env.APPLE_ID_PASSWORD || "",
-    teamId: process.env.APPLE_TEAM_ID || "",
-  };
+
+  // Configure codesigning and notarization for production builds
+  if (process.env["NODE_ENV"] === "production") {
+    packagerConfig.osxSign = {
+      // Options for codesigning the application
+      optionsForFile: (filePath: string) => ({
+        identity: "Developer ID Application", // Use your Developer ID
+        entitlements: path.join(__dirname, "entitlements.plist"),
+        "entitlements-inherit": path.join(__dirname, "entitlements.plist"),
+        hardenedRuntime: true,
+        "gatekeeper-assess": false,
+        // Ensure proper signing of all components
+        type: "distribution",
+      }),
+    };
+
+    // Only configure notarization if all required credentials are present
+    const appleId = process.env.APPLE_ID;
+    const appleIdPassword = process.env.APPLE_ID_PASSWORD;
+    const teamId = process.env.APPLE_TEAM_ID;
+
+    if (appleId && appleIdPassword && teamId) {
+      packagerConfig.osxNotarize = {
+        //@ts-ignore
+        tool: "notarytool",
+        appleId: appleId,
+        appleIdPassword: appleIdPassword,
+        teamId: teamId,
+      };
+      console.log("✅ Notarization configured with Apple ID:", appleId);
+    } else {
+      console.log("⚠️  Skipping notarization - missing Apple Developer credentials");
+      console.log("   APPLE_ID:", appleId ? "✓" : "✗");
+      console.log("   APPLE_ID_PASSWORD:", appleIdPassword ? "✓" : "✗");
+      console.log("   APPLE_TEAM_ID:", teamId ? "✓" : "✗");
+    }
+  } else {
+    // Development signing configuration
+    packagerConfig.osxSign = {
+      optionsForFile: (filePath: string) => ({
+        identity: "Developer ID Application", // Or use your development certificate
+        entitlements: path.join(__dirname, "entitlements.plist"),
+        "entitlements-inherit": path.join(__dirname, "entitlements.plist"),
+        hardenedRuntime: true,
+        "gatekeeper-assess": false,
+      }),
+    };
+  }
 }
 
 // Main Electron Forge configuration
@@ -246,6 +285,8 @@ const config: ForgeConfig = {
     }),
     new MakerDMG({
       icon: path.resolve(__dirname, "resources", "icon.icns"),
+      format: "ULFO", // Use a different format that works better with permissions
+      overwrite: true,
     }),
     new MakerRpm({}),
     new MakerDeb({}),

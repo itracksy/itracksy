@@ -12,8 +12,29 @@
     <true/>
     <key>com.apple.security.inherit</key>
     <true/>
+    <!-- Critical entitlement for Apple Events and browser URL access -->
     <key>com.apple.security.automation.apple-events</key>
     <true/>
+    <!-- Enable AppleScript execution for browser automation -->
+    <key>com.apple.security.scripting-targets</key>
+    <dict>
+      <key>com.apple.Safari</key>
+      <array>
+        <string>com.apple.event.appleEvent.core</string>
+      </array>
+      <key>com.google.Chrome</key>
+      <array>
+        <string>com.apple.event.appleEvent.core</string>
+      </array>
+      <key>org.mozilla.firefox</key>
+      <array>
+        <string>com.apple.event.appleEvent.core</string>
+      </array>
+      <key>com.microsoft.edgemac</key>
+      <array>
+        <string>com.apple.event.appleEvent.core</string>
+      </array>
+    </dict>
     <key>com.apple.security.cs.debugger</key>
     <true/>
     <!-- Entitlements for screen recording and accessibility -->
