@@ -13,13 +13,13 @@ The screenshots are generated using Playwright testing framework, which:
 
 ## Screenshot Specifications
 
-| Feature             | Filename                | Resolution | Format |
-| ------------------- | ----------------------- | ---------- | ------ |
-| Activity Tracking   | activity-tracking.png   | Full-page  | PNG    |
-| Project Management  | project-management.png  | Full-page  | PNG    |
-| Time Analytics      | time-analytics.png      | Full-page  | PNG    |
-| Achievements        | achievements.png        | Full-page  | PNG    |
-| Rule Classification | rule-classification.png | Full-page  | PNG    |
+| Feature             | Filename                     | Resolution | Format |
+| ------------------- | ---------------------------- | ---------- | ------ |
+| Activity Tracking   | activity-tracking.png        | Full-page  | PNG    |
+| Project Management  | project-management.png       | Full-page  | PNG    |
+| Time Analytics      | time-analytics.png           | Full-page  | PNG    |
+| Activity Classification | activity-classification.png | Full-page  | PNG    |
+| Rule Classification | rule-classification.png      | Full-page  | PNG    |
 
 ## Integration into Website
 

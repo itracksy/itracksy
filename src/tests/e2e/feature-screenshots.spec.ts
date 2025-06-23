@@ -120,17 +120,17 @@ test("Screenshot Time Analytics feature", async () => {
   });
 });
 
-test("Screenshot Achievements feature", async () => {
-  // Navigate to Achievements page using the link href
-  await page.locator('a[href="/achievements"]').click();
+test("Screenshot Activity Classification feature", async () => {
+  // Navigate to Activity Classification page using the link href
+  await page.locator('a[href="/classify"]').click();
   await page.waitForLoadState("networkidle");
 
-  // Make sure achievements data is fully loaded
+  // Make sure classification data is fully loaded
   await page.waitForTimeout(1500);
 
-  // Take screenshot of the Achievements view
+  // Take screenshot of the Activity Classification view
   await page.screenshot({
-    path: path.join(screenshotsDir, "achievements.png"),
+    path: path.join(screenshotsDir, "activity-classification.png"),
     fullPage: true,
   });
 });

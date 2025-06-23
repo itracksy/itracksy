@@ -54,6 +54,7 @@ export const timeEntryRouter = t.router({
       z.object({
         startTimestamp: z.number(),
         endTimestamp: z.number(),
+        isFocusMode: z.boolean().optional(),
       })
     )
     .query(async ({ input, ctx }) => {
@@ -61,6 +62,7 @@ export const timeEntryRouter = t.router({
         userId: ctx.userId!,
         startTimestamp: input.startTimestamp,
         endTimestamp: input.endTimestamp,
+        isFocusMode: input.isFocusMode,
       });
     }),
   getGroupActivitiesForTimeEntry: protectedProcedure.input(z.string()).query(async ({ input }) => {

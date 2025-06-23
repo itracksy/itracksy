@@ -1,5 +1,5 @@
 import * as React from "react";
-import { BarChart, FolderClosed, Settings, Timer, Trophy, BookOpen } from "lucide-react";
+import { BarChart, FolderClosed, Settings, Timer, Trophy, BookOpen, Target } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 
@@ -30,9 +30,9 @@ const items = [
     url: "/projects",
   },
   {
-    title: "Achievements",
-    icon: Trophy,
-    url: "/achievements",
+    title: "Classify",
+    icon: Target,
+    url: "/classify",
   },
   {
     title: "Analytics",

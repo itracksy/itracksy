@@ -7,7 +7,7 @@ import SettingsPage from "@/pages/settings-page/SettingsPage";
 import RainingLetters from "@/pages/rainning-letter/index";
 import FullScreenLayout from "@/layouts/FullScreenLayout";
 import RuleBookPage from "@/pages/rule-book";
-import { FocusSessionsAchievement } from "@/pages/new-achievements/page";
+import { ActivityClassificationPage } from "@/pages/new-activity-classification/page";
 
 export const DashboardRoute = createRoute({
   getParentRoute: () => RootRoute,
@@ -42,10 +42,10 @@ export const RainingLettersRoute = createRoute({
   ),
 });
 
-export const AchievementsRoute = createRoute({
+export const ClassificationRoute = createRoute({
   getParentRoute: () => RootRoute,
-  path: "/achievements",
-  component: FocusSessionsAchievement,
+  path: "/classify",
+  component: ActivityClassificationPage,
 });
 
 export const RuleBookRoute = createRoute({
@@ -60,6 +60,6 @@ export const rootTree = RootRoute.addChildren([
   ProjectsRoute,
   SettingsRoute,
   RainingLettersRoute,
-  AchievementsRoute,
+  ClassificationRoute,
   RuleBookRoute,
 ]);

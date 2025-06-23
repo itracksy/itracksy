@@ -9,7 +9,7 @@ The landing page should showcase the key features of iTracksy through high-quali
 1. **Activity Tracking** - Shows the focus session interface
 2. **Project Management** - Displays the kanban board interface
 3. **Time Analytics** - Highlights the dashboard with charts and insights
-4. **Achievements** - Showcases the gamification elements
+4. **Activity Classification** - Showcases the activity classification system
 5. **Rule-Based Classification** - Demonstrates the rule book interface
 
 ## Screenshot Generation Process
@@ -64,7 +64,7 @@ For each feature, create a section that includes:
   - `/screenshots/activity-tracking.png`
   - `/screenshots/project-management.png`
   - `/screenshots/time-analytics.png`
-  - `/screenshots/achievements.png`
+  - `/screenshots/activity-classification.png`
   - `/screenshots/rule-classification.png`
 
 - For responsive design:
@@ -94,9 +94,9 @@ Organize tasks with an intuitive kanban board. Drag and drop cards between colum
 
 Gain insights from powerful analytics. Visualize how you spend your time with beautiful, interactive charts that reveal productivity patterns.
 
-#### Achievements
+#### Activity Classification
 
-Stay motivated with gamification. Unlock achievements as you reach productivity milestones, making productivity improvement fun and rewarding.
+Improve your productivity with smart activity classification. Review and classify your focus sessions to gain better insights into your work patterns and productivity trends.
 
 #### Rule-Based Classification
 

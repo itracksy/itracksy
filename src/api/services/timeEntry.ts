@@ -237,10 +237,12 @@ export async function getTimeEntriesByTimeRange({
   userId,
   startTimestamp,
   endTimestamp,
+  isFocusMode,
 }: {
   userId: string;
   startTimestamp: number;
   endTimestamp: number;
+  isFocusMode?: boolean;
 }): Promise<TimeEntryWithRelations[]> {
   const startOfDay = new Date(startTimestamp);
   startOfDay.setHours(0, 0, 0, 0);
@@ -252,6 +254,11 @@ export async function getTimeEntriesByTimeRange({
     gte(timeEntries.startTime, startOfDay.getTime()),
     lte(timeEntries.startTime, endOfDay.getTime()),
   ];
+
+  // Add focus mode filter if specified
+  if (isFocusMode !== undefined) {
+    whereConditions.push(eq(timeEntries.isFocusMode, isFocusMode));
+  }
 
   const entries = await db.query.timeEntries.findMany({
     where: and(...whereConditions),

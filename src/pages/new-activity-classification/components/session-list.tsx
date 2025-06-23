@@ -8,13 +8,13 @@ import { trpcClient } from "@/utils/trpc";
 import { useState } from "react";
 import { useAtom } from "jotai";
 
-import { selectedAchievementTimeRangeAtom } from "@/context/timeRange";
+import { selectedClassificationTimeRangeAtom } from "@/context/timeRange";
 
 interface SessionListProps {}
 
 export function SessionList({}: SessionListProps) {
   const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
-  const [selectedTimeRange, setSelectedTimeRange] = useAtom(selectedAchievementTimeRangeAtom);
+  const [selectedTimeRange, setSelectedTimeRange] = useAtom(selectedClassificationTimeRangeAtom);
 
   const startTimestamp = selectedTimeRange.start;
   const endTimestamp = selectedTimeRange.end;
@@ -25,11 +25,12 @@ export function SessionList({}: SessionListProps) {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["timeEntry.getTimeEntriesByTimeRange", startTimestamp, endTimestamp],
+    queryKey: ["timeEntry.getTimeEntriesByTimeRange", startTimestamp, endTimestamp, true],
     queryFn: async () => {
       return await trpcClient.timeEntry.getTimeEntriesByTimeRange.query({
         startTimestamp,
         endTimestamp,
+        isFocusMode: true, // Only fetch focus sessions, not break sessions
       });
     },
   });
@@ -47,10 +48,15 @@ export function SessionList({}: SessionListProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-          Your Focus Sessions
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            Focus Session History
+          </h2>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Review and classify activities from your sessions
+          </p>
           <div className="mt-2 h-1 w-20 rounded bg-tracksy-gold dark:bg-tracksy-gold/70"></div>
-        </h2>
+        </div>
         <TimeRangeSelector
           start={selectedTimeRange.start}
           end={selectedTimeRange.end}

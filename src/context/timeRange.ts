@@ -1,7 +1,7 @@
 import { TimeRange } from "@/types/time";
 import { atom } from "jotai";
 
-export const selectedAchievementTimeRangeAtom = atom<TimeRange>({
+export const selectedClassificationTimeRangeAtom = atom<TimeRange>({
   start: Date.now(),
   end: Date.now(),
   value: "today",

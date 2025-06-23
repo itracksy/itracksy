@@ -11,7 +11,7 @@ iTracksy is a powerful desktop application for tracking your activities and mana
 - **Browser URL Tracking**: Captures browser URLs for detailed website analytics (requires macOS permissions)
 - **Project Management**: Organize your work with kanban boards, lists, and cards
 - **Time Analytics**: View detailed breakdowns of time spent on different applications, domains, and tasks
-- **Achievements**: Track your productivity goals with focus sessions and receive recognition for your progress
+- **Activity Classification**: Track your productivity goals with focus sessions and classify activities to improve insights
 - **Rule-Based Classification**: Customize how activities are categorized with a flexible rule system
 
 ## macOS Permissions
@@ -86,14 +86,14 @@ export const router = t.router({
 const activities = await trpcClient.getActivities.query();
 ```
 
-## Achievements System
+## Activity Classification System
 
-iTracksy includes a powerful achievements system that helps you visualize and celebrate your productivity milestones:
+iTracksy includes a powerful activity classification system that helps you visualize and improve your productivity:
 
 - **Focus Session Tracking**: Monitor your dedicated work sessions and see your improvement over time
 - **Productivity Percentage**: Get insights into how productive your time usage is based on your own classification rules
-- **Activity Classification**: Track what percentage of your activities have been classified
-- **Time-Range Selection**: View achievements across different time periods (daily, weekly, monthly)
+- **Activity Classification Progress**: Track what percentage of your activities have been classified
+- **Time-Range Selection**: View classification data across different time periods (daily, weekly, monthly)
 
 ### Rule-Based Classification
 
