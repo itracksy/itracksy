@@ -6,6 +6,9 @@ import { useQuery } from "@tanstack/react-query";
 import { trpcClient } from "@/utils/trpc";
 import { useAtomValue } from "jotai";
 import { selectedClassificationTimeRangeAtom } from "@/context/timeRange";
+import { Link } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
+import { BookOpen } from "lucide-react";
 
 export function ActivityClassificationPage() {
   const { toast } = useToast();
@@ -53,12 +56,20 @@ export function ActivityClassificationPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-          Activity Classification
-        </h1>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          Classify your activities to improve productivity insights
-        </p>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            Activity Classification
+          </h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Classify your activities to improve productivity insights
+          </p>
+        </div>
+        <Button asChild variant="outline" className="flex items-center gap-2">
+          <Link to="/rule-book">
+            <BookOpen className="h-4 w-4" />
+            Rule Book
+          </Link>
+        </Button>
       </div>
 
       <SummaryCard

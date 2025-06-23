@@ -1,5 +1,14 @@
 import * as React from "react";
-import { BarChart, FolderClosed, Settings, Timer, Trophy, BookOpen, Target } from "lucide-react";
+import {
+  BarChart,
+  FolderClosed,
+  Settings,
+  Timer,
+  Trophy,
+  BookOpen,
+  Target,
+  ChevronRight,
+} from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +20,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { BottomSideBar } from "./BottomSideBar";
@@ -33,16 +45,18 @@ const items = [
     title: "Classify",
     icon: Target,
     url: "/classify",
+    subItems: [
+      {
+        title: "Rule Book",
+        icon: BookOpen,
+        url: "/rule-book",
+      },
+    ],
   },
   {
     title: "Analytics",
     icon: BarChart,
     url: "/dashboard",
-  },
-  {
-    title: "Rule Book",
-    icon: BookOpen,
-    url: "/rule-book",
   },
   {
     title: "Settings",
@@ -53,6 +67,19 @@ const items = [
 
 export function AppSidebar({ className, ...props }: React.ComponentProps<typeof Sidebar>) {
   const [activeItem, setActiveItem] = React.useState<string | null>(null);
+  const [openSubMenus, setOpenSubMenus] = React.useState<Set<string>>(new Set());
+
+  const toggleSubMenu = (itemTitle: string) => {
+    setOpenSubMenus((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemTitle)) {
+        newSet.delete(itemTitle);
+      } else {
+        newSet.add(itemTitle);
+      }
+      return newSet;
+    });
+  };
 
   return (
     <Sidebar
@@ -69,28 +96,76 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton
-                asChild
-                isActive={activeItem === item.title}
-                tooltip={item.title}
-                className={cn(
-                  "gap-2 text-tracksy-blue/70 transition-colors dark:text-white/70",
-                  "hover:bg-tracksy-gold/10 hover:text-tracksy-blue",
-                  "dark:hover:bg-tracksy-gold/5 dark:hover:text-tracksy-gold",
-                  activeItem === item.title &&
-                    "bg-tracksy-gold/10 text-tracksy-blue dark:bg-tracksy-gold/5 dark:text-white"
-                )}
-              >
-                <Link
-                  to={item.url}
-                  onClick={() => {
-                    setActiveItem(item.title);
-                  }}
+              {item.subItems ? (
+                <>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={activeItem === item.title}
+                    tooltip={item.title}
+                    className={cn(
+                      "gap-2 text-tracksy-blue/70 transition-colors dark:text-white/70",
+                      "hover:bg-tracksy-gold/10 hover:text-tracksy-blue",
+                      "dark:hover:bg-tracksy-gold/5 dark:hover:text-tracksy-gold",
+                      activeItem === item.title &&
+                        "bg-tracksy-gold/10 text-tracksy-blue dark:bg-tracksy-gold/5 dark:text-white"
+                    )}
+                  >
+                    <Link
+                      to={item.url}
+                      onClick={() => {
+                        setActiveItem(item.title);
+                        toggleSubMenu(item.title);
+                      }}
+                    >
+                      <item.icon className="size-4" />
+                      <span>{item.title}</span>
+                      <ChevronRight
+                        className={cn(
+                          "ml-auto size-4 transition-transform",
+                          openSubMenus.has(item.title) && "rotate-90"
+                        )}
+                      />
+                    </Link>
+                  </SidebarMenuButton>
+                  {openSubMenus.has(item.title) && (
+                    <SidebarMenuSub>
+                      {item.subItems.map((subItem) => (
+                        <SidebarMenuSubItem key={subItem.title}>
+                          <SidebarMenuSubButton asChild isActive={activeItem === subItem.title}>
+                            <Link to={subItem.url} onClick={() => setActiveItem(subItem.title)}>
+                              <subItem.icon className="size-4" />
+                              <span>{subItem.title}</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      ))}
+                    </SidebarMenuSub>
+                  )}
+                </>
+              ) : (
+                <SidebarMenuButton
+                  asChild
+                  isActive={activeItem === item.title}
+                  tooltip={item.title}
+                  className={cn(
+                    "gap-2 text-tracksy-blue/70 transition-colors dark:text-white/70",
+                    "hover:bg-tracksy-gold/10 hover:text-tracksy-blue",
+                    "dark:hover:bg-tracksy-gold/5 dark:hover:text-tracksy-gold",
+                    activeItem === item.title &&
+                      "bg-tracksy-gold/10 text-tracksy-blue dark:bg-tracksy-gold/5 dark:text-white"
+                  )}
                 >
-                  <item.icon className="size-4" />
-                  <span>{item.title}</span>
-                </Link>
-              </SidebarMenuButton>
+                  <Link
+                    to={item.url}
+                    onClick={() => {
+                      setActiveItem(item.title);
+                    }}
+                  >
+                    <item.icon className="size-4" />
+                    <span>{item.title}</span>
+                  </Link>
+                </SidebarMenuButton>
+              )}
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
