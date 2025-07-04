@@ -8,6 +8,8 @@ import RainingLetters from "@/pages/rainning-letter/index";
 import FullScreenLayout from "@/layouts/FullScreenLayout";
 import RuleBookPage from "@/pages/rule-book";
 import { ActivityClassificationPage } from "@/pages/new-activity-classification/page";
+import CategorizationPage from "@/pages/categorization/index";
+import { CategoryManagement } from "@/pages/categorization/components/CategoryManagement";
 
 export const DashboardRoute = createRoute({
   getParentRoute: () => RootRoute,
@@ -24,6 +26,18 @@ export const ProjectsRoute = createRoute({
   getParentRoute: () => RootRoute,
   path: "/projects",
   component: ProjectsPage,
+});
+
+export const CategorizationRoute = createRoute({
+  getParentRoute: () => RootRoute,
+  path: "/categorization",
+  component: CategorizationPage,
+});
+
+export const CategoryManagementRoute = createRoute({
+  getParentRoute: () => RootRoute,
+  path: "/categorization/manage",
+  component: CategoryManagement,
 });
 
 export const SettingsRoute = createRoute({
@@ -58,6 +72,8 @@ export const rootTree = RootRoute.addChildren([
   FocusRoute,
   DashboardRoute,
   ProjectsRoute,
+  CategorizationRoute,
+  CategoryManagementRoute,
   SettingsRoute,
   RainingLettersRoute,
   ClassificationRoute,

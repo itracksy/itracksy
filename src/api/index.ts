@@ -7,6 +7,7 @@ import { boardRouter } from "./routers/board";
 import { dashboardRouter } from "./routers/dashboard";
 import { utilsRouter } from "./routers/utils";
 import { focusTargetsRouter } from "./routers/focusTargets";
+import { categoryRouter } from "./routers/category";
 
 // Create the root router
 export const router = t.router({
@@ -18,6 +19,7 @@ export const router = t.router({
   dashboard: dashboardRouter,
   utils: utilsRouter,
   focusTargets: focusTargetsRouter,
+  category: categoryRouter,
 });
 
 // Export type router type signature

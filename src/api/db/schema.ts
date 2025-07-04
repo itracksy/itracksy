@@ -81,6 +81,7 @@ export const activities = sqliteTable(
     userId: text("user_id").notNull(),
     isFocusMode: integer("is_focus_mode", { mode: "boolean" }),
     rating: integer("rating"), // null = unrated, 0 = bad, 1 = good
+    categoryId: text("category_id").references(() => categories.id, { onDelete: "set null" }),
     activityRuleId: text("activity_rule_id").references(() => activityRules.id, {
       onDelete: "set null",
     }),
@@ -203,6 +204,62 @@ export const focusTargets = sqliteTable(
   ]
 );
 
+export const categories = sqliteTable(
+  "categories",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    description: text("description"),
+    color: text("color"), // Hex color for UI representation
+    icon: text("icon"), // Icon name or emoji
+    parentId: text("parent_id"),
+    path: text("path").notNull(), // Full path like "/Work/Development/Frontend"
+    level: integer("level").notNull().default(0), // Depth level (0 = root)
+    order: integer("order").notNull().default(0), // Sort order within parent
+    userId: text("user_id").notNull(), // User-specific categories
+    isSystem: integer("is_system", { mode: "boolean" }).notNull().default(false), // System vs user categories
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    index("categories_user_id_idx").on(table.userId),
+    index("categories_parent_id_idx").on(table.parentId),
+    index("categories_path_idx").on(table.path),
+    index("categories_level_idx").on(table.level),
+    index("categories_system_idx").on(table.isSystem),
+    unique().on(table.userId, table.name, table.parentId), // Unique name per parent per user
+  ]
+);
+
+export const categoryMappings = sqliteTable(
+  "category_mappings",
+  {
+    id: text("id").primaryKey(),
+    categoryId: text("category_id")
+      .notNull()
+      .references(() => categories.id, { onDelete: "cascade" }),
+    appName: text("app_name"), // App name pattern (can use wildcards)
+    domain: text("domain"), // Domain pattern (can use wildcards)
+    titlePattern: text("title_pattern"), // Optional title pattern matching
+    matchType: text("match_type").notNull().default("exact"), // "exact", "contains", "starts_with", "regex"
+    priority: integer("priority").notNull().default(0), // Higher priority = matched first
+    userId: text("user_id").notNull(),
+    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    index("category_mappings_category_id_idx").on(table.categoryId),
+    index("category_mappings_user_id_idx").on(table.userId),
+    index("category_mappings_app_name_idx").on(table.appName),
+    index("category_mappings_domain_idx").on(table.domain),
+    index("category_mappings_priority_idx").on(table.priority),
+    index("category_mappings_active_idx").on(table.isActive),
+    // Composite index for matching
+    index("category_mappings_match_idx").on(table.appName, table.domain, table.isActive),
+  ]
+);
+
 // Relations
 export const boardsRelations = relations(boards, ({ many }) => ({
   columns: many(columns),
@@ -257,8 +314,32 @@ export const activitiesRelations = relations(activities, ({ one }) => ({
     fields: [activities.activityRuleId],
     references: [activityRules.id],
   }),
+  category: one(categories, {
+    fields: [activities.categoryId],
+    references: [categories.id],
+  }),
 }));
 
 export const activityRulesRelations = relations(activityRules, ({ many }) => ({
-  // No direct relations needed for now, but could be extended in the future
+  activities: many(activities),
+}));
+
+export const categoriesRelations = relations(categories, ({ one, many }) => ({
+  parent: one(categories, {
+    fields: [categories.parentId],
+    references: [categories.id],
+    relationName: "parentChild",
+  }),
+  children: many(categories, {
+    relationName: "parentChild",
+  }),
+  activities: many(activities),
+  mappings: many(categoryMappings),
+}));
+
+export const categoryMappingsRelations = relations(categoryMappings, ({ one }) => ({
+  category: one(categories, {
+    fields: [categoryMappings.categoryId],
+    references: [categories.id],
+  }),
 }));

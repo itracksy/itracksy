@@ -15,7 +15,7 @@ export const RootRoute = createRootRoute({
   errorComponent: ({ error }) => {
     const { toast } = useToast();
     const err = error as Error;
-    console.log("show toast", err);
+    console.error("[errorComponent]", err);
 
     // Track error events using the safer analytics helper
     analytics.track("navigation_error", {

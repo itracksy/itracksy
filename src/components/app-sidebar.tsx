@@ -8,6 +8,7 @@ import {
   BookOpen,
   Target,
   ChevronRight,
+  Tags,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
@@ -40,6 +41,11 @@ const items = [
     title: "Projects",
     icon: FolderClosed,
     url: "/projects",
+  },
+  {
+    title: "Categorization",
+    icon: Tags,
+    url: "/categorization",
   },
   {
     title: "Classify",

@@ -9,6 +9,7 @@
     "clear": "rm -rf .vite dist out node_modules",
     "type-check": "tsc --noEmit",
     "dev": "electron-forge start",
+    "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
     "win-make": "npm run clean:out && npm run debug-make",

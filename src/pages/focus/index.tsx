@@ -25,7 +25,6 @@ import { ActiveSession } from "./components/ActiveSession";
 import { FocusTargetWidget } from "./components/FocusTargetWidget";
 
 export default function FocusPage() {
-  const [selectedBoardId, setSelectedBoardId] = useAtom(selectedBoardIdAtom);
   const [targetMinutes, setTargetMinutes] = useAtom(targetMinutesAtom);
   const [breakMinutes, setBreakMinutes] = useAtom(breakDurationAtom);
   const [duration, setDuration] = useState<string>(`${targetMinutes}:00`);
