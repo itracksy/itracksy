@@ -21,7 +21,12 @@ import {
   AlertTriangle,
   ArrowRight,
 } from "lucide-react";
-import { useCategoryStats, useUncategorizedActivities, useCreateCategoryMutation, useCategories } from "@/hooks/useCategoryQueries";
+import {
+  useCategoryStats,
+  useUncategorizedActivities,
+  useCreateCategoryMutation,
+  useCategories,
+} from "@/hooks/useCategoryQueries";
 import { CategoryFormModal } from "./components/CategoryFormModal";
 
 const CategorizationPage: React.FC = () => {
