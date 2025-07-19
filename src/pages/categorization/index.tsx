@@ -1,9 +1,12 @@
 import React from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { useAtom } from "jotai";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import TimeRangeSelector from "@/components/TimeRangeSelector";
+import { selectedClassificationTimeRangeAtom } from "@/context/timeRange";
 import {
   Tags,
   Plus,
@@ -14,12 +17,23 @@ import {
   FolderOpen,
   Activity,
   Loader2,
+  Clock,
+  AlertTriangle,
+  ArrowRight,
 } from "lucide-react";
-import { useCategoryStats } from "@/hooks/useCategoryQueries";
+import { useCategoryStats, useUncategorizedActivities } from "@/hooks/useCategoryQueries";
 
 const CategorizationPage: React.FC = () => {
   const navigate = useNavigate();
-  const { data: stats, isLoading, error } = useCategoryStats();
+  const [selectedTimeRange, setSelectedTimeRange] = useAtom(selectedClassificationTimeRangeAtom);
+  const {
+    data: stats,
+    isLoading,
+    error,
+  } = useCategoryStats(selectedTimeRange.start, selectedTimeRange.end);
+
+  const { data: uncategorizedActivities, isLoading: isLoadingUncategorized } =
+    useUncategorizedActivities(selectedTimeRange.start, selectedTimeRange.end, 5);
 
   // Fallback data for when stats are loading or unavailable
   const fallbackStats = {
@@ -40,6 +54,11 @@ const CategorizationPage: React.FC = () => {
 
   const handleManageCategories = () => {
     navigate({ to: "/categorization/manage" });
+  };
+
+  const handleCreateCategoryForActivity = (activity: { ownerName: string; title: string }) => {
+    // For now, just navigate to manage categories - could be enhanced with a modal
+    navigate({ to: "/categorization/manage", search: { activity: activity.ownerName } });
   };
 
   // Show loading state
@@ -68,22 +87,30 @@ const CategorizationPage: React.FC = () => {
 
   return (
     <div className="flex h-full flex-col space-y-6 p-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Activity Categorization</h1>
           <p className="text-muted-foreground">
             Organize and analyze your activities with intelligent categorization
           </p>
         </div>
-        <div className="flex space-x-2">
-          <Button variant="outline" size="sm" onClick={handleManageCategories}>
-            <Settings className="mr-2 h-4 w-4" />
-            Manage Categories
-          </Button>
-          <Button size="sm">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Category
-          </Button>
+        <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-x-4 sm:space-y-0">
+          <TimeRangeSelector
+            start={selectedTimeRange.start}
+            end={selectedTimeRange.end}
+            value={selectedTimeRange.value}
+            onRangeChange={setSelectedTimeRange}
+          />
+          <div className="flex space-x-2">
+            <Button variant="outline" size="sm" onClick={handleManageCategories}>
+              <Settings className="mr-2 h-4 w-4" />
+              Manage Categories
+            </Button>
+            <Button size="sm">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Category
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -189,94 +216,76 @@ const CategorizationPage: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Quick Actions */}
+        {/* Uncategorized Activities */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Tags className="mr-2 h-5 w-5" />
-              Quick Actions
+              <AlertTriangle className="mr-2 h-5 w-5" />
+              Uncategorized Activities
             </CardTitle>
-            <CardDescription>Manage your categorization system</CardDescription>
+            <CardDescription>Activities that need category assignment</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <Button variant="outline" className="w-full justify-start">
-                <Plus className="mr-2 h-4 w-4" />
-                Create New Category
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <Target className="mr-2 h-4 w-4" />
-                Add Mapping Rule
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <Activity className="mr-2 h-4 w-4" />
-                Categorize Pending Activities
-              </Button>
-              <Separator />
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={handleManageCategories}
-              >
-                <Settings className="mr-2 h-4 w-4" />
-                Manage Categories
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <BarChart3 className="mr-2 h-4 w-4" />
-                View Detailed Analytics
-              </Button>
+              {isLoadingUncategorized ? (
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                  <span className="ml-2">Loading activities...</span>
+                </div>
+              ) : uncategorizedActivities && uncategorizedActivities.length > 0 ? (
+                uncategorizedActivities.map((activity) => (
+                  <div
+                    key={`${activity.timestamp}-${activity.ownerName}`}
+                    className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50"
+                  >
+                    <div className="flex min-w-0 flex-1 items-center space-x-3">
+                      <div className="h-2 w-2 flex-shrink-0 rounded-full bg-orange-500 dark:bg-orange-400"></div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium">{activity.ownerName}</p>
+                        <p className="truncate text-sm text-muted-foreground">{activity.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDuration(activity.duration)}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleCreateCategoryForActivity(activity)}
+                      className="ml-3 flex-shrink-0"
+                    >
+                      <Plus className="mr-1 h-3 w-3" />
+                      Create Category
+                    </Button>
+                  </div>
+                ))
+              ) : (
+                <div className="py-6 text-center text-muted-foreground">
+                  <AlertTriangle className="mx-auto mb-2 h-8 w-8 opacity-50" />
+                  <p className="text-sm">All activities are categorized!</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Great job organizing your activities
+                  </p>
+                </div>
+              )}
+
+              {uncategorizedActivities && uncategorizedActivities.length > 0 && (
+                <>
+                  <Separator />
+                  <Button
+                    variant="outline"
+                    className="w-full justify-center"
+                    onClick={handleManageCategories}
+                  >
+                    <ArrowRight className="mr-2 h-4 w-4" />
+                    View All Uncategorized
+                  </Button>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Categorization Activity</CardTitle>
-          <CardDescription>
-            Latest activities that have been automatically categorized
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between rounded-lg border p-3">
-              <div className="flex items-center space-x-3">
-                <div className="h-2 w-2 rounded-full bg-green-500 dark:bg-green-400"></div>
-                <div>
-                  <p className="font-medium">Visual Studio Code</p>
-                  <p className="text-sm text-muted-foreground">
-                    Automatically categorized as Development
-                  </p>
-                </div>
-              </div>
-              <Badge variant="secondary">Development</Badge>
-            </div>
-            <div className="flex items-center justify-between rounded-lg border p-3">
-              <div className="flex items-center space-x-3">
-                <div className="h-2 w-2 rounded-full bg-green-500 dark:bg-green-400"></div>
-                <div>
-                  <p className="font-medium">Slack</p>
-                  <p className="text-sm text-muted-foreground">
-                    Automatically categorized as Communication
-                  </p>
-                </div>
-              </div>
-              <Badge variant="secondary">Communication</Badge>
-            </div>
-            <div className="flex items-center justify-between rounded-lg border p-3">
-              <div className="flex items-center space-x-3">
-                <div className="h-2 w-2 rounded-full bg-orange-500 dark:bg-orange-400"></div>
-                <div>
-                  <p className="font-medium">Unknown Application</p>
-                  <p className="text-sm text-muted-foreground">Needs manual categorization</p>
-                </div>
-              </div>
-              <Badge variant="outline">Uncategorized</Badge>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };

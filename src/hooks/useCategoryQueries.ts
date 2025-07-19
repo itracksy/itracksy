@@ -49,10 +49,23 @@ export function useCategoryMappingsForCategory(categoryId: string) {
 }
 
 // Category Statistics
-export function useCategoryStats() {
+export function useCategoryStats(startDate?: number, endDate?: number) {
   return useQuery({
-    queryKey: ["categories", "stats"],
-    queryFn: () => trpcClient.category.getStats.query(),
+    queryKey: ["categories", "stats", startDate, endDate],
+    queryFn: () => trpcClient.category.getStats.query({ startDate, endDate }),
+  });
+}
+
+// Uncategorized Activities
+export function useUncategorizedActivities(
+  startDate?: number,
+  endDate?: number,
+  limit: number = 10
+) {
+  return useQuery({
+    queryKey: ["categories", "uncategorized", startDate, endDate, limit],
+    queryFn: () =>
+      trpcClient.category.getUncategorizedActivities.query({ startDate, endDate, limit }),
   });
 }
 

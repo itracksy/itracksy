@@ -22,7 +22,11 @@ export {
 } from "./category-matching";
 
 // Auto-categorization functions
-export { categorizeNewActivity, getCategoryStats } from "./auto-categorize";
+export {
+  categorizeNewActivity,
+  getCategoryStats,
+  getUncategorizedActivities,
+} from "./auto-categorize";
 
 // Category seeding functions
 export {

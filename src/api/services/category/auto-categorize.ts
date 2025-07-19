@@ -55,7 +55,9 @@ export const categorizeNewActivity = async (
  * Gets category statistics for a user
  */
 export const getCategoryStats = async (
-  userId: string
+  userId: string,
+  startDate?: number,
+  endDate?: number
 ): Promise<{
   readonly totalCategories: number;
   readonly totalMappings: number;
@@ -68,31 +70,59 @@ export const getCategoryStats = async (
     readonly totalDuration: number;
   }[];
 }> => {
-  const { sql, and, isNull, desc } = await import("drizzle-orm");
+  const { sql, and, isNull, desc, gte, lte } = await import("drizzle-orm");
 
-  // Get total categories
+  // Create time range filter conditions
+  const timeFilters = [];
+  if (startDate !== undefined) {
+    const startOfDay = new Date(startDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    timeFilters.push(gte(activities.timestamp, startOfDay.getTime()));
+  }
+  if (endDate !== undefined) {
+    const endOfDay = new Date(endDate);
+    endOfDay.setHours(23, 59, 59, 999);
+    timeFilters.push(lte(activities.timestamp, endOfDay.getTime()));
+  }
+
+  // Get total categories (not time-filtered)
   const totalCategoriesResult = await db
     .select({ count: sql<number>`count(*)`.as("count") })
     .from(categories);
 
-  // Get total mappings
+  // Get total mappings (not time-filtered)
   const totalMappingsResult = await db
     .select({ count: sql<number>`count(*)`.as("count") })
     .from(categoryMappings);
 
-  // Get categorized activities count
+  // Get categorized activities count (with time filter)
+  const categorizedActivitiesConditions = [
+    eq(activities.userId, userId),
+    sql`${activities.categoryId} IS NOT NULL`,
+    ...timeFilters,
+  ];
   const categorizedActivitiesResult = await db
     .select({ count: sql<number>`count(*)`.as("count") })
     .from(activities)
-    .where(and(eq(activities.userId, userId), sql`${activities.categoryId} IS NOT NULL`));
+    .where(and(...categorizedActivitiesConditions));
 
-  // Get uncategorized activities count
+  // Get uncategorized activities count (with time filter)
+  const uncategorizedActivitiesConditions = [
+    eq(activities.userId, userId),
+    isNull(activities.categoryId),
+    ...timeFilters,
+  ];
   const uncategorizedActivitiesResult = await db
     .select({ count: sql<number>`count(*)`.as("count") })
     .from(activities)
-    .where(and(eq(activities.userId, userId), isNull(activities.categoryId)));
+    .where(and(...uncategorizedActivitiesConditions));
 
-  // Get top categories by activity count
+  // Get top categories by activity count (with time filter)
+  const topCategoriesConditions = [
+    eq(activities.userId, userId),
+    sql`${activities.categoryId} IS NOT NULL`,
+    ...timeFilters,
+  ];
   const topCategoriesResult = await db
     .select({
       categoryId: activities.categoryId,
@@ -102,7 +132,7 @@ export const getCategoryStats = async (
     })
     .from(activities)
     .innerJoin(categories, eq(activities.categoryId, categories.id))
-    .where(and(eq(activities.userId, userId), sql`${activities.categoryId} IS NOT NULL`))
+    .where(and(...topCategoriesConditions))
     .groupBy(activities.categoryId, categories.name)
     .orderBy(desc(sql`count(*)`))
     .limit(10);
@@ -119,4 +149,55 @@ export const getCategoryStats = async (
       totalDuration: row.totalDuration || 0,
     })),
   };
+};
+
+/**
+ * Gets uncategorized activities for a user within a time range
+ */
+export const getUncategorizedActivities = async (
+  userId: string,
+  startDate?: number,
+  endDate?: number,
+  limit: number = 10
+): Promise<
+  readonly {
+    readonly timestamp: number;
+    readonly ownerName: string;
+    readonly url: string | null;
+    readonly title: string;
+    readonly duration: number;
+  }[]
+> => {
+  const { and, isNull, desc, gte, lte } = await import("drizzle-orm");
+
+  // Create time range filter conditions
+  const timeFilters = [];
+  if (startDate !== undefined) {
+    const startOfDay = new Date(startDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    timeFilters.push(gte(activities.timestamp, startOfDay.getTime()));
+  }
+  if (endDate !== undefined) {
+    const endOfDay = new Date(endDate);
+    endOfDay.setHours(23, 59, 59, 999);
+    timeFilters.push(lte(activities.timestamp, endOfDay.getTime()));
+  }
+
+  // Get uncategorized activities
+  const conditions = [eq(activities.userId, userId), isNull(activities.categoryId), ...timeFilters];
+
+  const uncategorizedActivities = await db
+    .select({
+      timestamp: activities.timestamp,
+      ownerName: activities.ownerName,
+      url: activities.url,
+      title: activities.title,
+      duration: activities.duration,
+    })
+    .from(activities)
+    .where(and(...conditions))
+    .orderBy(desc(activities.duration)) // Order by duration to show longest activities first
+    .limit(limit);
+
+  return uncategorizedActivities;
 };

@@ -6,6 +6,7 @@ import { LIMIT_TIME_APART } from "../../config/tracking";
 import db from "../db";
 import { activities } from "../db/schema";
 import { rateActivity } from "./activityRating";
+import { categorizeNewActivity } from "./category/auto-categorize";
 
 /**
  * TIMESTAMP AND TIMEZONE PATTERNS
@@ -77,11 +78,23 @@ export const upsertActivity = async (activity: Activity): Promise<void> => {
 
     return;
   }
+
+  // Insert new activity
   await db.insert(activities).values(activity);
+
+  // Automatically categorize the new activity
+  if (activity.userId) {
+    try {
+      await categorizeNewActivity(activity.timestamp, activity.userId);
+    } catch (error) {
+      console.error("Failed to auto-categorize activity:", error);
+      // Don't throw error - categorization failure shouldn't break activity creation
+    }
+  }
 };
 
 /**
- * Track a new activity with automatic rating
+ * Track a new activity with automatic rating and categorization
  */
 export async function trackActivity(activityData: Omit<Activity, "rating">) {
   // Insert the activity first
@@ -97,6 +110,16 @@ export async function trackActivity(activityData: Omit<Activity, "rating">) {
 
   // Rate the activity using rules
   await rateActivity(activity);
+
+  // Automatically categorize the activity
+  if (activity.userId) {
+    try {
+      await categorizeNewActivity(activity.timestamp, activity.userId);
+    } catch (error) {
+      console.error("Failed to auto-categorize activity:", error);
+      // Don't throw error - categorization failure shouldn't break activity creation
+    }
+  }
 
   return activity;
 }

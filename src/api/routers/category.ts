@@ -20,6 +20,7 @@ import {
   deleteCategoryMapping,
   categorizeNewActivity,
   getCategoryStats,
+  getUncategorizedActivities,
   seedUserCategoriesFromSystem,
   getDefaultCategoriesTemplate,
   userHasCategories,
@@ -169,9 +170,28 @@ export const categoryRouter = t.router({
   }),
 
   // Statistics
-  getStats: protectedProcedure.query(async ({ ctx }) => {
-    return getCategoryStats(ctx.userId!);
-  }),
+  getStats: protectedProcedure
+    .input(
+      z.object({
+        startDate: z.number().optional(),
+        endDate: z.number().optional(),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      return getCategoryStats(ctx.userId!, input.startDate, input.endDate);
+    }),
+
+  getUncategorizedActivities: protectedProcedure
+    .input(
+      z.object({
+        startDate: z.number().optional(),
+        endDate: z.number().optional(),
+        limit: z.number().default(10),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      return getUncategorizedActivities(ctx.userId!, input.startDate, input.endDate, input.limit);
+    }),
 
   // Category Seeding
   seedDefaultCategories: protectedProcedure.mutation(async ({ ctx }) => {
