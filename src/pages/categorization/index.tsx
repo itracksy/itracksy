@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtom } from "jotai";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,11 +21,18 @@ import {
   AlertTriangle,
   ArrowRight,
 } from "lucide-react";
-import { useCategoryStats, useUncategorizedActivities } from "@/hooks/useCategoryQueries";
+import { useCategoryStats, useUncategorizedActivities, useCreateCategoryMutation, useCategories } from "@/hooks/useCategoryQueries";
+import { CategoryFormModal } from "./components/CategoryFormModal";
 
 const CategorizationPage: React.FC = () => {
   const navigate = useNavigate();
   const [selectedTimeRange, setSelectedTimeRange] = useAtom(selectedClassificationTimeRangeAtom);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState<{
+    ownerName: string;
+    title: string;
+  } | null>(null);
+
   const {
     data: stats,
     isLoading,
@@ -34,6 +41,9 @@ const CategorizationPage: React.FC = () => {
 
   const { data: uncategorizedActivities, isLoading: isLoadingUncategorized } =
     useUncategorizedActivities(selectedTimeRange.start, selectedTimeRange.end, 5);
+
+  const { data: categories = [] } = useCategories();
+  const createMutation = useCreateCategoryMutation();
 
   // Fallback data for when stats are loading or unavailable
   const fallbackStats = {
@@ -57,8 +67,28 @@ const CategorizationPage: React.FC = () => {
   };
 
   const handleCreateCategoryForActivity = (activity: { ownerName: string; title: string }) => {
-    // For now, just navigate to manage categories - could be enhanced with a modal
-    navigate({ to: "/categorization/manage", search: { activity: activity.ownerName } });
+    setSelectedActivity(activity);
+    setIsCreateModalOpen(true);
+  };
+
+  const handleFormSubmit = async (data: any) => {
+    try {
+      await createMutation.mutateAsync({
+        ...data,
+        color: data.color || "#3b82f6",
+        isSystem: false,
+        order: 0,
+      });
+      setIsCreateModalOpen(false);
+      setSelectedActivity(null);
+    } catch (error) {
+      console.error("Failed to create category:", error);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsCreateModalOpen(false);
+    setSelectedActivity(null);
   };
 
   // Show loading state
@@ -106,7 +136,7 @@ const CategorizationPage: React.FC = () => {
               <Settings className="mr-2 h-4 w-4" />
               Manage Categories
             </Button>
-            <Button size="sm">
+            <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Add Category
             </Button>
@@ -275,7 +305,7 @@ const CategorizationPage: React.FC = () => {
                   <Button
                     variant="outline"
                     className="w-full justify-center"
-                    onClick={handleManageCategories}
+                    onClick={() => navigate({ to: "/categorization/uncategorized" })}
                   >
                     <ArrowRight className="mr-2 h-4 w-4" />
                     View All Uncategorized
@@ -286,6 +316,24 @@ const CategorizationPage: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Category Creation Modal */}
+      <CategoryFormModal
+        isOpen={isCreateModalOpen}
+        onClose={handleCloseModal}
+        onSubmit={handleFormSubmit}
+        mode="create"
+        parentCategories={categories}
+        isLoading={createMutation.isPending}
+        initialData={
+          selectedActivity
+            ? {
+                name: selectedActivity.ownerName,
+                description: `Category for ${selectedActivity.ownerName} activities`,
+              }
+            : undefined
+        }
+      />
     </div>
   );
 };

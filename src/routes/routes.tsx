@@ -10,6 +10,7 @@ import RuleBookPage from "@/pages/rule-book";
 import { ActivityClassificationPage } from "@/pages/new-activity-classification/page";
 import CategorizationPage from "@/pages/categorization/index";
 import { CategoryManagement } from "@/pages/categorization/components/CategoryManagement";
+import { UncategorizedActivities } from "@/pages/categorization/components/UncategorizedActivities";
 
 export const DashboardRoute = createRoute({
   getParentRoute: () => RootRoute,
@@ -38,6 +39,12 @@ export const CategoryManagementRoute = createRoute({
   getParentRoute: () => RootRoute,
   path: "/categorization/manage",
   component: CategoryManagement,
+});
+
+export const UncategorizedActivitiesRoute = createRoute({
+  getParentRoute: () => RootRoute,
+  path: "/categorization/uncategorized",
+  component: UncategorizedActivities,
 });
 
 export const SettingsRoute = createRoute({
@@ -74,6 +81,7 @@ export const rootTree = RootRoute.addChildren([
   ProjectsRoute,
   CategorizationRoute,
   CategoryManagementRoute,
+  UncategorizedActivitiesRoute,
   SettingsRoute,
   RainingLettersRoute,
   ClassificationRoute,

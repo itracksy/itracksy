@@ -30,6 +30,10 @@ interface CategoryFormModalProps {
   readonly parentCategories: readonly Category[];
   readonly selectedParentId?: string;
   readonly isLoading?: boolean;
+  readonly initialData?: {
+    readonly name?: string;
+    readonly description?: string;
+  };
 }
 
 const CATEGORY_COLORS = [
@@ -77,6 +81,7 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
   parentCategories,
   selectedParentId,
   isLoading = false,
+  initialData,
 }) => {
   const [formData, setFormData] = useState({
     name: "",
@@ -99,15 +104,15 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
         });
       } else {
         setFormData({
-          name: "",
-          description: "",
+          name: initialData?.name || "",
+          description: initialData?.description || "",
           color: CATEGORY_COLORS[0] as string,
           icon: "",
           parentId: selectedParentId || "none",
         });
       }
     }
-  }, [isOpen, mode, category, selectedParentId]);
+  }, [isOpen, mode, category, selectedParentId, initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
