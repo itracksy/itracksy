@@ -12,6 +12,7 @@ import CategorizationPage from "@/pages/categorization/index";
 import { CategoryManagement } from "@/pages/categorization/components/CategoryManagement";
 import { UncategorizedActivities } from "@/pages/categorization/components/UncategorizedActivities";
 import ReportsPage from "@/pages/reports/ReportsPage";
+import MusicPage from "@/pages/music/index";
 
 export const DashboardRoute = createRoute({
   getParentRoute: () => RootRoute,
@@ -82,6 +83,12 @@ export const ReportsRoute = createRoute({
   component: ReportsPage,
 });
 
+export const MusicRoute = createRoute({
+  getParentRoute: () => RootRoute,
+  path: "/music",
+  component: MusicPage,
+});
+
 export const rootTree = RootRoute.addChildren([
   FocusRoute,
   DashboardRoute,
@@ -94,4 +101,5 @@ export const rootTree = RootRoute.addChildren([
   ClassificationRoute,
   RuleBookRoute,
   ReportsRoute,
+  MusicRoute,
 ]);
