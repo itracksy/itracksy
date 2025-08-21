@@ -140,8 +140,8 @@ async function createTray() {
     },
     {
       label: "Show Clock",
-      click: async () => {
-        await toggleClockWindow();
+      click: () => {
+        toggleClockWindow();
       },
     },
     { type: "separator" },

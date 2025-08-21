@@ -1,6 +1,6 @@
 import { Activity } from "@/types/activity";
 
-import { extractDomain } from "./url";
+import { extractDomain, urlContainsDomain } from "./url";
 import { isEmpty } from "./value-checks";
 import { RuleFormValues } from "@/types/rule";
 
@@ -55,11 +55,18 @@ export function doesActivityMatchRule(activity: Activity, rule: RuleFormValues):
   const isAppNameValid = (appName: string): boolean => {
     return activity.ownerName === appName;
   };
+
+  /**
+   * Check if the activity's domain matches the rule's domain.
+   * Uses domain containment logic, so:
+   * - "youtube.com" will match both "youtube.com" and "youtube.com/watch?v=abc123"
+   * - "google.com" will match "mail.google.com", "drive.google.com", etc.
+   */
   const isDomainValid = (domain?: string): boolean => {
     if (isEmpty(domain)) {
       return true;
     }
-    return extractDomain(activity.url) === domain;
+    return urlContainsDomain(activity.url, domain!);
   };
 
   return (

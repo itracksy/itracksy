@@ -215,9 +215,9 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Minimal Clock Window</CardTitle>
+          <CardTitle>Clock Window</CardTitle>
           <CardDescription>
-            Show or hide the minimal clock window that displays your current focus session.
+            Control whether the floating clock window appears automatically when you start a focus session.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex items-center gap-4">
@@ -226,7 +226,7 @@ export default function SettingsPage() {
             onCheckedChange={onClockVisibilityChange}
             id="clock-visibility"
           />
-          <label htmlFor="clock-visibility">Show Minimal Clock Window</label>
+          <label htmlFor="clock-visibility">Show clock window when starting focus sessions</label>
         </CardContent>
       </Card>
 

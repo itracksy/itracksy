@@ -52,9 +52,46 @@ describe("doesActivityMatchRule", () => {
       expect(doesActivityMatchRule(activity, rule)).toBe(true);
     });
 
+    test("should match when URL contains domain with path", () => {
+      const activity = createMockActivity({ url: "https://youtube.com/watch?v=abc123" });
+      const rule = createMockRule({ domain: "youtube.com" });
+
+      expect(doesActivityMatchRule(activity, rule)).toBe(true);
+    });
+
+    test("should match when URL contains domain with subdomain", () => {
+      const activity = createMockActivity({ url: "https://www.youtube.com/watch?v=abc123" });
+      const rule = createMockRule({ domain: "youtube.com" });
+
+      expect(doesActivityMatchRule(activity, rule)).toBe(true);
+    });
+
+    test("should match when URL contains domain with complex path", () => {
+      const activity = createMockActivity({
+        url: "https://facebook.com/profile/user123?tab=posts",
+      });
+      const rule = createMockRule({ domain: "facebook.com" });
+
+      expect(doesActivityMatchRule(activity, rule)).toBe(true);
+    });
+
+    test("should match subdomains correctly", () => {
+      const activity = createMockActivity({ url: "https://mail.google.com/mail/u/0/#inbox" });
+      const rule = createMockRule({ domain: "google.com" });
+
+      expect(doesActivityMatchRule(activity, rule)).toBe(true);
+    });
+
     test("should not match when domain is different", () => {
       const activity = createMockActivity({ url: "https://example.com/page" });
       const rule = createMockRule({ domain: "different.com" });
+
+      expect(doesActivityMatchRule(activity, rule)).toBe(false);
+    });
+
+    test("should not match partial domain names", () => {
+      const activity = createMockActivity({ url: "https://myexample.com/page" });
+      const rule = createMockRule({ domain: "example.com" });
 
       expect(doesActivityMatchRule(activity, rule)).toBe(false);
     });

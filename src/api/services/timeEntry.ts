@@ -6,6 +6,7 @@ import { TimeEntryWithRelations } from "@/types/projects";
 import { sendClockUpdate } from "../../helpers/ipc/clock/clock-listeners";
 import { showClockWindow } from "../../main/windows/clock";
 import { getTray } from "../../main";
+import { isClockVisibilityEnabled } from "./userSettings";
 
 export type TimeEntry = typeof timeEntries.$inferSelect;
 export type TimeEntryInsert = typeof timeEntries.$inferInsert;
@@ -52,7 +53,11 @@ export async function createTimeEntry(
   // Show clock window when a new session starts (only if it doesn't have an endTime)
   if (!entry.endTime) {
     try {
-      await showClockWindow();
+      // Check if clock visibility is enabled in settings before showing
+      const isClockEnabled = await isClockVisibilityEnabled();
+      if (isClockEnabled) {
+        showClockWindow();
+      }
     } catch (error) {
       console.error("Failed to show clock window:", error);
       // Don't throw error here to avoid breaking the time entry creation

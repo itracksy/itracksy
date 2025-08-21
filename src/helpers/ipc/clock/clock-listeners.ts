@@ -25,7 +25,7 @@ export const addClockEventListeners = () => {
   safelyRegisterListener(CLOCK_SHOW_CHANNEL, async (_event) => {
     try {
       logger.debug("Clock show requested");
-      await showClockWindow();
+      showClockWindow();
       return { success: true };
     } catch (error) {
       logger.error("Failed to show clock", { error });

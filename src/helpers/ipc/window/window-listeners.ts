@@ -14,7 +14,7 @@ import { safelyRegisterListener } from "../safelyRegisterListener";
 
 import { logger } from "../../../helpers/logger";
 import { getPlatformDownloadUrl } from "./handleDownload";
-import { handleClockVisibilitySettingChange } from "../../../main/windows/clock";
+import { hideClockWindow } from "../../../main/windows/clock";
 
 let trayRef: Tray | null = null;
 
@@ -127,7 +127,11 @@ export const addWindowEventListeners = (mainWindow: BrowserWindow, tray: Tray | 
     WIN_CLOCK_VISIBILITY_CHANGE_CHANNEL,
     async (_event, isVisible: boolean) => {
       try {
-        await handleClockVisibilitySettingChange(isVisible);
+        // When clock visibility is disabled, hide the clock window
+        if (!isVisible) {
+          hideClockWindow();
+        }
+        // When enabled, don't show it immediately - it will show on next new session
         return { success: true };
       } catch (error) {
         logger.error("Failed to handle clock visibility change", { error, isVisible });
