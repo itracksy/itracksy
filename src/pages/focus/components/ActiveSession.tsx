@@ -124,6 +124,19 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
         const now = new Date();
         const startTimeDate = new Date(activeTimeEntry.startTime);
         const minutes = activeTimeEntry.targetDuration ?? 0;
+
+        // Handle unlimited sessions (targetDuration = 0)
+        if (minutes === 0) {
+          const elapsedSeconds = Math.floor((now.getTime() - startTimeDate.getTime()) / 1000);
+          const elapsedMins = Math.floor(elapsedSeconds / 60);
+          const elapsedSecs = elapsedSeconds % 60;
+          setDuration(
+            `${elapsedMins.toString().padStart(2, "0")}:${elapsedSecs.toString().padStart(2, "0")}`
+          );
+          setIsTimeExceeded(false);
+          return;
+        }
+
         const secondsDiff =
           minutes * 60 - Math.floor((now.getTime() - startTimeDate.getTime()) / 1000);
 
@@ -174,6 +187,11 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
           <div className="flex items-center justify-center gap-2 text-[#2B4474] dark:text-white">
             <span className="h-2 w-2 rounded-full bg-[#E5A853]"></span>
             {getTitleTimeEntry(activeTimeEntry)}
+            {(activeTimeEntry.targetDuration ?? 0) === 0 && (
+              <span className="ml-2 rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-600 dark:bg-blue-900 dark:text-blue-300">
+                ∞ Unlimited
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -209,9 +227,14 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
 
       {/* Action Buttons */}
       <div className="mt-4 flex space-x-4 pt-8">
-        {/* Extend Time Button */}
-        <Button onClick={handleExtendTime} variant="outline" className="flex-1">
-          +5 MINUTES
+        {/* Extend Time Button - disabled for unlimited sessions */}
+        <Button
+          onClick={handleExtendTime}
+          variant="outline"
+          className="flex-1"
+          disabled={(activeTimeEntry.targetDuration ?? 0) === 0}
+        >
+          {(activeTimeEntry.targetDuration ?? 0) === 0 ? "UNLIMITED" : "+5 MINUTES"}
         </Button>
         <Button onClick={handleStopTimeEntry} variant="default" className="flex-1">
           STOP {activeTimeEntry.isFocusMode ? "FOCUS" : "BREAK"}

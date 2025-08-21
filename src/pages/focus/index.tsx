@@ -12,6 +12,8 @@ import {
   breakDurationAtom,
   selectedBoardIdAtom,
   targetMinutesAtom,
+  isUnlimitedFocusAtom,
+  isUnlimitedBreakAtom,
 } from "@/context/board";
 
 import { Slider } from "@/components/ui/slider";
@@ -30,6 +32,8 @@ export default function FocusPage() {
   const [duration, setDuration] = useState<string>(`${targetMinutes}:00`);
   const [activeTab, setActiveTab] = useState<"focus" | "break">("focus");
   const [autoStopEnabled, setAutoStopEnabled] = useAtom(autoStopEnabledsAtom);
+  const [isUnlimitedFocus, setIsUnlimitedFocus] = useAtom(isUnlimitedFocusAtom);
+  const [isUnlimitedBreak, setIsUnlimitedBreak] = useAtom(isUnlimitedBreakAtom);
   const { data: activeTimeEntry, isLoading } = useActiveTimeEntry();
   const createTimeEntry = useCreateTimeEntryMutation();
   const { data: lastTimeEntry } = useLastTimeEntry();
@@ -38,17 +42,33 @@ export default function FocusPage() {
   useEffect(() => {
     if (!activeTimeEntry) {
       const minutes = activeTab === "focus" ? targetMinutes : breakMinutes;
-      setDuration(`${minutes.toString().padStart(2, "0")}:00`);
+      const isUnlimited = activeTab === "focus" ? isUnlimitedFocus : isUnlimitedBreak;
+
+      if (isUnlimited) {
+        setDuration("∞");
+      } else {
+        setDuration(`${minutes.toString().padStart(2, "0")}:00`);
+      }
     } else {
       if (lastTimeEntry) {
         setActiveTab(lastTimeEntry.isFocusMode ? "break" : "focus");
       }
     }
-  }, [targetMinutes, breakMinutes, activeTab, activeTimeEntry, lastTimeEntry]);
+  }, [
+    targetMinutes,
+    breakMinutes,
+    activeTab,
+    activeTimeEntry,
+    lastTimeEntry,
+    isUnlimitedFocus,
+    isUnlimitedBreak,
+  ]);
 
   const handleStartSession = async () => {
-    const minutes = activeTab === "focus" ? targetMinutes : breakMinutes;
+    const isUnlimited = activeTab === "focus" ? isUnlimitedFocus : isUnlimitedBreak;
+    const minutes = isUnlimited ? 0 : activeTab === "focus" ? targetMinutes : breakMinutes;
     const { description, boardId, itemId } = getTimeEntryData();
+
     try {
       await createTimeEntry.mutateAsync({
         startTime: Date.now(),
@@ -57,13 +77,14 @@ export default function FocusPage() {
         itemId,
         targetDuration: minutes,
         isFocusMode: activeTab === "focus",
-        autoStopEnabled,
+        autoStopEnabled: isUnlimited ? false : autoStopEnabled, // Disable auto-stop for unlimited sessions
       });
 
       const mode = activeTab === "focus" ? "Focus" : "Break";
+      const durationText = isUnlimited ? "unlimited" : `${minutes}-minute`;
       toast({
         title: `${mode} Session Started`,
-        description: `Your ${minutes}-minute ${mode.toLowerCase()} session has begun.`,
+        description: `Your ${durationText} ${mode.toLowerCase()} session has begun.`,
       });
     } catch (error) {
       toast({
@@ -130,24 +151,40 @@ export default function FocusPage() {
                     {/* Duration Slider - More compact */}
                     <Card className="shadow-sm">
                       <CardContent className="px-4 py-3">
-                        <div className="flex items-center justify-between">
+                        <div className="mb-2 flex items-center justify-between">
                           <Label className="text-sm font-medium">Focus Duration</Label>
-                          <span className="font-mono text-sm text-gray-500">
-                            {targetMinutes} minutes
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-sm text-gray-500">
+                              {isUnlimitedFocus ? "Unlimited" : `${targetMinutes} minutes`}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              <Label htmlFor="unlimited-focus" className="text-xs text-gray-500">
+                                ∞
+                              </Label>
+                              <Switch
+                                id="unlimited-focus"
+                                checked={isUnlimitedFocus}
+                                onCheckedChange={setIsUnlimitedFocus}
+                              />
+                            </div>
+                          </div>
                         </div>
-                        <Slider
-                          value={[targetMinutes]}
-                          onValueChange={(values) => setTargetMinutes(values[0])}
-                          min={5}
-                          max={60}
-                          step={1}
-                          className="py-2"
-                        />
-                        <div className="flex justify-between text-xs text-gray-500">
-                          <span>5m</span>
-                          <span>60m</span>
-                        </div>
+                        {!isUnlimitedFocus && (
+                          <>
+                            <Slider
+                              value={[targetMinutes]}
+                              onValueChange={(values) => setTargetMinutes(values[0])}
+                              min={5}
+                              max={480}
+                              step={5}
+                              className="py-2"
+                            />
+                            <div className="flex justify-between text-xs text-gray-500">
+                              <span>5m</span>
+                              <span>8h</span>
+                            </div>
+                          </>
+                        )}
                       </CardContent>
                     </Card>
                   </TabsContent>
@@ -167,24 +204,40 @@ export default function FocusPage() {
                     {/* Break Duration Slider */}
                     <Card>
                       <CardContent className="pt-6">
-                        <div className="flex items-center justify-between">
+                        <div className="mb-2 flex items-center justify-between">
                           <Label className="text-sm font-medium">Break Duration</Label>
-                          <span className="font-mono text-sm text-gray-500">
-                            {breakMinutes} minutes
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-sm text-gray-500">
+                              {isUnlimitedBreak ? "Unlimited" : `${breakMinutes} minutes`}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              <Label htmlFor="unlimited-break" className="text-xs text-gray-500">
+                                ∞
+                              </Label>
+                              <Switch
+                                id="unlimited-break"
+                                checked={isUnlimitedBreak}
+                                onCheckedChange={setIsUnlimitedBreak}
+                              />
+                            </div>
+                          </div>
                         </div>
-                        <Slider
-                          value={[breakMinutes]}
-                          onValueChange={(values) => setBreakMinutes(values[0])}
-                          min={1}
-                          max={30}
-                          step={1}
-                          className="py-4"
-                        />
-                        <div className="flex justify-between text-xs text-gray-500">
-                          <span>1m</span>
-                          <span>30m</span>
-                        </div>
+                        {!isUnlimitedBreak && (
+                          <>
+                            <Slider
+                              value={[breakMinutes]}
+                              onValueChange={(values) => setBreakMinutes(values[0])}
+                              min={1}
+                              max={120}
+                              step={1}
+                              className="py-4"
+                            />
+                            <div className="flex justify-between text-xs text-gray-500">
+                              <span>1m</span>
+                              <span>2h</span>
+                            </div>
+                          </>
+                        )}
                       </CardContent>
                     </Card>
                   </TabsContent>
@@ -205,8 +258,20 @@ export default function FocusPage() {
               </Button>
 
               <div className="mt-4 flex items-center justify-between">
-                <Label className="text-xs text-gray-500">Auto-stop timer</Label>
-                <Switch checked={autoStopEnabled} onCheckedChange={setAutoStopEnabled} />
+                <Label className="text-xs text-gray-500">
+                  Auto-stop timer
+                  {(activeTab === "focus" ? isUnlimitedFocus : isUnlimitedBreak) && (
+                    <span className="ml-1 text-orange-500">(disabled for unlimited sessions)</span>
+                  )}
+                </Label>
+                <Switch
+                  checked={
+                    autoStopEnabled &&
+                    !(activeTab === "focus" ? isUnlimitedFocus : isUnlimitedBreak)
+                  }
+                  onCheckedChange={setAutoStopEnabled}
+                  disabled={activeTab === "focus" ? isUnlimitedFocus : isUnlimitedBreak}
+                />
               </div>
             </div>
           </>
