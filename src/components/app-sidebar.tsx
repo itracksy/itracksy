@@ -9,6 +9,7 @@ import {
   Target,
   ChevronRight,
   Tags,
+  FileText,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
@@ -63,6 +64,11 @@ const items = [
     title: "Analytics",
     icon: BarChart,
     url: "/dashboard",
+  },
+  {
+    title: "Reports",
+    icon: FileText,
+    url: "/reports",
   },
   {
     title: "Settings",

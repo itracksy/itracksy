@@ -217,7 +217,8 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle>Clock Window</CardTitle>
           <CardDescription>
-            Control whether the floating clock window appears automatically when you start a focus session.
+            Control whether the floating clock window appears automatically when you start a focus
+            session.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex items-center gap-4">

@@ -12,6 +12,7 @@ import {
   getActivitiesForTimeEntry,
   getTimeEntriesByTimeRange,
   calculateSessionProductivityMetrics,
+  getTimeEntriesForExport,
 } from "../../api/services/timeEntry";
 import { timeEntries } from "../db/schema";
 import { createInsertSchema } from "drizzle-zod";
@@ -87,4 +88,22 @@ export const timeEntryRouter = t.router({
   delete: protectedProcedure.input(z.string()).mutation(async ({ input }) => {
     return deleteTimeEntry(input);
   }),
+
+  exportCsv: protectedProcedure
+    .input(
+      z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const startDate = input.startDate ? new Date(input.startDate) : undefined;
+      const endDate = input.endDate ? new Date(input.endDate) : undefined;
+
+      return getTimeEntriesForExport({
+        userId: ctx.userId!,
+        startDate,
+        endDate,
+      });
+    }),
 });

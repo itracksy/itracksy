@@ -1,5 +1,5 @@
 import { eq, desc, and, isNull, isNotNull, sql, gte, lte } from "drizzle-orm";
-import { timeEntries, items, activities } from "../db/schema";
+import { timeEntries, items, activities, boards, categories } from "../db/schema";
 import { nanoid } from "nanoid";
 import db from "../db";
 import { TimeEntryWithRelations } from "@/types/projects";
@@ -332,4 +332,87 @@ export function calculateSessionProductivityMetrics(
     sessionDuration,
     productivityPercentage,
   };
+}
+
+export async function getTimeEntriesForExport({
+  userId,
+  startDate,
+  endDate,
+}: {
+  userId: string;
+  startDate?: Date;
+  endDate?: Date;
+}): Promise<any[]> {
+  let whereConditions = [eq(timeEntries.userId, userId)];
+
+  // Add date filters if provided
+  if (startDate) {
+    whereConditions.push(gte(timeEntries.startTime, startDate.getTime()));
+  }
+  if (endDate) {
+    const endOfDay = new Date(endDate);
+    endOfDay.setHours(23, 59, 59, 999);
+    whereConditions.push(lte(timeEntries.startTime, endOfDay.getTime()));
+  }
+
+  const entries = await db
+    .select({
+      id: timeEntries.id,
+      startTime: timeEntries.startTime,
+      endTime: timeEntries.endTime,
+      duration: timeEntries.duration,
+      description: timeEntries.description,
+      isFocusMode: timeEntries.isFocusMode,
+      boardId: timeEntries.boardId,
+      itemId: timeEntries.itemId,
+      boardName: boards.name,
+      boardColor: boards.color,
+      itemTitle: items.title,
+      itemContent: items.content,
+    })
+    .from(timeEntries)
+    .leftJoin(boards, eq(timeEntries.boardId, boards.id))
+    .leftJoin(items, eq(timeEntries.itemId, items.id))
+    .where(and(...whereConditions))
+    .orderBy(desc(timeEntries.startTime));
+
+  // Get activities with categories for each time entry
+  const entriesWithActivities = await Promise.all(
+    entries.map(async (entry) => {
+      const activitiesData = await db
+        .select({
+          categoryName: categories.name,
+          activityTitle: activities.title,
+          activityDuration: activities.duration,
+          rating: activities.rating,
+        })
+        .from(activities)
+        .leftJoin(categories, eq(activities.categoryId, categories.id))
+        .where(eq(activities.timeEntryId, entry.id));
+
+      // Get unique categories used during this time entry
+      const categoriesUsed = Array.from(
+        new Set(activitiesData.map((a) => a.categoryName).filter(Boolean))
+      ).join("; ");
+
+      // Calculate productivity stats
+      const totalActivityTime = activitiesData.reduce(
+        (sum, a) => sum + (a.activityDuration || 0),
+        0
+      );
+      const productiveTime = activitiesData
+        .filter((a) => a.rating === 1)
+        .reduce((sum, a) => sum + (a.activityDuration || 0), 0);
+      const productivityPercentage =
+        totalActivityTime > 0 ? Math.round((productiveTime / totalActivityTime) * 100) : 0;
+
+      return {
+        ...entry,
+        categoriesUsed,
+        productivityPercentage,
+      };
+    })
+  );
+
+  return entriesWithActivities;
 }

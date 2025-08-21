@@ -11,6 +11,7 @@ import { ActivityClassificationPage } from "@/pages/new-activity-classification/
 import CategorizationPage from "@/pages/categorization/index";
 import { CategoryManagement } from "@/pages/categorization/components/CategoryManagement";
 import { UncategorizedActivities } from "@/pages/categorization/components/UncategorizedActivities";
+import ReportsPage from "@/pages/reports/ReportsPage";
 
 export const DashboardRoute = createRoute({
   getParentRoute: () => RootRoute,
@@ -75,6 +76,12 @@ export const RuleBookRoute = createRoute({
   component: RuleBookPage,
 });
 
+export const ReportsRoute = createRoute({
+  getParentRoute: () => RootRoute,
+  path: "/reports",
+  component: ReportsPage,
+});
+
 export const rootTree = RootRoute.addChildren([
   FocusRoute,
   DashboardRoute,
@@ -86,4 +93,5 @@ export const rootTree = RootRoute.addChildren([
   RainingLettersRoute,
   ClassificationRoute,
   RuleBookRoute,
+  ReportsRoute,
 ]);
