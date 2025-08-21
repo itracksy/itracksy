@@ -7,6 +7,7 @@ import {
   WIN_GET_APP_VERSION_CHANNEL,
   WIN_CHECK_UPDATES_CHANNEL,
   WIN_GET_LOG_FILE_CONTENT_CHANNEL,
+  WIN_CLOCK_VISIBILITY_CHANGE_CHANNEL,
 } from "./window-channels";
 
 export function exposeWindowContext() {
@@ -25,5 +26,7 @@ export function exposeWindowContext() {
     getLogFileContent: async () => {
       return ipcRenderer.invoke(WIN_GET_LOG_FILE_CONTENT_CHANNEL);
     },
+    handleClockVisibilityChange: (isVisible: boolean) =>
+      ipcRenderer.invoke(WIN_CLOCK_VISIBILITY_CHANGE_CHANNEL, isVisible),
   });
 }

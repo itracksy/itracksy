@@ -52,7 +52,7 @@ export async function createTimeEntry(
   // Show clock window when a new session starts (only if it doesn't have an endTime)
   if (!entry.endTime) {
     try {
-      showClockWindow();
+      await showClockWindow();
     } catch (error) {
       console.error("Failed to show clock window:", error);
       // Don't throw error here to avoid breaking the time entry creation

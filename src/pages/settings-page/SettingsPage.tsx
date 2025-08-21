@@ -117,6 +117,23 @@ export default function SettingsPage() {
     queryClient.invalidateQueries({ queryKey: ["user.getActivitySettings"] });
   };
 
+  const onClockVisibilityChange = async () => {
+    const newValue = !activitySettings?.isClockVisible;
+    await trpcClient.user.updateActivitySettings.mutate({
+      isClockVisible: newValue,
+    });
+    queryClient.invalidateQueries({ queryKey: ["user.getActivitySettings"] });
+
+    // Notify the main process about the setting change
+    if ((window as any).electronWindow) {
+      try {
+        await (window as any).electronWindow.handleClockVisibilityChange(newValue);
+      } catch (error) {
+        console.error("Failed to notify main process about clock visibility change:", error);
+      }
+    }
+  };
+
   return (
     <div className="space-y-6 p-6">
       {itemToDelete && (
@@ -193,6 +210,23 @@ export default function SettingsPage() {
             id="focus-mode"
           />
           <label htmlFor="focus-mode">Enable Warning Pop-up</label>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Minimal Clock Window</CardTitle>
+          <CardDescription>
+            Show or hide the minimal clock window that displays your current focus session.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center gap-4">
+          <Switch
+            checked={activitySettings?.isClockVisible}
+            onCheckedChange={onClockVisibilityChange}
+            id="clock-visibility"
+          />
+          <label htmlFor="clock-visibility">Show Minimal Clock Window</label>
         </CardContent>
       </Card>
 

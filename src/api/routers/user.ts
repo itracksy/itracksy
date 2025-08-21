@@ -13,6 +13,7 @@ import {
 
 const trackingSettingsSchema = z.object({
   isWarningPopupEnable: z.boolean(),
+  isClockVisible: z.boolean(),
 });
 
 const updateTrackingSettingsSchema = trackingSettingsSchema.partial();

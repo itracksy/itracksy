@@ -10,7 +10,7 @@ import { nanoid } from "nanoid";
 
 const USER_SETTINGS_KEYS = {
   isWarningPopupEnable: "user.isWarningPopupEnable",
-
+  isClockVisible: "user.isClockVisible",
   lastUpdateActivity: "user.lastUpdateActivity",
   currentUserId: "user.currentUserId",
 };
@@ -88,13 +88,15 @@ export async function requestScreenRecordingPermission(): Promise<boolean> {
 }
 
 export async function getUserSettings({ userId }: { userId: string }) {
-  const [isWarningPopupEnable, lastUpdateActivity] = await Promise.all([
+  const [isWarningPopupEnable, isClockVisible, lastUpdateActivity] = await Promise.all([
     getValue(USER_SETTINGS_KEYS.isWarningPopupEnable),
+    getValue(USER_SETTINGS_KEYS.isClockVisible),
     getValue(USER_SETTINGS_KEYS.lastUpdateActivity),
   ]);
 
   return {
     isWarningPopupEnable: isWarningPopupEnable === "true",
+    isClockVisible: isClockVisible !== "false", // Default to true
     lastUpdateActivity: lastUpdateActivity ? parseInt(lastUpdateActivity) : null,
   };
 }
@@ -265,12 +267,24 @@ export function getDetailedPermissionStatus(): {
   };
 }
 
-export async function updateUserSettings(settings: { isWarningPopupEnable?: boolean }) {
-  const { isWarningPopupEnable } = settings;
-  await setValue(
-    USER_SETTINGS_KEYS.isWarningPopupEnable,
-    isWarningPopupEnable?.toString() || "false"
-  );
+export async function updateUserSettings(settings: {
+  isWarningPopupEnable?: boolean;
+  isClockVisible?: boolean;
+}) {
+  const { isWarningPopupEnable, isClockVisible } = settings;
+
+  if (isWarningPopupEnable !== undefined) {
+    await setValue(USER_SETTINGS_KEYS.isWarningPopupEnable, isWarningPopupEnable.toString());
+  }
+
+  if (isClockVisible !== undefined) {
+    await setValue(USER_SETTINGS_KEYS.isClockVisible, isClockVisible.toString());
+  }
+}
+
+export async function isClockVisibilityEnabled(): Promise<boolean> {
+  const setting = await getValue(USER_SETTINGS_KEYS.isClockVisible);
+  return setting !== "false"; // Default to true if not set
 }
 
 export const getUserBlockedApps = async (userId: string) => {

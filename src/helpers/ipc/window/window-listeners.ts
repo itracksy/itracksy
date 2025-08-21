@@ -7,12 +7,14 @@ import {
   WIN_GET_APP_VERSION_CHANNEL,
   WIN_CHECK_UPDATES_CHANNEL,
   WIN_GET_LOG_FILE_CONTENT_CHANNEL,
+  WIN_CLOCK_VISIBILITY_CHANGE_CHANNEL,
 } from "./window-channels";
 
 import { safelyRegisterListener } from "../safelyRegisterListener";
 
 import { logger } from "../../../helpers/logger";
 import { getPlatformDownloadUrl } from "./handleDownload";
+import { handleClockVisibilitySettingChange } from "../../../main/windows/clock";
 
 let trayRef: Tray | null = null;
 
@@ -120,4 +122,17 @@ export const addWindowEventListeners = (mainWindow: BrowserWindow, tray: Tray | 
       logger.error("Failed to update tray title", { error, title });
     }
   });
+
+  safelyRegisterListener(
+    WIN_CLOCK_VISIBILITY_CHANGE_CHANNEL,
+    async (_event, isVisible: boolean) => {
+      try {
+        await handleClockVisibilitySettingChange(isVisible);
+        return { success: true };
+      } catch (error) {
+        logger.error("Failed to handle clock visibility change", { error, isVisible });
+        throw error;
+      }
+    }
+  );
 };

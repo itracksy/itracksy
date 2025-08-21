@@ -2,6 +2,7 @@
 import { logger } from "@/helpers/logger";
 import { BrowserWindow, screen } from "electron";
 import path from "path";
+import { isClockVisibilityEnabled } from "../../api/services/userSettings";
 
 let clockWindow: BrowserWindow | null = null;
 let isClockVisible = false;
@@ -98,7 +99,14 @@ export function getClockWindow(): BrowserWindow | null {
   return clockWindow;
 }
 
-export function showClockWindow(): void {
+export async function showClockWindow(): Promise<void> {
+  // Check if clock visibility is enabled
+  const isEnabled = await isClockVisibilityEnabled();
+  if (!isEnabled) {
+    console.log("Clock window is disabled in settings, not showing");
+    return;
+  }
+
   if (!clockWindow || clockWindow.isDestroyed()) {
     createClockWindow();
   }
@@ -132,10 +140,28 @@ export function isClockWindowVisible(): boolean {
   return isClockVisible && clockWindow !== null && !clockWindow.isDestroyed();
 }
 
-export function toggleClockWindow(): void {
+export async function handleClockVisibilitySettingChange(isVisible: boolean): Promise<void> {
+  if (!isVisible) {
+    // If clock should not be visible, hide it
+    hideClockWindow();
+  } else {
+    // If clock should be visible and there's an active session, show it
+    // This will be handled by the normal clock update logic
+    console.log("Clock visibility enabled - will show on next timer update");
+  }
+}
+
+export async function toggleClockWindow(): Promise<void> {
+  // Check if clock visibility is enabled
+  const isEnabled = await isClockVisibilityEnabled();
+  if (!isEnabled) {
+    console.log("Clock window is disabled in settings, cannot toggle");
+    return;
+  }
+
   if (isClockWindowVisible()) {
     hideClockWindow();
   } else {
-    showClockWindow();
+    await showClockWindow();
   }
 }
