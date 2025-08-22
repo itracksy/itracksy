@@ -260,6 +260,33 @@ export const categoryMappings = sqliteTable(
   ]
 );
 
+export const scheduledSessions = sqliteTable(
+  "scheduled_sessions",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    description: text("description"),
+    focusDuration: integer("focus_duration").notNull(), // minutes
+    breakDuration: integer("break_duration").notNull(), // minutes
+    cycles: integer("cycles").notNull().default(1),
+    startTime: text("start_time").notNull(), // HH:MM format
+    daysOfWeek: text("days_of_week").notNull(), // JSON array of numbers [0-6]
+    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+    autoStart: integer("auto_start", { mode: "boolean" }).notNull().default(false),
+    userId: text("user_id").notNull(),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+    lastRun: integer("last_run"), // Timestamp of last execution
+    nextRun: integer("next_run"), // Calculated next execution time
+  },
+  (table) => [
+    index("scheduled_sessions_user_id_idx").on(table.userId),
+    index("scheduled_sessions_active_idx").on(table.isActive),
+    index("scheduled_sessions_next_run_idx").on(table.nextRun),
+    index("scheduled_sessions_auto_start_idx").on(table.autoStart),
+  ]
+);
+
 // Relations
 export const boardsRelations = relations(boards, ({ many }) => ({
   columns: many(columns),
@@ -342,4 +369,8 @@ export const categoryMappingsRelations = relations(categoryMappings, ({ one }) =
     fields: [categoryMappings.categoryId],
     references: [categories.id],
   }),
+}));
+
+export const scheduledSessionsRelations = relations(scheduledSessions, ({ one }) => ({
+  // Could add relation to user table if implemented
 }));

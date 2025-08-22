@@ -11,6 +11,7 @@ import {
   Tags,
   FileText,
   Music,
+  CalendarClock,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
@@ -37,6 +38,11 @@ const items = [
     icon: Timer,
     url: "/",
     isActive: true,
+  },
+  {
+    title: "Scheduling",
+    icon: CalendarClock,
+    url: "/scheduling",
   },
 
   {

@@ -5,6 +5,17 @@ iTracksy is a powerful desktop application for tracking your activities and mana
 ![Screenshot 2025-03-08 at 20 18 19](https://github.com/user-attachments/assets/e2255cb1-4a3c-4ab8-a83b-c95c3196caab)
 ![Screenshot 2025-03-25 at 14 40 29](https://github.com/user-attachments/assets/617b065d-88ff-4f5b-9734-518fe9e4436d)
 
+## What's New 🎉
+
+**Latest Release Features:**
+- ⏰ **Custom Session Times** - Set your own focus session durations
+- ⚙️ **Clock Window Controls** - Toggle the floating clock on/off in settings
+- 📊 **Reports & Export** - New reports page with CSV export functionality
+- 🎵 **Music Page** - Focus-enhancing playlists to keep you in the zone
+- 🔕 **Notification Controls** - Disable time exceeded notifications to avoid interruptions
+
+📋 **[View Full Release Notes](./RELEASE_NOTES.md)** for detailed information about all new features and improvements.
+
 ## Features
 
 - **Activity Tracking**: Automatically tracks window activities and provides detailed insights about your application usage
