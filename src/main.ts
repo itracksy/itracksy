@@ -323,7 +323,7 @@ if (!gotTheLock) {
   app.quit();
 } else {
   // This is the first instance, handle second instance events
-  app.on('second-instance', (event, commandLine, workingDirectory) => {
+  app.on("second-instance", (event, commandLine, workingDirectory) => {
     // Someone tried to run a second instance, focus our window instead
     if (mainWindow) {
       if (mainWindow.isMinimized()) {
@@ -333,9 +333,9 @@ if (!gotTheLock) {
         mainWindow.show();
       }
       mainWindow.focus();
-      
+
       // On Windows, bring to front more aggressively
-      if (process.platform === 'win32') {
+      if (process.platform === "win32") {
         mainWindow.setAlwaysOnTop(true);
         mainWindow.setAlwaysOnTop(false);
       }
