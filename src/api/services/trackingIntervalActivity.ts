@@ -3,7 +3,7 @@ import { upsertActivity } from "./activities";
 import { TRACKING_INTERVAL } from "../../config/tracking";
 import { extractDomainWindows, urlContainsDomain } from "../../utils/url";
 import { logger } from "../../helpers/logger";
-import { getCurrentUserIdLocalStorage } from "./userSettings";
+import { getCurrentUserIdLocalStorage, isTimeExceededNotificationEnabled } from "./userSettings";
 import {
   createTimeEntry,
   getActiveTimeEntry,
@@ -78,7 +78,12 @@ export const startTracking = async (): Promise<void> => {
         (activeEntry.targetDuration ?? 0) * 60;
 
       if (timeExceeded > 0) {
-        await sendNotificationService(activeEntry, timeExceeded);
+        // Check if time exceeded notifications are enabled before sending
+        const notificationsEnabled = await isTimeExceededNotificationEnabled();
+        if (notificationsEnabled) {
+          await sendNotificationService(activeEntry, timeExceeded);
+        }
+
         if (activeEntry.autoStopEnabled) {
           //stop the session when time is exceeded
           await updateTimeEntry(activeEntry.id, { endTime: Date.now() });

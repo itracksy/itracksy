@@ -11,6 +11,7 @@ import { nanoid } from "nanoid";
 const USER_SETTINGS_KEYS = {
   isWarningPopupEnable: "user.isWarningPopupEnable",
   isClockVisible: "user.isClockVisible",
+  isTimeExceededNotificationEnabled: "user.isTimeExceededNotificationEnabled",
   lastUpdateActivity: "user.lastUpdateActivity",
   currentUserId: "user.currentUserId",
 };
@@ -88,15 +89,22 @@ export async function requestScreenRecordingPermission(): Promise<boolean> {
 }
 
 export async function getUserSettings({ userId }: { userId: string }) {
-  const [isWarningPopupEnable, isClockVisible, lastUpdateActivity] = await Promise.all([
+  const [
+    isWarningPopupEnable,
+    isClockVisible,
+    isTimeExceededNotificationEnabled,
+    lastUpdateActivity,
+  ] = await Promise.all([
     getValue(USER_SETTINGS_KEYS.isWarningPopupEnable),
     getValue(USER_SETTINGS_KEYS.isClockVisible),
+    getValue(USER_SETTINGS_KEYS.isTimeExceededNotificationEnabled),
     getValue(USER_SETTINGS_KEYS.lastUpdateActivity),
   ]);
 
   return {
     isWarningPopupEnable: isWarningPopupEnable === "true",
     isClockVisible: isClockVisible !== "false", // Default to true
+    isTimeExceededNotificationEnabled: isTimeExceededNotificationEnabled !== "false", // Default to true
     lastUpdateActivity: lastUpdateActivity ? parseInt(lastUpdateActivity) : null,
   };
 }
@@ -203,6 +211,7 @@ export async function setCurrentUserId(userId: string): Promise<string> {
   }
 
   await setValue(USER_SETTINGS_KEYS.isWarningPopupEnable, "true");
+  await setValue(USER_SETTINGS_KEYS.isTimeExceededNotificationEnabled, "true");
 
   return existingUserId;
 }
@@ -270,8 +279,9 @@ export function getDetailedPermissionStatus(): {
 export async function updateUserSettings(settings: {
   isWarningPopupEnable?: boolean;
   isClockVisible?: boolean;
+  isTimeExceededNotificationEnabled?: boolean;
 }) {
-  const { isWarningPopupEnable, isClockVisible } = settings;
+  const { isWarningPopupEnable, isClockVisible, isTimeExceededNotificationEnabled } = settings;
 
   if (isWarningPopupEnable !== undefined) {
     await setValue(USER_SETTINGS_KEYS.isWarningPopupEnable, isWarningPopupEnable.toString());
@@ -280,10 +290,22 @@ export async function updateUserSettings(settings: {
   if (isClockVisible !== undefined) {
     await setValue(USER_SETTINGS_KEYS.isClockVisible, isClockVisible.toString());
   }
+
+  if (isTimeExceededNotificationEnabled !== undefined) {
+    await setValue(
+      USER_SETTINGS_KEYS.isTimeExceededNotificationEnabled,
+      isTimeExceededNotificationEnabled.toString()
+    );
+  }
 }
 
 export async function isClockVisibilityEnabled(): Promise<boolean> {
   const setting = await getValue(USER_SETTINGS_KEYS.isClockVisible);
+  return setting !== "false"; // Default to true if not set
+}
+
+export async function isTimeExceededNotificationEnabled(): Promise<boolean> {
+  const setting = await getValue(USER_SETTINGS_KEYS.isTimeExceededNotificationEnabled);
   return setting !== "false"; // Default to true if not set
 }
 

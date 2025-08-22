@@ -134,6 +134,13 @@ export default function SettingsPage() {
     }
   };
 
+  const onTimeExceededNotificationChange = async () => {
+    await trpcClient.user.updateActivitySettings.mutate({
+      isTimeExceededNotificationEnabled: !activitySettings?.isTimeExceededNotificationEnabled,
+    });
+    queryClient.invalidateQueries({ queryKey: ["user.getActivitySettings"] });
+  };
+
   return (
     <div className="space-y-6 p-6">
       {itemToDelete && (
@@ -228,6 +235,26 @@ export default function SettingsPage() {
             id="clock-visibility"
           />
           <label htmlFor="clock-visibility">Show clock window when starting focus sessions</label>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Time Exceeded Notifications</CardTitle>
+          <CardDescription>
+            Control whether to receive notifications when your focus session time exceeds the target
+            duration. Disable this to avoid interruptions during extended focus sessions.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center gap-4">
+          <Switch
+            checked={activitySettings?.isTimeExceededNotificationEnabled}
+            onCheckedChange={onTimeExceededNotificationChange}
+            id="time-exceeded-notifications"
+          />
+          <label htmlFor="time-exceeded-notifications">
+            Show notifications when time is exceeded
+          </label>
         </CardContent>
       </Card>
 
