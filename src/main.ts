@@ -26,6 +26,7 @@ import {
   requestAccessibilityPermission,
   requestScreenRecordingPermission,
 } from "./api/services/userSettings";
+import { initializeAutoStart } from "./api/services/autoStart";
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -301,6 +302,9 @@ app.whenReady().then(async () => {
   try {
     logger.clearLogFile();
     await initializeDatabase();
+
+    // Initialize auto-start functionality
+    initializeAutoStart();
 
     // Check and request permissions before starting tracking
     await checkAndRequestPermissions();

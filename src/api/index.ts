@@ -9,6 +9,7 @@ import { utilsRouter } from "./routers/utils";
 import { focusTargetsRouter } from "./routers/focusTargets";
 import { categoryRouter } from "./routers/category";
 import { schedulingRouter } from "./routers/scheduling";
+import { autoStartRouter } from "./routers/autoStart";
 
 // Create the root router
 export const router = t.router({
@@ -22,6 +23,7 @@ export const router = t.router({
   focusTargets: focusTargetsRouter,
   category: categoryRouter,
   scheduling: schedulingRouter,
+  autoStart: autoStartRouter,
 });
 
 // Export type router type signature

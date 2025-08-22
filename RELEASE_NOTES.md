@@ -57,6 +57,17 @@
 - **Easy management** - View, edit, or delete scheduled sessions anytime
 - **One-time or recurring** - Perfect for both ad-hoc sessions and daily routines
 
+#### 🚀 Auto-Start on System Boot
+
+- **Cross-platform auto-start functionality** - Launch iTracksy automatically when your computer starts
+- **Native platform integration**:
+  - 🍎 **macOS**: Integrates with Login Items for seamless startup
+  - 🪟 **Windows**: Uses Windows Registry and Squirrel installer events
+  - 🐧 **Linux**: Creates XDG autostart desktop entries
+- **Smart configuration** - Easy toggle in Settings with platform-specific descriptions
+- **Installer integration** - Automatically handles auto-start during app installation/uninstallation
+- **User control** - Enable or disable at any time through the Settings page
+
 ### 🛠️ Technical Improvements
 
 #### Windows Release Changes
@@ -68,9 +79,11 @@
 
 #### Code Quality & Architecture
 
+- **Cross-platform auto-start system** with native OS integration
 - **New scheduling infrastructure** with comprehensive session automation
 - **Database schema expansion** with new scheduled_sessions table
-- **Enhanced tRPC API** with scheduling endpoints and validation
+- **Enhanced tRPC API** with scheduling and auto-start endpoints
+- **Squirrel installer integration** for Windows auto-start management
 - Enhanced settings management system
 - Improved notification controls
 - Better user preference persistence
@@ -93,6 +106,7 @@ The macOS version remains properly signed and notarized - no security warnings.
 
 ### 🎯 User Experience Enhancements
 
+- **Seamless system integration** with cross-platform auto-start functionality
 - **Automated productivity routines** with comprehensive session scheduling
 - **Reduced notification fatigue** with granular notification controls
 - **Better focus session customization** with flexible timing
@@ -103,13 +117,14 @@ The macOS version remains properly signed and notarized - no security warnings.
 
 ### 💡 Why These Features Matter
 
-1. **Automated Scheduling**: Building consistent productivity habits through automation
-2. **Customizable Sessions**: Recognizing that everyone has different optimal focus durations
-3. **Notification Control**: Giving users power over when and how they're interrupted
-4. **Music Integration**: Research shows the right background music can significantly enhance focus
-5. **Better Reporting**: Helping users understand and optimize their productivity patterns
-6. **UI Flexibility**: Letting users customize their workspace for minimal distractions
-7. **Preset Templates**: Science-backed session patterns (Pomodoro, Deep Work, etc.) for optimal focus
+1. **System Integration**: Seamless startup ensures iTracksy is always ready to track your productivity
+2. **Automated Scheduling**: Building consistent productivity habits through automation
+3. **Customizable Sessions**: Recognizing that everyone has different optimal focus durations
+4. **Notification Control**: Giving users power over when and how they're interrupted
+5. **Music Integration**: Research shows the right background music can significantly enhance focus
+6. **Better Reporting**: Helping users understand and optimize their productivity patterns
+7. **UI Flexibility**: Letting users customize their workspace for minimal distractions
+8. **Preset Templates**: Science-backed session patterns (Pomodoro, Deep Work, etc.) for optimal focus
 
 ### 🚀 Getting Started
 

@@ -71,6 +71,22 @@ export default function SettingsPage() {
     },
   });
 
+  const { data: autoStartStatus = null } = useQuery({
+    queryKey: ["autoStart.getStatus"],
+    queryFn: async () => {
+      const data = await trpcClient.autoStart.getStatus.query();
+      return data;
+    },
+  });
+
+  const { data: autoStartInfo = null } = useQuery({
+    queryKey: ["autoStart.getInfo"],
+    queryFn: async () => {
+      const data = await trpcClient.autoStart.getInfo.query();
+      return data;
+    },
+  });
+
   useEffect(() => {
     getCurrentTheme().then((theme) => {
       setCurrentTheme(theme.local || theme.system);
@@ -139,6 +155,20 @@ export default function SettingsPage() {
       isTimeExceededNotificationEnabled: !activitySettings?.isTimeExceededNotificationEnabled,
     });
     queryClient.invalidateQueries({ queryKey: ["user.getActivitySettings"] });
+  };
+
+  const onAutoStartChange = async () => {
+    try {
+      const newValue = !autoStartStatus?.openAtLogin;
+      await trpcClient.autoStart.setEnabled.mutate({
+        enabled: newValue,
+        openAsHidden: false, // Start visible by default
+      });
+      queryClient.invalidateQueries({ queryKey: ["autoStart.getStatus"] });
+      queryClient.invalidateQueries({ queryKey: ["autoStart.getInfo"] });
+    } catch (error) {
+      console.error("Failed to toggle auto-start:", error);
+    }
   };
 
   return (
@@ -254,6 +284,36 @@ export default function SettingsPage() {
           />
           <label htmlFor="time-exceeded-notifications">
             Show notifications when time is exceeded
+          </label>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Auto-Start on System Boot</CardTitle>
+          <CardDescription>
+            Launch iTracksy automatically when your system starts up. {autoStartInfo?.platform === "win32" 
+              ? "On Windows, this is managed through the Windows Registry."
+              : autoStartInfo?.platform === "darwin"
+              ? "On macOS, this adds iTracksy to your Login Items."
+              : autoStartInfo?.platform === "linux"
+              ? "On Linux, this creates an autostart desktop entry."
+              : "Platform-specific auto-start functionality."
+            }
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center gap-4">
+          <Switch
+            checked={autoStartStatus?.openAtLogin || false}
+            onCheckedChange={onAutoStartChange}
+            id="auto-start"
+            disabled={!autoStartInfo?.supported}
+          />
+          <label htmlFor="auto-start" className={!autoStartInfo?.supported ? "text-muted-foreground" : ""}>
+            {autoStartInfo?.supported 
+              ? "Start iTracksy automatically when system boots"
+              : `Auto-start not supported on ${autoStartInfo?.platform || "this platform"}`
+            }
           </label>
         </CardContent>
       </Card>
