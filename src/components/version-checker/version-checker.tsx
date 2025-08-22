@@ -131,10 +131,15 @@ export function VersionChecker({
   // Transform the tRPC result to match VersionInfo interface
   const versionInfo: VersionInfo | undefined = updateCheckResult
     ? {
-        currentVersion: updateCheckResult.status === "success" ? updateCheckResult.currentVersion : currentVersion || "",
-        latestVersion: updateCheckResult.status === "success" ? updateCheckResult.latestVersion : undefined,
+        currentVersion:
+          updateCheckResult.status === "success"
+            ? updateCheckResult.currentVersion
+            : currentVersion || "",
+        latestVersion:
+          updateCheckResult.status === "success" ? updateCheckResult.latestVersion : undefined,
         hasUpdate: updateCheckResult.hasUpdate,
-        downloadUrl: updateCheckResult.status === "success" ? updateCheckResult.downloadUrl : undefined,
+        downloadUrl:
+          updateCheckResult.status === "success" ? updateCheckResult.downloadUrl : undefined,
       }
     : undefined;
 
@@ -158,7 +163,7 @@ export function VersionChecker({
   useEffect(() => {
     if (versionInfo?.hasUpdate && !updateToastShown.current) {
       updateToastShown.current = true;
-      
+
       toast({
         title: "Update Available",
         description: `Version ${versionInfo.latestVersion} is available. You are currently using version ${versionInfo.currentVersion}.`,
@@ -172,7 +177,7 @@ export function VersionChecker({
         ),
       });
     }
-    
+
     // Reset the flag when no update is available
     if (!versionInfo?.hasUpdate) {
       updateToastShown.current = false;

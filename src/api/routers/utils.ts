@@ -131,7 +131,7 @@ export const utilsRouter = t.router({
     )
     .mutation(async ({ input, ctx }) => {
       const { downloadUrl } = input;
-      
+
       try {
         logger.info("Starting download from:", downloadUrl);
 
@@ -171,8 +171,8 @@ export const utilsRouter = t.router({
               if (totalBytes > 0) {
                 const progress = Math.round((downloadedBytes / totalBytes) * 100);
                 logger.debug(`Download progress: ${progress}%`);
-                
-                // Note: Progress updates would need to be handled via subscriptions 
+
+                // Note: Progress updates would need to be handled via subscriptions
                 // or a different mechanism in tRPC. For now, we'll handle completion only.
               }
             });
