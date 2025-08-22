@@ -62,10 +62,16 @@ export function showMainWindow(): void {
   // Bring the window to front and focus it
   mainWindow.focus();
 
-  // On macOS, also call setAlwaysOnTop briefly to ensure it comes to front
+  // Platform-specific window activation
   if (process.platform === "darwin") {
+    // On macOS, use setAlwaysOnTop briefly to ensure it comes to front
     mainWindow.setAlwaysOnTop(true);
     mainWindow.setAlwaysOnTop(false);
+  } else if (process.platform === "win32") {
+    // On Windows, use more aggressive focusing
+    mainWindow.setAlwaysOnTop(true);
+    mainWindow.setAlwaysOnTop(false);
+    mainWindow.moveTop();
   }
 }
 
@@ -177,12 +183,7 @@ async function createTray() {
   tray.setTitle("");
 
   tray.on("click", () => {
-    if (!mainWindow) {
-      createWindow();
-    } else {
-      mainWindow.show();
-      mainWindow.focus();
-    }
+    showMainWindow();
   });
 }
 
@@ -314,6 +315,37 @@ async function checkAndRequestPermissions(): Promise<void> {
   }
 }
 
+// Ensure single instance - prevent multiple app instances
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  // Another instance is already running, quit this one
+  app.quit();
+} else {
+  // This is the first instance, handle second instance events
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    // Someone tried to run a second instance, focus our window instead
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) {
+        mainWindow.restore();
+      }
+      if (!mainWindow.isVisible()) {
+        mainWindow.show();
+      }
+      mainWindow.focus();
+      
+      // On Windows, bring to front more aggressively
+      if (process.platform === 'win32') {
+        mainWindow.setAlwaysOnTop(true);
+        mainWindow.setAlwaysOnTop(false);
+      }
+    } else {
+      // If no window exists, create one
+      createWindow();
+    }
+  });
+}
+
 // Initialize app when ready
 app.whenReady().then(async () => {
   try {
@@ -425,9 +457,8 @@ app.on("window-all-closed", () => {
 app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
-  } else if (mainWindow) {
-    mainWindow.show();
-    mainWindow.focus();
+  } else {
+    showMainWindow();
   }
 });
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
