@@ -1,6 +1,6 @@
 # iTracksy Release Notes
 
-## Latest Release - Version [TBD]
+## Latest Release - Version 1.0.189
 
 ### 🎉 New Features
 
@@ -40,6 +40,23 @@
 - Perfect for deep work sessions where you don't want to be disturbed
 - Auto-stop functionality still works regardless of notification setting
 
+#### 📅 Session Scheduling System
+
+- **Automated session scheduling** - Set up focus sessions to start automatically
+- **Smart recurring patterns** - Daily, weekly, or custom recurring schedules
+- **Quick preset templates** - Choose from 6 built-in session types:
+  - 🍅 **Pomodoro**: 25-minute focus + 5-minute break cycles
+  - 🎯 **Deep Work**: 90-minute intensive focus sessions
+  - 🧠 **Creative Flow**: 45-minute creative sessions with longer breaks
+  - ⚡ **Sprint**: 15-minute quick bursts for small tasks
+  - 🔬 **Research**: 60-minute sessions perfect for learning
+  - 📚 **Study**: 50-minute academic-focused sessions
+- **Flexible timing** - Set any start/end times that fit your schedule
+- **Project integration** - Link scheduled sessions to specific projects
+- **Smart execution** - Sessions start automatically at scheduled times
+- **Easy management** - View, edit, or delete scheduled sessions anytime
+- **One-time or recurring** - Perfect for both ad-hoc sessions and daily routines
+
 ### 🛠️ Technical Improvements
 
 #### Windows Release Changes
@@ -51,6 +68,9 @@
 
 #### Code Quality & Architecture
 
+- **New scheduling infrastructure** with comprehensive session automation
+- **Database schema expansion** with new scheduled_sessions table
+- **Enhanced tRPC API** with scheduling endpoints and validation
 - Enhanced settings management system
 - Improved notification controls
 - Better user preference persistence
@@ -73,27 +93,32 @@ The macOS version remains properly signed and notarized - no security warnings.
 
 ### 🎯 User Experience Enhancements
 
+- **Automated productivity routines** with comprehensive session scheduling
 - **Reduced notification fatigue** with granular notification controls
 - **Better focus session customization** with flexible timing
 - **Enhanced productivity insights** through improved reporting
 - **Ambient focus enhancement** with curated music integration
 - **Streamlined settings management** with clear categorization
+- **Preset-driven workflows** with 6 research-backed session templates
 
 ### 💡 Why These Features Matter
 
-1. **Customizable Sessions**: Recognizing that everyone has different optimal focus durations
-2. **Notification Control**: Giving users power over when and how they're interrupted
-3. **Music Integration**: Research shows the right background music can significantly enhance focus
-4. **Better Reporting**: Helping users understand and optimize their productivity patterns
-5. **UI Flexibility**: Letting users customize their workspace for minimal distractions
+1. **Automated Scheduling**: Building consistent productivity habits through automation
+2. **Customizable Sessions**: Recognizing that everyone has different optimal focus durations
+3. **Notification Control**: Giving users power over when and how they're interrupted
+4. **Music Integration**: Research shows the right background music can significantly enhance focus
+5. **Better Reporting**: Helping users understand and optimize their productivity patterns
+6. **UI Flexibility**: Letting users customize their workspace for minimal distractions
+7. **Preset Templates**: Science-backed session patterns (Pomodoro, Deep Work, etc.) for optimal focus
 
 ### 🚀 Getting Started
 
 1. **Download** the latest release from [GitHub Releases](https://github.com/hunght/itracksy/releases)
-2. **Explore new settings** in the Settings page
-3. **Try the Music page** to find your perfect focus soundtrack
-4. **Customize your session times** to match your work style
-5. **Export your data** from the new Reports page
+2. **Set up automated sessions** in the new Scheduling page
+3. **Explore new settings** in the Settings page
+4. **Try the Music page** to find your perfect focus soundtrack
+5. **Customize your session times** to match your work style
+6. **Export your data** from the new Reports page
 
 ### 🐛 Bug Fixes & Stability
 
