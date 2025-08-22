@@ -1,6 +1,6 @@
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, inArray, sql } from "drizzle-orm";
 
-import { boards, columns, items } from "../db/schema";
+import { boards, columns, items, timeEntries, activities, notifications } from "../db/schema";
 import { nanoid } from "nanoid";
 import db from "../db";
 
@@ -136,5 +136,46 @@ export async function updateItem(id: string, item: Partial<ItemInsert>): Promise
 }
 
 export async function deleteItem(id: string): Promise<void> {
-  await db.delete(items).where(eq(items.id, id));
+  try {
+    console.log(`[deleteItem] Starting deletion of item: ${id}`);
+
+    // Enable foreign keys explicitly at the start (sometimes they're not enabled in SQLite)
+    await db.run(sql`PRAGMA foreign_keys = ON`);
+    console.log(`[deleteItem] Foreign keys enabled`);
+
+    // Check current foreign keys status
+    const foreignKeysStatus = await db.get(sql`PRAGMA foreign_keys`);
+    console.log(`[deleteItem] Foreign keys status:`, foreignKeysStatus);
+
+    // Check what will be cascade deleted (for logging purposes)
+    const relatedTimeEntries = await db
+      .select()
+      .from(timeEntries)
+      .where(eq(timeEntries.itemId, id));
+
+    console.log(
+      `[deleteItem] Found ${relatedTimeEntries.length} related time entries that will be cascade deleted:`,
+      relatedTimeEntries
+    );
+
+    // Attempt the deletion - cascade should handle all related data
+    console.log(
+      `[deleteItem] Attempting to delete item ${id} (cascade delete should handle time entries and notifications)`
+    );
+    const result = await db.delete(items).where(eq(items.id, id));
+    console.log(`[deleteItem] Delete result:`, result);
+
+    console.log(`[deleteItem] Successfully deleted item: ${id}`);
+  } catch (error) {
+    console.error(`[deleteItem] Error deleting item ${id}:`, error);
+
+    // Additional error information
+    if (error instanceof Error) {
+      console.error(`[deleteItem] Error name: ${error.name}`);
+      console.error(`[deleteItem] Error message: ${error.message}`);
+      console.error(`[deleteItem] Error stack: ${error.stack}`);
+    }
+
+    throw error;
+  }
 }

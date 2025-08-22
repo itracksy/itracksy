@@ -176,7 +176,7 @@ export const notifications = sqliteTable(
     body: text("body").notNull(),
     type: text("type").notNull(), // 'system', 'time_entry', etc.
     userId: text("user_id").notNull(),
-    timeEntryId: text("time_entry_id").references(() => timeEntries.id),
+    timeEntryId: text("time_entry_id").references(() => timeEntries.id, { onDelete: "cascade" }),
     createdAt: integer("created_at").notNull(),
   },
   (table) => [
