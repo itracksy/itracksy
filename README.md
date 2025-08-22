@@ -14,6 +14,26 @@ iTracksy is a powerful desktop application for tracking your activities and mana
 - **Activity Classification**: Track your productivity goals with focus sessions and classify activities to improve insights
 - **Rule-Based Classification**: Customize how activities are categorized with a flexible rule system
 
+## Installation
+
+### Download
+
+Download the latest release for your platform from the [GitHub Releases page](https://github.com/hunght/itracksy/releases).
+
+### Windows Installation
+
+**Important**: The Windows executable is unsigned, which means Windows Defender/SmartScreen will show security warnings when you try to install or run the application. This is expected behavior for unsigned executables.
+
+When you see the "Windows protected your PC" dialog:
+1. Click **"More info"**
+2. Click **"Run anyway"** to proceed with installation
+
+This warning appears because the application hasn't been digitally signed with a code signing certificate. The application is safe to use - the warning is simply Windows being cautious about unsigned software.
+
+### macOS Installation
+
+The macOS version is properly signed and notarized, so you shouldn't see security warnings during installation.
+
 ## macOS Permissions
 
 For full functionality on macOS, iTracksy requires system permissions to track browser URLs:
