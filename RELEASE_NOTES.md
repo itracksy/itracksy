@@ -137,6 +137,8 @@ The macOS version remains properly signed and notarized - no security warnings.
 
 ### 🐛 Bug Fixes & Stability
 
+- **Fixed clock window countdown for unlimited sessions** - Clock now properly shows elapsed time instead of countdown when session duration is unlimited
+- **Enhanced unlimited session display** - Added infinity symbol (∞) indicator and purple border styling for unlimited sessions in clock window
 - Improved error handling in notification system
 - Enhanced settings persistence
 - Better memory management for music page

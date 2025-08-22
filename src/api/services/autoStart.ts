@@ -61,13 +61,15 @@ export function setAutoStart(enable: boolean, options: Partial<AutoStartOptions>
       // Verify the setting was applied
       const currentSettings = app.getLoginItemSettings();
       const success = currentSettings.openAtLogin === enable;
-      
+
       if (success) {
-        logger.info(`Auto-start ${enable ? "enabled" : "disabled"} successfully for ${process.platform}`);
+        logger.info(
+          `Auto-start ${enable ? "enabled" : "disabled"} successfully for ${process.platform}`
+        );
       } else {
         logger.error("Failed to verify auto-start setting");
       }
-      
+
       return success;
     } else if (process.platform === "linux") {
       // Handle Linux autostart
@@ -159,14 +161,14 @@ export function toggleAutoStart(): boolean {
  */
 export function initializeAutoStart(): void {
   logger.info("Initializing auto-start functionality");
-  
+
   try {
     const currentStatus = getAutoStartStatus();
     logger.info("Current auto-start status:", currentStatus);
 
     // On first run, we could optionally prompt the user or set a default
     // For now, we just log the current status
-    
+
     // Handle Squirrel events on Windows
     if (process.platform === "win32") {
       handleSquirrelEvents();
@@ -181,7 +183,7 @@ export function initializeAutoStart(): void {
  */
 function handleSquirrelEvents(): void {
   const squirrelStartup = require("electron-squirrel-startup");
-  
+
   if (squirrelStartup) {
     logger.info("Squirrel event detected, app will quit");
     return;
@@ -190,7 +192,7 @@ function handleSquirrelEvents(): void {
   // Handle additional Squirrel events
   if (process.argv.length > 1) {
     const squirrelEvent = process.argv[1];
-    
+
     switch (squirrelEvent) {
       case "--squirrel-install":
       case "--squirrel-updated":
@@ -200,14 +202,14 @@ function handleSquirrelEvents(): void {
         // setAutoStart(true);
         app.quit();
         return;
-        
+
       case "--squirrel-uninstall":
         // Uninstall event - clean up auto-start
         logger.info("Squirrel uninstall event");
         setAutoStart(false);
         app.quit();
         return;
-        
+
       case "--squirrel-obsolete":
         // Obsolete version event
         logger.info("Squirrel obsolete event");

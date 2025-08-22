@@ -292,14 +292,14 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle>Auto-Start on System Boot</CardTitle>
           <CardDescription>
-            Launch iTracksy automatically when your system starts up. {autoStartInfo?.platform === "win32" 
+            Launch iTracksy automatically when your system starts up.{" "}
+            {autoStartInfo?.platform === "win32"
               ? "On Windows, this is managed through the Windows Registry."
               : autoStartInfo?.platform === "darwin"
-              ? "On macOS, this adds iTracksy to your Login Items."
-              : autoStartInfo?.platform === "linux"
-              ? "On Linux, this creates an autostart desktop entry."
-              : "Platform-specific auto-start functionality."
-            }
+                ? "On macOS, this adds iTracksy to your Login Items."
+                : autoStartInfo?.platform === "linux"
+                  ? "On Linux, this creates an autostart desktop entry."
+                  : "Platform-specific auto-start functionality."}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex items-center gap-4">
@@ -309,11 +309,13 @@ export default function SettingsPage() {
             id="auto-start"
             disabled={!autoStartInfo?.supported}
           />
-          <label htmlFor="auto-start" className={!autoStartInfo?.supported ? "text-muted-foreground" : ""}>
-            {autoStartInfo?.supported 
+          <label
+            htmlFor="auto-start"
+            className={!autoStartInfo?.supported ? "text-muted-foreground" : ""}
+          >
+            {autoStartInfo?.supported
               ? "Start iTracksy automatically when system boots"
-              : `Auto-start not supported on ${autoStartInfo?.platform || "this platform"}`
-            }
+              : `Auto-start not supported on ${autoStartInfo?.platform || "this platform"}`}
           </label>
         </CardContent>
       </Card>

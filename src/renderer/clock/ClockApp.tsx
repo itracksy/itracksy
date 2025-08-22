@@ -123,12 +123,24 @@ const ClockApp: React.FC = () => {
   const getRemainingTime = (): number => {
     if (!clockState.activeEntry || clockState.activeEntry.endTime) return 0;
     const elapsed = Math.floor((clockState.currentTime - clockState.activeEntry.startTime) / 1000);
+    
+    // Handle unlimited sessions (targetDuration = 0)
+    if (clockState.activeEntry.targetDuration === 0) {
+      return elapsed; // Show elapsed time instead of remaining time
+    }
+    
     const target = clockState.activeEntry.targetDuration * 60; // Convert to seconds
     return Math.max(target - elapsed, 0);
   };
 
   const getProgress = (): number => {
     if (!clockState.activeEntry) return 0;
+    
+    // For unlimited sessions, don't show progress bar
+    if (clockState.activeEntry.targetDuration === 0) {
+      return 0;
+    }
+    
     const elapsed = Math.floor((clockState.currentTime - clockState.activeEntry.startTime) / 1000);
     const target = clockState.activeEntry.targetDuration * 60; // Convert to seconds
     return Math.min((elapsed / target) * 100, 100);
@@ -136,9 +148,19 @@ const ClockApp: React.FC = () => {
 
   const isOvertime = (): boolean => {
     if (!clockState.activeEntry) return false;
+    
+    // Unlimited sessions are never overtime
+    if (clockState.activeEntry.targetDuration === 0) {
+      return false;
+    }
+    
     const elapsed = Math.floor((clockState.currentTime - clockState.activeEntry.startTime) / 1000);
     const target = clockState.activeEntry.targetDuration * 60;
     return elapsed > target;
+  };
+
+  const isUnlimitedSession = (): boolean => {
+    return clockState.activeEntry?.targetDuration === 0;
   };
 
   const formatMinutes = (minutes: number): string => {
@@ -201,20 +223,31 @@ const ClockApp: React.FC = () => {
   // Active session state
   const mode = activeEntry.isFocusMode ? "focus" : "break";
   const modeIcon = activeEntry.isFocusMode ? "🎯" : "☕";
+  const unlimited = isUnlimitedSession();
 
   return (
     <div
-      className={`clock-container active ${mode}`}
+      className={`clock-container active ${mode} ${unlimited ? "unlimited" : ""}`}
       onClick={handleShowMain}
       title="Click to show main window"
     >
       <div className="clock-content">
         <span className="clock-icon">{modeIcon}</span>
         <div className="clock-info">
-          <div className="clock-time">{formatTime(remainingTime)}</div>
-          <div className="clock-progress">
-            <div className="clock-progress-bar" style={{ width: `${progress}%` }} />
+          <div className="clock-time">
+            {unlimited ? (
+              <>
+                {formatTime(remainingTime)} <span className="unlimited-indicator">∞</span>
+              </>
+            ) : (
+              formatTime(remainingTime)
+            )}
           </div>
+          {!unlimited && (
+            <div className="clock-progress">
+              <div className="clock-progress-bar" style={{ width: `${progress}%` }} />
+            </div>
+          )}
         </div>
       </div>
       <button className="close-btn" onClick={handleHide} title="Hide">

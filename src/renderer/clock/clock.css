@@ -35,6 +35,10 @@
   border-color: rgba(255, 152, 0, 0.4);
 }
 
+.clock-container.unlimited {
+  border-color: rgba(138, 43, 226, 0.4); /* Purple border for unlimited */
+}
+
 .clock-content {
   display: flex;
   align-items: center;
@@ -47,6 +51,13 @@
 .clock-icon {
   font-size: 12px;
   flex-shrink: 0;
+}
+
+.unlimited-indicator {
+  font-size: 8px;
+  color: rgba(138, 43, 226, 0.8);
+  margin-left: 2px;
+  font-weight: bold;
 }
 
 /* Daily Target Display */
