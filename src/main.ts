@@ -139,7 +139,7 @@ async function createTray() {
       },
     },
     {
-      label: "Show Clock",
+      label: "Toggle Clock",
       click: () => {
         toggleClockWindow();
       },
