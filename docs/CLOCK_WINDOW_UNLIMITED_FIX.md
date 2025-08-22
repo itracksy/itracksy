@@ -62,6 +62,7 @@ Added new CSS classes in `src/renderer/clock/clock.css`:
 ## Code Changes
 
 ### Before Fix
+
 ```typescript
 // Always showed countdown, even for unlimited sessions
 <div className="clock-time">{formatTime(remainingTime)}</div>
@@ -71,6 +72,7 @@ Added new CSS classes in `src/renderer/clock/clock.css`:
 ```
 
 ### After Fix
+
 ```typescript
 // Shows elapsed time + infinity indicator for unlimited sessions
 <div className="clock-time">
@@ -92,18 +94,21 @@ Added new CSS classes in `src/renderer/clock/clock.css`:
 ## Testing
 
 ### Manual Test Cases
+
 1. **Limited Session**: Start 25-minute focus session → Clock shows countdown timer with progress bar
 2. **Unlimited Session**: Start unlimited focus session → Clock shows elapsed time with ∞ symbol, no progress bar
 3. **Visual Distinction**: Unlimited sessions have purple border, limited sessions have standard colors
 4. **Switch Between**: Toggle between limited and unlimited → UI updates appropriately
 
 ### Expected Behavior
+
 - **Limited sessions**: Countdown timer from target to 00:00, progress bar fills up, shows overtime in red
 - **Unlimited sessions**: Elapsed timer counting up, ∞ symbol visible, purple border, no progress bar, never shows overtime
 
 ## Consistency with Main UI
 
 This fix ensures the clock window behavior is consistent with the main ActiveSession component, which already properly handled unlimited sessions by:
+
 - Displaying "∞ Unlimited" badge
 - Showing elapsed time instead of countdown
 - Never marking unlimited sessions as "overtime"

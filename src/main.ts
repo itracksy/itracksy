@@ -46,9 +46,26 @@ export function getTray(): Tray | null {
 export function showMainWindow(): void {
   if (!mainWindow) {
     createWindow();
-  } else {
+    return;
+  }
+
+  // Show the window if it's hidden
+  if (!mainWindow.isVisible()) {
     mainWindow.show();
-    mainWindow.focus();
+  }
+
+  // Restore the window if it's minimized
+  if (mainWindow.isMinimized()) {
+    mainWindow.restore();
+  }
+
+  // Bring the window to front and focus it
+  mainWindow.focus();
+
+  // On macOS, also call setAlwaysOnTop briefly to ensure it comes to front
+  if (process.platform === "darwin") {
+    mainWindow.setAlwaysOnTop(true);
+    mainWindow.setAlwaysOnTop(false);
   }
 }
 

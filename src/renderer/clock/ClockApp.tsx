@@ -56,12 +56,10 @@ const ClockApp: React.FC = () => {
 
   // Listen for updates from main process
   useEffect(() => {
-    console.log("ClockApp: Component mounted");
-    console.log("ClockApp: window.electronClock available:", !!(window as any).electronClock);
+    const electronClock = (window as any).electronClock;
 
-    if ((window as any).electronClock) {
+    if (electronClock) {
       const handleUpdate = (data: any) => {
-        console.log("Clock update received:", data);
         setClockState((prev) => ({
           ...prev,
           activeEntry: data.activeEntry,
@@ -71,10 +69,10 @@ const ClockApp: React.FC = () => {
         }));
       };
 
-      (window as any).electronClock.onUpdate(handleUpdate);
+      electronClock.onUpdate(handleUpdate);
 
       return () => {
-        (window as any).electronClock.removeAllListeners();
+        electronClock.removeAllListeners();
       };
     }
   }, []);
@@ -82,7 +80,6 @@ const ClockApp: React.FC = () => {
   const handleHide = useCallback(async (event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
-    console.log("Hiding clock window");
 
     if ((window as any).electronClock) {
       try {
@@ -94,25 +91,29 @@ const ClockApp: React.FC = () => {
   }, []);
 
   const handleShowMain = useCallback(async (event: React.MouseEvent) => {
+    // Don't trigger if clicking on the close button
+    if ((event.target as HTMLElement).closest(".close-btn")) {
+      return;
+    }
+
     event.preventDefault();
     event.stopPropagation();
-    console.log("handleShowMain called - Showing main window");
 
     if ((window as any).electronClock) {
       try {
-        console.log(
-          "electronClock.showMain is available:",
-          typeof (window as any).electronClock.showMain
-        );
         await (window as any).electronClock.showMain();
-        console.log("Main window show request sent successfully");
       } catch (error) {
         console.error("Failed to show main window:", error);
       }
-    } else {
-      console.error("electronClock is not available");
     }
   }, []);
+
+  const handleContainerClick = useCallback(
+    (event: React.MouseEvent) => {
+      handleShowMain(event);
+    },
+    [handleShowMain]
+  );
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -123,24 +124,24 @@ const ClockApp: React.FC = () => {
   const getRemainingTime = (): number => {
     if (!clockState.activeEntry || clockState.activeEntry.endTime) return 0;
     const elapsed = Math.floor((clockState.currentTime - clockState.activeEntry.startTime) / 1000);
-    
+
     // Handle unlimited sessions (targetDuration = 0)
     if (clockState.activeEntry.targetDuration === 0) {
       return elapsed; // Show elapsed time instead of remaining time
     }
-    
+
     const target = clockState.activeEntry.targetDuration * 60; // Convert to seconds
     return Math.max(target - elapsed, 0);
   };
 
   const getProgress = (): number => {
     if (!clockState.activeEntry) return 0;
-    
+
     // For unlimited sessions, don't show progress bar
     if (clockState.activeEntry.targetDuration === 0) {
       return 0;
     }
-    
+
     const elapsed = Math.floor((clockState.currentTime - clockState.activeEntry.startTime) / 1000);
     const target = clockState.activeEntry.targetDuration * 60; // Convert to seconds
     return Math.min((elapsed / target) * 100, 100);
@@ -148,12 +149,12 @@ const ClockApp: React.FC = () => {
 
   const isOvertime = (): boolean => {
     if (!clockState.activeEntry) return false;
-    
+
     // Unlimited sessions are never overtime
     if (clockState.activeEntry.targetDuration === 0) {
       return false;
     }
-    
+
     const elapsed = Math.floor((clockState.currentTime - clockState.activeEntry.startTime) / 1000);
     const target = clockState.activeEntry.targetDuration * 60;
     return elapsed > target;
@@ -174,7 +175,6 @@ const ClockApp: React.FC = () => {
   const { activeEntry, isRunning, focusTarget, dailyProgress } = clockState;
   const remainingTime = getRemainingTime();
   const progress = getProgress();
-  const overtime = isOvertime();
 
   if (!activeEntry || activeEntry.endTime) {
     // Idle state - show daily target and progress
@@ -182,7 +182,11 @@ const ClockApp: React.FC = () => {
     const dailyProgressPercent = dailyProgress?.progressPercentage || 0;
 
     return (
-      <div className="clock-container idle" onClick={handleShowMain} title="Click to start session">
+      <div
+        className="clock-container idle"
+        onClick={handleContainerClick}
+        title="Click to open iTracksy"
+      >
         <div className="clock-content">
           {hasTarget ? (
             <>
@@ -228,7 +232,7 @@ const ClockApp: React.FC = () => {
   return (
     <div
       className={`clock-container active ${mode} ${unlimited ? "unlimited" : ""}`}
-      onClick={handleShowMain}
+      onClick={handleContainerClick}
       title="Click to show main window"
     >
       <div className="clock-content">

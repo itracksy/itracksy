@@ -13,7 +13,7 @@
   transition: all 0.2s ease;
   user-select: none;
   overflow: visible;
-  -webkit-app-region: drag;
+  -webkit-app-region: no-drag; /* Allow clicks */
 }
 
 .clock-container:hover {

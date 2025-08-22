@@ -19,12 +19,9 @@ import {
 import { getFocusTarget, getTodaysFocusProgress } from "../../../api/services/focusTargets";
 
 export const addClockEventListeners = () => {
-  logger.debug("ClockListeners: Adding clock listeners");
-
   // Show clock handler
   safelyRegisterListener(CLOCK_SHOW_CHANNEL, async (_event) => {
     try {
-      logger.debug("Clock show requested");
       showClockWindow();
       return { success: true };
     } catch (error) {
@@ -36,7 +33,6 @@ export const addClockEventListeners = () => {
   // Hide clock handler
   safelyRegisterListener(CLOCK_HIDE_CHANNEL, async (_event) => {
     try {
-      logger.debug("Clock hide requested");
       hideClockWindow();
       return { success: true };
     } catch (error) {
@@ -48,11 +44,10 @@ export const addClockEventListeners = () => {
   // Show main window handler
   safelyRegisterListener(CLOCK_SHOW_MAIN_CHANNEL, async (_event) => {
     try {
-      logger.debug("Show main window requested from clock");
       showMainWindow();
       return { success: true };
     } catch (error) {
-      logger.error("Failed to show main window", { error });
+      logger.error("Failed to show main window from clock", { error });
       throw error;
     }
   });
