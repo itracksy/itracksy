@@ -74,28 +74,61 @@ jobs:
 
           Write-Host "Signing setup file: $setupFile"
 
-          # Login to Azure CLI
+          # Check if the file exists
+          if (-not (Test-Path $setupFile)) {
+            Write-Error "Setup file not found: $setupFile"
+            Get-ChildItem out/make -Recurse -Name "*.exe" | Write-Host
+            exit 1
+          }
+
+          # Hardcoded certificate information from Azure Trusted Signing
+          $identityValidationId = "c11d3515-6b00-466f-9722-a778639be633"
+          $certificateThumbprint = "B59513654510DCD5804280C1340A8723B11EE110"
+
+          Write-Host "Using certificate thumbprint: $certificateThumbprint"
+          Write-Host "Using identity validation ID: $identityValidationId"
+
+          # Login to Azure CLI using service principal
+          Write-Host "Logging in to Azure..."
           az login --service-principal `
             --username $env:AZURE_CLIENT_ID `
             --password $env:AZURE_CLIENT_SECRET `
             --tenant $env:AZURE_TENANT_ID
 
+          # Set the subscription (even if expired, certificates might still be accessible)
+          az account set --subscription $env:AZURE_SUBSCRIPTION_ID
+
           # Get Azure access token for code signing
+          Write-Host "Getting access token..."
           $accessToken = az account get-access-token --resource "https://codesigning.azure.net" --query accessToken -o tsv
 
-          # Sign using JSign with Azure Code Signing
-          # --storetype: Use Azure Trusted Signing service
-          # --keystore: Azure Code Signing endpoint (region specific)
-          # --storepass: Azure access token for authentication
-          # --alias: Certificate alias in format 'account-name/cert-name'
+          if (-not $accessToken) {
+            Write-Error "Failed to get access token"
+            exit 1
+          }
+
+          # Sign using JSign with Azure Code Signing and specific certificate
+          Write-Host "Signing with Azure Trusted Signing..."
           java -jar jsign-7.0.jar `
             --storetype TRUSTEDSIGNING `
             --keystore eus.codesigning.azure.net `
             --storepass $accessToken `
-            --alias hung/itracksy-cert `
+            --alias "hung/$certificateThumbprint" `
+            --tsaurl http://timestamp.digicert.com `
             $setupFile
 
-          Write-Host "Signing complete"
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "✅ Signing successful"
+
+            # Verify the signature
+            Write-Host "Verifying signature..."
+            java -jar jsign-7.0.jar --verify $setupFile
+          } else {
+            Write-Error "❌ Signing failed with exit code: $LASTEXITCODE"
+            exit 1
+          }
+
+          Write-Host "Windows code signing complete"
 
       - name: Release
         uses: softprops/action-gh-release@v1
