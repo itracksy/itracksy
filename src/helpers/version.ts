@@ -1,17 +1,17 @@
+import { trpcClient } from "@/utils/trpc";
+
 /**
- * Gets the current application version from Electron
+ * Gets the current application version using tRPC
  * @returns A promise that resolves to the current application version
  */
 export async function getAppVersion(): Promise<string> {
   try {
-    if (window.electronWindow && window.electronWindow.getAppVersion) {
-      return await window.electronWindow.getAppVersion();
-    }
+    return await trpcClient.utils.getAppVersion.query();
   } catch (error) {
     console.error("Failed to get app version:", error);
   }
 
-  // Fallbacks if Electron API fails or isn't available
+  // Fallbacks if tRPC fails or isn't available
   if (process.env.APP_VERSION) {
     return process.env.APP_VERSION;
   }

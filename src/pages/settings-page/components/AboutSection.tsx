@@ -19,7 +19,7 @@ export function AboutSection() {
 
   const handleOpenLogFile = async () => {
     try {
-      const content = await window.electronWindow.getLogFileContent();
+      const content = await trpcClient.utils.getLogFileContent.query();
       setLogContent(content);
       setIsLogDialogOpen(true);
     } catch (error) {

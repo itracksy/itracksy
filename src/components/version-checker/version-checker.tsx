@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { DownloadIcon, ExternalLinkIcon, RefreshCwIcon } from "lucide-react";
@@ -19,6 +19,83 @@ interface VersionCheckerProps {
   cacheDuration?: number; // Duration in milliseconds to cache version info
 }
 
+// Separate component for download buttons to manage download state independently
+interface DownloadButtonsProps {
+  downloadUrl: string;
+  onOpenDownloadLink: () => void;
+}
+
+function DownloadButtons({ downloadUrl, onOpenDownloadLink }: DownloadButtonsProps) {
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const { toast } = useToast();
+
+  const handleDownloadUpdate = useCallback(async () => {
+    if (!downloadUrl) return;
+
+    setIsDownloading(true);
+    setDownloadProgress(0);
+
+    try {
+      const result = await trpcClient.utils.downloadUpdate.mutate({
+        downloadUrl,
+      });
+
+      if (result.status === "success") {
+        setDownloadProgress(100);
+        toast({
+          title: "Download Complete",
+          description: "The update has been downloaded and opened automatically.",
+          variant: "default",
+          duration: 5000,
+        });
+      } else {
+        toast({
+          title: "Download Failed",
+          description: result.message || "Failed to download update",
+          variant: "destructive",
+          duration: 5000,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to download update:", error);
+      toast({
+        title: "Download Failed",
+        description: "An error occurred while downloading the update",
+        variant: "destructive",
+        duration: 5000,
+      });
+    } finally {
+      setIsDownloading(false);
+      setDownloadProgress(0);
+    }
+  }, [downloadUrl, toast]);
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleDownloadUpdate}
+        disabled={isDownloading}
+        className="flex items-center"
+      >
+        <DownloadIcon className="h-2 w-2" />
+        {isDownloading ? `${downloadProgress}%` : "Download"}
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onOpenDownloadLink}
+        className="flex items-center"
+      >
+        <ExternalLinkIcon className="h-2 w-2" />
+        Open
+      </Button>
+    </div>
+  );
+}
+
 export function VersionChecker({
   autoCheck = true,
   showCheckButton = false,
@@ -27,52 +104,39 @@ export function VersionChecker({
 }: VersionCheckerProps) {
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const { toast } = useToast();
-  const [currentVersion, setCurrentVersion] = useState("");
+  const updateToastShown = useRef(false);
 
-  // Get current app version
-  useEffect(() => {
-    const fetchAppVersion = async () => {
-      try {
-        const version = await window.electronWindow.getAppVersion();
-        setCurrentVersion(version);
-      } catch (error) {
-        console.error("Failed to get app version:", error);
-      }
-    };
-
-    fetchAppVersion();
-  }, []);
+  // Get current app version using tRPC
+  const { data: currentVersion } = useQuery({
+    queryKey: ["appVersion"],
+    queryFn: () => trpcClient.utils.getAppVersion.query(),
+    staleTime: Infinity, // Version doesn't change during runtime
+  });
 
   // Use React Query for version checking with built-in caching
   const {
-    data: versionInfo,
+    data: updateCheckResult,
     refetch,
     isLoading,
   } = useQuery({
-    queryKey: ["appVersion", currentVersion],
-    queryFn: async (): Promise<VersionInfo> => {
-      try {
-        const result = await window.electronWindow.checkForUpdates();
-        return {
-          currentVersion: result.currentVersion || currentVersion,
-          latestVersion: result.latestVersion,
-          hasUpdate: result.hasUpdate,
-          downloadUrl: result.downloadUrl,
-        };
-      } catch (error) {
-        console.error("Failed to check for updates:", error);
-        return {
-          currentVersion,
-          hasUpdate: false,
-        };
-      }
-    },
+    queryKey: ["appVersionCheck", currentVersion],
+    queryFn: () => trpcClient.utils.checkForUpdates.query(),
     enabled: autoCheck && !!currentVersion, // Only run if autoCheck is true and we have the current version
     staleTime: cacheDuration, // Consider data fresh for the cacheDuration
     refetchOnWindowFocus: false, // Don't refetch when window gains focus
     refetchOnMount: false, // Don't refetch when component mounts
     refetchOnReconnect: false, // Don't refetch when reconnecting
   });
+
+  // Transform the tRPC result to match VersionInfo interface
+  const versionInfo: VersionInfo | undefined = updateCheckResult
+    ? {
+        currentVersion: updateCheckResult.status === "success" ? updateCheckResult.currentVersion : currentVersion || "",
+        latestVersion: updateCheckResult.status === "success" ? updateCheckResult.latestVersion : undefined,
+        hasUpdate: updateCheckResult.hasUpdate,
+        downloadUrl: updateCheckResult.status === "success" ? updateCheckResult.downloadUrl : undefined,
+      }
+    : undefined;
 
   // Notify parent component when version info is available
   useEffect(() => {
@@ -90,45 +154,28 @@ export function VersionChecker({
     }
   };
 
-  // Show toast when update is available
+  // Show toast when update is available (only once)
   useEffect(() => {
-    if (versionInfo?.hasUpdate) {
+    if (versionInfo?.hasUpdate && !updateToastShown.current) {
+      updateToastShown.current = true;
+      
       toast({
         title: "Update Available",
         description: `Version ${versionInfo.latestVersion} is available. You are currently using version ${versionInfo.currentVersion}.`,
         variant: "default",
         duration: 10000, // Show for 10 seconds
         action: (
-          <div className="flex flex-col gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                if (versionInfo.downloadUrl) {
-                  window.location.href = versionInfo.downloadUrl;
-                }
-              }}
-              className="flex items-center"
-            >
-              <DownloadIcon className="h-2 w-2" />
-              Download
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                if (versionInfo.downloadUrl) {
-                  handleOpenDownloadLink();
-                }
-              }}
-              className="flex items-center"
-            >
-              <ExternalLinkIcon className="h-2 w-2" />
-              Open
-            </Button>
-          </div>
+          <DownloadButtons
+            downloadUrl={versionInfo.downloadUrl!}
+            onOpenDownloadLink={handleOpenDownloadLink}
+          />
         ),
       });
+    }
+    
+    // Reset the flag when no update is available
+    if (!versionInfo?.hasUpdate) {
+      updateToastShown.current = false;
     }
   }, [
     versionInfo?.hasUpdate,
