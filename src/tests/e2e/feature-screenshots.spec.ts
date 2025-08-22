@@ -4,7 +4,33 @@ import path from "path";
 import fs from "fs";
 
 /**
- * Test file for taking screenshots of main iTracksy features for landing page
+ * Test file for taking comprehensive screenshots of ALL iTracksy pages for landing page
+ *
+ * This test suite captures screenshots of every major page/feature in the iTracksy app:
+ *
+ * Core Features:
+ * - Activity Tracking (Focus Sessions) - Main productivity tracking interface
+ * - Time Analytics Dashboard - Charts, insights, and time analysis
+ * - Project Management - Kanban boards and project organization
+ * - Activity Classification - Smart activity categorization system
+ * - Rule-Based Classification - Custom rules for automatic classification
+ *
+ * Categorization System:
+ * - Categorization Overview - Main categorization interface
+ * - Category Management - Create and manage categories
+ * - Uncategorized Activities - Activities awaiting categorization
+ *
+ * Additional Features:
+ * - Reports - Detailed reporting and analytics
+ * - Music/Focus Enhancement - Focus music and ambient sounds
+ * - Scheduling - Time management and scheduling tools
+ * - Settings - App configuration and preferences
+ *
+ * Generated screenshots are used for:
+ * - Landing page feature showcases
+ * - Documentation and guides
+ * - Marketing materials
+ * - Product demos
  */
 
 let electronApp: ElectronApplication;
@@ -17,8 +43,19 @@ if (!fs.existsSync(screenshotsDir)) {
 }
 
 test.beforeAll(async () => {
-  const latestBuild = findLatestBuild();
-  const appInfo = parseElectronApp(latestBuild);
+  // Try to find latest build, fallback to dev build
+  let latestBuild;
+  let appInfo;
+
+  try {
+    latestBuild = findLatestBuild();
+    appInfo = parseElectronApp(latestBuild);
+  } catch (error) {
+    console.log("No packaged build found, using development build");
+    // Use development build files
+    latestBuild = ".vite/build/main.js";
+    appInfo = { main: latestBuild };
+  }
 
   // Set environment variables for testing
   process.env.CI = "e2e";
@@ -90,6 +127,21 @@ test("Screenshot Activity Tracking feature", async () => {
   });
 });
 
+test("Screenshot Time Analytics Dashboard", async () => {
+  // Navigate to Time Analytics page using the link href
+  await page.locator('a[href="/dashboard"]').click();
+  await page.waitForLoadState("networkidle");
+
+  // Make sure charts and data are fully loaded
+  await page.waitForTimeout(2000);
+
+  // Take screenshot of the Time Analytics view
+  await page.screenshot({
+    path: path.join(screenshotsDir, "time-analytics.png"),
+    fullPage: true,
+  });
+});
+
 test("Screenshot Project Management feature", async () => {
   // Navigate to Projects/Kanban page using the link href
   await page.locator('a[href="/projects"]').click();
@@ -101,21 +153,6 @@ test("Screenshot Project Management feature", async () => {
   // Take screenshot of the Project Management view
   await page.screenshot({
     path: path.join(screenshotsDir, "project-management.png"),
-    fullPage: true,
-  });
-});
-
-test("Screenshot Time Analytics feature", async () => {
-  // Navigate to Time Analytics page using the link href
-  await page.locator('a[href="/dashboard"]').click();
-  await page.waitForLoadState("networkidle");
-
-  // Make sure charts and data are fully loaded
-  await page.waitForTimeout(2000);
-
-  // Take screenshot of the Time Analytics view
-  await page.screenshot({
-    path: path.join(screenshotsDir, "time-analytics.png"),
     fullPage: true,
   });
 });
@@ -146,6 +183,111 @@ test("Screenshot Rule-Based Classification feature", async () => {
   // Take screenshot of the Rule-Based Classification view
   await page.screenshot({
     path: path.join(screenshotsDir, "rule-classification.png"),
+    fullPage: true,
+  });
+});
+
+test("Screenshot Categorization Overview", async () => {
+  // Navigate to Categorization main page
+  await page.locator('a[href="/categorization"]').click();
+  await page.waitForLoadState("networkidle");
+
+  // Wait for categories to load
+  await page.waitForTimeout(1500);
+
+  // Take screenshot of the Categorization view
+  await page.screenshot({
+    path: path.join(screenshotsDir, "categorization-overview.png"),
+    fullPage: true,
+  });
+});
+
+test("Screenshot Category Management", async () => {
+  // Navigate to Category Management page
+  await page.goto("/#/categorization/manage");
+  await page.waitForLoadState("networkidle");
+
+  // Wait for category management interface to load
+  await page.waitForTimeout(1500);
+
+  // Take screenshot of the Category Management view
+  await page.screenshot({
+    path: path.join(screenshotsDir, "category-management.png"),
+    fullPage: true,
+  });
+});
+
+test("Screenshot Uncategorized Activities", async () => {
+  // Navigate to Uncategorized Activities page
+  await page.goto("/#/categorization/uncategorized");
+  await page.waitForLoadState("networkidle");
+
+  // Wait for uncategorized activities to load
+  await page.waitForTimeout(1500);
+
+  // Take screenshot of the Uncategorized Activities view
+  await page.screenshot({
+    path: path.join(screenshotsDir, "uncategorized-activities.png"),
+    fullPage: true,
+  });
+});
+
+test("Screenshot Reports Page", async () => {
+  // Navigate to Reports page
+  await page.locator('a[href="/reports"]').click();
+  await page.waitForLoadState("networkidle");
+
+  // Wait for reports to load
+  await page.waitForTimeout(2000);
+
+  // Take screenshot of the Reports view
+  await page.screenshot({
+    path: path.join(screenshotsDir, "reports.png"),
+    fullPage: true,
+  });
+});
+
+test("Screenshot Music/Focus Enhancement Page", async () => {
+  // Navigate to Music page
+  await page.locator('a[href="/music"]').click();
+  await page.waitForLoadState("networkidle");
+
+  // Wait for music interface to load
+  await page.waitForTimeout(1500);
+
+  // Take screenshot of the Music view
+  await page.screenshot({
+    path: path.join(screenshotsDir, "music-focus.png"),
+    fullPage: true,
+  });
+});
+
+test("Screenshot Scheduling Page", async () => {
+  // Navigate to Scheduling page
+  await page.locator('a[href="/scheduling"]').click();
+  await page.waitForLoadState("networkidle");
+
+  // Wait for scheduling interface to load
+  await page.waitForTimeout(1500);
+
+  // Take screenshot of the Scheduling view
+  await page.screenshot({
+    path: path.join(screenshotsDir, "scheduling.png"),
+    fullPage: true,
+  });
+});
+
+test("Screenshot Settings Page", async () => {
+  // Navigate to Settings page
+  await page.locator('a[href="/settings"]').click();
+  await page.waitForLoadState("networkidle");
+
+  // Wait for settings to load
+  await page.waitForTimeout(1500);
+
+  // Take screenshot of the Settings view
+  await page.screenshot({
+    path: path.join(screenshotsDir, "settings.png"),
     fullPage: true,
   });
 });
