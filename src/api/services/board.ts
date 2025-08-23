@@ -1,4 +1,4 @@
-import { eq, desc, and, inArray, sql } from "drizzle-orm";
+import { eq, desc, and, inArray, sql, isNull, isNotNull } from "drizzle-orm";
 
 import { boards, columns, items, timeEntries, activities, notifications } from "../db/schema";
 import { nanoid } from "nanoid";
@@ -29,8 +29,16 @@ export async function getBoards(userId: string): Promise<Board[]> {
   return await db
     .select()
     .from(boards)
-    .where(eq(boards.userId, userId))
+    .where(and(eq(boards.userId, userId), isNull(boards.deletedAt)))
     .orderBy(desc(boards.createdAt));
+}
+
+export async function getArchivedBoards(userId: string): Promise<Board[]> {
+  return await db
+    .select()
+    .from(boards)
+    .where(and(eq(boards.userId, userId), isNotNull(boards.deletedAt)))
+    .orderBy(desc(boards.deletedAt));
 }
 
 export async function createBoard(

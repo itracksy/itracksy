@@ -5,6 +5,7 @@ import { trpcClient } from "@/utils/trpc.js";
 
 export const boardQueries = {
   list: () => ["boards"],
+  listArchived: () => ["archivedBoards"],
   detail: (id: string) => ["board", id],
 };
 
@@ -103,6 +104,7 @@ export function useArchiveBoardMutation() {
     onSettled: (data, error, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["board", id] });
       queryClient.invalidateQueries({ queryKey: ["boards"] });
+      queryClient.invalidateQueries({ queryKey: ["archivedBoards"] });
     },
   });
 }

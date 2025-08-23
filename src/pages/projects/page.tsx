@@ -72,11 +72,15 @@ export function ProjectsPage() {
     },
   });
 
-  // Filter boards to show only active (non-archived) boards
-  const activeBoards = boards?.filter((board) => board.deletedAt === null);
+  const { data: archivedBoards, isLoading: archivedBoardsLoading } = useQuery({
+    queryKey: ["archivedBoards"],
+    queryFn: async () => {
+      return await trpcClient.board.listArchived.query();
+    },
+  });
 
-  // Get all archived boards for the dialog
-  const archivedBoards = boards?.filter((board) => board.deletedAt !== null) || [];
+  // Filter boards to show only active (non-archived) boards
+  const activeBoards = boards;
 
   const createBoardMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
@@ -143,7 +147,7 @@ export function ProjectsPage() {
     }
   }, [activeBoards, selectedBoardId, setSelectedBoardId]);
 
-  if (boardLoading || boardsLoading) return <Loader />;
+  if (boardLoading || boardsLoading || archivedBoardsLoading) return <Loader />;
 
   return (
     <div className="flex h-full flex-col bg-gradient-to-br from-tracksy-blue/5 to-tracksy-gold/5">
@@ -349,7 +353,7 @@ export function ProjectsPage() {
       <ArchivedBoardsDialog
         open={archivedBoardsDialogOpen}
         onOpenChange={setArchivedBoardsDialogOpen}
-        archivedBoards={archivedBoards}
+        archivedBoards={archivedBoards || []}
       />
     </div>
   );

@@ -4,6 +4,7 @@ import {
   createBoard,
   getBoard,
   getBoards,
+  getArchivedBoards,
   createColumn,
   updateColumn,
   deleteColumn,
@@ -28,6 +29,10 @@ export const boardRouter = t.router({
 
   list: protectedProcedure.query(async ({ ctx }) => {
     return getBoards(ctx.userId);
+  }),
+
+  listArchived: protectedProcedure.query(async ({ ctx }) => {
+    return getArchivedBoards(ctx.userId);
   }),
 
   create: protectedProcedure

@@ -9,6 +9,14 @@ import { Cloud, Clock, AlertTriangle, Tag } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BoardSelector } from "@/components/tracking/BoardSelector";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useAtom } from "jotai";
 import { selectedBoardIdAtom, selectedItemIdAtom } from "@/context/board";
 
@@ -25,26 +33,30 @@ const warningMessages = [
   "🚀 Houston, we've exceeded time!",
 ];
 
-export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }> = ({
-  activeTimeEntry,
-}) => {
+interface ActiveSessionProps {
+  activeTimeEntry: TimeEntryWithRelations;
+}
+
+export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const updateTimeEntry = useUpdateTimeEntryMutation();
   const { toast } = useToast();
-  const [duration, setDuration] = useState<string>("00:00");
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [duration, setDuration] = useState("00:00");
   const [isTimeExceeded, setIsTimeExceeded] = useState(false);
   const [warningMessage, setWarningMessage] = useState(warningMessages[0]);
-  const [showTaskAssignment, setShowTaskAssignment] = useState(false);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [selectedBoardId, setSelectedBoardId] = useAtom(selectedBoardIdAtom);
   const [selectedItemId, setSelectedItemId] = useAtom(selectedItemIdAtom);
-  const queryClient = useQueryClient();
+
+  const updateTimeEntryMutation = useUpdateTimeEntryMutation();
 
   const handleExtendTime = async () => {
     if (!activeTimeEntry) return;
 
     try {
       const newTargetDuration = (activeTimeEntry.targetDuration ?? 0) + 5;
-      await updateTimeEntry.mutateAsync({
+      await updateTimeEntryMutation.mutateAsync({
         id: activeTimeEntry.id,
         targetDuration: newTargetDuration,
       });
@@ -66,7 +78,7 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
     if (!activeTimeEntry) return;
 
     try {
-      await updateTimeEntry.mutateAsync({
+      await updateTimeEntryMutation.mutateAsync({
         id: activeTimeEntry.id,
         endTime: Date.now(),
       });
@@ -96,7 +108,7 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
     }
 
     try {
-      await updateTimeEntry.mutateAsync({
+      await updateTimeEntryMutation.mutateAsync({
         id: activeTimeEntry.id,
         boardId: selectedBoardId,
         itemId: selectedItemId,
@@ -106,7 +118,7 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
         title: "Task Assigned",
         description: "Task has been successfully assigned to this session.",
       });
-      setShowTaskAssignment(false);
+      setIsAssignModalOpen(false);
     } catch (error) {
       toast({
         title: "Failed to assign task",
@@ -270,44 +282,40 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
                   <div className="text-xs text-gray-500">
                     Assigned to: {activeTimeEntry.item?.title || "Unknown Task"}
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowTaskAssignment(!showTaskAssignment)}
-                  >
-                    {showTaskAssignment ? "Cancel" : "Change Task"}
+                  <Button variant="ghost" size="sm" onClick={() => setIsAssignModalOpen(true)}>
+                    Change Task
                   </Button>
                 </div>
               ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowTaskAssignment(!showTaskAssignment)}
-                >
-                  {showTaskAssignment ? "Cancel" : "Assign Task"}
+                <Button variant="ghost" size="sm" onClick={() => setIsAssignModalOpen(true)}>
+                  Assign Task
                 </Button>
               )}
             </div>
           </CardHeader>
-          {showTaskAssignment && (
-            <CardContent className="space-y-3">
-              <BoardSelector selectedItemId={selectedItemId} onItemSelect={setSelectedItemId} />
-              <div className="flex gap-2">
-                <Button onClick={handleAssignTask} className="flex-1">
-                  Assign Task
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowTaskAssignment(false)}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </CardContent>
-          )}
         </Card>
       )}
+
+      {/* Task Assignment Modal */}
+      <Dialog open={isAssignModalOpen} onOpenChange={setIsAssignModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Assign Task to Session</DialogTitle>
+            <DialogDescription>
+              Select a task to assign to your current focus session.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <BoardSelector selectedItemId={selectedItemId} onItemSelect={setSelectedItemId} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAssignModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAssignTask}>Assign Task</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <style>{`
         @keyframes warning {
@@ -327,4 +335,4 @@ export const ActiveSession: React.FC<{ activeTimeEntry: TimeEntryWithRelations }
       `}</style>
     </>
   );
-};
+}
