@@ -140,11 +140,19 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
         // Handle unlimited sessions (targetDuration = 0)
         if (minutes === 0) {
           const elapsedSeconds = Math.floor((now.getTime() - startTimeDate.getTime()) / 1000);
-          const elapsedMins = Math.floor(elapsedSeconds / 60);
+          const elapsedHours = Math.floor(elapsedSeconds / 3600);
+          const elapsedMins = Math.floor((elapsedSeconds % 3600) / 60);
           const elapsedSecs = elapsedSeconds % 60;
-          setDuration(
-            `${elapsedMins.toString().padStart(2, "0")}:${elapsedSecs.toString().padStart(2, "0")}`
-          );
+
+          if (elapsedHours > 0) {
+            setDuration(
+              `${elapsedHours}:${elapsedMins.toString().padStart(2, "0")}:${elapsedSecs.toString().padStart(2, "0")}`
+            );
+          } else {
+            setDuration(
+              `${elapsedMins.toString().padStart(2, "0")}:${elapsedSecs.toString().padStart(2, "0")}`
+            );
+          }
           setIsTimeExceeded(false);
           return;
         }
@@ -155,7 +163,8 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
         // Format time differently for negative values
         if (secondsDiff <= 0) {
           const absDiff = Math.abs(secondsDiff);
-          const mins = Math.floor(absDiff / 60);
+          const hours = Math.floor(absDiff / 3600);
+          const mins = Math.floor((absDiff % 3600) / 60);
           const secs = absDiff % 60;
 
           // Only stop if autoStopEnabled is true
@@ -165,16 +174,32 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
             setIsTimeExceeded(false);
             return;
           } else {
-            setDuration(`-${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`);
+            if (hours > 0) {
+              setDuration(
+                `-${hours}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+              );
+            } else {
+              setDuration(
+                `-${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+              );
+            }
             setIsTimeExceeded(true);
             // Change message every 60 seconds when time is exceeded
             const messageIndex = Math.floor(Math.abs(secondsDiff) / 60) % warningMessages.length;
             setWarningMessage(warningMessages[messageIndex]);
           }
         } else {
-          const mins = Math.floor(secondsDiff / 60);
+          const hours = Math.floor(secondsDiff / 3600);
+          const mins = Math.floor((secondsDiff % 3600) / 60);
           const secs = secondsDiff % 60;
-          setDuration(`${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`);
+
+          if (hours > 0) {
+            setDuration(
+              `${hours}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+            );
+          } else {
+            setDuration(`${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`);
+          }
           setIsTimeExceeded(false);
         }
       };

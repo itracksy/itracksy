@@ -6,13 +6,32 @@ import {
   closeNotificationWindow as closeWindow,
 } from "../../main/windows/notification";
 import { sendNotificationToWindow } from "../../helpers/notification/notification-window-utils";
-import { getPlatformDownloadUrl } from "../../helpers/ipc/window/handleDownload";
+import { buildAppLinks } from "../../config/app-links";
+
 import { logger } from "../../helpers/logger";
 import path from "path";
 import fs from "fs";
 import os from "os";
 import { EventEmitter } from "events";
 
+//   a function to get platform-specific download URL without triggering download
+const getPlatformDownloadUrl = (version: string): string => {
+  const customAppLinks = buildAppLinks(version);
+  // Use Electron's process.platform for platform detection
+  switch (process.platform) {
+    case "win32":
+      return customAppLinks.windows;
+    case "darwin":
+      // For macOS, check if running on ARM
+      return process.arch === "arm64"
+        ? customAppLinks.macos
+        : customAppLinks.macosIntel || customAppLinks.macos;
+    case "linux":
+      return customAppLinks.linux;
+    default:
+      return customAppLinks.releases;
+  }
+};
 export const utilsRouter = t.router({
   openExternalUrl: protectedProcedure
     .input(
