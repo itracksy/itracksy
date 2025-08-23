@@ -141,12 +141,10 @@ export default function SettingsPage() {
     queryClient.invalidateQueries({ queryKey: ["user.getActivitySettings"] });
 
     // Notify the main process about the setting change
-    if ((window as any).electronWindow) {
-      try {
-        await (window as any).electronWindow.handleClockVisibilityChange(newValue);
-      } catch (error) {
-        console.error("Failed to notify main process about clock visibility change:", error);
-      }
+    try {
+      await trpcClient.window.setClockVisibility.mutate({ isVisible: newValue });
+    } catch (error) {
+      console.error("Failed to notify main process about clock visibility change:", error);
     }
   };
 

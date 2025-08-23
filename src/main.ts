@@ -16,6 +16,7 @@ import registerListeners from "./helpers/ipc/listeners-register";
 import { router } from "./api";
 import { initializeDatabase } from "./api/db/init";
 import { createContext } from "./api/trpc";
+import { setWindowReferences } from "./api/routers/window";
 
 import { logger } from "./helpers/logger";
 import { startTracking } from "./api/services/trackingIntervalActivity";
@@ -229,6 +230,10 @@ function createWindow(): void {
     mainWindow.loadFile(mainPath);
   }
 
+  // Set up window references for tRPC window router
+  setWindowReferences(mainWindow, tray);
+
+  // Register other IPC listeners (excluding window listeners)
   registerListeners(mainWindow, tray);
 
   mainWindow.on("close", (event) => {
@@ -482,17 +487,10 @@ interface ThemeModeContext {
   system: () => Promise<boolean>;
   current: () => Promise<"dark" | "light" | "system">;
 }
-interface ElectronWindow {
-  minimize: () => Promise<void>;
-  maximize: () => Promise<void>;
-  close: () => Promise<void>;
-  updateTrayTitle: (title: string) => Promise<void>;
-}
 
 declare global {
   interface Window {
     themeMode: ThemeModeContext;
-    electronWindow: ElectronWindow;
     electronNotification?: {
       send: (data: any) => Promise<void>;
       close: () => Promise<void>;
