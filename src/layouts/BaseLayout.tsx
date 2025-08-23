@@ -15,7 +15,7 @@ export default function BaseLayout({ children }: { children: React.ReactNode }) 
         <SidebarProvider>
           <AppSidebar />
 
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 overflow-auto bg-gradient-to-br from-tracksy-blue/5 to-tracksy-gold/5 dark:from-tracksy-blue/10 dark:to-tracksy-gold/10">
             <SidebarTrigger className="absolute top-4 z-10" />
             {children}
           </main>
