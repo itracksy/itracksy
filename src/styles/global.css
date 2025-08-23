@@ -207,6 +207,64 @@
   line-height: 1.5;
 }
 
+/* RichTextEditor dark mode styles */
+.dark .ProseMirror {
+  color: white;
+}
+
+.dark .ProseMirror p {
+  color: white;
+}
+
+.dark .ProseMirror h1,
+.dark .ProseMirror h2,
+.dark .ProseMirror h3,
+.dark .ProseMirror h4,
+.dark .ProseMirror h5,
+.dark .ProseMirror h6 {
+  color: white;
+}
+
+.dark .ProseMirror strong {
+  color: white;
+}
+
+.dark .ProseMirror em {
+  color: white;
+}
+
+.dark .ProseMirror code {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .ProseMirror pre {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .ProseMirror blockquote {
+  color: white;
+  border-left-color: rgba(255, 255, 255, 0.3);
+}
+
+.dark .ProseMirror ul,
+.dark .ProseMirror ol {
+  color: white;
+}
+
+.dark .ProseMirror li {
+  color: white;
+}
+
+.dark .ProseMirror a {
+  color: #60a5fa;
+}
+
+.dark .ProseMirror a:hover {
+  color: #93c5fd;
+}
+
 /* For the rendered read-only view */
 .task-list {
   list-style: none;

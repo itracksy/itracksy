@@ -28,14 +28,18 @@ import {
   useCategories,
 } from "@/hooks/useCategoryQueries";
 import { CategoryFormModal } from "./components/CategoryFormModal";
+import { AssignCategoryModal } from "./components/AssignCategoryModal";
 
 const CategorizationPage: React.FC = () => {
   const navigate = useNavigate();
   const [selectedTimeRange, setSelectedTimeRange] = useAtom(selectedClassificationTimeRangeAtom);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [selectedActivity, setSelectedActivity] = useState<{
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [selectedActivityGroup, setSelectedActivityGroup] = useState<{
     ownerName: string;
-    title: string;
+    domain: string | null;
+    sampleTitles: readonly string[];
+    activityCount: number;
   } | null>(null);
 
   const {
@@ -71,9 +75,14 @@ const CategorizationPage: React.FC = () => {
     navigate({ to: "/categorization/manage" });
   };
 
-  const handleCreateCategoryForActivity = (activity: { ownerName: string; title: string }) => {
-    setSelectedActivity(activity);
-    setIsCreateModalOpen(true);
+  const handleAssignCategory = (activityGroup: {
+    ownerName: string;
+    domain: string | null;
+    sampleTitles: readonly string[];
+    activityCount: number;
+  }) => {
+    setSelectedActivityGroup(activityGroup);
+    setIsAssignModalOpen(true);
   };
 
   const handleFormSubmit = async (data: any) => {
@@ -85,7 +94,6 @@ const CategorizationPage: React.FC = () => {
         order: 0,
       });
       setIsCreateModalOpen(false);
-      setSelectedActivity(null);
     } catch (error) {
       console.error("Failed to create category:", error);
     }
@@ -93,7 +101,6 @@ const CategorizationPage: React.FC = () => {
 
   const handleCloseModal = () => {
     setIsCreateModalOpen(false);
-    setSelectedActivity(null);
   };
 
   // Show loading state
@@ -268,29 +275,33 @@ const CategorizationPage: React.FC = () => {
                   <span className="ml-2">Loading activities...</span>
                 </div>
               ) : uncategorizedActivities && uncategorizedActivities.length > 0 ? (
-                uncategorizedActivities.map((activity) => (
+                uncategorizedActivities.map((activityGroup) => (
                   <div
-                    key={`${activity.timestamp}-${activity.ownerName}`}
+                    key={`${activityGroup.ownerName}-${activityGroup.domain || "no-domain"}`}
                     className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50"
                   >
                     <div className="flex min-w-0 flex-1 items-center space-x-3">
                       <div className="h-2 w-2 flex-shrink-0 rounded-full bg-orange-500 dark:bg-orange-400"></div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">{activity.ownerName}</p>
-                        <p className="truncate text-sm text-muted-foreground">{activity.title}</p>
+                        <p className="truncate font-medium">{activityGroup.ownerName}</p>
                         <p className="text-xs text-muted-foreground">
-                          {formatDuration(activity.duration)}
+                          {activityGroup.activityCount} activities
                         </p>
+                        {activityGroup.sampleTitles.length > 0 && (
+                          <p className="truncate text-xs text-muted-foreground">
+                            Examples: {activityGroup.sampleTitles.join(", ")}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleCreateCategoryForActivity(activity)}
+                      onClick={() => handleAssignCategory(activityGroup)}
                       className="ml-3 flex-shrink-0"
                     >
                       <Plus className="mr-1 h-3 w-3" />
-                      Create Category
+                      Assign Category
                     </Button>
                   </div>
                 ))
@@ -322,6 +333,15 @@ const CategorizationPage: React.FC = () => {
         </Card>
       </div>
 
+      {/* Assign Category Modal */}
+      {selectedActivityGroup && (
+        <AssignCategoryModal
+          open={isAssignModalOpen}
+          onOpenChange={setIsAssignModalOpen}
+          activityGroup={selectedActivityGroup}
+        />
+      )}
+
       {/* Category Creation Modal */}
       <CategoryFormModal
         isOpen={isCreateModalOpen}
@@ -331,10 +351,10 @@ const CategorizationPage: React.FC = () => {
         parentCategories={categories}
         isLoading={createMutation.isPending}
         initialData={
-          selectedActivity
+          selectedActivityGroup
             ? {
-                name: selectedActivity.ownerName,
-                description: `Category for ${selectedActivity.ownerName} activities`,
+                name: selectedActivityGroup.ownerName,
+                description: `Category for ${selectedActivityGroup.ownerName} activities`,
               }
             : undefined
         }

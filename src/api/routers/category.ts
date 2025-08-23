@@ -21,6 +21,7 @@ import {
   categorizeNewActivity,
   getCategoryStats,
   getUncategorizedActivities,
+  bulkAssignCategory,
   seedUserCategoriesFromSystem,
   getDefaultCategoriesTemplate,
   userHasCategories,
@@ -168,6 +169,25 @@ export const categoryRouter = t.router({
   categorizeActivity: protectedProcedure.input(z.number()).mutation(async ({ input, ctx }) => {
     return categorizeNewActivity(input, ctx.userId!);
   }),
+
+  bulkAssignCategory: protectedProcedure
+    .input(
+      z.object({
+        categoryId: z.string(),
+        ownerName: z.string(),
+        domain: z.string().nullable().optional(),
+        startDate: z.number().optional(),
+        endDate: z.number().optional(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      return bulkAssignCategory(ctx.userId!, input.categoryId, {
+        ownerName: input.ownerName,
+        domain: input.domain,
+        startDate: input.startDate,
+        endDate: input.endDate,
+      });
+    }),
 
   // Statistics
   getStats: protectedProcedure

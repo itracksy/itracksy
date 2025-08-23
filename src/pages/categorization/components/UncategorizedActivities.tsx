@@ -7,32 +7,32 @@ import { Separator } from "@/components/ui/separator";
 import {
   Clock,
   Search,
-  Plus,
+  Tag,
   ArrowLeft,
   Calendar,
   Folder,
   Loader2,
   AlertCircle,
+  AlertTriangle,
+  Plus,
 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtom } from "jotai";
 import { selectedClassificationTimeRangeAtom } from "@/context/timeRange";
 import TimeRangeSelector from "@/components/TimeRangeSelector";
-import {
-  useUncategorizedActivities,
-  useCreateCategoryMutation,
-  useCategories,
-} from "@/hooks/useCategoryQueries";
-import { CategoryFormModal } from "./CategoryFormModal";
+import { useUncategorizedActivities, useCategories } from "@/hooks/useCategoryQueries";
+import { AssignCategoryModal } from "./AssignCategoryModal";
 
 export const UncategorizedActivities: React.FC = () => {
   const navigate = useNavigate();
   const [selectedTimeRange, setSelectedTimeRange] = useAtom(selectedClassificationTimeRangeAtom);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [prefilledActivity, setPrefilledActivity] = useState<{
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [selectedActivityGroup, setSelectedActivityGroup] = useState<{
     ownerName: string;
-    title: string;
+    domain: string | null;
+    sampleTitles: readonly string[];
+    activityCount: number;
   } | null>(null);
 
   // Fetch all uncategorized activities (no limit)
@@ -42,60 +42,33 @@ export const UncategorizedActivities: React.FC = () => {
   );
 
   const { data: categories = [] } = useCategories();
-  const createMutation = useCreateCategoryMutation();
-
-  // Add a simple duration formatter
-  const formatDuration = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = Math.floor(seconds % 60);
-
-    if (hours > 0) {
-      return `${hours}h ${minutes}m`;
-    } else if (minutes > 0) {
-      return `${minutes}m ${secs}s`;
-    } else {
-      return `${secs}s`;
-    }
-  };
 
   // Filter activities based on search query
   const filteredActivities =
-    uncategorizedActivities?.filter((activity) => {
+    uncategorizedActivities?.filter((activityGroup) => {
       const searchLower = searchQuery.toLowerCase();
       return (
-        activity.ownerName.toLowerCase().includes(searchLower) ||
-        activity.title.toLowerCase().includes(searchLower)
+        activityGroup.ownerName.toLowerCase().includes(searchLower) ||
+        (activityGroup.domain && activityGroup.domain.toLowerCase().includes(searchLower)) ||
+        activityGroup.sampleTitles.some((title) => title.toLowerCase().includes(searchLower))
       );
     }) || [];
 
-  const handleCreateCategory = (ownerName: string, title: string) => {
-    setPrefilledActivity({ ownerName, title });
-    setIsFormModalOpen(true);
+  const handleAssignCategory = (activityGroup: {
+    ownerName: string;
+    domain: string | null;
+    sampleTitles: readonly string[];
+    activityCount: number;
+  }) => {
+    setSelectedActivityGroup(activityGroup);
+    setIsAssignModalOpen(true);
   };
 
-  const handleFormSubmit = async (data: any) => {
-    try {
-      await createMutation.mutateAsync({
-        ...data,
-        color: data.color || "#3b82f6",
-        isSystem: false,
-        order: 0,
-      });
-      setIsFormModalOpen(false);
-      setPrefilledActivity(null);
-    } catch (error) {
-      console.error("Failed to create category:", error);
-    }
-  };
-
-  const handleCloseModal = () => {
-    setIsFormModalOpen(false);
-    setPrefilledActivity(null);
-  };
-
-  const totalDuration = filteredActivities.reduce((sum, activity) => sum + activity.duration, 0);
-  const activityCount = filteredActivities.length;
+  const totalActivityCount = filteredActivities.reduce(
+    (sum, activityGroup) => sum + activityGroup.activityCount,
+    0
+  );
+  const groupCount = filteredActivities.length;
 
   return (
     <div className="container mx-auto space-y-6 p-6">
@@ -140,14 +113,15 @@ export const UncategorizedActivities: React.FC = () => {
       </Card>
 
       {/* Stats Summary */}
+      {/* Stats Summary */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
               <Folder className="h-4 w-4 text-muted-foreground" />
               <div>
-                <p className="text-sm font-medium">Total Activities</p>
-                <p className="text-2xl font-bold">{activityCount}</p>
+                <p className="text-sm font-medium">Activity Groups</p>
+                <p className="text-2xl font-bold">{groupCount}</p>
               </div>
             </div>
           </CardContent>
@@ -157,8 +131,8 @@ export const UncategorizedActivities: React.FC = () => {
             <div className="flex items-center space-x-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
               <div>
-                <p className="text-sm font-medium">Total Duration</p>
-                <p className="text-2xl font-bold">{formatDuration(totalDuration)}</p>
+                <p className="text-sm font-medium">Total Activities</p>
+                <p className="text-2xl font-bold">{totalActivityCount}</p>
               </div>
             </div>
           </CardContent>
@@ -166,10 +140,10 @@ export const UncategorizedActivities: React.FC = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <AlertCircle className="h-4 w-4 text-orange-500" />
+              <AlertTriangle className="h-4 w-4 text-orange-500" />
               <div>
                 <p className="text-sm font-medium">Needs Categorization</p>
-                <p className="text-2xl font-bold text-orange-600">{activityCount}</p>
+                <p className="text-2xl font-bold text-orange-600">{groupCount}</p>
               </div>
             </div>
           </CardContent>
@@ -217,33 +191,36 @@ export const UncategorizedActivities: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredActivities.map((activity, index) => (
+              {filteredActivities.map((activityGroup, index) => (
                 <div
-                  key={`${activity.ownerName}-${activity.title}-${index}`}
+                  key={`${activityGroup.ownerName}-${activityGroup.domain || "no-domain"}-${index}`}
                   className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50"
                 >
                   <div className="flex-1">
                     <div className="flex items-center space-x-3">
                       <div>
-                        <p className="font-medium">{activity.ownerName}</p>
-                        <p className="max-w-md truncate text-sm text-muted-foreground">
-                          {activity.title}
-                        </p>
+                        <p className="font-medium">{activityGroup.ownerName}</p>
+                        {activityGroup.sampleTitles.length > 0 && (
+                          <p className="max-w-md truncate text-sm text-muted-foreground">
+                            Examples: {activityGroup.sampleTitles.slice(0, 2).join(", ")}
+                            {activityGroup.sampleTitles.length > 2 && "..."}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">
                     <Badge variant="secondary" className="flex items-center space-x-1">
-                      <Clock className="h-3 w-3" />
-                      <span>{formatDuration(activity.duration)}</span>
+                      <Folder className="h-3 w-3" />
+                      <span>{activityGroup.activityCount} activities</span>
                     </Badge>
                     <Button
                       size="sm"
-                      onClick={() => handleCreateCategory(activity.ownerName, activity.title)}
+                      onClick={() => handleAssignCategory(activityGroup)}
                       className="flex items-center space-x-1"
                     >
                       <Plus className="h-3 w-3" />
-                      <span>Create Category</span>
+                      <span>Assign Category</span>
                     </Button>
                   </div>
                 </div>
@@ -253,23 +230,14 @@ export const UncategorizedActivities: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Category Creation Modal */}
-      <CategoryFormModal
-        isOpen={isFormModalOpen}
-        onClose={handleCloseModal}
-        onSubmit={handleFormSubmit}
-        mode="create"
-        parentCategories={categories}
-        isLoading={createMutation.isPending}
-        initialData={
-          prefilledActivity
-            ? {
-                name: prefilledActivity.ownerName,
-                description: `Category for ${prefilledActivity.ownerName} activities`,
-              }
-            : undefined
-        }
-      />
+      {/* Category Assignment Modal */}
+      {selectedActivityGroup && (
+        <AssignCategoryModal
+          open={isAssignModalOpen}
+          onOpenChange={setIsAssignModalOpen}
+          activityGroup={selectedActivityGroup}
+        />
+      )}
     </div>
   );
 };

@@ -268,6 +268,30 @@ export function useCategorizeActivityMutation() {
   });
 }
 
+export function useBulkAssignCategoryMutation() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: trpcClient.category.bulkAssignCategory.mutate,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["categories", "uncategorized"] });
+      queryClient.invalidateQueries({ queryKey: ["categoryMappings"] });
+      toast({
+        title: "Success",
+        description: `Assigned category to ${data.assignedCount} activities and created a new mapping rule.`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to assign category",
+        variant: "destructive",
+      });
+    },
+  });
+}
+
 // Category Seeding Queries and Mutations
 export function useDefaultCategoriesTemplate() {
   return useQuery({

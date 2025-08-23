@@ -26,6 +26,7 @@ export {
   categorizeNewActivity,
   getCategoryStats,
   getUncategorizedActivities,
+  bulkAssignCategory,
 } from "./auto-categorize";
 
 // Category seeding functions

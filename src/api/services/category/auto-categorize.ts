@@ -1,5 +1,5 @@
-import { eq } from "drizzle-orm";
-import { matchActivityToCategory } from "./category-matching";
+import { eq, and, isNull, like, gte, lte, sql } from "drizzle-orm";
+import { matchActivityToCategory, createCategoryMapping } from "./category-matching";
 import db from "@/api/db";
 import { activities, categories, categoryMappings } from "@/api/db/schema";
 
@@ -152,7 +152,7 @@ export const getCategoryStats = async (
 };
 
 /**
- * Gets uncategorized activities for a user within a time range
+ * Gets uncategorized activities grouped by domain (when available) or app name
  */
 export const getUncategorizedActivities = async (
   userId: string,
@@ -161,14 +161,13 @@ export const getUncategorizedActivities = async (
   limit: number = 10
 ): Promise<
   readonly {
-    readonly timestamp: number;
     readonly ownerName: string;
-    readonly url: string | null;
-    readonly title: string;
-    readonly duration: number;
+    readonly domain: string | null;
+    readonly activityCount: number;
+    readonly sampleTitles: readonly string[];
   }[]
 > => {
-  const { and, isNull, desc, gte, lte } = await import("drizzle-orm");
+  const { and, isNull, desc, gte, lte, sql } = await import("drizzle-orm");
 
   // Create time range filter conditions
   const timeFilters = [];
@@ -188,16 +187,128 @@ export const getUncategorizedActivities = async (
 
   const uncategorizedActivities = await db
     .select({
-      timestamp: activities.timestamp,
       ownerName: activities.ownerName,
       url: activities.url,
       title: activities.title,
-      duration: activities.duration,
     })
     .from(activities)
-    .where(and(...conditions))
-    .orderBy(desc(activities.duration)) // Order by duration to show longest activities first
-    .limit(limit);
+    .where(and(...conditions));
 
-  return uncategorizedActivities;
+  // Process and group the results
+  const groupedActivities = new Map<
+    string,
+    {
+      ownerName: string;
+      domain: string | null;
+      activityCount: number;
+      titles: Set<string>;
+    }
+  >();
+
+  for (const activity of uncategorizedActivities) {
+    // Extract domain from URL
+    let domain: string | null = null;
+    if (activity.url) {
+      try {
+        const url = new URL(activity.url);
+        domain = url.hostname;
+      } catch {
+        // If URL parsing fails, use null
+        domain = null;
+      }
+    }
+
+    // Create a unique key for grouping:
+    // - If we have a domain, group by domain only (ignore browser app name)
+    // - If no domain, group by app name
+    const groupKey = domain ? `domain:${domain}` : `app:${activity.ownerName}`;
+
+    // For display purposes:
+    // - If we have a domain, show the domain as the "ownerName"
+    // - If no domain, show the actual app name
+    const displayName = domain || activity.ownerName;
+
+    if (!groupedActivities.has(groupKey)) {
+      groupedActivities.set(groupKey, {
+        ownerName: displayName,
+        domain,
+        activityCount: 0,
+        titles: new Set(),
+      });
+    }
+
+    const group = groupedActivities.get(groupKey)!;
+    group.activityCount++;
+    group.titles.add(activity.title);
+  }
+
+  // Convert to final format and sort by activity count
+  const result = Array.from(groupedActivities.values())
+    .map((group) => ({
+      ownerName: group.ownerName,
+      domain: group.domain,
+      activityCount: group.activityCount,
+      sampleTitles: Array.from(group.titles).slice(0, 3), // Show up to 3 sample titles
+    }))
+    .sort((a, b) => b.activityCount - a.activityCount) // Sort by activity count descending
+    .slice(0, limit);
+
+  return result;
+};
+
+/**
+ * Bulk assigns a category to activities matching specific criteria
+ */
+export const bulkAssignCategory = async (
+  userId: string,
+  categoryId: string,
+  criteria: {
+    ownerName: string;
+    domain?: string | null;
+    startDate?: number;
+    endDate?: number;
+  }
+): Promise<{ assignedCount: number }> => {
+  const { ownerName, domain, startDate, endDate } = criteria;
+
+  // Build the conditions array
+  const conditions = [
+    eq(activities.userId, userId),
+    eq(activities.ownerName, ownerName),
+    isNull(activities.categoryId), // Only assign to uncategorized activities
+  ];
+
+  // Add domain condition if provided
+  if (domain) {
+    conditions.push(like(activities.url, `%${domain}%`));
+  }
+
+  // Add time range conditions if provided
+  if (startDate) {
+    conditions.push(gte(activities.timestamp, startDate));
+  }
+  if (endDate) {
+    conditions.push(lte(activities.timestamp, endDate));
+  }
+
+  // Update activities matching the criteria
+  const result = await db
+    .update(activities)
+    .set({
+      categoryId,
+    })
+    .where(and(...conditions))
+    .returning({ timestamp: activities.timestamp });
+
+  // Automatically create a mapping rule
+  await createCategoryMapping({
+    userId,
+    categoryId,
+    priority: 10, // Default priority
+    isActive: true,
+    matchType: "exact", // Simplest match type
+    ...(domain ? { domain } : { appName: ownerName }),
+  });
+
+  return { assignedCount: result.length };
 };
