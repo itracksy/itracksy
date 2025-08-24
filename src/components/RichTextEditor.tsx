@@ -232,7 +232,7 @@ export function RichTextEditor({
       </div>
       <EditorContent
         editor={editor}
-        className="prose prose-sm min-h-[150px] max-w-none p-3 focus-visible:outline-none prose-headings:text-foreground prose-p:text-foreground prose-blockquote:text-foreground prose-strong:text-foreground prose-em:text-foreground prose-code:text-foreground prose-pre:text-foreground prose-ol:text-foreground prose-ul:text-foreground prose-li:text-foreground dark:prose-headings:text-white dark:prose-p:text-white dark:prose-blockquote:text-white dark:prose-strong:text-white dark:prose-em:text-white dark:prose-code:text-white dark:prose-pre:text-white dark:prose-ol:text-white dark:prose-ul:text-white dark:prose-li:text-white [&_*:focus-visible]:outline-none [&_.task-item_p]:my-0 [&_.task-list]:pl-0 [&_.task-list_li]:list-none"
+        className="prose prose-sm min-h-[150px] max-w-none bg-white p-3 text-black focus-visible:outline-none prose-headings:text-black prose-p:text-black prose-blockquote:text-black prose-strong:text-black prose-em:text-black prose-code:text-black prose-pre:text-black prose-ol:text-black prose-ul:text-black prose-li:text-black dark:bg-transparent dark:text-white dark:prose-headings:text-white dark:prose-p:text-white dark:prose-blockquote:text-white dark:prose-strong:text-white dark:prose-em:text-white dark:prose-code:text-white dark:prose-pre:text-white dark:prose-ol:text-white dark:prose-ul:text-white dark:prose-li:text-white [&_*:focus-visible]:outline-none [&_.task-item_p]:my-0 [&_.task-list]:pl-0 [&_.task-list_li]:list-none"
       />
     </div>
   );
