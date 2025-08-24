@@ -129,9 +129,9 @@ const CategorizationPage: React.FC = () => {
 
   return (
     <div className="flex h-full flex-col space-y-6 p-6">
-      <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+      <div className="flex flex-col space-y-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Activity Categorization</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Categorization</h1>
           <p className="text-muted-foreground">
             Organize and analyze your activities with intelligent categorization
           </p>

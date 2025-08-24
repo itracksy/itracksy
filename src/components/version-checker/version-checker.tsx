@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { DownloadIcon, ExternalLinkIcon, RefreshCwIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { trpcClient } from "@/utils/trpc";
+import path from "path";
 
 export interface VersionInfo {
   currentVersion: string;
@@ -29,47 +30,155 @@ function DownloadButtons({ downloadUrl, onOpenDownloadLink }: DownloadButtonsPro
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const { toast } = useToast();
+  const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const startProgressTimer = useCallback(() => {
+    // Clear any existing timer
+    if (progressTimerRef.current) {
+      clearInterval(progressTimerRef.current);
+    }
+
+    // Start a timer that gradually increases progress to 90%
+    // This prevents users from thinking the download is stuck
+    progressTimerRef.current = setInterval(() => {
+      setDownloadProgress((prev) => {
+        if (prev >= 90) {
+          return prev; // Don't go beyond 90% until actual completion
+        }
+        const increment = Math.round(Math.random() * 10 + 5); // Random increment between 5-15%
+        return Math.min(prev + increment, 90); // Ensure we don't exceed 90%
+      });
+    }, 1000); // Update every second
+  }, []);
+
+  const stopProgressTimer = useCallback(() => {
+    if (progressTimerRef.current) {
+      clearInterval(progressTimerRef.current);
+      progressTimerRef.current = null;
+    }
+  }, []);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      stopProgressTimer();
+    };
+  }, [stopProgressTimer]);
 
   const handleDownloadUpdate = useCallback(async () => {
     if (!downloadUrl) return;
 
     setIsDownloading(true);
     setDownloadProgress(0);
+    startProgressTimer();
 
     try {
       const result = await trpcClient.utils.downloadUpdate.mutate({
         downloadUrl,
       });
 
+      // Stop the progress timer and set to 100% on completion
+      stopProgressTimer();
+      setDownloadProgress(100);
+
       if (result.status === "success") {
-        setDownloadProgress(100);
         toast({
           title: "Download Complete",
-          description: "The update has been downloaded and opened automatically.",
+          description: `The update has been downloaded. Click "Install Update & Quit" to open the installer — the app will quit automatically to allow installation.`,
           variant: "default",
-          duration: 5000,
+          duration: 2 * 60 * 1000, // 2 minutes
+          action: (
+            <div className="flex flex-col gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  if (result.filePath) {
+                    // Open the installer file
+                    await trpcClient.utils.openLocalFile.mutate({ filePath: result.filePath });
+                    // Quit the app after a short delay to allow the installer to start
+                    setTimeout(() => {
+                      trpcClient.utils.quitApp.mutate();
+                    }, 1000);
+                  }
+                }}
+              >
+                Install Update & Quit
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (result.filePath) {
+                    const folderPath = result.filePath.substring(
+                      0,
+                      result.filePath.lastIndexOf(path.sep)
+                    );
+                    trpcClient.utils.openFolder.mutate({ folderPath });
+                  }
+                }}
+              >
+                Open Folder
+              </Button>
+            </div>
+          ),
         });
       } else {
         toast({
           title: "Download Failed",
           description: result.message || "Failed to download update",
           variant: "destructive",
-          duration: 5000,
+          duration: 10000,
+          action: (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                try {
+                  await trpcClient.utils.openExternalUrl.mutate({ url: downloadUrl });
+                } catch (err) {
+                  console.error("Failed to open download URL:", err);
+                }
+              }}
+            >
+              Open in Browser
+            </Button>
+          ),
         });
       }
     } catch (error) {
       console.error("Failed to download update:", error);
+      stopProgressTimer();
       toast({
         title: "Download Failed",
-        description: "An error occurred while downloading the update",
+        description:
+          String((error as any)?.message) || "An error occurred while downloading the update",
         variant: "destructive",
-        duration: 5000,
+        duration: 10000,
+        action: (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              try {
+                await trpcClient.utils.openExternalUrl.mutate({ url: downloadUrl });
+              } catch (err) {
+                console.error("Failed to open download URL:", err);
+              }
+            }}
+          >
+            Open in Browser
+          </Button>
+        ),
       });
     } finally {
       setIsDownloading(false);
-      setDownloadProgress(0);
+      // Reset progress after a short delay to show completion
+      setTimeout(() => {
+        setDownloadProgress(0);
+      }, 2000);
     }
-  }, [downloadUrl, toast]);
+  }, [downloadUrl, toast, startProgressTimer, stopProgressTimer]);
 
   return (
     <div className="flex flex-col gap-2">
@@ -168,7 +277,7 @@ export function VersionChecker({
         title: "Update Available",
         description: `Version ${versionInfo.latestVersion} is available. You are currently using version ${versionInfo.currentVersion}.`,
         variant: "default",
-        duration: 10000, // Show for 10 seconds
+        duration: 2 * 60 * 1000, // 2 minutes
         action: (
           <DownloadButtons
             downloadUrl={versionInfo.downloadUrl!}

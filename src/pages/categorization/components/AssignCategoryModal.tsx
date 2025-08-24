@@ -62,9 +62,7 @@ export const AssignCategoryModal: React.FC<AssignCategoryModalProps> = ({
     }
   };
 
-  const handleCreateAndAssignCategory = async (
-    data: CreateCategoryData | UpdateCategoryData
-  ) => {
+  const handleCreateAndAssignCategory = async (data: CreateCategoryData | UpdateCategoryData) => {
     try {
       const newCategory = await createCategoryMutation.mutateAsync({
         ...(data as CreateCategoryData),

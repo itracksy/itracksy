@@ -44,6 +44,49 @@ export const utilsRouter = t.router({
       return { success };
     }),
 
+  openLocalFile: protectedProcedure
+    .input(
+      z.object({
+        filePath: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        await shell.openPath(input.filePath);
+        return { success: true };
+      } catch (error) {
+        logger.error("Failed to open local file:", error);
+        return { success: false, error: String(error) };
+      }
+    }),
+
+  openFolder: protectedProcedure
+    .input(
+      z.object({
+        folderPath: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        await shell.openPath(input.folderPath);
+        return { success: true };
+      } catch (error) {
+        logger.error("Failed to open folder:", error);
+        return { success: false, error: String(error) };
+      }
+    }),
+
+  quitApp: protectedProcedure.mutation(async () => {
+    try {
+      logger.info("Quitting application...");
+      app.quit();
+      return { success: true };
+    } catch (error) {
+      logger.error("Failed to quit app:", error);
+      return { success: false, error: String(error) };
+    }
+  }),
+
   // Get current app version
   getAppVersion: protectedProcedure.query(() => {
     return app.getVersion();
@@ -171,71 +214,102 @@ export const utilsRouter = t.router({
           status: "success" | "error";
           message: string;
           filePath?: string;
-        }>((resolve, reject) => {
-          const request = net.request(downloadUrl);
-          let downloadedBytes = 0;
-          let totalBytes = 0;
+          filename?: string;
+        }>(async (resolve, reject) => {
+          // Helper to perform download and follow redirects up to maxRedirects
+          const maxRedirects = 5;
 
-          request.on("response", (response) => {
-            totalBytes = parseInt(response.headers["content-length"] as string) || 0;
-            logger.info(`Download size: ${totalBytes} bytes`);
+          const doRequest = (urlToFetch: string, redirectsLeft: number) => {
+            let request;
+            try {
+              request = net.request({ method: "GET", url: urlToFetch });
+            } catch (err) {
+              logger.error("Failed to create net.request:", err);
+              return reject({
+                status: "error",
+                message: `Failed to start download: ${String(err)}`,
+              });
+            }
 
-            const writeStream = fs.createWriteStream(filePath);
+            request.on("response", (response) => {
+              const statusCode = response.statusCode || 0;
+              logger.info(`Download response status: ${statusCode}`);
 
-            response.on("data", (chunk) => {
-              downloadedBytes += chunk.length;
-              writeStream.write(chunk);
-
-              // Calculate and log progress
-              if (totalBytes > 0) {
-                const progress = Math.round((downloadedBytes / totalBytes) * 100);
-                logger.debug(`Download progress: ${progress}%`);
-
-                // Note: Progress updates would need to be handled via subscriptions
-                // or a different mechanism in tRPC. For now, we'll handle completion only.
+              // Handle redirects manually
+              if (statusCode >= 300 && statusCode < 400 && redirectsLeft > 0) {
+                const locationHeader = response.headers["location"] || response.headers["Location"];
+                const location = Array.isArray(locationHeader) ? locationHeader[0] : locationHeader;
+                if (location) {
+                  logger.info("Redirecting download to:", location);
+                  // Drain response and start new request to location
+                  response.on("data", () => {});
+                  response.on("end", () => {
+                    doRequest(location, redirectsLeft - 1);
+                  });
+                  return;
+                }
               }
-            });
 
-            response.on("end", () => {
-              writeStream.end();
-              logger.info("Download completed:", filePath);
-
-              // Auto-open the downloaded file
-              shell
-                .openPath(filePath)
-                .then(() => {
-                  logger.info("Opened downloaded file:", filePath);
-                })
-                .catch((error) => {
-                  logger.error("Failed to open downloaded file:", error);
+              if (statusCode >= 400) {
+                logger.error(
+                  "Download failed, status code:",
+                  statusCode,
+                  "headers:",
+                  response.headers
+                );
+                // consume response and reject
+                response.on("data", () => {});
+                response.on("end", () => {
+                  reject({ status: "error", message: `Download failed with status ${statusCode}` });
                 });
+                return;
+              }
 
-              resolve({
-                status: "success",
-                message: "Download completed successfully",
-                filePath,
+              logger.info(
+                `Starting download, content-length: ${response.headers["content-length"] || "unknown"} bytes`
+              );
+
+              const writeStream = fs.createWriteStream(filePath);
+
+              response.on("data", (chunk) => {
+                writeStream.write(chunk);
+              });
+
+              response.on("end", () => {
+                writeStream.end();
+                logger.info("Download completed:", filePath);
+
+                resolve({
+                  status: "success",
+                  message: "Download completed successfully",
+                  filePath,
+                  filename,
+                });
+              });
+
+              response.on("error", (error) => {
+                writeStream.destroy();
+                logger.error("Download stream error:", error);
+                reject({
+                  status: "error",
+                  message: "Download failed",
+                });
               });
             });
 
-            response.on("error", (error) => {
-              writeStream.destroy();
-              logger.error("Download stream error:", error);
+            request.on("error", (error) => {
+              logger.error("Download request error:", error);
               reject({
                 status: "error",
-                message: "Download failed",
+                message: `Failed to start download: ${String(error)}`,
               });
             });
-          });
 
-          request.on("error", (error) => {
-            logger.error("Download request error:", error);
-            reject({
-              status: "error",
-              message: "Failed to start download",
-            });
-          });
+            request.end();
+          };
 
-          request.end();
+          // Kick off the request
+          doRequest(downloadUrl, maxRedirects);
         });
       } catch (error) {
         logger.error("Failed to download update", error);
