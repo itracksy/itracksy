@@ -6,6 +6,7 @@ import path, { join, normalize } from "node:path";
 import { MakerDeb } from "@electron-forge/maker-deb";
 import { MakerRpm } from "@electron-forge/maker-rpm";
 import { MakerDMG } from "@electron-forge/maker-dmg";
+import { MakerZIP } from "@electron-forge/maker-zip";
 // Use flora-colossus for finding all dependencies of EXTERNAL_DEPENDENCIES
 // flora-colossus is maintained by MarshallOfSound (a top electron-forge contributor)
 // already included as a dependency of electron-packager/galactus (so we do NOT have to add it to package.json)
@@ -306,18 +307,38 @@ const config: ForgeConfig = {
   rebuildConfig: {},
   // Makers for different platforms
   makers: [
+    // Windows installer
     new MakerSquirrel({
       setupIcon: path.resolve(__dirname, "resources", "icon.ico"),
       iconUrl: "https://raw.githubusercontent.com/hunght/itracksy/main/resources/icon.ico",
       loadingGif: path.resolve(__dirname, "resources", "icon_64x64.png"),
     }),
+    // Windows portable
+    new MakerZIP({}, ["win32"]),
+    // macOS DMG
     new MakerDMG({
       icon: path.resolve(__dirname, "resources", "icon.icns"),
       format: "ULFO", // Use a different format that works better with permissions
       overwrite: true,
     }),
-    new MakerRpm({}),
-    new MakerDeb({}),
+    // macOS ZIP
+    new MakerZIP({}, ["darwin"]),
+    // Linux RPM
+    new MakerRpm({
+      options: {
+        categories: ["Utility", "Office"],
+        description: "A productivity app that tracks time, boosts focus, and provides insights into work habits",
+      },
+    }),
+    // Linux DEB
+    new MakerDeb({
+      options: {
+        categories: ["Utility", "Office"],
+        description: "A productivity app that tracks time, boosts focus, and provides insights into work habits",
+      },
+    }),
+    // Linux AppImage (portable)
+    new MakerZIP({}, ["linux"]),
   ],
   // Publishers for different platforms
   publishers: [
