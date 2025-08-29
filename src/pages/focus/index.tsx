@@ -22,9 +22,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Brain, Coffee } from "lucide-react";
+import { Brain, Coffee, History } from "lucide-react";
 import { ActiveSession } from "./components/ActiveSession";
 import { FocusTargetWidget } from "./components/FocusTargetWidget";
+import { SessionReviewDialog } from "./components/SessionReviewDialog";
 
 export default function FocusPage() {
   const [targetMinutes, setTargetMinutes] = useAtom(targetMinutesAtom);
@@ -117,6 +118,19 @@ export default function FocusPage() {
       <div className="w-full max-w-md space-y-6">
         {/* Focus Target Widget - always shown */}
         <FocusTargetWidget />
+
+        {/* Session Review Button */}
+        {(activeTimeEntry || lastTimeEntry?.isFocusMode) && (
+          <SessionReviewDialog
+            session={activeTimeEntry || (lastTimeEntry?.isFocusMode ? lastTimeEntry : null)}
+            trigger={
+              <Button variant="outline" size="sm" className="w-full gap-2">
+                <History className="h-4 w-4" />
+                {activeTimeEntry ? "Review Current Session" : "Review Last Session"}
+              </Button>
+            }
+          />
+        )}
 
         {activeTimeEntry ? (
           <ActiveSession activeTimeEntry={activeTimeEntry} />

@@ -53,6 +53,8 @@ import { trpcClient } from "@/utils/trpc.js";
 import { useUpdateBoardMutation, useArchiveBoardMutation } from "@/hooks/useBoardQueries";
 import { BoardDialog } from "./components/BoardDialog";
 import { ArchivedBoardsDialog } from "./components/ArchivedBoardsDialog";
+import { ItemDetailDialog } from "./components/ItemDetailDialog";
+import { Item } from "@/types/projects";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -68,6 +70,8 @@ export function ProjectsPage() {
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [archivedBoardsDialogOpen, setArchivedBoardsDialogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+  const [itemDetailOpen, setItemDetailOpen] = useState(false);
 
   // Filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -537,10 +541,19 @@ export function ProjectsPage() {
                     return (
                       <TableRow
                         key={item.id}
-                        className="hover:bg-tracksy-gold/5 dark:border-tracksy-gold/10 dark:hover:bg-tracksy-gold/10"
+                        className="group cursor-pointer hover:bg-tracksy-gold/5 dark:border-tracksy-gold/10 dark:hover:bg-tracksy-gold/10"
+                        onClick={() => {
+                          setSelectedItem(item);
+                          setItemDetailOpen(true);
+                        }}
                       >
                         <TableCell className="font-medium text-tracksy-blue dark:text-white">
-                          {item.title}
+                          <div className="flex items-center gap-2">
+                            {item.title}
+                            <span className="text-xs text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
+                              Click to view details
+                            </span>
+                          </div>
                         </TableCell>
                         <TableCell>
                           <Select
@@ -615,6 +628,15 @@ export function ProjectsPage() {
         onOpenChange={setArchivedBoardsDialogOpen}
         archivedBoards={archivedBoards || []}
       />
+
+      {/* Item Detail Dialog */}
+      {selectedItem && (
+        <ItemDetailDialog
+          open={itemDetailOpen}
+          onOpenChange={setItemDetailOpen}
+          item={selectedItem}
+        />
+      )}
     </div>
   );
 }

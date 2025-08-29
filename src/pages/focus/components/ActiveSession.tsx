@@ -5,7 +5,7 @@ import { useUpdateTimeEntryMutation } from "@/hooks/useTimeEntryQueries";
 import { TimeEntryWithRelations } from "@/types/projects";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { Cloud, Clock, AlertTriangle, Tag } from "lucide-react";
+import { Cloud, Clock, AlertTriangle, Tag, History } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BoardSelector } from "@/components/tracking/BoardSelector";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
