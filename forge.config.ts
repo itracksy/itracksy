@@ -327,14 +327,16 @@ const config: ForgeConfig = {
     new MakerRpm({
       options: {
         categories: ["Utility", "Office"],
-        description: "A productivity app that tracks time, boosts focus, and provides insights into work habits",
+        description:
+          "A productivity app that tracks time, boosts focus, and provides insights into work habits",
       },
     }),
     // Linux DEB
     new MakerDeb({
       options: {
         categories: ["Utility", "Office"],
-        description: "A productivity app that tracks time, boosts focus, and provides insights into work habits",
+        description:
+          "A productivity app that tracks time, boosts focus, and provides insights into work habits",
       },
     }),
     // Linux AppImage (portable)

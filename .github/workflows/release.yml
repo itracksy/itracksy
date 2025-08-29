@@ -3,13 +3,13 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release (e.g., 1.0.203)'
+        description: "Version to release (e.g., 1.0.203)"
         required: true
-        default: '1.0.203'
+        default: "1.0.203"
 
 jobs:
   build:
@@ -36,7 +36,7 @@ jobs:
             target: x64
 
     runs-on: ${{ matrix.os }}
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -45,7 +45,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -86,7 +86,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -95,7 +95,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: 'npm'
+          cache: "npm"
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -113,22 +113,22 @@ jobs:
           name: Release ${{ steps.get_version.outputs.VERSION }}
           body: |
             ## What's New in ${{ steps.get_version.outputs.VERSION }}
-            
+
             ### 🚀 Features
             - Session Review feature for enhanced productivity tracking
-            
+
             ### 🔧 Improvements
             - Enhanced auto-update system
             - Better performance and stability
-            
+
             ### 📱 Supported Platforms
             - macOS (Intel & Apple Silicon)
             - Windows (x64)
             - Linux (x64)
-            
+
             ### 📥 Downloads
             Download the appropriate version for your platform from the assets below.
-            
+
             ### 🔄 Auto-Update
             This version supports automatic updates. The app will check for updates every 24 hours.
           draft: false
@@ -145,7 +145,7 @@ jobs:
     needs: release
     runs-on: ubuntu-latest
     if: always()
-    
+
     steps:
       - name: Notify completion
         run: |

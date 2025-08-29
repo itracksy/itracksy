@@ -3,6 +3,7 @@
 ## Overview
 
 iTracksy now supports automatic updates across all major platforms:
+
 - **macOS** (Intel x64 & Apple Silicon ARM64)
 - **Windows** (x64)
 - **Linux** (x64 - AppImage, DEB, RPM)
@@ -19,18 +20,19 @@ Git Tag Push → GitHub Actions → Multi-Platform Builds → GitHub Release →
 
 ### 2. Platform Support Matrix
 
-| Platform | Architecture | Format | Auto-Update |
-|----------|--------------|---------|-------------|
-| macOS | ARM64 (Apple Silicon) | DMG + ZIP | ✅ |
-| macOS | x64 (Intel) | DMG + ZIP | ✅ |
-| Windows | x64 | EXE + ZIP | ✅ |
-| Linux | x64 | AppImage + DEB + RPM | ✅ |
+| Platform | Architecture          | Format               | Auto-Update |
+| -------- | --------------------- | -------------------- | ----------- |
+| macOS    | ARM64 (Apple Silicon) | DMG + ZIP            | ✅          |
+| macOS    | x64 (Intel)           | DMG + ZIP            | ✅          |
+| Windows  | x64                   | EXE + ZIP            | ✅          |
+| Linux    | x64                   | AppImage + DEB + RPM | ✅          |
 
 ## Setup Instructions
 
 ### 1. GitHub Actions Workflow
 
 The workflow file `.github/workflows/release.yml` automatically:
+
 - Builds for all platforms when a version tag is pushed
 - Creates GitHub releases with all platform artifacts
 - Enables auto-updates for all users
@@ -38,6 +40,7 @@ The workflow file `.github/workflows/release.yml` automatically:
 ### 2. Forge Configuration
 
 Updated `forge.config.ts` includes makers for all platforms:
+
 - `MakerSquirrel` - Windows installer
 - `MakerZIP` - Portable versions for all platforms
 - `MakerDMG` - macOS installer
@@ -54,6 +57,7 @@ npm run release:multi
 ```
 
 **What happens:**
+
 1. Creates version tag
 2. Pushes to GitHub
 3. Triggers GitHub Actions workflow
@@ -109,15 +113,18 @@ matrix:
 Each platform generates multiple formats:
 
 **macOS:**
+
 - `itracksy-{version}-arm64.dmg` (Apple Silicon)
 - `itracksy-{version}-x64.dmg` (Intel)
 - `itracksy-{version}-darwin-x64.zip` (Portable)
 
 **Windows:**
+
 - `itracksy Setup {version}.exe` (Installer)
 - `itracksy-{version}-win32-x64.zip` (Portable)
 
 **Linux:**
+
 - `itracksy-{version}-1.x86_64.rpm` (RPM package)
 - `itracksy-{version}_amd64.deb` (DEB package)
 - `itracksy-{version}-linux-x64.zip` (Portable)
@@ -136,7 +143,7 @@ app.whenReady().then(async () => {
     logger: require("electron-log"),
     updateInterval: "1 day", // Check for updates every 24 hours
   });
-  
+
   // ... rest of app initialization
 });
 ```
@@ -159,16 +166,19 @@ app.whenReady().then(async () => {
 ### Platform-Specific Behavior
 
 **macOS:**
+
 - Requires code signing for auto-updates
 - Updates install automatically on restart
 - Gatekeeper compatibility maintained
 
 **Windows:**
+
 - Squirrel installer handles updates
 - Creates shortcuts and registry entries
 - Silent installation supported
 
 **Linux:**
+
 - Package manager integration (RPM/DEB)
 - Portable AppImage updates
 - System integration maintained
@@ -188,6 +198,7 @@ open https://github.com/hunght/itracksy/releases
 ### Build Logs
 
 Each platform build generates detailed logs:
+
 - **macOS**: ARM64 and x64 builds run in parallel
 - **Windows**: x64 build with Squirrel installer
 - **Linux**: Multiple package formats in single build
@@ -198,6 +209,7 @@ Each platform build generates detailed logs:
 
 **Symptoms**: GitHub Actions workflow fails
 **Solutions**:
+
 - Check build logs for specific errors
 - Verify platform-specific dependencies
 - Ensure all required tools are available
@@ -206,6 +218,7 @@ Each platform build generates detailed logs:
 
 **Symptoms**: Users don't receive updates
 **Solutions**:
+
 - Verify GitHub release contains all platform artifacts
 - Check update.electronjs.org compatibility
 - Review app code signing status
