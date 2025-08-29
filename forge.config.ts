@@ -20,17 +20,45 @@ import { PublisherGithub } from "@electron-forge/publisher-github";
 // Track native module dependencies that need to be packaged
 let nativeModuleDependenciesToPackage: string[] = [];
 
-// List of external dependencies that require special handling during packaging
-// base on this solution https://github.com/electron/forge/issues/3738
+/**
+ * External dependencies that require special handling during Electron packaging.
+ *
+ * These dependencies are explicitly included in the final bundle to ensure they
+ * are properly packaged and available at runtime. This is necessary because:
+ *
+ * 1. **Native modules** (like @libsql/darwin-x64) need to be bundled with their
+ *    platform-specific binaries
+ * 2. **Runtime dependencies** (like drizzle-orm, zod) are used by the main process
+ *    and need to be available when the app starts
+ * 3. **Electron-specific modules** (like electron-squirrel-startup) handle
+ *    Windows installer integration
+ *
+ * This configuration is based on the solution from:
+ * https://github.com/electron/forge/issues/3738
+ *
+ * @see {@link https://github.com/electron/forge/issues/3738|Electron Forge Issue #3738}
+ */
 export const EXTERNAL_DEPENDENCIES = [
+  // Windows installer integration - handles Squirrel installer events
   "electron-squirrel-startup",
+  // Windows-specific utilities for getting window information
   "get-windows",
+  // Runtime validation library used throughout the application
   "zod",
+  // SQLite client library for database operations
   "@libsql/client",
+  // Platform-specific SQLite binaries for macOS ARM64
   "@libsql/darwin-x64",
+  // Database ORM for type-safe database queries
   "drizzle-orm",
+  // Zod integration for Drizzle ORM schema validation
   "drizzle-zod",
+  // Date manipulation library for time tracking features
   "date-fns",
+  // tRPC server for type-safe API communication
+  "@trpc/server",
+  // Electron auto-updater for handling application updates
+  "update-electron-app",
 ];
 
 // Base packager configuration
