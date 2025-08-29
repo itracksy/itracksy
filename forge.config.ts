@@ -11,11 +11,11 @@ import { MakerDMG } from "@electron-forge/maker-dmg";
 // already included as a dependency of electron-packager/galactus (so we do NOT have to add it to package.json)
 // grabs nested dependencies from tree
 import { Walker, DepType, type Module } from "flora-colossus";
-import VitePlugin from "@electron-forge/plugin-vite";
-import FusesPlugin from "@electron-forge/plugin-fuses";
+import { VitePlugin } from "@electron-forge/plugin-vite";
+import { FusesPlugin } from "@electron-forge/plugin-fuses";
 import { FuseV1Options, FuseVersion } from "@electron/fuses";
-import MakerSquirrel from "@electron-forge/maker-squirrel";
-import PublisherGithub from "@electron-forge/publisher-github";
+import { MakerSquirrel } from "@electron-forge/maker-squirrel";
+import { PublisherGithub } from "@electron-forge/publisher-github";
 
 // Track native module dependencies that need to be packaged
 let nativeModuleDependenciesToPackage: string[] = [];

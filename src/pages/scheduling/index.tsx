@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Clock, Calendar, Play, Pause, Settings, Plus, Trash2, AlertCircle } from "lucide-react";
+import { Clock, Calendar, Pause, Settings, Plus, Trash2, AlertCircle, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { trpcClient } from "@/utils/trpc";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
@@ -92,7 +92,7 @@ export default function SchedulingPage() {
     startTime: "09:00",
     daysOfWeek: [] as number[],
     isActive: true,
-    autoStart: false,
+    autoStart: true,
     description: "",
   });
 
@@ -116,7 +116,7 @@ export default function SchedulingPage() {
         startTime: "09:00",
         daysOfWeek: [],
         isActive: true,
-        autoStart: false,
+        autoStart: true,
         description: "",
       });
       toast({
@@ -281,7 +281,7 @@ export default function SchedulingPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center space-x-2">
-              <Play className="h-4 w-4 text-green-600" />
+              <Check className="h-4 w-4 text-green-600" />
               <div className="text-2xl font-bold">
                 {scheduledSessions.filter((s) => s.isActive).length}
               </div>
@@ -557,8 +557,8 @@ export default function SchedulingPage() {
             <div>
               <h4 className="mb-2 font-medium">🚀 Auto-start</h4>
               <p className="text-sm text-muted-foreground">
-                Enable auto-start to have sessions begin automatically at the scheduled time without
-                manual intervention.
+                All sessions start automatically at the scheduled time. No manual intervention
+                needed!
               </p>
             </div>
             <div>

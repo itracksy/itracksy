@@ -17,7 +17,6 @@ import { breakDurationAtom } from "@/context/board";
 import { useNavigate } from "@tanstack/react-router";
 import { get } from "http";
 import { getTitleTimeEntry } from "@/api/db/timeEntryExt";
-import { trpc } from "trpc";
 
 // Motivational phrases to encourage users to start working
 const motivationalPhrases = [

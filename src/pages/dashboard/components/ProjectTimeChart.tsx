@@ -140,7 +140,7 @@ export default function ProjectTimeChart({ timeRange }: ProjectTimeChartProps) {
                     cy="50%"
                     innerRadius={80}
                     outerRadius={130}
-                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                    label={({ name, percent }) => `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`}
                     labelLine={{ stroke: "#2B4474", strokeWidth: 0.5, strokeOpacity: 0.5 }}
                     paddingAngle={2}
                   >
@@ -224,7 +224,7 @@ export default function ProjectTimeChart({ timeRange }: ProjectTimeChartProps) {
                         {project.displayDuration}
                       </span>
                     </div>
-                    <div className="ml-5 mt-2">
+                    <div className="mt-2 ml-5">
                       {isProjectChartItem(project) &&
                         project.tasks.map((task) => (
                           <div key={task.name} className="flex justify-between text-sm">

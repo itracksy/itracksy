@@ -3,6 +3,9 @@ import { createRoot } from "react-dom/client";
 import { useTranslation } from "react-i18next";
 import posthog from "posthog-js";
 
+// Import global CSS for Tailwind
+import "./styles/global.css";
+
 import "./localization/i18n";
 import { updateAppLanguage } from "./helpers/language_helpers";
 import { syncThemeWithLocal } from "./helpers/theme_helpers";

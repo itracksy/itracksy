@@ -28,6 +28,10 @@ import {
   requestScreenRecordingPermission,
 } from "./api/services/userSettings";
 import { initializeAutoStart } from "./api/services/autoStart";
+import { initializeScheduledSessionMonitoring } from "./api/services/scheduledSessions";
+
+// Auto-update for open source apps
+import { updateElectronApp } from "update-electron-app";
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -357,8 +361,17 @@ app.whenReady().then(async () => {
     logger.clearLogFile();
     await initializeDatabase();
 
+    // Initialize auto-update functionality
+    updateElectronApp({
+      logger: require("electron-log"),
+      updateInterval: "1 day", // Check for updates every 24 hours
+    });
+
     // Initialize auto-start functionality
     initializeAutoStart();
+
+    // Initialize scheduled session monitoring
+    initializeScheduledSessionMonitoring();
 
     // Check and request permissions before starting tracking
     await checkAndRequestPermissions();

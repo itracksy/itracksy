@@ -91,9 +91,24 @@ Run `npm run test-permissions` to verify your permission setup.
 
 ### Distribution
 - **Electron Forge**: Building and packaging
-- **Squirrel.Windows**: Auto-updates
+- **Auto-Updates**: Automatic updates via update.electronjs.org
 - **GitHub Actions**: CI/CD pipeline
 - **Azure Code Signing**: Certificate signing for Windows
+
+## Auto-Updates
+
+iTracksy automatically updates to the latest version, ensuring you always have the newest features and improvements. The app checks for updates every 24 hours and downloads them in the background.
+
+### How It Works
+- **Automatic**: Updates are downloaded and installed automatically
+- **Seamless**: No interruption to your workflow
+- **Secure**: All updates are verified and signed
+- **Free**: Uses the free update.electronjs.org service
+
+### Manual Update Check
+You can manually check for updates by restarting the application.
+
+📖 **[View Auto-Update Documentation](./docs/AUTO_UPDATE_SETUP.md)** for detailed information.
 
 ## Architecture
 

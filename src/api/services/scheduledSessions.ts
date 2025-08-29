@@ -249,6 +249,110 @@ export async function executeScheduledSession(sessionId: string): Promise<boolea
     const session = await getScheduledSessionById(sessionId, userId);
     if (!session || !session.isActive) return false;
 
+    // Check if there's already an active session
+    const { getActiveTimeEntry } = await import("./timeEntry");
+    const activeEntry = await getActiveTimeEntry(userId);
+
+    if (activeEntry) {
+      // There's an active session - ask user what to do
+      const userChoice = await askUserAboutScheduledSession(session, activeEntry);
+
+      switch (userChoice) {
+        case "stop_current_start_scheduled":
+          // Stop current session and start scheduled
+          await stopCurrentSession(activeEntry.id);
+          return await startScheduledSession(session, sessionId);
+
+        case "queue_scheduled":
+          // Queue the scheduled session for later
+          await queueScheduledSession(session, sessionId);
+          return true;
+
+        case "skip_scheduled":
+          // Skip this occurrence
+          await skipScheduledSession(sessionId);
+          return true;
+
+        default:
+          // User cancelled or choice not handled
+          return false;
+      }
+    } else {
+      // No active session - start scheduled session normally
+      return await startScheduledSession(session, sessionId);
+    }
+  } catch (error) {
+    logger.error(`[executeScheduledSession] Failed to execute session ${sessionId}`, { error });
+    return false;
+  }
+}
+
+/**
+ * Ask user what to do when there's a conflict with scheduled session
+ * For now, we'll use a simple approach: send a notification and default to stopping current session
+ * In the future, this could be enhanced with interactive notifications or a dialog
+ */
+async function askUserAboutScheduledSession(
+  scheduledSession: ScheduledSession,
+  activeEntry: any
+): Promise<"stop_current_start_scheduled" | "queue_scheduled" | "skip_scheduled" | "cancelled"> {
+  try {
+    // Import the notification service
+    const { sendNotification } = await import("./notification");
+
+    // Send a notification to inform the user about the conflict
+    await sendNotification(
+      {
+        title: "Scheduled Session Conflict",
+        body: `"${scheduledSession.name}" is scheduled to start now, but you have an active session. The current session will be stopped to start the scheduled one.`,
+        userId: scheduledSession.userId,
+        type: "focus_reminder",
+        timeEntryId: activeEntry.id,
+        createdAt: Date.now(),
+      },
+      10000, // 10 second timeout
+      true // Auto-dismiss
+    );
+
+    // For now, default to stopping current and starting scheduled
+    // In the future, this could be enhanced with:
+    // 1. Interactive notifications with action buttons
+    // 2. A dialog window asking for user choice
+    // 3. Integration with the notification system's action handling
+    logger.info(
+      `[askUserAboutScheduledSession] User notified about scheduled session conflict: ${scheduledSession.name}`
+    );
+    return "stop_current_start_scheduled";
+  } catch (error) {
+    logger.error("[askUserAboutScheduledSession] Failed to send notification", { error });
+    // Default to stopping current and starting scheduled
+    return "stop_current_start_scheduled";
+  }
+}
+
+/**
+ * Stop the current session
+ */
+async function stopCurrentSession(entryId: string): Promise<void> {
+  try {
+    const { updateTimeEntry } = await import("./timeEntry");
+    await updateTimeEntry(entryId, { endTime: Date.now() });
+    logger.info(`[stopCurrentSession] Stopped current session: ${entryId}`);
+  } catch (error) {
+    logger.error(`[stopCurrentSession] Failed to stop session ${entryId}`, { error });
+  }
+}
+
+/**
+ * Start the scheduled session
+ */
+async function startScheduledSession(
+  session: ScheduledSession,
+  sessionId: string
+): Promise<boolean> {
+  try {
+    const { createTimeEntry } = await import("./timeEntry");
+
     // Create a new time entry for the scheduled session
     await createTimeEntry(
       {
@@ -256,9 +360,9 @@ export async function executeScheduledSession(sessionId: string): Promise<boolea
         startTime: Date.now(),
         targetDuration: session.focusDuration,
         description: `Scheduled: ${session.name}`,
-        autoStopEnabled: true, // Enable auto-stop for scheduled sessions
+        autoStopEnabled: true,
       },
-      userId
+      session.userId
     );
 
     // Update last run time
@@ -271,11 +375,57 @@ export async function executeScheduledSession(sessionId: string): Promise<boolea
       })
       .where(eq(scheduledSessions.id, sessionId));
 
-    logger.info(`[executeScheduledSession] Executed scheduled session: ${session.name}`);
+    logger.info(`[startScheduledSession] Started scheduled session: ${session.name}`);
     return true;
   } catch (error) {
-    logger.error(`[executeScheduledSession] Failed to execute session ${sessionId}`, { error });
+    logger.error(`[startScheduledSession] Failed to start scheduled session ${sessionId}`, {
+      error,
+    });
     return false;
+  }
+}
+
+/**
+ * Queue the scheduled session for later execution
+ */
+async function queueScheduledSession(session: ScheduledSession, sessionId: string): Promise<void> {
+  try {
+    // Mark session as queued (you might want to add a 'queued' field to the schema)
+    await db
+      .update(scheduledSessions)
+      .set({
+        updatedAt: Date.now(),
+        // Add a note that this session was queued
+      })
+      .where(eq(scheduledSessions.id, sessionId));
+
+    logger.info(`[queueScheduledSession] Queued scheduled session: ${session.name}`);
+  } catch (error) {
+    logger.error(`[queueScheduledSession] Failed to queue session ${sessionId}`, { error });
+  }
+}
+
+/**
+ * Skip this occurrence of the scheduled session
+ */
+async function skipScheduledSession(sessionId: string): Promise<void> {
+  try {
+    // Update next run time to skip this occurrence
+    const session = await getScheduledSessionById(sessionId, "");
+    if (session) {
+      const nextRun = calculateNextRunTime(session.startTime, session.daysOfWeek, true);
+      await db
+        .update(scheduledSessions)
+        .set({
+          nextRun,
+          updatedAt: Date.now(),
+        })
+        .where(eq(scheduledSessions.id, sessionId));
+    }
+
+    logger.info(`[skipScheduledSession] Skipped scheduled session: ${sessionId}`);
+  } catch (error) {
+    logger.error(`[skipScheduledSession] Failed to skip session ${sessionId}`, { error });
   }
 }
 
