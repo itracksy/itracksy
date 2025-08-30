@@ -1,10 +1,10 @@
 name: Auto-Update Release
 
 on:
-  push:
-    tags:
-      - "v*.*.*" # Trigger on version tags
-  workflow_dispatch: # Allow manual triggering
+  # push:
+  #   tags:
+  #     - "v*.*.*" # Trigger on version tags (DISABLED)
+  workflow_dispatch: # Allow manual triggering only
     inputs:
       version:
         description: "Version to release (e.g., v1.0.204)"
