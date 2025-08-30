@@ -280,7 +280,7 @@ jobs:
           # macOS builds
           MACOS_X64_DMG="out/make/itracksy-$VERSION-x64.dmg"
           MACOS_ARM64_DMG="out/make/itracksy-$VERSION-arm64.dmg"
-          
+
           # Check if files exist and upload them
           if [ -f "$MACOS_X64_DMG" ]; then
             echo "📦 Uploading macOS Intel (x64): $MACOS_X64_DMG"
@@ -288,14 +288,14 @@ jobs:
           else
             echo "⚠️  macOS Intel (x64) DMG not found: $MACOS_X64_DMG"
           fi
-          
+
           if [ -f "$MACOS_ARM64_DMG" ]; then
             echo "📦 Uploading macOS Apple Silicon (ARM64): $MACOS_ARM64_DMG"
             gh release upload "$VERSION" "$MACOS_ARM64_DMG" --clobber
           else
             echo "⚠️  macOS Apple Silicon (ARM64) DMG not found: $MACOS_ARM64_DMG"
           fi
-          
+
           # Also check for any ZIP files that might exist
           ZIP_FILES=$(find out/make -name "*.zip" -type f 2>/dev/null || echo "")
           if [ -n "$ZIP_FILES" ]; then
