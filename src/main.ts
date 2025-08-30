@@ -365,7 +365,11 @@ app.whenReady().then(async () => {
     updateElectronApp({
       logger: require("electron-log"),
       updateInterval: "1 day", // Check for updates every 24 hours
+      notifyUser: true, // Show notification when updates are available
     });
+
+    // Log that auto-update is initialized
+    logger.info("Auto-update initialized - will check for updates automatically on startup");
 
     // Initialize auto-start functionality
     initializeAutoStart();
