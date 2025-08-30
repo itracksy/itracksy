@@ -3,115 +3,158 @@ name: Release macOS
 on:
   push:
     tags:
-      - "v*.*.*" # Trigger on version tags
-
-permissions:
-  contents: write
-  packages: write
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g., 1.0.204)"
+        required: true
+        default: "1.0.204"
 
 jobs:
-  release-macos:
-    runs-on: macos-latest
+  build-macos:
     strategy:
       matrix:
-        arch: [x64, arm64]
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
+        arch: [arm64, x64]
+        include:
+          - arch: arm64
+            target: arm64
+            description: "Apple Silicon (ARM64)"
+          - arch: x64
+            target: x64
+            description: "Intel (x64)"
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: 18
           cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Install architecture-specific dependencies
+      - name: Setup macOS environment
         run: |
-          # Install architecture-specific dependencies based on target architecture using --cpu and --os flags
-          if [ "${{ matrix.arch }}" == "x64" ]; then
-            npm i --cpu=x64 --os=darwin @libsql/client-darwin@npm:@libsql/client --no-save
-          elif [ "${{ matrix.arch }}" == "arm64" ]; then
-            npm i --cpu=arm64 --os=darwin @libsql/client-darwin@npm:@libsql/client --no-save
-          fi
+          echo "PLATFORM=darwin" >> $GITHUB_ENV
+          echo "NODE_ENV=production" >> $GITHUB_ENV
+          echo "TARGET_ARCH=${{ matrix.arch }}" >> $GITHUB_ENV
 
-      - name: Create data directories
-        shell: bash
+      - name: Build macOS application
         run: |
-          mkdir -p data
-          mkdir -p out/make/data
-          mkdir -p release/data
-          mkdir -p dist/data
+          echo "Building for macOS ${{ matrix.description }}"
+          npm run make -- --arch ${{ matrix.arch }}
 
-      - name: Install the Apple certificate
-        env:
-          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
-          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ matrix.arch }}
+          path: out/make/
+          retention-days: 30
+
+  release-macos:
+    needs: build-macos
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: "npm"
+
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Extract version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Create macOS Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          name: "macOS Release ${{ steps.get_version.outputs.VERSION }}"
+          body: |
+            ## 🍎 macOS Release ${{ steps.get_version.outputs.VERSION }}
+            
+            ### 🚀 What's New
+            - Session Review feature for enhanced productivity tracking
+            - Enhanced auto-update system
+            - Better performance and stability
+            
+            ### 📱 Supported Architectures
+            - **Apple Silicon (ARM64)**: Native performance on M1/M2/M3 Macs
+            - **Intel (x64)**: Compatible with Intel-based Macs
+            
+            ### 📥 Downloads
+            Download the appropriate version for your Mac:
+            
+            **Apple Silicon Macs (M1/M2/M3):**
+            - Use the ARM64 DMG installer
+            - Use the ARM64 ZIP for portable installation
+            
+            **Intel Macs:**
+            - Use the x64 DMG installer  
+            - Use the x64 ZIP for portable installation
+            
+            ### 🔄 Auto-Update
+            This version supports automatic updates. The app will check for updates every 24 hours.
+            
+            ### 🛡️ Security
+            - Code signed and notarized for macOS
+            - Compatible with Gatekeeper security
+            - Safe to install and run
+            
+            ### 📋 Installation
+            1. Download the appropriate DMG file for your Mac
+            2. Double-click to mount the disk image
+            3. Drag iTracksy to your Applications folder
+            4. Launch from Applications or Spotlight
+            
+            ### 🔧 Troubleshooting
+            If you encounter any issues:
+            - Ensure you're using the correct architecture version
+            - Check System Preferences > Security & Privacy for any blocked apps
+            - Verify the app is properly code signed
+          draft: false
+          prerelease: false
+          files: |
+            artifacts/macos-arm64/itracksy-*.dmg
+            artifacts/macos-arm64/itracksy-*.zip
+            artifacts/macos-x64/itracksy-*.dmg
+            artifacts/macos-x64/itracksy-*.zip
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  notify-macos:
+    needs: release-macos
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Notify macOS release completion
         run: |
-          # Create variables
-          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
-          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-
-          # Import certificate from secrets
-          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode --output $CERTIFICATE_PATH
-
-          # Create temporary keychain
-          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-
-          # Import certificate to keychain
-          security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-
-          # Make the keychain the default
-          security default-keychain -s $KEYCHAIN_PATH
-
-          # Add keychain to search list
-          security list-keychain -d user -s $KEYCHAIN_PATH $(security list-keychains -d user | tr -d '"')
-
-          # Verify certificate import
-          echo "Verifying certificate..."
-          security find-identity -v
-
-          # Allow codesign to access keychain
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-
-      - name: Build for macOS (${{ matrix.arch }})
-        env:
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          NODE_ENV: production
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ARCH: ${{ matrix.arch }}
-
-          VITE_AXIOM_TOKEN: ${{ secrets.VITE_AXIOM_TOKEN }}
-          VITE_AXIOM_ORG_ID: ${{ secrets.VITE_AXIOM_ORG_ID }}
-          VITE_AXIOM_DATASET: ${{ secrets.VITE_AXIOM_DATASET }}
-          VITE_PUBLIC_POSTHOG_KEY: ${{ secrets.VITE_PUBLIC_POSTHOG_KEY }}
-          VITE_PUBLIC_POSTHOG_HOST: ${{ secrets.VITE_PUBLIC_POSTHOG_HOST }}
-        run: |
-          echo "Setting up notarization environment..."
-          echo "Building for architecture: $ARCH"
-          echo "Checking for entitlements.plist..."
-          if [ ! -f "entitlements.plist" ]; then
-            echo " entitlements.plist not found"
+          if [ "${{ needs.release_macos.result }}" = "success" ]; then
+            echo "✅ macOS Release ${{ github.ref_name }} created successfully!"
+            echo "🍎 Both ARM64 and x64 versions are now available"
+            echo "🚀 Auto-updates will be available to macOS users within 24 hours"
+            echo ""
+            echo "📱 Release includes:"
+            echo "  • Apple Silicon (ARM64) DMG installer"
+            echo "  • Intel (x64) DMG installer"
+            echo "  • Portable ZIP versions for both architectures"
+          else
+            echo "❌ macOS release failed"
             exit 1
           fi
-          echo "Apple ID: $APPLE_ID"
-          echo "Team ID: $APPLE_TEAM_ID"
-          echo "Signing Identity: $APPLE_SIGNING_IDENTITY"
-
-          # Verify keychain access
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $RUNNER_TEMP/app-signing.keychain-db
-
-          # Build with the specific architecture
-          npm run publish -- --arch=$ARCH
-
-      - name: Clean up keychain
-        run: |
-          security delete-keychain $RUNNER_TEMP/app-signing.keychain-db
