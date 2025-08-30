@@ -219,10 +219,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="${{ needs.check-version.outputs.version }}"
-          
+
           # Check if release already exists
           RELEASE_EXISTS=$(gh api repos/${{ github.repository }}/releases/tags/$VERSION --jq '.id' 2>/dev/null || echo "")
-          
+
           if [ -n "$RELEASE_EXISTS" ]; then
             echo "release-exists=true" >> $GITHUB_OUTPUT
             echo "release-id=$RELEASE_EXISTS" >> $GITHUB_OUTPUT
@@ -234,6 +234,7 @@ jobs:
           fi
 
       - name: Create GitHub Release
+        id: create-release
         if: steps.check-release.outputs.release-exists != 'true'
         uses: actions/create-release@v1
         env:
@@ -246,10 +247,22 @@ jobs:
           prerelease: false
 
       - name: Publish to GitHub Releases
+        if: steps.check-release.outputs.release-exists == 'true' || steps.create-release.result == 'success'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="${{ needs.check-version.outputs.version }}"
+          
+          # Verify the release exists before uploading assets
+          RELEASE_CHECK=$(gh api repos/${{ github.repository }}/releases/tags/$VERSION --jq '.id' 2>/dev/null || echo "")
+          
+          if [ -z "$RELEASE_CHECK" ]; then
+            echo "❌ Release $VERSION does not exist - cannot upload assets"
+            echo "This might happen if the release creation step failed"
+            exit 1
+          fi
+          
+          echo "✅ Release $VERSION exists (ID: $RELEASE_CHECK) - proceeding with asset upload"
 
           # Find all DMG files and upload them to the release
           find . -name "*.dmg" -type f | while read -r file; do
