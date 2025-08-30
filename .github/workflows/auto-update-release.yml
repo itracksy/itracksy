@@ -36,7 +36,7 @@ jobs:
       - name: Check if version needs auto-update
         id: check
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Get the version from the tag or input
           if [ "${{ github.event.inputs.version }}" != "" ]; then
@@ -226,7 +226,7 @@ jobs:
 
       - name: Publish to GitHub Releases
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="${{ needs.check-version.outputs.version }}"
 
