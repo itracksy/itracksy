@@ -219,10 +219,15 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="${{ needs.check-version.outputs.version }}"
-
+          
+          echo "🔍 DEBUG: Checking if release exists for version: $VERSION"
+          echo "🔍 DEBUG: Repository: ${{ github.repository }}"
+          
           # Check if release already exists
           RELEASE_EXISTS=$(gh api repos/${{ github.repository }}/releases/tags/$VERSION --jq '.id' 2>/dev/null || echo "")
-
+          
+          echo "🔍 DEBUG: Raw API response: $RELEASE_EXISTS"
+          
           if [ -n "$RELEASE_EXISTS" ]; then
             echo "release-exists=true" >> $GITHUB_OUTPUT
             echo "release-id=$RELEASE_EXISTS" >> $GITHUB_OUTPUT
@@ -232,6 +237,23 @@ jobs:
             echo "release-id=" >> $GITHUB_OUTPUT
             echo "✅ Release $VERSION does not exist - will create new"
           fi
+          
+          echo "🔍 DEBUG: Final outputs:"
+          echo "  - release-exists: ${{ steps.check-release.outputs.release-exists }}"
+          echo "  - release-id: ${{ steps.check-release.outputs.release-id }}"
+
+      - name: Debug - Check current state
+        run: |
+          echo "🔍 DEBUG: Current working directory: $(pwd)"
+          echo "🔍 DEBUG: Directory contents:"
+          ls -la
+          echo ""
+          echo "🔍 DEBUG: Release check output:"
+          echo "  - release-exists: ${{ steps.check-release.outputs.release-exists }}"
+          echo "  - release-id: ${{ steps.check-release.outputs.release-id }}"
+          echo ""
+          echo "🔍 DEBUG: Release notes output:"
+          echo "  - release-notes: ${{ steps.release-notes.outputs.release-notes }}"
 
       - name: Create GitHub Release
         id: create-release
