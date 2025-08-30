@@ -1,136 +1,191 @@
 # Auto-Update Quick Reference
 
-## 🚀 Quick Start
+## Quick Commands
 
-### 1. Check Configuration
-
-```bash
-node scripts/test-auto-update.js
-```
-
-### 2. Release New Version
-
-```bash
-# Update version
-npm version patch  # or minor/major
-
-# Build and publish
-npm run make
-npm run publish
-
-# Create GitHub release with artifacts
-```
-
-## 📋 Configuration Files
-
-### package.json
-
-```json
-{
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/hunght/itracksy.git"
-  }
-}
-```
-
-### forge.config.ts
-
-```typescript
-publishers: [
-  new PublisherGithub({
-    repository: { owner: "hunght", name: "itracksy" },
-    prerelease: false,
-    draft: true,
-  }),
-];
-```
-
-### src/main.ts
+### Start Auto-Update
 
 ```typescript
 import { updateElectronApp } from "update-electron-app";
 
+// Initialize auto-update (in main process)
 updateElectronApp({
+  repo: "hunght/itracksy",
+  updateInterval: "1 hour",
   logger: require("electron-log"),
-  updateInterval: "1 day",
 });
 ```
 
-## 🔧 Commands
+### Check for Updates
 
-### Development
+```typescript
+// Manual update check
+updateElectronApp.checkForUpdates();
+
+// Listen for update events
+updateElectronApp.on("update-available", () => {
+  console.log("Update available!");
+});
+
+updateElectronApp.on("update-downloaded", () => {
+  console.log("Update downloaded, ready to install");
+});
+```
+
+## Workflow Commands
+
+### Trigger Auto-Update Release
 
 ```bash
-npm run dev          # Start dev server (auto-updates disabled)
-npm run type-check   # Check for TypeScript errors
+# Automatic (push tag)
+git tag v1.0.204
+git push origin v1.0.204
+
+# Manual (via GitHub Actions)
+# Go to Actions → Auto-Update Release → Run workflow
 ```
 
-### Production
+### Check Workflow Status
 
 ```bash
-npm run make         # Build application
-npm run package      # Package without publishing
-npm run publish      # Build and publish to GitHub
+# View workflow runs
+gh run list --workflow="Auto-Update Release"
+
+# View latest run
+gh run view --workflow="Auto-Update Release" --latest
 ```
 
-### Testing
+### Monitor Auto-Update Health
 
 ```bash
-node scripts/test-auto-update.js  # Test auto-update config
-npm run test                      # Run test suite
+# Check endpoint health
+curl -I "https://update.electronjs.org/hunght/itracksy/darwin/v1.0.204"
+
+# View monitoring workflow
+gh run list --workflow="Auto-Update Monitor"
 ```
 
-## 📊 Update Flow
+## Configuration
 
-```
-1. App starts → 2. Checks for updates → 3. Downloads if available → 4. Installs on restart
-```
-
-**Timing**: Every 24 hours in production, disabled in development
-
-## 🐛 Troubleshooting
-
-### Updates Not Working?
-
-- ✅ App code-signed? (required for macOS)
-- ✅ GitHub repository configured?
-- ✅ GitHub releases contain artifacts?
-- ✅ Network access to update.electronjs.org?
-
-### Check Logs
+### Required Environment Variables
 
 ```bash
-# macOS
-~/Library/Logs/itracksy/main.log
+# Auto-update service
+REPO=hunght/itracksy
+PLATFORM=darwin
+ARCH=x64,arm64
 
-# Windows
-%USERPROFILE%\AppData\Roaming\itracksy\logs\main.log
+# Apple signing
+APPLE_SIGNING_IDENTITY="Developer ID Application"
+APPLE_ID="your-apple-id@example.com"
+APPLE_TEAM_ID="YOUR_TEAM_ID"
 ```
+
+### GitHub Secrets
+
+```bash
+BUILD_CERTIFICATE_BASE64    # .p12 certificate (base64)
+P12_PASSWORD               # Certificate password
+KEYCHAIN_PASSWORD          # Temporary keychain password
+APPLE_SIGNING_IDENTITY     # Developer ID Application
+APPLE_ID                   # Apple ID email
+APPLE_ID_PASSWORD          # App-specific password
+APPLE_TEAM_ID             # Team ID
+```
+
+## Workflow Files
+
+### Auto-Update Release
+
+- **File**: `.github/workflows/auto-update-release.yml`
+- **Trigger**: Version tags (`v*.*.*`)
+- **Purpose**: Build, sign, and publish updates
+- **Output**: GitHub release with auto-update
+
+### Auto-Update Monitor
+
+- **File**: `.github/workflows/auto-update-monitor.yml`
+- **Trigger**: Every 6 hours + post-release
+- **Purpose**: Monitor system health
+- **Output**: Health reports and status
+
+## Update Flow
+
+### For Users
+
+1. App starts → Check for updates
+2. Update available → Background download
+3. Download complete → User notification
+4. User clicks → Install and restart
+
+### For Developers
+
+1. Push version tag → Workflow triggers
+2. Build and sign → Create release
+3. Publish assets → Auto-update active
+4. Monitor health → Ensure reliability
+
+## Troubleshooting
 
 ### Common Issues
 
-- **Development mode**: Updates disabled (expected)
-- **Code signing**: Required for macOS auto-updates
-- **Network**: Check firewall/proxy settings
+```bash
+# Build fails
+npm run test-auto-update  # Check configuration
 
-## 📝 Release Checklist
+# Auto-update not working
+curl "https://update.electronjs.org/hunght/itracksy/darwin/latest"
 
-- [ ] Update version in package.json
-- [ ] Run tests: `npm run test`
-- [ ] Build: `npm run make`
-- [ ] Publish: `npm run publish`
-- [ ] Create GitHub release
-- [ ] Upload built artifacts
-- [ ] Test auto-update in production build
+# Certificate issues
+security find-identity -v  # Check keychain
+```
 
-## 🔗 Resources
+### Debug Commands
 
-- [Full Documentation](./AUTO_UPDATE_SETUP.md)
-- [update-electron-app](https://github.com/electron/update-electron-app)
-- [Electron Forge Auto-Update](https://www.electronforge.io/advanced/auto-update)
-- [update.electronjs.org](https://update.electronjs.org)
+```bash
+# Test auto-update locally
+npm run test-auto-update
 
----
+# Check workflow logs
+gh run view --workflow="Auto-Update Release" --log
 
-**Need help?** Run `node scripts/test-auto-update.js` to verify your configuration.
+# Verify release assets
+gh release view v1.0.204 --json assets
+```
+
+## Quick Links
+
+- **Workflows**: [GitHub Actions](https://github.com/hunght/itracksy/actions)
+- **Releases**: [GitHub Releases](https://github.com/hunght/itracksy/releases)
+- **Auto-Update Service**: [update.electronjs.org](https://update.electronjs.org)
+- **Documentation**: [Auto-Update Workflow Guide](AUTO_UPDATE_WORKFLOW_GUIDE.md)
+
+## Status Indicators
+
+### ✅ Healthy
+
+- Auto-update endpoint accessible
+- Release assets available
+- Configuration valid
+- Users receiving updates
+
+### ⚠️ Warning
+
+- Recent release (endpoint may be 404)
+- Configuration differences
+- Build in progress
+
+### ❌ Issue
+
+- Endpoint inaccessible
+- Missing assets
+- Configuration errors
+- Build failures
+
+## Best Practices
+
+1. **Always use semantic versioning** (`v1.0.204`)
+2. **Test builds locally** before pushing tags
+3. **Monitor workflow health** regularly
+4. **Keep release notes** comprehensive
+5. **Maintain certificates** and secrets
+6. **Use conventional commits** for auto-changelog

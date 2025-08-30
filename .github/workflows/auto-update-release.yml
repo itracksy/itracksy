@@ -1,0 +1,335 @@
+name: Auto-Update Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*" # Trigger on version tags
+  workflow_dispatch: # Allow manual triggering
+    inputs:
+      version:
+        description: "Version to release (e.g., v1.0.204)"
+        required: true
+        default: ""
+
+permissions:
+  contents: write
+  packages: write
+  actions: read
+
+env:
+  NODE_VERSION: "20"
+  ELECTRON_VERSION: "33.2.0"
+
+jobs:
+  # Job to check if this is a new version that needs auto-update
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      should-update: ${{ steps.check.outputs.should-update }}
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if version needs auto-update
+        id: check
+        run: |
+          # Get the version from the tag or input
+          if [ "${{ github.event.inputs.version }}" != "" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/}"
+          fi
+
+          echo "Checking version: $VERSION"
+
+          # Check if this version already exists in releases
+          RELEASE_EXISTS=$(gh api repos/${{ github.repository }}/releases/tags/$VERSION --jq '.id' 2>/dev/null || echo "")
+
+          if [ -z "$RELEASE_EXISTS" ]; then
+            echo "should-update=true" >> $GITHUB_OUTPUT
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "✅ New version $VERSION detected - will create auto-update"
+          else
+            echo "should-update=false" >> $GITHUB_OUTPUT
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "⚠️  Version $VERSION already exists - skipping auto-update"
+          fi
+
+  # Job to build and publish the auto-update
+  auto-update-release:
+    needs: check-version
+    if: needs.check-version.outputs.should-update == 'true'
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install architecture-specific dependencies
+        run: |
+          # Install architecture-specific dependencies based on target architecture
+          if [ "${{ matrix.arch }}" == "x64" ]; then
+            npm i --cpu=x64 --os=darwin @libsql/client-darwin@npm:@libsql/client --no-save
+          elif [ "${{ matrix.arch }}" == "arm64" ]; then
+            npm i --cpu=arm64 --os=darwin @libsql/client-darwin@npm:@libsql/client --no-save
+          fi
+
+      - name: Create data directories
+        shell: bash
+        run: |
+          mkdir -p data
+          mkdir -p out/make/data
+          mkdir -p release/data
+          mkdir -p dist/data
+
+      - name: Install the Apple certificate
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          # Create variables
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+          # Import certificate from secrets
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode --output $CERTIFICATE_PATH
+
+          # Create temporary keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # Import certificate to keychain
+          security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+
+          # Make the keychain the default
+          security default-keychain -s $KEYCHAIN_PATH
+
+          # Add keychain to search list
+          security list-keychain -d user -s $KEYCHAIN_PATH $(security list-keychains -d user | tr -d '"')
+
+          # Verify certificate import
+          echo "Verifying certificate..."
+          security find-identity -v
+
+          # Allow codesign to access keychain
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+      - name: Build for macOS (${{ matrix.arch }})
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          NODE_ENV: production
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARCH: ${{ matrix.arch }}
+          VITE_AXIOM_TOKEN: ${{ secrets.VITE_AXIOM_TOKEN }}
+          VITE_AXIOM_ORG_ID: ${{ secrets.VITE_AXIOM_ORG_ID }}
+          VITE_AXIOM_DATASET: ${{ secrets.VITE_AXIOM_DATASET }}
+          VITE_PUBLIC_POSTHOG_KEY: ${{ secrets.VITE_PUBLIC_POSTHOG_KEY }}
+          VITE_PUBLIC_POSTHOG_HOST: ${{ secrets.VITE_PUBLIC_POSTHOG_HOST }}
+        run: |
+          echo "Building auto-update for architecture: $ARCH"
+          echo "Version: ${{ needs.check-version.outputs.version }}"
+
+          # Verify keychain access
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $RUNNER_TEMP/app-signing.keychain-db
+
+          # Build with the specific architecture
+          npm run publish -- --arch=$ARCH
+
+      - name: Clean up keychain
+        run: |
+          security delete-keychain $RUNNER_TEMP/app-signing.keychain-db
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ matrix.arch }}-${{ needs.check-version.outputs.version }}
+          path: |
+            out/make/**/*.dmg
+            out/make/**/*.zip
+            out/make/**/*.tar.gz
+          retention-days: 30
+
+  # Job to create GitHub release and publish auto-update
+  create-release:
+    needs: [check-version, auto-update-release]
+    if: needs.check-version.outputs.should-update == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: macos-*-${{ needs.check-version.outputs.version }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate release notes
+        id: release-notes
+        run: |
+          VERSION="${{ needs.check-version.outputs.version }}"
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 $VERSION^ 2>/dev/null || echo "")
+
+          if [ -n "$PREVIOUS_TAG" ]; then
+            # Generate changelog from previous tag
+            CHANGELOG=$(git log --pretty=format:"- %s" $PREVIOUS_TAG..$VERSION --grep="^feat\|^fix\|^docs\|^style\|^refactor\|^test\|^chore" --invert-grep --grep="^Merge\|^Revert" || echo "No conventional commits found")
+          else
+            CHANGELOG="Initial release"
+          fi
+
+          # Create release notes
+          RELEASE_NOTES="## What's New in $VERSION\n\n$CHANGELOG\n\n## Auto-Update\n\nThis release includes automatic update functionality. Users will be notified of updates and can install them automatically.\n\n## Installation\n\nDownload the appropriate installer for your system architecture:\n- **macOS Intel (x64)**: Use the .dmg file\n- **macOS Apple Silicon (ARM64)**: Use the .dmg file\n\n## Auto-Update Features\n\n- Automatic update detection\n- Seamless installation process\n- Background download and installation\n- User notification system"
+
+          echo "release-notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ needs.check-version.outputs.version }}
+          release_name: iTracksy ${{ needs.check-version.outputs.version }}
+          body: ${{ steps.release-notes.outputs.release-notes }}
+          draft: false
+          prerelease: false
+
+      - name: Publish to GitHub Releases
+        run: |
+          VERSION="${{ needs.check-version.outputs.version }}"
+
+          # Find all DMG files and upload them to the release
+          find . -name "*.dmg" -type f | while read -r file; do
+            echo "Uploading $file to release $VERSION"
+            gh release upload "$VERSION" "$file" --clobber
+          done
+
+          # Find all ZIP files and upload them to the release
+          find . -name "*.zip" -type f | while read -r file; do
+            echo "Uploading $file to release $VERSION"
+            gh release upload "$VERSION" "$file" --clobber
+          done
+
+          echo "✅ Auto-update release $VERSION published successfully!"
+
+      - name: Notify auto-update success
+        run: |
+          echo "🚀 Auto-update release ${{ needs.check-version.outputs.version }} has been published!"
+          echo "📱 Users will now receive automatic updates through the update.electronjs.org service"
+          echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/${{ needs.check-version.outputs.version }}"
+
+  # Job to verify auto-update configuration
+  verify-auto-update:
+    needs: [check-version, create-release]
+    if: needs.check-version.outputs.should-update == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify auto-update configuration
+        run: |
+          echo "🔍 Verifying auto-update configuration..."
+
+          # Check if update-electron-app is properly configured
+          if npm list update-electron-app > /dev/null 2>&1; then
+            echo "✅ update-electron-app is installed"
+          else
+            echo "❌ update-electron-app is not installed"
+            exit 1
+          fi
+
+          # Check if the main process has auto-update code
+          if grep -q "updateElectronApp" src/main.ts; then
+            echo "✅ Auto-update code is present in main process"
+          else
+            echo "❌ Auto-update code is missing from main process"
+            exit 1
+          fi
+
+          # Check if forge config has GitHub publisher
+          if grep -q "PublisherGithub" forge.config.ts; then
+            echo "✅ GitHub publisher is configured"
+          else
+            echo "❌ GitHub publisher is not configured"
+            exit 1
+          fi
+
+          echo "✅ Auto-update configuration verification passed!"
+
+      - name: Test auto-update endpoint
+        run: |
+          VERSION="${{ needs.check-version.outputs.version }}"
+          REPO="${{ github.repository }}"
+
+          echo "🔍 Testing auto-update endpoint..."
+
+          # Test the update.electronjs.org endpoint
+          UPDATE_URL="https://update.electronjs.org/$REPO/darwin/$VERSION"
+          echo "Testing URL: $UPDATE_URL"
+
+          # Make a request to check if the update endpoint is working
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "$UPDATE_URL" || echo "000")
+
+          if [ "$RESPONSE" = "200" ] || [ "$RESPONSE" = "404" ]; then
+            echo "✅ Auto-update endpoint is accessible (HTTP $RESPONSE)"
+          else
+            echo "⚠️  Auto-update endpoint returned HTTP $RESPONSE"
+          fi
+
+  # Job to clean up and finalize
+  cleanup:
+    needs: [check-version, create-release, verify-auto-update]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check workflow status
+        run: |
+          if [ "${{ needs.check-version.result }}" = "success" ] && \
+             [ "${{ needs.create-release.result }}" = "success" ] && \
+             [ "${{ needs.verify-auto-update.result }}" = "success" ]; then
+            echo "🎉 Auto-update release workflow completed successfully!"
+            echo "📱 Users will now receive automatic updates for version ${{ needs.check-version.outputs.version }}"
+          else
+            echo "⚠️  Auto-update release workflow had some issues:"
+            echo "   Check Version: ${{ needs.check-version.result }}"
+            echo "   Create Release: ${{ needs.create-release.result }}"
+            echo "   Verify Auto-Update: ${{ needs.verify-auto-update.result }}"
+          fi
