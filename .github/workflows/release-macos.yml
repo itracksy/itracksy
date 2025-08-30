@@ -25,7 +25,7 @@ jobs:
             description: "Intel (x64)"
 
     runs-on: macos-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -61,7 +61,7 @@ jobs:
     needs: build-macos
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -88,41 +88,41 @@ jobs:
           name: "macOS Release ${{ steps.get_version.outputs.VERSION }}"
           body: |
             ## 🍎 macOS Release ${{ steps.get_version.outputs.VERSION }}
-            
+
             ### 🚀 What's New
             - Session Review feature for enhanced productivity tracking
             - Enhanced auto-update system
             - Better performance and stability
-            
+
             ### 📱 Supported Architectures
             - **Apple Silicon (ARM64)**: Native performance on M1/M2/M3 Macs
             - **Intel (x64)**: Compatible with Intel-based Macs
-            
+
             ### 📥 Downloads
             Download the appropriate version for your Mac:
-            
+
             **Apple Silicon Macs (M1/M2/M3):**
             - Use the ARM64 DMG installer
             - Use the ARM64 ZIP for portable installation
-            
+
             **Intel Macs:**
-            - Use the x64 DMG installer  
+            - Use the x64 DMG installer
             - Use the x64 ZIP for portable installation
-            
+
             ### 🔄 Auto-Update
             This version supports automatic updates. The app will check for updates every 24 hours.
-            
+
             ### 🛡️ Security
             - Code signed and notarized for macOS
             - Compatible with Gatekeeper security
             - Safe to install and run
-            
+
             ### 📋 Installation
             1. Download the appropriate DMG file for your Mac
             2. Double-click to mount the disk image
             3. Drag iTracksy to your Applications folder
             4. Launch from Applications or Spotlight
-            
+
             ### 🔧 Troubleshooting
             If you encounter any issues:
             - Ensure you're using the correct architecture version
@@ -141,7 +141,7 @@ jobs:
     needs: release-macos
     runs-on: ubuntu-latest
     if: always()
-    
+
     steps:
       - name: Notify macOS release completion
         run: |
