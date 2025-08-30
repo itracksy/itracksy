@@ -244,9 +244,7 @@ jobs:
           # Create release notes
           RELEASE_NOTES="## What's New in $VERSION\n\n$CHANGELOG\n\n## Auto-Update\n\nThis release includes automatic update functionality. Users will be notified of updates and can install them automatically.\n\n## Installation\n\nDownload the appropriate installer for your system architecture:\n- **macOS Intel (x64)**: Use the .dmg file\n- **macOS Apple Silicon (ARM64)**: Use the .dmg file\n\n## Auto-Update Features\n\n- Automatic update detection\n- Seamless installation process\n- Background download and installation\n- User notification system\n\n## Auto-Update Files\n\nThis release includes ZIP files required by the auto-update system:\n- **macOS Intel (x64)**: `itracksy-darwin-x64-$VERSION.zip`\n- **macOS Apple Silicon (ARM64)**: `itracksy-darwin-arm64-$VERSION.zip`\n\nThese ZIP files are automatically detected by update.electronjs.org for seamless auto-updates."
 
-          echo "release-notes<<EOF" >> $GITHUB_OUTPUT
-          echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "release-notes=$RELEASE_NOTES" >> $GITHUB_OUTPUT
 
       - name: Check if release already exists
         id: check-release
