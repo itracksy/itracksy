@@ -252,16 +252,16 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="${{ needs.check-version.outputs.version }}"
-          
+
           # Verify the release exists before uploading assets
           RELEASE_CHECK=$(gh api repos/${{ github.repository }}/releases/tags/$VERSION --jq '.id' 2>/dev/null || echo "")
-          
+
           if [ -z "$RELEASE_CHECK" ]; then
             echo "❌ Release $VERSION does not exist - cannot upload assets"
             echo "This might happen if the release creation step failed"
             exit 1
           fi
-          
+
           echo "✅ Release $VERSION exists (ID: $RELEASE_CHECK) - proceeding with asset upload"
 
           # Find all DMG files and upload them to the release
