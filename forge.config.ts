@@ -6,6 +6,7 @@ import path, { join, normalize } from "node:path";
 import { MakerDeb } from "@electron-forge/maker-deb";
 import { MakerRpm } from "@electron-forge/maker-rpm";
 import { MakerDMG } from "@electron-forge/maker-dmg";
+import { MakerZIP } from "@electron-forge/maker-zip";
 // Use flora-colossus for finding all dependencies of EXTERNAL_DEPENDENCIES
 // flora-colossus is maintained by MarshallOfSound (a top electron-forge contributor)
 // already included as a dependency of electron-packager/galactus (so we do NOT have to add it to package.json)
@@ -315,6 +316,10 @@ const config: ForgeConfig = {
       icon: path.resolve(__dirname, "resources", "icon.icns"),
       format: "ULFO", // Use a different format that works better with permissions
       overwrite: true,
+    }),
+    new MakerZIP({
+      // Generate ZIP files required by update.electronjs.org
+      // Must match pattern: .*-(mac|darwin|osx).*.zip
     }),
     new MakerRpm({}),
     new MakerDeb({}),

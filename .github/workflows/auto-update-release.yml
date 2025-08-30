@@ -296,11 +296,30 @@ jobs:
             echo "⚠️  macOS Apple Silicon (ARM64) DMG not found: $MACOS_ARM64_DMG"
           fi
 
-          # Also check for any ZIP files that might exist
-          ZIP_FILES=$(find out/make -name "*.zip" -type f 2>/dev/null || echo "")
-          if [ -n "$ZIP_FILES" ]; then
-            echo "📦 Found ZIP files, uploading:"
-            echo "$ZIP_FILES" | while read -r file; do
+          # Check for ZIP files required by update.electronjs.org
+          # Must match pattern: .*-(mac|darwin|osx).*.zip
+          MACOS_ZIP_X64="out/make/itracksy-$VERSION-mac-x64.zip"
+          MACOS_ZIP_ARM64="out/make/itracksy-$VERSION-mac-arm64.zip"
+          
+          if [ -f "$MACOS_ZIP_X64" ]; then
+            echo "📦 Uploading macOS Intel (x64) ZIP: $MACOS_ZIP_X64"
+            gh release upload "$VERSION" "$MACOS_ZIP_X64" --clobber
+          else
+            echo "⚠️  macOS Intel (x64) ZIP not found: $MACOS_ZIP_X64"
+          fi
+          
+          if [ -f "$MACOS_ZIP_ARM64" ]; then
+            echo "📦 Uploading macOS Apple Silicon (ARM64) ZIP: $MACOS_ZIP_ARM64"
+            gh release upload "$VERSION" "$MACOS_ZIP_ARM64" --clobber
+          else
+            echo "⚠️  macOS Apple Silicon (ARM64) ZIP not found: $MACOS_ZIP_ARM64"
+          fi
+          
+          # Also check for any other ZIP files that might exist
+          OTHER_ZIP_FILES=$(find out/make -name "*.zip" -type f 2>/dev/null | grep -v "$MACOS_ZIP_X64" | grep -v "$MACOS_ZIP_ARM64" || echo "")
+          if [ -n "$OTHER_ZIP_FILES" ]; then
+            echo "📦 Found additional ZIP files, uploading:"
+            echo "$OTHER_ZIP_FILES" | while read -r file; do
               if [ -f "$file" ]; then
                 echo "  - Uploading: $file"
                 gh release upload "$VERSION" "$file" --clobber
