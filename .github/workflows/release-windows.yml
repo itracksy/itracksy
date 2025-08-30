@@ -3,7 +3,7 @@ name: Release Windows
 on:
   push:
     tags:
-      - "v*.*.*" # Trigger on version tags
+      # - "v*.*.*" # Trigger on version tags
 
 permissions:
   contents: write

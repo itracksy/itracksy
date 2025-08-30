@@ -3,7 +3,7 @@ name: Release Linux
 on:
   push:
     tags:
-      - "v*.*.*" # Trigger on version tags
+      # - "v*.*.*" # Trigger on version tags
 
 permissions:
   contents: write
