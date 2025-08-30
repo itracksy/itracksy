@@ -65,9 +65,6 @@ jobs:
     needs: check-version
     if: needs.check-version.outputs.should-update == 'true'
     runs-on: macos-14
-    strategy:
-      matrix:
-        arch: [x64, arm64]
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -132,7 +129,7 @@ jobs:
           # Allow codesign to access keychain
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
-      - name: Build for macOS (${{ matrix.arch }})
+      - name: Build for macOS (both architectures)
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -140,21 +137,64 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           NODE_ENV: production
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ARCH: ${{ matrix.arch }}
           VITE_AXIOM_TOKEN: ${{ secrets.VITE_AXIOM_TOKEN }}
           VITE_AXIOM_ORG_ID: ${{ secrets.VITE_AXIOM_ORG_ID }}
           VITE_AXIOM_DATASET: ${{ secrets.VITE_AXIOM_DATASET }}
           VITE_PUBLIC_POSTHOG_KEY: ${{ secrets.VITE_PUBLIC_POSTHOG_KEY }}
           VITE_PUBLIC_POSTHOG_HOST: ${{ secrets.VITE_PUBLIC_POSTHOG_HOST }}
         run: |
-          echo "Building auto-update for architecture: $ARCH"
+          echo "Building auto-update for both architectures (x64 and arm64)"
           echo "Version: ${{ needs.check-version.outputs.version }}"
 
           # Verify keychain access
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" $RUNNER_TEMP/app-signing.keychain-db
 
-          # Build with the specific architecture
-          npm run publish -- --arch=$ARCH
+          # Build for both architectures to ensure ZIP files are created
+          echo "🔨 Building for x64 architecture..."
+          npm run publish -- --arch=x64
+
+          echo "🔨 Building for arm64 architecture..."
+          npm run publish -- --arch=arm64
+
+          # Verify ZIP files were created for update.electronjs.org
+          echo "🔍 Checking for ZIP files..."
+          find out/make -name "*.zip" -type f
+          echo "📦 ZIP files found:"
+          ls -la out/make/*.zip 2>/dev/null || echo "No ZIP files found"
+
+          # Check the exact naming pattern of generated files
+          echo "🔍 All generated files in out/make:"
+          find out/make -type f -name "*$VERSION*" | sort
+
+          # Check if any files match the update.electronjs.org pattern
+          echo "🔍 Files matching update.electronjs.org pattern .*-(mac|darwin|osx).*.zip:"
+          find out/make -type f -name "*$VERSION*" | grep -E ".*-(mac|darwin|osx).*\.zip" || echo "No files match the required pattern"
+
+          # If ZIP files are not created by MakerZIP, create them manually
+          echo "🔧 Creating ZIP files manually if needed..."
+          VERSION="${{ needs.check-version.outputs.version }}"
+
+          # Check for x64 build directory
+          X64_DIR="out/make/itracksy-$VERSION-x64"
+          if [ -d "$X64_DIR" ]; then
+            echo "📦 Creating ZIP for x64 architecture..."
+            cd "$X64_DIR"
+            zip -r "../itracksy-$VERSION-mac-x64.zip" .
+            cd - > /dev/null
+          fi
+
+          # Check for arm64 build directory
+          ARM64_DIR="out/make/itracksy-$VERSION-arm64"
+          if [ -d "$ARM64_DIR" ]; then
+            echo "📦 Creating ZIP for arm64 architecture..."
+            cd "$ARM64_DIR"
+            zip -r "../itracksy-$VERSION-mac-arm64.zip" .
+            cd - > /dev/null
+          fi
+
+          # Verify ZIP files were created
+          echo "🔍 Final ZIP files check:"
+          find out/make -name "*.zip" -type f
 
       - name: Clean up keychain
         run: |
@@ -163,7 +203,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: macos-${{ matrix.arch }}-${{ needs.check-version.outputs.version }}
+          name: macos-both-archs-${{ needs.check-version.outputs.version }}
           path: |
             out/make/**/*.dmg
             out/make/**/*.zip
@@ -182,7 +222,7 @@ jobs:
       - name: Download all build artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: macos-*-${{ needs.check-version.outputs.version }}
+          pattern: macos-both-archs-${{ needs.check-version.outputs.version }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -207,7 +247,7 @@ jobs:
           fi
 
           # Create release notes
-          RELEASE_NOTES="## What's New in $VERSION\n\n$CHANGELOG\n\n## Auto-Update\n\nThis release includes automatic update functionality. Users will be notified of updates and can install them automatically.\n\n## Installation\n\nDownload the appropriate installer for your system architecture:\n- **macOS Intel (x64)**: Use the .dmg file\n- **macOS Apple Silicon (ARM64)**: Use the .dmg file\n\n## Auto-Update Features\n\n- Automatic update detection\n- Seamless installation process\n- Background download and installation\n- User notification system"
+          RELEASE_NOTES="## What's New in $VERSION\n\n$CHANGELOG\n\n## Auto-Update\n\nThis release includes automatic update functionality. Users will be notified of updates and can install them automatically.\n\n## Installation\n\nDownload the appropriate installer for your system architecture:\n- **macOS Intel (x64)**: Use the .dmg file\n- **macOS Apple Silicon (ARM64)**: Use the .dmg file\n\n## Auto-Update Features\n\n- Automatic update detection\n- Seamless installation process\n- Background download and installation\n- User notification system\n\n## Auto-Update Files\n\nThis release includes ZIP files required by the auto-update system:\n- **macOS Intel (x64)**: `itracksy-$VERSION-mac-x64.zip`\n- **macOS Apple Silicon (ARM64)**: `itracksy-$VERSION-mac-arm64.zip`"
 
           echo "release-notes<<EOF" >> $GITHUB_OUTPUT
           echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
@@ -400,6 +440,32 @@ jobs:
             echo "✅ Auto-update endpoint is accessible (HTTP $RESPONSE)"
           else
             echo "⚠️  Auto-update endpoint returned HTTP $RESPONSE"
+          fi
+
+          # Check if ZIP files are accessible in the GitHub release
+          echo "🔍 Verifying ZIP files in GitHub release..."
+
+          # Get the release assets
+          ASSETS=$(gh api repos/$REPO/releases/tags/$VERSION --jq '.assets[] | .name' 2>/dev/null || echo "")
+
+          if [ -n "$ASSETS" ]; then
+            echo "📦 Release assets found:"
+            echo "$ASSETS"
+
+            # Check for required ZIP files
+            if echo "$ASSETS" | grep -q "itracksy-$VERSION-mac-x64.zip"; then
+              echo "✅ x64 ZIP file found in release"
+            else
+              echo "❌ x64 ZIP file missing from release"
+            fi
+
+            if echo "$ASSETS" | grep -q "itracksy-$VERSION-mac-arm64.zip"; then
+              echo "✅ arm64 ZIP file found in release"
+            else
+              echo "❌ arm64 ZIP file missing from release"
+            fi
+          else
+            echo "⚠️  No release assets found"
           fi
 
   # Job to clean up and finalize

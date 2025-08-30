@@ -320,6 +320,8 @@ const config: ForgeConfig = {
     new MakerZIP({
       // Generate ZIP files required by update.electronjs.org
       // Must match pattern: .*-(mac|darwin|osx).*.zip
+      // This will create ZIP files for macOS builds
+      // Note: MakerZIP works with all platforms, so it should create ZIP files
     }),
     new MakerRpm({}),
     new MakerDeb({}),
