@@ -253,16 +253,26 @@ jobs:
         run: |
           VERSION="${{ needs.check-version.outputs.version }}"
 
-          # Verify the release exists before uploading assets
-          RELEASE_CHECK=$(gh api repos/${{ github.repository }}/releases/tags/$VERSION --jq '.id' 2>/dev/null || echo "")
-
-          if [ -z "$RELEASE_CHECK" ]; then
+                    # Verify the release exists before uploading assets
+          RELEASE_CHECK=$(gh api repos/${{ github.repository }}/releases/tags/$VERSION 2>/dev/null || echo "")
+          
+          # Check if the response contains an error message
+          if echo "$RELEASE_CHECK" | grep -q '"message":"Not Found"'; then
             echo "❌ Release $VERSION does not exist - cannot upload assets"
             echo "This might happen if the release creation step failed"
             exit 1
           fi
-
-          echo "✅ Release $VERSION exists (ID: $RELEASE_CHECK) - proceeding with asset upload"
+          
+          # Extract the release ID from the response
+          RELEASE_ID=$(echo "$RELEASE_CHECK" | jq -r '.id // empty' 2>/dev/null || echo "")
+          
+          if [ -z "$RELEASE_ID" ] || [ "$RELEASE_ID" = "null" ]; then
+            echo "❌ Release $VERSION does not exist or has invalid ID - cannot upload assets"
+            echo "Response: $RELEASE_CHECK"
+            exit 1
+          fi
+          
+          echo "✅ Release $VERSION exists (ID: $RELEASE_ID) - proceeding with asset upload"
 
           # Find all DMG files and upload them to the release
           find . -name "*.dmg" -type f | while read -r file; do
