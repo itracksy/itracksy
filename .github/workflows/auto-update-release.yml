@@ -1,5 +1,10 @@
 name: Auto-Update Release
 
+# Add concurrency control to prevent multiple runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     tags:
@@ -46,19 +51,14 @@ jobs:
           fi
 
           echo "Checking version: $VERSION"
+          echo "Workflow run ID: ${{ github.run_id }}"
+          echo "Workflow run number: ${{ github.run_number }}"
 
-          # Check if this version already exists in releases
-          RELEASE_EXISTS=$(gh api repos/${{ github.repository }}/releases/tags/$VERSION --jq '.id' 2>/dev/null || echo "")
-
-          if [ -z "$RELEASE_EXISTS" ]; then
-            echo "should-update=true" >> $GITHUB_OUTPUT
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
-            echo "✅ New version $VERSION detected - will create auto-update"
-          else
-            echo "should-update=false" >> $GITHUB_OUTPUT
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
-            echo "⚠️  Version $VERSION already exists - skipping auto-update"
-          fi
+          # Always proceed with auto-update for new version tags
+          # The concurrency control ensures only one workflow runs per version
+          echo "should-update=true" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "✅ Processing version $VERSION for auto-update"
 
   # Job to build and publish the auto-update
   auto-update-release:
@@ -213,7 +213,28 @@ jobs:
           echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
+      - name: Check if release already exists
+        id: check-release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ needs.check-version.outputs.version }}"
+          
+          # Check if release already exists
+          RELEASE_EXISTS=$(gh api repos/${{ github.repository }}/releases/tags/$VERSION --jq '.id' 2>/dev/null || echo "")
+          
+          if [ -n "$RELEASE_EXISTS" ]; then
+            echo "release-exists=true" >> $GITHUB_OUTPUT
+            echo "release-id=$RELEASE_EXISTS" >> $GITHUB_OUTPUT
+            echo "ℹ️  Release $VERSION already exists (ID: $RELEASE_EXISTS)"
+          else
+            echo "release-exists=false" >> $GITHUB_OUTPUT
+            echo "release-id=" >> $GITHUB_OUTPUT
+            echo "✅ Release $VERSION does not exist - will create new"
+          fi
+
       - name: Create GitHub Release
+        if: steps.check-release.outputs.release-exists != 'true'
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
