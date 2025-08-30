@@ -284,12 +284,11 @@ jobs:
             exit 1
           fi
 
-          # Check if forge config has GitHub publisher
+          # Check if forge config has GitHub publisher (optional since we handle publishing in workflow)
           if grep -q "PublisherGithub" forge.config.ts; then
-            echo "✅ GitHub publisher is configured"
+            echo "✅ GitHub publisher is configured in forge config"
           else
-            echo "❌ GitHub publisher is not configured"
-            exit 1
+            echo "ℹ️  GitHub publisher not in forge config (handled by workflow)"
           fi
 
           echo "✅ Auto-update configuration verification passed!"

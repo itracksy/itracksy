@@ -320,16 +320,17 @@ const config: ForgeConfig = {
     new MakerDeb({}),
   ],
   // Publishers for different platforms
-  publishers: [
-    new PublisherGithub({
-      repository: {
-        owner: "hunght",
-        name: "itracksy",
-      },
-      prerelease: false,
-      draft: true,
-    }),
-  ],
+  // Note: GitHub publishing is handled by our auto-update workflow
+  // publishers: [
+  //   new PublisherGithub({
+  //     repository: {
+  //       owner: "hunght",
+  //       name: "itracksy",
+  //     },
+  //     prerelease: false,
+  //     draft: true,
+  //   }),
+  // ],
   // Plugins for custom build steps
   plugins: [
     new VitePlugin({
