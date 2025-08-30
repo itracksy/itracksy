@@ -170,26 +170,21 @@ jobs:
           echo "🔍 Files matching update.electronjs.org pattern .*-(mac|darwin|osx).*.zip:"
           find out/make -type f -name "*$VERSION*" | grep -E ".*-(mac|darwin|osx).*\.zip" || echo "No files match the required pattern"
 
-          # If ZIP files are not created by MakerZIP, create them manually
-          echo "🔧 Creating ZIP files manually if needed..."
+          # The MakerZIP is already creating ZIP files correctly!
+          # Just copy them to the root out/make directory for easier access
+          echo "📦 Copying ZIP files to root directory for easier access..."
           VERSION="${{ needs.check-version.outputs.version }}"
 
-          # Check for x64 build directory
-          X64_DIR="out/make/itracksy-$VERSION-x64"
-          if [ -d "$X64_DIR" ]; then
-            echo "📦 Creating ZIP for x64 architecture..."
-            cd "$X64_DIR"
-            zip -r "../itracksy-$VERSION-mac-x64.zip" .
-            cd - > /dev/null
+          # Copy x64 ZIP
+          if [ -f "out/make/zip/darwin/x64/itracksy-darwin-x64-$VERSION.zip" ]; then
+            cp "out/make/zip/darwin/x64/itracksy-darwin-x64-$VERSION.zip" "out/make/itracksy-$VERSION-mac-x64.zip"
+            echo "✅ Copied x64 ZIP to root directory"
           fi
 
-          # Check for arm64 build directory
-          ARM64_DIR="out/make/itracksy-$VERSION-arm64"
-          if [ -d "$ARM64_DIR" ]; then
-            echo "📦 Creating ZIP for arm64 architecture..."
-            cd "$ARM64_DIR"
-            zip -r "../itracksy-$VERSION-mac-arm64.zip" .
-            cd - > /dev/null
+          # Copy arm64 ZIP
+          if [ -f "out/make/zip/darwin/arm64/itracksy-darwin-arm64-$VERSION.zip" ]; then
+            cp "out/make/zip/darwin/arm64/itracksy-darwin-arm64-$VERSION.zip" "out/make/itracksy-$VERSION-mac-arm64.zip"
+            echo "✅ Copied arm64 ZIP to root directory"
           fi
 
           # Verify ZIP files were created
@@ -247,7 +242,7 @@ jobs:
           fi
 
           # Create release notes
-          RELEASE_NOTES="## What's New in $VERSION\n\n$CHANGELOG\n\n## Auto-Update\n\nThis release includes automatic update functionality. Users will be notified of updates and can install them automatically.\n\n## Installation\n\nDownload the appropriate installer for your system architecture:\n- **macOS Intel (x64)**: Use the .dmg file\n- **macOS Apple Silicon (ARM64)**: Use the .dmg file\n\n## Auto-Update Features\n\n- Automatic update detection\n- Seamless installation process\n- Background download and installation\n- User notification system\n\n## Auto-Update Files\n\nThis release includes ZIP files required by the auto-update system:\n- **macOS Intel (x64)**: `itracksy-$VERSION-mac-x64.zip`\n- **macOS Apple Silicon (ARM64)**: `itracksy-$VERSION-mac-arm64.zip`"
+          RELEASE_NOTES="## What's New in $VERSION\n\n$CHANGELOG\n\n## Auto-Update\n\nThis release includes automatic update functionality. Users will be notified of updates and can install them automatically.\n\n## Installation\n\nDownload the appropriate installer for your system architecture:\n- **macOS Intel (x64)**: Use the .dmg file\n- **macOS Apple Silicon (ARM64)**: Use the .dmg file\n\n## Auto-Update Features\n\n- Automatic update detection\n- Seamless installation process\n- Background download and installation\n- User notification system\n\n## Auto-Update Files\n\nThis release includes ZIP files required by the auto-update system:\n- **macOS Intel (x64)**: `itracksy-darwin-x64-$VERSION.zip`\n- **macOS Apple Silicon (ARM64)**: `itracksy-darwin-arm64-$VERSION.zip`\n\nThese ZIP files are automatically detected by update.electronjs.org for seamless auto-updates."
 
           echo "release-notes<<EOF" >> $GITHUB_OUTPUT
           echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
