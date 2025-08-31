@@ -2,8 +2,7 @@ name: Release macOS
 
 on:
   push:
-    tags:
-- "v*.*.*" # Trigger on version tags
+    tags: ["v*.*.*"]
 
 permissions:
   contents: write

@@ -1,9 +1,8 @@
 name: Release Linux
 
 on:
-push:
-  tags:
-- "v*.*.*" # Trigger on version tags
+  push:
+    tags: ["v*.*.*"]
 
 permissions:
   contents: write
