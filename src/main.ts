@@ -38,6 +38,20 @@ let tray: Tray | null = null;
 let isQuiting: boolean = false;
 
 /**
+ * Initialize auto-update functionality with error handling
+ * This wrapper ensures that auto-update failures don't crash the app
+ */
+function initializeAutoUpdate(): void {
+  try {
+    updateElectronApp();
+    logger.info("Auto-update initialized - will check for updates automatically on startup");
+  } catch (error) {
+    logger.error("Failed to initialize auto-update functionality:", error);
+    // Don't throw the error - auto-update is not critical for app functionality
+  }
+}
+
+/**
  * Get the tray instance
  * @returns The tray instance or null if not created yet
  */
@@ -359,11 +373,8 @@ if (!gotTheLock) {
 app.whenReady().then(async () => {
   try {
     logger.clearLogFile();
-    // Initialize auto-update functionality
-    updateElectronApp();
-    // Log that auto-update is initialized
-    logger.info("Auto-update initialized - will check for updates automatically on startup");
-
+    // Initialize auto-update functionality with error handling
+    initializeAutoUpdate();
     await initializeDatabase();
 
     // Initialize auto-start functionality
