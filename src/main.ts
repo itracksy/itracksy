@@ -512,6 +512,7 @@ declare global {
       send: (data: any) => Promise<void>;
       close: () => Promise<void>;
       action: () => Promise<void>;
+      extendSession: (minutesToAdd: number) => Promise<any>;
       onNotification: (callback: (data: any) => void) => void;
     };
   }

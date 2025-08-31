@@ -12,14 +12,22 @@ import { getTitleTimeEntry } from "../db/timeEntryExt";
 import { sendNotificationToWindow } from "../../helpers/notification/notification-window-utils";
 
 export const sendNotification = async (
-  options: Omit<NotificationInsert, "id">,
+  options: Omit<NotificationInsert, "id"> & {
+    sessionEndTime?: number;
+    actions?: Array<{
+      label: string;
+      action: () => Promise<void>;
+      variant?: "primary" | "secondary" | "success" | "warning";
+    }>;
+  },
   timeoutMs?: number,
   autoDismiss?: boolean
 ) => {
   try {
-    // Store notification in database
+    // Store notification in database (exclude sessionEndTime and actions as they're UI-only)
+    const { sessionEndTime, actions, ...dbOptions } = options;
     await db.insert(notifications).values({
-      ...options,
+      ...dbOptions,
       id: nanoid(),
     });
 
@@ -28,6 +36,8 @@ export const sendNotification = async (
       title: options.title,
       body: options.body,
       autoDismiss: autoDismiss ?? false, // Default is false (no auto dismiss)
+      sessionEndTime: options.sessionEndTime, // Pass through session end time if available
+      actions: options.actions, // Pass through actions if available
     });
 
     return success;
@@ -100,39 +110,51 @@ export const sendNotificationWhenNoActiveEntry = async (userId: string) => {
 
 export const sendNotificationService = async (
   timeEntry: TimeEntryWithRelations,
-  secondsExceeded: number
+  secondsRemaining: number
 ): Promise<void> => {
   if (!timeEntry.targetDuration) {
     return;
   }
 
-  if (
-    (timeEntry.notificationSentAt ?? 0) <= 3 &&
-    secondsExceeded >= getSecondsToSendNoti(timeEntry.notificationSentAt)
-  ) {
-    const { title, body } = getNotificationOptions({
-      timeEntry,
-      minutesExceeded: Math.floor(secondsExceeded / 60),
-    });
+  // Only send notification once when 1 minute (60 seconds) remains
+  if (secondsRemaining <= 60 && secondsRemaining > 50 && !timeEntry.notificationSentAt) {
+    const { title, body } = getOneMinuteWarningNotificationOptions(timeEntry);
+    const sessionEndTime = timeEntry.startTime + timeEntry.targetDuration * 60 * 1000;
+
+    // Create extend session actions - these are placeholders, actual IPC will be handled in the UI
+    const extendActions = [
+      {
+        label: "+ 5 minutes",
+        action: async () => {}, // Placeholder - actual implementation in UI
+        variant: "success" as const,
+      },
+      {
+        label: "+ 25 minutes",
+        action: async () => {}, // Placeholder - actual implementation in UI
+        variant: "primary" as const,
+      },
+    ];
 
     try {
-      sendNotification(
+      await sendNotification(
         {
           title,
           body,
           userId: timeEntry.userId,
-          type: "engagement_time_entry",
+          type: "session_ending_warning",
           timeEntryId: timeEntry.id,
           createdAt: Date.now(),
+          sessionEndTime, // Include session end time for countdown
+          actions: extendActions, // Include extend session actions
         },
         undefined,
-        false
-      ); // Keep engagement notifications persistent (no auto-dismiss)
-      const notificationSentAt = (timeEntry.notificationSentAt ?? 0) + 1;
+        false // Don't auto-dismiss when user has actions to take
+      );
 
-      await updateTimeEntry(timeEntry.id, { notificationSentAt });
+      // Mark that notification has been sent for this session
+      await updateTimeEntry(timeEntry.id, { notificationSentAt: 1 });
     } catch (error) {
-      logger.error("[sendNotification] Failed to send or update notification", { error });
+      logger.error("[sendNotification] Failed to send 1-minute warning notification", { error });
     }
   }
 };
@@ -178,6 +200,18 @@ const getNotificationOptions = ({
       minutesExceeded > 0
         ? breakMessages[Math.floor(Math.random() * breakMessages.length)]
         : `Break time complete! 🎉 Ready to tackle work with fresh energy?`,
+  };
+};
+
+const getOneMinuteWarningNotificationOptions = (
+  timeEntry: TimeEntryWithRelations
+): { title: string; body: string } => {
+  const taskTitle = getTitleTimeEntry(timeEntry);
+  return {
+    title: timeEntry.isFocusMode ? `Focus session ending soon! ⏰` : `Break ending soon! ⏰`,
+    body: timeEntry.isFocusMode
+      ? `Your focus session "${taskTitle}" will end in 1 minute. Prepare to wrap up! 🎯`
+      : `Your break will end in 1 minute. Get ready to focus! 🚀`,
   };
 };
 

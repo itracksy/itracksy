@@ -124,6 +124,28 @@ export async function deleteTimeEntry(id: string): Promise<void> {
   await db.delete(timeEntries).where(eq(timeEntries.id, id));
 }
 
+export async function extendActiveSession(
+  userId: string,
+  minutesToAdd: number
+): Promise<TimeEntry | null> {
+  const activeEntry = await getActiveTimeEntry(userId);
+
+  if (!activeEntry || activeEntry.endTime) {
+    return null; // No active session to extend
+  }
+
+  const currentTargetDuration = activeEntry.targetDuration ?? 0;
+  const newTargetDuration = currentTargetDuration + minutesToAdd;
+
+  const updated = await updateTimeEntry(activeEntry.id, {
+    targetDuration: newTargetDuration,
+    // Reset notification flag so new warning can be sent for extended time
+    notificationSentAt: null,
+  });
+
+  return updated;
+}
+
 export async function getTimeEntriesForItem(itemId: string): Promise<TimeEntry[]> {
   return await db
     .select()

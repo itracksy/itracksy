@@ -7,6 +7,7 @@ import React, { useState, useEffect } from "react";
 const NotificationApp: React.FC = () => {
   const [notificationData, setNotificationData] = useState<NotificationData | null>(null);
   const [timeLeft, setTimeLeft] = useState<number>(5); // Auto-close after 5 seconds
+  const [sessionTimeLeft, setSessionTimeLeft] = useState<number | null>(null); // Session countdown
 
   useEffect(() => {
     console.log("NotificationApp: Component mounted");
@@ -25,14 +26,20 @@ const NotificationApp: React.FC = () => {
         if (data.autoDismiss) {
           setTimeLeft(5);
         }
+        // Initialize session countdown if sessionEndTime is provided
+        if (data.sessionEndTime) {
+          const timeUntilEnd = Math.max(0, Math.floor((data.sessionEndTime - Date.now()) / 1000));
+          setSessionTimeLeft(timeUntilEnd);
+        } else {
+          setSessionTimeLeft(null);
+        }
       };
 
       window.electronNotification.onNotification(handleNotification);
 
-      // Cleanup function would be called if available
+      // Only return cleanup function when component is truly unmounting
       return () => {
-        // Note: we may need to add a removeListener function to the preload script
-        console.log("Cleaning up notification listener");
+        console.log("NotificationApp: Component unmounting, cleaning up listeners");
       };
     } else {
       console.error("electronNotification not available in notification window");
@@ -52,6 +59,17 @@ const NotificationApp: React.FC = () => {
       closeNotification();
     }
   }, [notificationData, timeLeft]);
+
+  // Session countdown timer
+  useEffect(() => {
+    if (sessionTimeLeft !== null && sessionTimeLeft > 0) {
+      const timer = setTimeout(() => {
+        setSessionTimeLeft(sessionTimeLeft - 1);
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [sessionTimeLeft]);
 
   // Add keyboard support for closing notification
   useEffect(() => {
@@ -89,8 +107,62 @@ const NotificationApp: React.FC = () => {
       console.error("Failed to execute notification action:", error);
     }
   };
+
+  const handleExtendSession = async (minutesToAdd: number) => {
+    try {
+      console.log("Extending session by", minutesToAdd, "minutes");
+      if (window.electronNotification?.extendSession) {
+        const result = await window.electronNotification.extendSession(minutesToAdd);
+        console.log("Session extended successfully", result);
+
+        // Update the session end time in the countdown
+        if (notificationData?.sessionEndTime) {
+          const newEndTime = notificationData.sessionEndTime + minutesToAdd * 60 * 1000;
+          const newTimeLeft = Math.max(0, Math.floor((newEndTime - Date.now()) / 1000));
+          setSessionTimeLeft(newTimeLeft);
+
+          // Update the notification data to reflect the new end time
+          setNotificationData({
+            ...notificationData,
+            sessionEndTime: newEndTime,
+          });
+        }
+      } else {
+        console.error("extendSession function not available");
+      }
+    } catch (error) {
+      console.error("Failed to extend session:", error);
+    }
+  };
   if (!notificationData) {
-    return null;
+    console.log("NotificationApp: No notification data, rendering placeholder");
+    return (
+      <div
+        style={{
+          height: "100vh",
+          width: "100vw",
+          background: "transparent",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: "20px",
+          boxSizing: "border-box",
+        }}
+      >
+        <div
+          style={{
+            background: "rgba(255, 255, 255, 0.95)",
+            borderRadius: "12px",
+            padding: "20px",
+            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
+            maxWidth: "400px",
+            textAlign: "center",
+          }}
+        >
+          <p style={{ margin: 0, color: "#666", fontSize: "14px" }}>Waiting for notification...</p>
+        </div>
+      </div>
+    );
   }
   return (
     <div
@@ -245,33 +317,96 @@ const NotificationApp: React.FC = () => {
           <div
             style={{
               display: "flex",
-              flexDirection: "column",
+              flexDirection: "row",
               gap: "8px",
               marginTop: "16px",
               flex: "0 0 auto",
+              justifyContent: "center",
             }}
           >
-            {notificationData.actions.map((action: NotificationAction, index: number) => (
-              <button
-                key={index}
-                onClick={() => handleAction(action.action)}
-                className="action-button"
-                style={{
-                  padding: "10px 16px",
-                  background: index === 0 ? "#4CAF50" : index === 1 ? "#2196F3" : "#FF9800",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  textAlign: "left",
-                  transition: "opacity 0.2s",
-                }}
-              >
-                {action.label}
-              </button>
-            ))}
+            {notificationData.actions.map((action: NotificationAction, index: number) => {
+              // Handle extend session actions specially
+              if (action.label === "+ 5 minutes") {
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleExtendSession(5)}
+                    style={{
+                      padding: "10px 16px",
+                      background: "#28a745",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      transition: "all 0.2s",
+                      minWidth: "120px",
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.background = "#218838";
+                      e.currentTarget.style.transform = "translateY(-1px)";
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.background = "#28a745";
+                      e.currentTarget.style.transform = "translateY(0)";
+                    }}
+                  >
+                    {action.label}
+                  </button>
+                );
+              } else if (action.label === "+ 25 minutes") {
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleExtendSession(25)}
+                    style={{
+                      padding: "10px 16px",
+                      background: "#007bff",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      transition: "all 0.2s",
+                      minWidth: "120px",
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.background = "#0056b3";
+                      e.currentTarget.style.transform = "translateY(-1px)";
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.background = "#007bff";
+                      e.currentTarget.style.transform = "translateY(0)";
+                    }}
+                  >
+                    {action.label}
+                  </button>
+                );
+              } else {
+                // Handle other actions normally
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleAction(action.action)}
+                    style={{
+                      padding: "10px 16px",
+                      background: "#6c757d",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      fontSize: "14px",
+                      fontWeight: "500",
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    {action.label}
+                  </button>
+                );
+              }
+            })}
           </div>
         )}
 
@@ -302,6 +437,60 @@ const NotificationApp: React.FC = () => {
             >
               Dismiss
             </button>
+          </div>
+        )}
+
+        {/* Session countdown - show if sessionEndTime is provided */}
+        {sessionTimeLeft !== null && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              marginTop: "16px",
+              padding: "12px",
+              backgroundColor: "#f8f9fa",
+              borderRadius: "8px",
+              border: "2px solid #e9ecef",
+              flex: "0 0 auto",
+            }}
+          >
+            <div style={{ textAlign: "center" }}>
+              <p
+                style={{
+                  margin: "0 0 4px 0",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  color: "#495057",
+                }}
+              >
+                Session ends in:
+              </p>
+              <p
+                style={{
+                  margin: "0",
+                  fontSize: "24px",
+                  fontWeight: "700",
+                  color: sessionTimeLeft <= 10 ? "#dc3545" : "#198754",
+                  fontFamily: "monospace",
+                }}
+              >
+                {Math.floor(sessionTimeLeft / 60)}:
+                {(sessionTimeLeft % 60).toString().padStart(2, "0")}
+              </p>
+              {sessionTimeLeft <= 10 && (
+                <p
+                  style={{
+                    margin: "4px 0 0 0",
+                    fontSize: "12px",
+                    color: "#dc3545",
+                    fontWeight: "500",
+                  }}
+                >
+                  Time to wrap up!
+                </p>
+              )}
+            </div>
           </div>
         )}
 

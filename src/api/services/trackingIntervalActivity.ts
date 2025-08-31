@@ -73,17 +73,20 @@ export const startTracking = async (): Promise<void> => {
         elapsedSeconds: durationInSeconds,
       });
 
-      const timeExceeded =
-        Math.floor((Date.now() - activeEntry.startTime) / 1000) -
-        (activeEntry.targetDuration ?? 0) * 60;
+      const elapsedSeconds = Math.floor((Date.now() - activeEntry.startTime) / 1000);
+      const targetSeconds = (activeEntry.targetDuration ?? 0) * 60;
+      const timeRemaining = targetSeconds - elapsedSeconds;
 
-      if (timeExceeded > 0) {
-        // Check if time exceeded notifications are enabled before sending
+      // Send 1-minute warning notification if enabled
+      if (timeRemaining > 0) {
         const notificationsEnabled = await isTimeExceededNotificationEnabled();
         if (notificationsEnabled) {
-          await sendNotificationService(activeEntry, timeExceeded);
+          await sendNotificationService(activeEntry, timeRemaining);
         }
+      }
 
+      const timeExceeded = elapsedSeconds - targetSeconds;
+      if (timeExceeded > 0) {
         if (activeEntry.autoStopEnabled) {
           //stop the session when time is exceeded
           await updateTimeEntry(activeEntry.id, { endTime: Date.now() });

@@ -7,5 +7,6 @@ export type NotificationInsert = typeof notifications.$inferInsert & {
     | "remind_last_time_entry"
     | "focus_reminder"
     | "target_completed"
-    | "daily_start";
+    | "daily_start"
+    | "session_ending_warning";
 };

@@ -5,6 +5,7 @@ import { logger } from "../logger";
 export interface NotificationAction {
   label: string;
   action: () => Promise<void>;
+  variant?: "primary" | "secondary" | "success" | "warning"; // For styling
 }
 
 export interface NotificationData {
@@ -12,6 +13,7 @@ export interface NotificationData {
   body: string;
   autoDismiss?: boolean; // Default is false (turn off auto dismiss)
   actions?: NotificationAction[];
+  sessionEndTime?: number; // Timestamp when session ends (for countdown)
 }
 
 /**

@@ -2,6 +2,7 @@ import {
   NOTIFICATION_SEND_CHANNEL,
   NOTIFICATION_CLOSE_CHANNEL,
   NOTIFICATION_ACTION_CHANNEL,
+  NOTIFICATION_EXTEND_SESSION_CHANNEL,
 } from "./notification-channels";
 
 import { safelyRegisterListener } from "../safelyRegisterListener";
@@ -47,6 +48,28 @@ export const addNotificationEventListeners = () => {
       // You can add custom action handling here
     } catch (error) {
       logger.error("Failed to handle notification action", { error });
+    }
+  });
+
+  // Extend session handler
+  safelyRegisterListener(NOTIFICATION_EXTEND_SESSION_CHANNEL, async (_event, data) => {
+    try {
+      logger.debug("Extend session requested", data);
+      const { extendActiveSession } = await import("../../../api/services/timeEntry");
+      const { getCurrentUserIdLocalStorage } = await import("../../../api/services/userSettings");
+
+      const userId = await getCurrentUserIdLocalStorage();
+      if (!userId) {
+        throw new Error("No user ID found");
+      }
+
+      const result = await extendActiveSession(userId, data.minutesToAdd);
+      logger.debug("Session extended", { result, minutesToAdd: data.minutesToAdd });
+
+      return { success: true, updatedEntry: result };
+    } catch (error) {
+      logger.error("Failed to extend session", { error, data });
+      throw error;
     }
   });
 };
