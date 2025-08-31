@@ -131,7 +131,7 @@ function DownloadButtons({ downloadUrl, onOpenDownloadLink }: DownloadButtonsPro
           duration: 10000,
           action: (
             <Button
-              variant="outline"
+              variant="default"
               size="sm"
               onClick={async () => {
                 try {
@@ -157,7 +157,7 @@ function DownloadButtons({ downloadUrl, onOpenDownloadLink }: DownloadButtonsPro
         duration: 10000,
         action: (
           <Button
-            variant="outline"
+            variant="default"
             size="sm"
             onClick={async () => {
               try {
