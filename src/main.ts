@@ -359,17 +359,12 @@ if (!gotTheLock) {
 app.whenReady().then(async () => {
   try {
     logger.clearLogFile();
-    await initializeDatabase();
-
     // Initialize auto-update functionality
-    updateElectronApp({
-      logger: require("electron-log"),
-      updateInterval: "1 day", // Check for updates every 24 hours
-      notifyUser: true, // Show notification when updates are available
-    });
-
+    updateElectronApp();
     // Log that auto-update is initialized
     logger.info("Auto-update initialized - will check for updates automatically on startup");
+
+    await initializeDatabase();
 
     // Initialize auto-start functionality
     initializeAutoStart();
