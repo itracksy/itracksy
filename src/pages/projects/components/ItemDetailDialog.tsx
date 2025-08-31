@@ -22,6 +22,7 @@ import { formatDuration } from "@/utils/timeUtils";
 import type { Item, TimeEntry } from "@/types/projects";
 import { History } from "lucide-react";
 import { DialogDescription } from "@/components/ui/dialog";
+import { SessionReviewDialog } from "@/pages/focus/components/SessionReviewDialog";
 
 interface ItemDetailDialogProps {
   open: boolean;
@@ -161,33 +162,14 @@ export function ItemDetailDialog({ open, onOpenChange, item }: ItemDetailDialogP
 
       {/* Session Review Dialog */}
       {selectedTimeEntry && (
-        <Dialog open={sessionReviewOpen} onOpenChange={setSessionReviewOpen}>
-          <DialogContent className="max-h-[90vh] max-w-6xl overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <History className="h-5 w-5" />
-                {selectedTimeEntry.isFocusMode ? "Focus" : "Break"} Session Review
-              </DialogTitle>
-              <DialogDescription>
-                {selectedTimeEntry.endTime
-                  ? `Session from ${format(selectedTimeEntry.startTime, "MMM d, yyyy 'at' h:mm a")}`
-                  : "Current active session"}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-8 text-center">
-              <div className="text-lg font-medium">Session Review</div>
-              <div className="text-gray-600 dark:text-gray-400">
-                Duration:{" "}
-                {selectedTimeEntry.endTime
-                  ? formatDuration(selectedTimeEntry.endTime - selectedTimeEntry.startTime)
-                  : formatDuration(Date.now() - selectedTimeEntry.startTime)}
-              </div>
-              <div className="mt-4 text-sm text-gray-500">
-                Session activities and detailed analytics will be shown here.
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <SessionReviewDialog
+          session={{
+            ...selectedTimeEntry,
+            item: item,
+          }}
+          open={sessionReviewOpen}
+          onOpenChange={setSessionReviewOpen}
+        />
       )}
     </>
   );

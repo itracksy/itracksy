@@ -22,10 +22,21 @@ import { useCreateRule } from "@/hooks/use-create-rule";
 interface SessionReviewDialogProps {
   session: TimeEntryWithRelations | null;
   trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function SessionReviewDialog({ session, trigger }: SessionReviewDialogProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function SessionReviewDialog({
+  session,
+  trigger,
+  open,
+  onOpenChange,
+}: SessionReviewDialogProps) {
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+
+  // Use external state if provided, otherwise use internal state
+  const isOpen = open !== undefined ? open : internalIsOpen;
+  const setIsOpen = onOpenChange || setInternalIsOpen;
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -131,7 +142,7 @@ export function SessionReviewDialog({ session, trigger }: SessionReviewDialogPro
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
+      {trigger && !open && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent className="max-h-[90vh] max-w-6xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
