@@ -286,12 +286,47 @@ function DownloadButtons({ downloadUrl, latestVersion, onOpenDownloadLink }: Dow
         });
       } else if (result) {
         console.error("Update installation failed:", result);
-        toast({
-          title: "Installation Failed",
-          description: result.message,
-          variant: "destructive",
-          duration: 10000,
-        });
+
+        // Check if we have fallback options
+        if (result.fallbackUrl) {
+          toast({
+            title: "Auto-Update Failed",
+            description: result.message,
+            variant: "destructive",
+            duration: 15000,
+            action: (
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    window.open(result.fallbackUrl, "_blank");
+                  }}
+                >
+                  <ExternalLinkIcon className="mr-1 h-4 w-4" />
+                  Download Manually
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => {
+                    window.open("https://www.itracksy.com/download", "_blank");
+                  }}
+                >
+                  <ExternalLinkIcon className="mr-1 h-4 w-4" />
+                  View Releases
+                </Button>
+              </div>
+            ),
+          });
+        } else {
+          toast({
+            title: "Installation Failed",
+            description: result.message,
+            variant: "destructive",
+            duration: 10000,
+          });
+        }
       }
     } catch (error) {
       console.error("Failed to install update:", error);
@@ -301,17 +336,46 @@ function DownloadButtons({ downloadUrl, latestVersion, onOpenDownloadLink }: Dow
         zipFilePath: downloadedFilePath,
         version: latestVersion,
       });
+
+      // Show fallback options when installation fails
       toast({
-        title: "Installation Failed",
-        description: "An error occurred while installing the update",
+        title: "Auto-Update Failed",
+        description: "An error occurred while installing the update. You can download it manually.",
         variant: "destructive",
-        duration: 10000,
+        duration: 15000,
+        action: (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                window.open(downloadUrl, "_blank");
+              }}
+            >
+              <ExternalLinkIcon className="mr-1 h-4 w-4" />
+              Download Manually
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => {
+                window.open(
+                  `https://github.com/itracksy/itracksy/releases/tag/v${latestVersion}`,
+                  "_blank"
+                );
+              }}
+            >
+              <ExternalLinkIcon className="mr-1 h-4 w-4" />
+              View Releases
+            </Button>
+          </div>
+        ),
       });
     } finally {
       console.log("Install update process completed, setting isInstalling to false");
       setIsInstalling(false);
     }
-  }, [downloadedFilePath, latestVersion, toast]);
+  }, [downloadedFilePath, latestVersion, toast, downloadUrl]);
 
   return (
     <div className="flex flex-col gap-2">
