@@ -1,7 +1,7 @@
 {
   "name": "itracksy",
   "productName": "itracksy",
-  "version": "1.0.230",
+  "version": "1.0.235",
   "description": "A productivity app that tracks time, boosts focus, and provides insights into work habits, helping you manage time effectively and stay productive.",
   "main": ".vite/build/main.js",
   "scripts": {
@@ -144,6 +144,7 @@
     "date-fns": "^3.6.0",
     "drizzle-orm": "^0.44.5",
     "drizzle-zod": "^0.7.1",
+    "electron-log": "^5.4.3",
     "electron-squirrel-startup": "^1.0.1",
     "electron-trpc": "^0.7.1",
     "get-windows": "^9.2.3",
@@ -162,8 +163,8 @@
     "recharts": "^3.1.2",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
+    "update-electron-app": "^3.1.1",
     "winston": "^3.17.0",
-    "yauzl": "^3.2.0",
     "zod": "^3.25.76"
   }
 }

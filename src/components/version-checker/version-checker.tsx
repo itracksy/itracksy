@@ -1,9 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { DownloadIcon, ExternalLinkIcon, RefreshCwIcon, PackageIcon } from "lucide-react";
+import { DownloadIcon, ExternalLinkIcon, RefreshCwIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { trpcClient } from "@/utils/trpc";
+import path from "path";
 
 export interface VersionInfo {
   currentVersion: string;
@@ -22,81 +23,14 @@ interface VersionCheckerProps {
 // Separate component for download buttons to manage download state independently
 interface DownloadButtonsProps {
   downloadUrl: string;
-  latestVersion?: string;
   onOpenDownloadLink: () => void;
 }
 
-function DownloadButtons({ downloadUrl, latestVersion, onOpenDownloadLink }: DownloadButtonsProps) {
+function DownloadButtons({ downloadUrl, onOpenDownloadLink }: DownloadButtonsProps) {
   const [isDownloading, setIsDownloading] = useState(false);
-  const [isInstalling, setIsInstalling] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
-  const [downloadedFilePath, setDownloadedFilePath] = useState<string | null>(null);
-  const [autoDownloadComplete, setAutoDownloadComplete] = useState(false);
-  const autoDownloadAttempted = useRef(false);
   const { toast } = useToast();
   const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Reset auto-download attempt when version changes
-  useEffect(() => {
-    autoDownloadAttempted.current = false;
-  }, [latestVersion]);
-
-  // Check for existing downloaded file using tRPC
-  const { data: existingUpdate } = useQuery({
-    queryKey: ["checkExistingUpdate", latestVersion],
-    queryFn: () => trpcClient.utils.checkExistingUpdate.query({ version: latestVersion! }),
-    enabled: !!latestVersion && !downloadedFilePath,
-  });
-
-  // Update state when existing file is found
-  useEffect(() => {
-    if (existingUpdate?.exists && existingUpdate.filePath) {
-      console.log("Found existing download for version:", latestVersion);
-      setDownloadedFilePath(existingUpdate.filePath);
-      setAutoDownloadComplete(true);
-    }
-  }, [existingUpdate, latestVersion]);
-
-  // Auto-download when a new version is available (only once per version)
-  useEffect(() => {
-    // Only auto-download if we haven't attempted it yet for this version
-    if (downloadUrl && latestVersion && !autoDownloadAttempted.current) {
-      console.log("Auto-downloading latest version:", latestVersion);
-      autoDownloadAttempted.current = true;
-
-      // Use setTimeout to avoid render loop
-      const timeoutId = setTimeout(async () => {
-        try {
-          setIsDownloading(true);
-          setDownloadProgress(0);
-
-          const result = await trpcClient.utils.downloadUpdate.mutate({
-            downloadUrl,
-          });
-
-          if (result.status === "success" && result.filePath) {
-            setDownloadedFilePath(result.filePath);
-            setAutoDownloadComplete(true);
-            toast({
-              title: "Auto-download Complete",
-              description: `Update ${latestVersion} downloaded automatically. Click "Install Update" to install.`,
-            });
-          }
-        } catch (error) {
-          console.error("Auto-download failed:", error);
-          toast({
-            title: "Auto-download Failed",
-            description: "Failed to download update automatically. You can download manually.",
-            variant: "destructive",
-          });
-        } finally {
-          setIsDownloading(false);
-        }
-      }, 100);
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [downloadUrl, latestVersion, toast]); // Only essential dependencies
 
   const startProgressTimer = useCallback(() => {
     // Clear any existing timer
@@ -148,24 +82,28 @@ function DownloadButtons({ downloadUrl, latestVersion, onOpenDownloadLink }: Dow
       setDownloadProgress(100);
 
       if (result.status === "success") {
-        setDownloadedFilePath(result.filePath || null);
-        setAutoDownloadComplete(true);
         toast({
           title: "Download Complete",
-          description: `The update ZIP file has been downloaded. Click "Install Update" to automatically install the update.`,
+          description: `The update has been downloaded. Click "Install Update & Quit" to open the installer — the app will quit automatically to allow installation.`,
           variant: "default",
           duration: 2 * 60 * 1000, // 2 minutes
           action: (
             <div className="flex flex-col gap-2">
               <Button
-                variant="default"
+                variant="outline"
                 size="sm"
-                onClick={handleInstallUpdate}
-                disabled={isInstalling}
-                className="flex items-center gap-2"
+                onClick={async () => {
+                  if (result.filePath) {
+                    // Open the installer file
+                    await trpcClient.utils.openLocalFile.mutate({ filePath: result.filePath });
+                    // Quit the app after a short delay to allow the installer to start
+                    setTimeout(() => {
+                      trpcClient.utils.quitApp.mutate();
+                    }, 1000);
+                  }
+                }}
               >
-                <PackageIcon className="h-4 w-4" />
-                {isInstalling ? "Installing..." : "Install Update"}
+                Install Update & Quit
               </Button>
               <Button
                 variant="outline"
@@ -174,7 +112,7 @@ function DownloadButtons({ downloadUrl, latestVersion, onOpenDownloadLink }: Dow
                   if (result.filePath) {
                     const folderPath = result.filePath.substring(
                       0,
-                      result.filePath.lastIndexOf("/")
+                      result.filePath.lastIndexOf(path.sep)
                     );
                     trpcClient.utils.openFolder.mutate({ folderPath });
                   }
@@ -242,133 +180,27 @@ function DownloadButtons({ downloadUrl, latestVersion, onOpenDownloadLink }: Dow
     }
   }, [downloadUrl, toast, startProgressTimer, stopProgressTimer]);
 
-  const handleInstallUpdate = useCallback(async () => {
-    if (!downloadedFilePath || !latestVersion) {
-      console.error("Install update failed: missing file path or version", {
-        downloadedFilePath,
-        latestVersion,
-      });
-      return;
-    }
-
-    console.log("Starting update installation...", {
-      zipFilePath: downloadedFilePath,
-      version: latestVersion,
-    });
-    setIsInstalling(true);
-
-    try {
-      const result = await trpcClient.utils.installUpdate.mutate({
-        zipFilePath: downloadedFilePath,
-        version: latestVersion,
-      });
-
-      console.log("Install update result:", result);
-
-      if (result && result.status === "success") {
-        console.log("Update installation successful!");
-        toast({
-          title: "Update Installed Successfully",
-          description: result.message,
-          variant: "default",
-          duration: 10000,
-          action: (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => {
-                trpcClient.utils.quitApp.mutate();
-              }}
-            >
-              Restart App
-            </Button>
-          ),
-        });
-      } else if (result) {
-        console.error("Update installation failed:", result);
-        toast({
-          title: "Installation Failed",
-          description: result.message,
-          variant: "destructive",
-          duration: 10000,
-        });
-      }
-    } catch (error) {
-      console.error("Failed to install update:", error);
-      console.error("Error details:", {
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        zipFilePath: downloadedFilePath,
-        version: latestVersion,
-      });
-      toast({
-        title: "Installation Failed",
-        description: "An error occurred while installing the update",
-        variant: "destructive",
-        duration: 10000,
-      });
-    } finally {
-      console.log("Install update process completed, setting isInstalling to false");
-      setIsInstalling(false);
-    }
-  }, [downloadedFilePath, latestVersion, toast]);
-
   return (
     <div className="flex flex-col gap-2">
-      {isDownloading && autoDownloadComplete === false && (
-        <div className="text-xs text-muted-foreground">
-          Auto-downloading update in background...
-        </div>
-      )}
-      {downloadedFilePath && autoDownloadComplete && (
-        <div className="text-xs text-green-600">Update ready to install!</div>
-      )}
-      {!downloadedFilePath ? (
-        <>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleDownloadUpdate}
-            disabled={isDownloading}
-            className="flex items-center"
-          >
-            <DownloadIcon className="h-2 w-2" />
-            {isDownloading ? `${downloadProgress}%` : "Download"}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onOpenDownloadLink}
-            className="flex items-center"
-          >
-            <ExternalLinkIcon className="h-2 w-2" />
-            Open
-          </Button>
-        </>
-      ) : (
-        <>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={handleInstallUpdate}
-            disabled={isInstalling}
-            className="flex items-center"
-          >
-            <PackageIcon className="h-2 w-2" />
-            {isInstalling ? "Installing..." : "Install Update"}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleDownloadUpdate}
-            disabled={isDownloading}
-            className="flex items-center"
-          >
-            <DownloadIcon className="h-2 w-2" />
-            {isDownloading ? `${downloadProgress}%` : "Re-download"}
-          </Button>
-        </>
-      )}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleDownloadUpdate}
+        disabled={isDownloading}
+        className="flex items-center"
+      >
+        <DownloadIcon className="h-2 w-2" />
+        {isDownloading ? `${downloadProgress}%` : "Download"}
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onOpenDownloadLink}
+        className="flex items-center"
+      >
+        <ExternalLinkIcon className="h-2 w-2" />
+        Open
+      </Button>
     </div>
   );
 }
@@ -449,7 +281,6 @@ export function VersionChecker({
         action: (
           <DownloadButtons
             downloadUrl={versionInfo.downloadUrl!}
-            latestVersion={versionInfo.latestVersion}
             onOpenDownloadLink={handleOpenDownloadLink}
           />
         ),

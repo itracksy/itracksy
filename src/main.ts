@@ -31,9 +31,72 @@ import {
 import { initializeAutoStart } from "./api/services/autoStart";
 import { initializeScheduledSessionMonitoring } from "./api/services/scheduledSessions";
 
+// Auto-update for open source apps
+import { updateElectronApp } from "update-electron-app";
+
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let isQuiting: boolean = false;
+
+/**
+ * Initialize auto-update functionality with error handling
+ * This wrapper ensures that auto-update failures don't crash the app
+ */
+function initializeAutoUpdate(): void {
+  try {
+    // Only initialize auto-update in production mode
+    if (process.env.NODE_ENV === "development" || !app.isPackaged) {
+      logger.info("Auto-update disabled in development mode");
+      return;
+    }
+
+    updateElectronApp({
+      logger: require("electron-log"),
+      updateInterval: "1 day",
+    });
+
+    // Add event listeners for update events
+
+    autoUpdater.on("update-available", () => {
+      logger.info("Update available");
+    });
+
+    autoUpdater.on("update-downloaded", () => {
+      logger.info("Update downloaded, ready to install");
+
+      // Show dialog to user about restart
+      dialog
+        .showMessageBox({
+          type: "info",
+          buttons: ["Restart", "Later"],
+          title: "Update Ready",
+          message:
+            "A new version has been downloaded. Restart the application to apply the updates.",
+        })
+        .then((result) => {
+          if (result.response === 0) {
+            // User clicked "Restart"
+            logger.info("User chose to restart for update");
+            app.relaunch();
+            app.exit(0);
+          }
+        });
+    });
+
+    autoUpdater.on("update-not-available", () => {
+      logger.info("Update not available");
+    });
+
+    autoUpdater.on("error", (err: any) => {
+      logger.error("Auto-updater error:", err);
+    });
+
+    logger.info("Auto-update initialized - will check for updates automatically on startup");
+  } catch (error) {
+    logger.error("Failed to initialize auto-update functionality:", error);
+    // Don't throw the error - auto-update is not critical for app functionality
+  }
+}
 
 /**
  * Get the tray instance
@@ -357,7 +420,8 @@ if (!gotTheLock) {
 app.whenReady().then(async () => {
   try {
     logger.clearLogFile();
-
+    // Initialize auto-update functionality with error handling
+    initializeAutoUpdate();
     await initializeDatabase();
 
     // Initialize auto-start functionality
