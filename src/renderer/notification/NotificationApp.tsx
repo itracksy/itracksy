@@ -134,36 +134,12 @@ const NotificationApp: React.FC = () => {
       console.error("Failed to extend session:", error);
     }
   };
+
   if (!notificationData) {
-    console.log("NotificationApp: No notification data, rendering placeholder");
-    return (
-      <div
-        style={{
-          height: "100vh",
-          width: "100vw",
-          background: "transparent",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          padding: "20px",
-          boxSizing: "border-box",
-        }}
-      >
-        <div
-          style={{
-            background: "rgba(255, 255, 255, 0.95)",
-            borderRadius: "12px",
-            padding: "20px",
-            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
-            maxWidth: "400px",
-            textAlign: "center",
-          }}
-        >
-          <p style={{ margin: 0, color: "#666", fontSize: "14px" }}>Waiting for notification...</p>
-        </div>
-      </div>
-    );
+    console.log("NotificationApp: No notification data, returning null");
+    return null;
   }
+
   return (
     <div
       style={{

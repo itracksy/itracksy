@@ -13,7 +13,24 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Clock, Calendar, Pause, Settings, Plus, Trash2, AlertCircle, Check } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Clock,
+  Calendar,
+  Pause,
+  Settings,
+  Plus,
+  Trash2,
+  AlertCircle,
+  Check,
+  Edit,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { trpcClient } from "@/utils/trpc";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
@@ -82,8 +99,9 @@ export default function SchedulingPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Form state for creating new scheduled session
+  // Form state for creating/editing scheduled session
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingSession, setEditingSession] = useState<ScheduledSession | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     focusDuration: 25,
@@ -107,18 +125,7 @@ export default function SchedulingPage() {
     mutationFn: (data: typeof formData) => trpcClient.scheduling.createSession.mutate(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["scheduling.getUserSessions"] });
-      setShowCreateForm(false);
-      setFormData({
-        name: "",
-        focusDuration: 25,
-        breakDuration: 5,
-        cycles: 4,
-        startTime: "09:00",
-        daysOfWeek: [],
-        isActive: true,
-        autoStart: true,
-        description: "",
-      });
+      resetForm();
       toast({
         title: "Session scheduled",
         description: "Your new session schedule has been created",
@@ -127,6 +134,26 @@ export default function SchedulingPage() {
     onError: (error) => {
       toast({
         title: "Error creating session",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: typeof formData }) =>
+      trpcClient.scheduling.updateSession.mutate({ id, ...data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["scheduling.getUserSessions"] });
+      resetForm();
+      toast({
+        title: "Session updated",
+        description: "Your session schedule has been updated",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error updating session",
         description: error.message,
         variant: "destructive",
       });
@@ -166,6 +193,30 @@ export default function SchedulingPage() {
     },
   });
 
+  const resetForm = () => {
+    setShowCreateForm(false);
+    setEditingSession(null);
+    setFormData({
+      name: "",
+      focusDuration: 25,
+      breakDuration: 5,
+      cycles: 4,
+      startTime: "09:00",
+      daysOfWeek: [],
+      isActive: true,
+      autoStart: true,
+      description: "",
+    });
+  };
+
+  const handleDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      resetForm();
+    } else {
+      setShowCreateForm(true);
+    }
+  };
+
   const handleCreateSession = () => {
     if (!formData.name.trim()) {
       toast({
@@ -185,11 +236,31 @@ export default function SchedulingPage() {
       return;
     }
 
-    createMutation.mutate(formData);
+    if (editingSession) {
+      updateMutation.mutate({ id: editingSession.id, data: formData });
+    } else {
+      createMutation.mutate(formData);
+    }
   };
 
   const handleDeleteSession = (id: string) => {
     deleteMutation.mutate(id);
+  };
+
+  const handleEditSession = (session: ScheduledSession) => {
+    setEditingSession(session);
+    setFormData({
+      name: session.name,
+      focusDuration: session.focusDuration,
+      breakDuration: session.breakDuration,
+      cycles: session.cycles,
+      startTime: session.startTime,
+      daysOfWeek: session.daysOfWeek,
+      isActive: session.isActive,
+      autoStart: session.autoStart,
+      description: session.description || "",
+    });
+    setShowCreateForm(true);
   };
 
   const handleToggleSession = (id: string) => {
@@ -302,16 +373,18 @@ export default function SchedulingPage() {
         </Card>
       </div>
 
-      {/* Create New Schedule Form */}
-      {showCreateForm && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Create New Schedule</CardTitle>
-            <CardDescription>
-              Set up a recurring focus session schedule that fits your routine
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
+      {/* Create/Edit Schedule Dialog */}
+      <Dialog open={showCreateForm} onOpenChange={handleDialogOpenChange}>
+        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingSession ? "Edit Schedule" : "Create New Schedule"}</DialogTitle>
+            <DialogDescription>
+              {editingSession
+                ? "Update your existing focus session schedule"
+                : "Set up a recurring focus session schedule that fits your routine"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6">
             {/* Preset Templates */}
             <div>
               <Label className="text-sm font-medium">Quick Start Templates</Label>
@@ -446,14 +519,19 @@ export default function SchedulingPage() {
 
             {/* Actions */}
             <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setShowCreateForm(false)}>
+              <Button variant="outline" onClick={resetForm}>
                 Cancel
               </Button>
-              <Button onClick={handleCreateSession}>Create Schedule</Button>
+              <Button
+                onClick={handleCreateSession}
+                disabled={createMutation.isPending || updateMutation.isPending}
+              >
+                {editingSession ? "Update Schedule" : "Create Schedule"}
+              </Button>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Scheduled Sessions List */}
       <div className="space-y-4">
@@ -520,6 +598,14 @@ export default function SchedulingPage() {
                         checked={session.isActive}
                         onCheckedChange={() => handleToggleSession(session.id)}
                       />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditSession(session)}
+                        className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
