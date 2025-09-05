@@ -945,39 +945,9 @@ echo "Update process completed successfully!"
         }
       } catch (error) {
         logger.error(`Failed to install update: ${error}`);
-
-        // Get the download URL for manual download fallback
-        const downloadUrl = getPlatformDownloadUrl(version);
-
         return {
           status: "error" as const,
           message: `Failed to install update: ${error}`,
-          fallbackUrl: downloadUrl,
-          fallbackMessage: "You can manually download the update from the releases page.",
-        };
-      }
-    }),
-
-  // Get releases page URL for manual download fallback
-  getReleasesPageUrl: protectedProcedure
-    .input(z.object({ version: z.string() }))
-    .query(async ({ input }) => {
-      try {
-        const { version } = input;
-        const releasesPageUrl = `https://github.com/itracksy/itracksy/releases/tag/v${version}`;
-        const downloadUrl = getPlatformDownloadUrl(version);
-
-        return {
-          releasesPageUrl,
-          downloadUrl,
-          message: "Manual download options available",
-        };
-      } catch (error) {
-        logger.error(`Failed to get releases page URL: ${error}`);
-        return {
-          releasesPageUrl: "https://github.com/itracksy/itracksy/releases",
-          downloadUrl: null,
-          message: "Failed to get specific version URL, using general releases page",
         };
       }
     }),
