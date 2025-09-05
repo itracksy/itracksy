@@ -1,22 +1,21 @@
 /// <reference path="../../../forge.env.d.ts" />
-import { logger } from "@/helpers/logger";
 import { BrowserWindow, screen } from "electron";
 import path from "path";
 
 let blockingNotificationWindow: BrowserWindow | null = null;
 
 export function createBlockingNotificationWindow(): BrowserWindow {
-  logger.info("Creating blocking notification window");
+  console.log("Creating blocking notification window");
 
   // Don't create multiple blocking notification windows
   if (blockingNotificationWindow && !blockingNotificationWindow.isDestroyed()) {
-    logger.info("Reusing existing blocking notification window");
+    console.log("Reusing existing blocking notification window");
     blockingNotificationWindow.focus();
     return blockingNotificationWindow;
   }
 
   const preload = path.join(__dirname, "./preload/blocking-notification.js");
-  logger.info("BlockingNotification: Preload path:", preload);
+  console.log("BlockingNotification: Preload path:", preload);
 
   // Get the current mouse position to determine active screen
   const mousePoint = screen.getCursorScreenPoint();
@@ -56,12 +55,12 @@ export function createBlockingNotificationWindow(): BrowserWindow {
 
   // Load the blocking notification app
   if (BLOCKING_NOTIFICATION_WINDOW_VITE_DEV_SERVER_URL) {
-    logger.info(
+    console.log(
       `Loading blocking notification URL: ${BLOCKING_NOTIFICATION_WINDOW_VITE_DEV_SERVER_URL}`
     );
     blockingNotificationWindow.loadURL(BLOCKING_NOTIFICATION_WINDOW_VITE_DEV_SERVER_URL);
   } else {
-    logger.info("Loading blocking notification from file");
+    console.log("Loading blocking notification from file");
     blockingNotificationWindow.loadFile(
       path.join(__dirname, `../renderer/${BLOCKING_NOTIFICATION_WINDOW_VITE_NAME}/index.html`)
     );
@@ -70,26 +69,26 @@ export function createBlockingNotificationWindow(): BrowserWindow {
   // Register an escape key handler
   blockingNotificationWindow.webContents.on("before-input-event", (event, input) => {
     if (input.type === "keyDown" && input.key === "Escape") {
-      logger.info("Escape key pressed in blocking notification window");
+      console.log("Escape key pressed in blocking notification window");
       blockingNotificationWindow?.webContents.send("trigger-close");
     }
   });
 
   // Handle close event to ensure proper cleanup
   blockingNotificationWindow.on("close", (event) => {
-    logger.info("Blocking notification window close event triggered");
+    console.log("Blocking notification window close event triggered");
     // Trigger close channel to handle response if needed
     blockingNotificationWindow?.webContents.send("trigger-close");
   });
 
   blockingNotificationWindow.on("closed", () => {
-    logger.info("Blocking notification window closed");
+    console.log("Blocking notification window closed");
     blockingNotificationWindow = null;
   });
 
   // Open DevTools for debugging in development
   if (process.env.NODE_ENV === "development") {
-    logger.info("Opening blocking notification window DevTools");
+    console.log("Opening blocking notification window DevTools");
     blockingNotificationWindow.webContents.openDevTools();
   }
 
@@ -97,13 +96,13 @@ export function createBlockingNotificationWindow(): BrowserWindow {
 }
 
 export function getBlockingNotificationWindow(): BrowserWindow | null {
-  logger.info("Getting blocking notification window reference");
+  console.log("Getting blocking notification window reference");
   return blockingNotificationWindow;
 }
 
 export function closeBlockingNotificationWindow(): void {
   if (blockingNotificationWindow && !blockingNotificationWindow.isDestroyed()) {
-    logger.info("Closing blocking notification window");
+    console.log("Closing blocking notification window");
     blockingNotificationWindow.close();
     blockingNotificationWindow = null;
   }

@@ -60,8 +60,6 @@ export const EXTERNAL_DEPENDENCIES = [
   "@trpc/server",
   // Electron auto-updater for handling application updates
   "update-electron-app",
-  // Electron logging library for auto-update and general logging
-  "electron-log",
 ];
 
 // Base packager configuration
