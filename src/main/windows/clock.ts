@@ -7,16 +7,16 @@ let clockWindow: BrowserWindow | null = null;
 let isClockVisible = false;
 
 export function createClockWindow(): BrowserWindow {
-  logger.info("Creating clock window");
+  console.log("Creating clock window");
 
   // Don't create multiple clock windows
   if (clockWindow && !clockWindow.isDestroyed()) {
-    logger.info("Reusing existing clock window");
+    console.log("Reusing existing clock window");
     return clockWindow;
   }
 
   const preload = path.join(__dirname, "./preload/clock.js");
-  logger.info("Clock: Preload path:", preload);
+  console.log("Clock: Preload path:", preload);
 
   // Get the primary display
   const primaryDisplay = screen.getPrimaryDisplay();
@@ -60,7 +60,7 @@ export function createClockWindow(): BrowserWindow {
 
   // Load the clock app
   if (CLOCK_WINDOW_VITE_DEV_SERVER_URL) {
-    logger.info(`Loading clock URL: ${CLOCK_WINDOW_VITE_DEV_SERVER_URL}`);
+    console.log(`Loading clock URL: ${CLOCK_WINDOW_VITE_DEV_SERVER_URL}`);
     clockWindow.loadURL(CLOCK_WINDOW_VITE_DEV_SERVER_URL);
   } else {
     logger.info("CLOCK_WINDOW_VITE_NAME:", CLOCK_WINDOW_VITE_NAME);
@@ -71,7 +71,7 @@ export function createClockWindow(): BrowserWindow {
 
   // Handle window events
   clockWindow.on("closed", () => {
-    logger.info("Clock window closed");
+    console.log("Clock window closed");
     clockWindow = null;
     isClockVisible = false;
   });
@@ -86,7 +86,7 @@ export function createClockWindow(): BrowserWindow {
 
   // Open DevTools for debugging in development
   if (process.env.NODE_ENV === "development") {
-    logger.info("Opening clock window DevTools");
+    console.log("Opening clock window DevTools");
     clockWindow.webContents.openDevTools({ mode: "detach" });
   }
 
@@ -94,7 +94,7 @@ export function createClockWindow(): BrowserWindow {
 }
 
 export function getClockWindow(): BrowserWindow | null {
-  logger.info("Getting clock window reference");
+  console.log("Getting clock window reference");
   return clockWindow;
 }
 
@@ -104,7 +104,7 @@ export function showClockWindow(): void {
   }
 
   if (clockWindow) {
-    logger.info("Showing clock window");
+    console.log("Showing clock window");
     clockWindow.show();
     clockWindow.focus();
     isClockVisible = true;
@@ -113,7 +113,7 @@ export function showClockWindow(): void {
 
 export function hideClockWindow(): void {
   if (clockWindow && !clockWindow.isDestroyed() && isClockVisible) {
-    logger.info("Hiding clock window");
+    console.log("Hiding clock window");
     clockWindow.hide();
     isClockVisible = false;
   }
@@ -121,7 +121,7 @@ export function hideClockWindow(): void {
 
 export function closeClockWindow(): void {
   if (clockWindow && !clockWindow.isDestroyed()) {
-    logger.info("Closing clock window");
+    console.log("Closing clock window");
     clockWindow.close();
     clockWindow = null;
     isClockVisible = false;

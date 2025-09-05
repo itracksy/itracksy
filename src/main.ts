@@ -10,7 +10,6 @@ import {
   session,
   ipcMain,
   dialog,
-  autoUpdater,
 } from "electron";
 import { createIPCHandler } from "electron-trpc/main";
 import registerListeners from "./helpers/ipc/listeners-register";
@@ -31,9 +30,26 @@ import {
 import { initializeAutoStart } from "./api/services/autoStart";
 import { initializeScheduledSessionMonitoring } from "./api/services/scheduledSessions";
 
+// Auto-update for open source apps
+import { updateElectronApp } from "update-electron-app";
+
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let isQuiting: boolean = false;
+
+/**
+ * Initialize auto-update functionality with error handling
+ * This wrapper ensures that auto-update failures don't crash the app
+ */
+function initializeAutoUpdate(): void {
+  try {
+    updateElectronApp();
+    logger.info("Auto-update initialized - will check for updates automatically on startup");
+  } catch (error) {
+    logger.error("Failed to initialize auto-update functionality:", error);
+    // Don't throw the error - auto-update is not critical for app functionality
+  }
+}
 
 /**
  * Get the tray instance
@@ -357,7 +373,8 @@ if (!gotTheLock) {
 app.whenReady().then(async () => {
   try {
     logger.clearLogFile();
-
+    // Initialize auto-update functionality with error handling
+    initializeAutoUpdate();
     await initializeDatabase();
 
     // Initialize auto-start functionality

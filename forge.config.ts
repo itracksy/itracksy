@@ -58,8 +58,8 @@ export const EXTERNAL_DEPENDENCIES = [
   "date-fns",
   // tRPC server for type-safe API communication
   "@trpc/server",
-  // ZIP extraction library for auto-updates (replaced extract-zip with yauzl for better reliability)
-  "yauzl",
+  // Electron auto-updater for handling application updates
+  "update-electron-app",
 ];
 
 // Base packager configuration
@@ -311,30 +311,20 @@ const config: ForgeConfig = {
       setupIcon: path.resolve(__dirname, "resources", "icon.ico"),
       iconUrl: "https://raw.githubusercontent.com/hunght/itracksy/main/resources/icon.ico",
       loadingGif: path.resolve(__dirname, "resources", "icon_64x64.png"),
-      // Naming pattern: itracksy-{version}.Setup.exe
-      name: "itracksy-${version}.Setup.exe",
     }),
     new MakerDMG({
       icon: path.resolve(__dirname, "resources", "icon.icns"),
       format: "ULFO", // Use a different format that works better with permissions
       overwrite: true,
-      // Default naming pattern: itracksy-{version}-{arch}.dmg
     }),
     new MakerZIP({
-      // Generate ZIP files for auto-updates
-      // Default naming pattern: itracksy-{platform}-{arch}-{version}.zip
-      // Examples:
-      // - itracksy-darwin-arm64-1.0.234.zip (macOS ARM)
-      // - itracksy-darwin-x64-1.0.234.zip (macOS Intel)
-      // - itracksy-win32-x64-1.0.234.zip (Windows)
-      // - itracksy-linux-x64-1.0.234.zip (Linux)
+      // Generate ZIP files required by update.electronjs.org
+      // Must match pattern: .*-(mac|darwin|osx).*.zip
+      // This will create ZIP files for macOS builds
+      // Note: MakerZIP works with all platforms, so it should create ZIP files
     }),
-    new MakerRpm({
-      // Default naming pattern: itracksy-{version}-1.x86_64.rpm
-    }),
-    new MakerDeb({
-      // Default naming pattern: itracksy_{version}_amd64.deb
-    }),
+    new MakerRpm({}),
+    new MakerDeb({}),
   ],
   // Publishers for different platforms
 
