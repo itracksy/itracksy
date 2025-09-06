@@ -29,6 +29,7 @@ import {
 } from "./api/services/userSettings";
 import { initializeAutoStart } from "./api/services/autoStart";
 import { initializeScheduledSessionMonitoring } from "./api/services/scheduledSessions";
+import { initializeSystemMonitor } from "./api/services/systemMonitor";
 
 // Auto-update for open source apps
 import { updateElectronApp } from "update-electron-app";
@@ -382,6 +383,9 @@ app.whenReady().then(async () => {
 
     // Initialize scheduled session monitoring
     initializeScheduledSessionMonitoring();
+
+    // Initialize system monitoring for idle/sleep/lock detection
+    initializeSystemMonitor();
 
     // Check and request permissions before starting tracking
     await checkAndRequestPermissions();

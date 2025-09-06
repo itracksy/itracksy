@@ -41,7 +41,7 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isSyncing, setIsSyncing] = useState(false);
+
   const [duration, setDuration] = useState("00:00");
   const [isTimeExceeded, setIsTimeExceeded] = useState(false);
   const [warningMessage, setWarningMessage] = useState(warningMessages[0]);

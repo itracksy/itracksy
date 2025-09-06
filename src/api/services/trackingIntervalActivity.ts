@@ -21,20 +21,87 @@ import { extractUrlFromBrowserTitle } from "../../helpers/extractUrlFromBrowserT
 import { findMatchingRules } from "./activityRules";
 import { showBlockingNotification } from "./blocking-notification-service";
 import { sendClockUpdate } from "../../helpers/ipc/clock/clock-listeners";
+import { onSystemStateChange, isSystemActive } from "./systemMonitor";
+import { pauseActiveSession, resumeActiveSession, clearPausedSession } from "./sessionPause";
+
+// Export debug utilities for development
+export { debugSystemState, testSystemMonitoring } from "./systemMonitorDebug";
 
 let trackingIntervalId: NodeJS.Timeout | null = null;
 let lastNotificationTime: number = 0;
+let isTrackingPaused: boolean = false;
+let systemMonitorUnsubscribe: (() => void) | null = null;
 
 let isAccessibilityError: boolean = false;
 const NOTIFICATION_COOLDOWN = 10 * 1000; // 10 seconds in milliseconds
+
+/**
+ * Update tray status when system becomes active
+ */
+const updateTrayForActiveSystem = async (): Promise<void> => {
+  try {
+    const userId = await getCurrentUserIdLocalStorage();
+    if (!userId) {
+      return;
+    }
+
+    const activeEntry = await getActiveTimeEntry(userId);
+    if (!activeEntry || activeEntry.endTime) {
+      const tray = getTray();
+      if (tray) {
+        tray.setTitle("");
+      }
+      return;
+    }
+
+    // Update tray with current session info
+    const durationInSeconds = Math.floor((Date.now() - activeEntry.startTime) / 1000);
+    const formattedDuration = formatDuration(durationInSeconds);
+    const modePrefix = activeEntry.isFocusMode ? "🎯" : "🚀";
+
+    const tray = getTray();
+    if (tray) {
+      tray.setTitle(`${modePrefix} ${formattedDuration}`);
+    }
+  } catch (error) {
+    logger.error("[updateTrayForActiveSystem] Error updating tray", { error });
+  }
+};
 
 export const startTracking = async (): Promise<void> => {
   // Clear any existing interval
   stopTracking();
 
+  // Set up system state monitoring
+  systemMonitorUnsubscribe = onSystemStateChange(async (isActive: boolean) => {
+    if (isActive) {
+      logger.info("[Tracking] System became active - resuming tracking");
+      isTrackingPaused = false;
+      // Resume any paused session
+      await resumeActiveSession();
+      // Update tray to show current status when system becomes active
+      await updateTrayForActiveSystem();
+    } else {
+      logger.info("[Tracking] System became inactive - pausing tracking");
+      isTrackingPaused = true;
+      // Pause the current session
+      await pauseActiveSession();
+      // Update tray to show paused status
+      const tray = getTray();
+      if (tray) {
+        tray.setTitle("💤"); // Sleep emoji to indicate paused state
+      }
+    }
+  });
+
   // Start the interval
   trackingIntervalId = setInterval(async () => {
     try {
+      // Skip tracking if system is inactive (sleeping, locked, or idle)
+      if (isTrackingPaused || !isSystemActive()) {
+        return;
+      }
+
       const userId = await getCurrentUserIdLocalStorage();
       if (!userId) {
         return;
@@ -54,8 +121,8 @@ export const startTracking = async (): Promise<void> => {
       }
 
       // Update tray title with duration and mode
-      const durationInSeconds = Math.floor((Date.now() - activeEntry.startTime) / 1000);
-      const formattedDuration = formatDuration(durationInSeconds);
+      const elapsedSeconds = Math.floor((Date.now() - activeEntry.startTime) / 1000);
+      const formattedDuration = formatDuration(elapsedSeconds);
       // Use emoji for mode (🎯=Focus, 🚀=Break)
       const modePrefix = activeEntry.isFocusMode ? "🎯" : "🚀";
 
@@ -70,10 +137,9 @@ export const startTracking = async (): Promise<void> => {
       await sendClockUpdate({
         activeEntry,
         currentTime: Date.now(),
-        elapsedSeconds: durationInSeconds,
+        elapsedSeconds: elapsedSeconds,
       });
 
-      const elapsedSeconds = Math.floor((Date.now() - activeEntry.startTime) / 1000);
       const targetSeconds = (activeEntry.targetDuration ?? 0) * 60;
       const timeRemaining = targetSeconds - elapsedSeconds;
 
@@ -203,11 +269,23 @@ export const startTracking = async (): Promise<void> => {
   }, TRACKING_INTERVAL);
 };
 
-const stopTracking = (): void => {
+export const stopTracking = (): void => {
   if (trackingIntervalId) {
     clearInterval(trackingIntervalId);
     trackingIntervalId = null;
   }
+
+  // Clean up system monitor subscription
+  if (systemMonitorUnsubscribe) {
+    systemMonitorUnsubscribe();
+    systemMonitorUnsubscribe = null;
+  }
+
+  // Clear any paused session state
+  clearPausedSession();
+
+  // Reset tracking state
+  isTrackingPaused = false;
 };
 
 // No longer needed as we're using sendBlockingNotificationToWindow

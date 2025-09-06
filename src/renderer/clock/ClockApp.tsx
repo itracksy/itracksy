@@ -31,6 +31,7 @@ interface DailyProgress {
 interface ClockState {
   activeEntry: TimeEntry | null;
   currentTime: number;
+  elapsedSeconds: number; // Add elapsed seconds from main process
   isRunning: boolean;
   focusTarget: FocusTarget | null;
   dailyProgress: DailyProgress | null;
@@ -40,6 +41,7 @@ const ClockApp: React.FC = () => {
   const [clockState, setClockState] = useState<ClockState>({
     activeEntry: null,
     currentTime: Date.now(),
+    elapsedSeconds: 0,
     isRunning: false,
     focusTarget: null,
     dailyProgress: null,
@@ -63,6 +65,7 @@ const ClockApp: React.FC = () => {
         setClockState((prev) => ({
           ...prev,
           activeEntry: data.activeEntry,
+          elapsedSeconds: data.elapsedSeconds || 0,
           isRunning: !!data.activeEntry && !data.activeEntry.endTime,
           focusTarget: data.focusTarget || prev.focusTarget,
           dailyProgress: data.dailyProgress || prev.dailyProgress,
@@ -128,7 +131,12 @@ const ClockApp: React.FC = () => {
 
   const getRemainingTime = (): number => {
     if (!clockState.activeEntry || clockState.activeEntry.endTime) return 0;
-    const elapsed = Math.floor((clockState.currentTime - clockState.activeEntry.startTime) / 1000);
+
+    // Use elapsedSeconds from main process if available, otherwise calculate locally
+    const elapsed =
+      clockState.elapsedSeconds > 0
+        ? clockState.elapsedSeconds
+        : Math.floor((clockState.currentTime - clockState.activeEntry.startTime) / 1000);
 
     // Handle unlimited sessions (targetDuration = 0)
     if (clockState.activeEntry.targetDuration === 0) {
@@ -147,7 +155,11 @@ const ClockApp: React.FC = () => {
       return 0;
     }
 
-    const elapsed = Math.floor((clockState.currentTime - clockState.activeEntry.startTime) / 1000);
+    // Use elapsedSeconds from main process if available, otherwise calculate locally
+    const elapsed =
+      clockState.elapsedSeconds > 0
+        ? clockState.elapsedSeconds
+        : Math.floor((clockState.currentTime - clockState.activeEntry.startTime) / 1000);
     const target = clockState.activeEntry.targetDuration * 60; // Convert to seconds
     return Math.min((elapsed / target) * 100, 100);
   };
