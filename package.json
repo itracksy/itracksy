@@ -1,7 +1,7 @@
 {
   "name": "itracksy",
   "productName": "itracksy",
-  "version": "1.0.243",
+  "version": "1.0.244",
   "description": "A productivity app that tracks time, boosts focus, and provides insights into work habits, helping you manage time effectively and stay productive.",
   "main": ".vite/build/main.js",
   "scripts": {
@@ -30,7 +30,7 @@
     "screenshots:verbose": "./scripts/screenshots-scripts/generate-screenshots.sh --verbose",
     "screenshots:quick": "./scripts/screenshots-scripts/generate-screenshots.sh --skip-build",
     "release:draft": "./scripts/release.sh --draft",
-    "release": "./scripts/release.sh --no-draft",
+    "release:no-draft": "./scripts/release.sh --no-draft",
     "debug-make": "DEBUG=electron-forge:* npm run make",
     "db:generate": "drizzle-kit generate",
     "db:pull": "drizzle-kit pull",
