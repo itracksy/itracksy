@@ -5,7 +5,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { X } from "lucide-react";
 
-
 interface Character {
   char: string;
   x: number;

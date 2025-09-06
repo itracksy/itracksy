@@ -335,7 +335,7 @@ const config: ForgeConfig = {
         name: "itracksy",
       },
       prerelease: false,
-      draft: true,
+      draft: process.env.GITHUB_RELEASE_DRAFT === "true",
     }),
   ],
   // Plugins for custom build steps
