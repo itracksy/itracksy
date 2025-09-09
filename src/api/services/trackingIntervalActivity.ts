@@ -75,11 +75,12 @@ export const startTracking = async (): Promise<void> => {
   // Set up system state monitoring
   systemMonitorUnsubscribe = onSystemStateChange(async (isActive: boolean) => {
     if (isActive) {
-      logger.info("[Tracking] System became active - resuming tracking");
+      logger.info("[Tracking] System became active - checking for paused session");
       isTrackingPaused = false;
-      // Resume any paused session
-      await resumeActiveSession();
-      // Update tray to show current status when system becomes active
+
+      // Don't auto-resume - let the UI handle the confirmation
+      // The UI will check via tRPC if a resume is required
+      // Only update tray for now
       await updateTrayForActiveSystem();
     } else {
       logger.info("[Tracking] System became inactive - pausing tracking");

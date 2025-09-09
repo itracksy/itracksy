@@ -11,6 +11,7 @@ import { categoryRouter } from "./routers/category";
 import { schedulingRouter } from "./routers/scheduling";
 import { autoStartRouter } from "./routers/autoStart";
 import { windowRouter } from "./routers/window";
+import { systemStateRouter } from "./routers/systemState";
 
 // Create the root router
 export const router = t.router({
@@ -26,6 +27,7 @@ export const router = t.router({
   scheduling: schedulingRouter,
   autoStart: autoStartRouter,
   window: windowRouter,
+  systemState: systemStateRouter,
 });
 
 // Export type router type signature

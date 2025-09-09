@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAtom } from "jotai";
 import { selectedBoardIdAtom, selectedItemIdAtom } from "@/context/board";
+import { trpcClient } from "@/utils/trpc";
 
 const warningMessages = [
   "⏰ Tick tock! Time's flying!",
@@ -46,10 +47,33 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
   const [isTimeExceeded, setIsTimeExceeded] = useState(false);
   const [warningMessage, setWarningMessage] = useState(warningMessages[0]);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [showResumeDialog, setShowResumeDialog] = useState(false);
+  const [pendingResumeEntry, setPendingResumeEntry] = useState<TimeEntryWithRelations | null>(null);
   const [selectedBoardId, setSelectedBoardId] = useAtom(selectedBoardIdAtom);
   const [selectedItemId, setSelectedItemId] = useAtom(selectedItemIdAtom);
 
   const updateTimeEntryMutation = useUpdateTimeEntryMutation();
+
+  // Check for resume requirements when component mounts
+  useEffect(() => {
+    const checkResumeRequired = async () => {
+      try {
+        const result = await trpcClient.systemState.checkResumeRequired.query();
+        if (result.requiresResume && result.activeEntry) {
+          setPendingResumeEntry(result.activeEntry);
+          setShowResumeDialog(true);
+        }
+      } catch (error) {
+        console.error("Failed to check resume requirements:", error);
+      }
+    };
+
+    checkResumeRequired();
+
+    // Set up polling to check for resume requirements every 2 seconds
+    const interval = setInterval(checkResumeRequired, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleExtendTime = async () => {
     if (!activeTimeEntry) return;
@@ -122,6 +146,46 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
     } catch (error) {
       toast({
         title: "Failed to assign task",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleResumeConfirm = async () => {
+    try {
+      await trpcClient.timeEntry.handleSessionResume.mutate({ action: "continue" });
+      setShowResumeDialog(false);
+      setPendingResumeEntry(null);
+      toast({
+        title: "Session resumed",
+        description: "Your session is now active again.",
+      });
+      // Refresh the query data
+      queryClient.invalidateQueries({ queryKey: ["timeEntries"] });
+    } catch (error) {
+      toast({
+        title: "Failed to resume session",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleResumeDismiss = async () => {
+    try {
+      await trpcClient.timeEntry.handleSessionResume.mutate({ action: "dismiss" });
+      setShowResumeDialog(false);
+      setPendingResumeEntry(null);
+      toast({
+        title: "Session dismissed",
+        description: "Your session has been ended.",
+      });
+      // Refresh the query data
+      queryClient.invalidateQueries({ queryKey: ["timeEntries"] });
+    } catch (error) {
+      toast({
+        title: "Failed to dismiss session",
         description: error instanceof Error ? error.message : "An error occurred",
         variant: "destructive",
       });
@@ -214,6 +278,19 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
       }
     };
   }, [activeTimeEntry]);
+
+  // Listen for resume pending event from main process
+  useEffect(() => {
+    const electronClock = (window as any).electronClock;
+    if (electronClock) {
+      const handleResumePending = (entry: any) => {
+        setPendingResumeEntry(entry);
+        setShowResumeDialog(true);
+      };
+      electronClock.onResumePending(handleResumePending);
+      return () => electronClock.removeResumePendingListener();
+    }
+  }, []);
 
   return (
     <>
@@ -338,6 +415,61 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
               Cancel
             </Button>
             <Button onClick={handleAssignTask}>Assign Task</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Resume Session Dialog */}
+      <Dialog open={showResumeDialog} onOpenChange={setShowResumeDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>🌙 Welcome back! Resume your session?</DialogTitle>
+            <DialogDescription>
+              You have a paused {pendingResumeEntry?.isFocusMode ? "focus" : "break"} session that
+              was temporarily paused while you were away.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-4">
+            {pendingResumeEntry && (
+              <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                    Session Details:
+                  </span>
+                </div>
+                <div className="text-sm text-gray-700 dark:text-gray-300">
+                  <div>
+                    Mode:{" "}
+                    <span className="font-medium">
+                      {pendingResumeEntry.isFocusMode ? "🎯 Focus" : "🚀 Break"}
+                    </span>
+                  </div>
+                  <div>
+                    Description:{" "}
+                    <span className="font-medium">{pendingResumeEntry.description}</span>
+                  </div>
+                  {pendingResumeEntry.targetDuration && pendingResumeEntry.targetDuration > 0 && (
+                    <div>
+                      Target:{" "}
+                      <span className="font-medium">
+                        {pendingResumeEntry.targetDuration} minutes
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            <div className="text-center text-sm text-gray-600 dark:text-gray-400">
+              Choose "Continue" to resume your session, or "Dismiss" to end it.
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={handleResumeDismiss}>
+              Dismiss Session
+            </Button>
+            <Button variant="default" onClick={handleResumeConfirm}>
+              Continue Session
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

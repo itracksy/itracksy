@@ -106,4 +106,27 @@ export const timeEntryRouter = t.router({
         endDate,
       });
     }),
+
+  handleSessionResume: protectedProcedure
+    .input(
+      z.object({
+        action: z.enum(["continue", "dismiss"]),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { resumeActiveSession, clearPausedSession } = await import("../services/sessionPause");
+
+      if (input.action === "continue") {
+        await resumeActiveSession();
+        return { success: true, message: "Session resumed" };
+      } else {
+        // Dismiss session - end it
+        const activeEntry = await getActiveTimeEntry(ctx.userId!);
+        if (activeEntry && !activeEntry.endTime) {
+          await updateTimeEntry(activeEntry.id, { endTime: Date.now() });
+        }
+        await clearPausedSession();
+        return { success: true, message: "Session dismissed" };
+      }
+    }),
 });
