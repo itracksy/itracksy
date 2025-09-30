@@ -1,231 +1,346 @@
-/* Compact Clock Window Styles */
-.clock-container {
-  width: 90px;
-  height: 32px;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(8px);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  display: flex;
-  align-items: center;
-  position: relative;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  user-select: none;
-  overflow: visible;
-  -webkit-app-region: no-drag; /* Allow clicks */
+body {
+  margin: 0;
+  padding: 12px;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #f8fafc;
+  background: transparent;
 }
 
-.clock-container:hover {
-  background: rgba(0, 0, 0, 0.9);
-  transform: scale(1.02);
-}
-
-.clock-container.idle {
-  width: 90px;
-  height: 32px;
-  background: rgba(100, 100, 100, 0.8);
-}
-
-.clock-container.focus {
-  border-color: rgba(76, 175, 80, 0.4);
-}
-
-.clock-container.break {
-  border-color: rgba(255, 152, 0, 0.4);
-}
-
-.clock-container.unlimited {
-  border-color: rgba(138, 43, 226, 0.4); /* Purple border for unlimited */
-}
-
-.clock-content {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 8px;
-  flex: 1;
-  min-width: 0;
-}
-
-.clock-icon {
-  font-size: 12px;
-  flex-shrink: 0;
-}
-
-.unlimited-indicator {
-  font-size: 8px;
-  color: rgba(138, 43, 226, 0.8);
-  margin-left: 2px;
-  font-weight: bold;
-}
-
-/* Daily Target Display */
-.clock-title {
-  font-size: 6px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
-  text-transform: uppercase;
-  letter-spacing: 0.2px;
-  margin-right: 2px;
-}
-
-.clock-target {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  margin-bottom: 1px;
-}
-
-.target-icon {
-  font-size: 8px;
-  flex-shrink: 0;
-}
-
-.target-text {
-  font-size: 8px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.95);
-  white-space: nowrap;
-}
-
-/* Daily Progress Display */
-.clock-daily-progress {
+.clock-shell {
   display: flex;
   flex-direction: column;
-  gap: 1px;
   width: 100%;
-}
-
-.progress-info {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.progress-text {
-  font-size: 7px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.8);
-  white-space: nowrap;
-  text-align: center;
-}
-
-.progress-bar-container {
-  width: 100%;
-  height: 2px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 1px;
-  overflow: hidden;
-}
-
-.progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #4CAF50 0%, #66BB6A 100%);
-  transition: width 0.3s ease;
-  border-radius: 1px;
+  border-radius: 18px;
+  padding: 16px 18px 14px;
+  background: linear-gradient(140deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.8));
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  gap: 16px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  -webkit-app-region: drag;
 }
 
-/* Idle state content layout */
-.clock-container.idle .clock-content {
-  flex-direction: column;
-  gap: 1px;
-  padding: 2px 6px;
+.clock-shell.idle {
+  background: linear-gradient(160deg, rgba(15, 118, 110, 0.9), rgba(8, 47, 73, 0.85));
+  border-color: rgba(94, 234, 212, 0.4);
+}
+
+.clock-shell.active.focus {
+  border-color: rgba(134, 239, 172, 0.4);
+  box-shadow: 0 18px 45px rgba(21, 128, 61, 0.35);
+}
+
+.clock-shell.active.break {
+  border-color: rgba(253, 230, 138, 0.4);
+  box-shadow: 0 18px 45px rgba(234, 179, 8, 0.35);
+}
+
+.clock-shell.unpinned {
+  border-style: dashed;
+  border-color: rgba(226, 232, 240, 0.3);
+}
+
+.clock-shell:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 22px 55px rgba(15, 23, 42, 0.45);
+}
+
+.no-drag {
+  -webkit-app-region: no-drag;
+}
+
+.clock-header {
+  display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .clock-status {
-  font-size: 10px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
-  white-space: nowrap;
-}
-
-.clock-info {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  min-width: 0;
-  flex: 1;
-}
-
-.clock-time {
-  font-size: 11px;
-  font-weight: 600;
-  font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
-  color: #fff;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.clock-container.focus .clock-time {
-  color: #4CAF50;
-}
-
-.clock-container.break .clock-time {
-  color: #FF9800;
-}
-
-.clock-progress {
-  width: 100%;
-  height: 2px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 1px;
-  overflow: hidden;
-  margin-top: 1px;
-}
-
-.clock-progress-bar {
-  height: 100%;
-  background: #4CAF50;
-  transition: width 0.3s ease;
-  border-radius: 1px;
-}
-
-.clock-container.break .clock-progress-bar {
-  background: #FF9800;
-}
-
-.close-btn {
-  position: absolute;
-  top: -2px;
-  right: -2px;
-  width: 14px;
-  height: 14px;
-  border: none;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.95);
-  color: #666;
-  font-size: 10px;
-  cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
+  gap: 10px;
+}
+
+.clock-mode-icon {
+  font-size: 22px;
+  filter: drop-shadow(0 3px 6px rgba(14, 116, 144, 0.45));
+}
+
+.clock-mode-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.clock-mode-label {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  color: #e2e8f0;
+}
+
+.clock-subtitle {
+  font-size: 12px;
+  color: rgba(226, 232, 240, 0.75);
+}
+
+.clock-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-button {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.45);
+  color: #f8fafc;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+  font-size: 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.icon-button:hover {
+  background: rgba(51, 65, 85, 0.6);
+  border-color: rgba(148, 163, 184, 0.5);
+  transform: translateY(-1px);
+}
+
+.clock-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.daily-progress-card,
+.clock-ready-card,
+.clock-timer-wrapper {
+  background: rgba(15, 23, 42, 0.55);
+  border-radius: 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.daily-progress-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.daily-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #f8fafc;
+}
+
+.daily-progress-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.daily-progress-percentage {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(129, 230, 217, 0.95);
+}
+
+.daily-progress-bar {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, 0.25);
+  overflow: hidden;
+}
+
+.daily-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(45, 212, 191, 0.9), rgba(56, 189, 248, 0.9));
+  transition: width 0.35s ease;
+}
+
+.daily-progress-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: rgba(226, 232, 240, 0.7);
+}
+
+.clock-ready-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #f8fafc;
+}
+
+.ready-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ready-text {
+  font-size: 12px;
+  color: rgba(226, 232, 240, 0.75);
+  line-height: 1.4;
+}
+
+.clock-timer-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.clock-timer-label {
+  font-size: 12px;
+  color: rgba(226, 232, 240, 0.75);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.clock-timer-display {
+  font-size: clamp(32px, 6vw, 40px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.6px;
+  color: #f8fafc;
+}
+
+.unlimited-indicator {
+  font-size: 14px;
+  margin-left: 6px;
+  color: rgba(196, 181, 253, 0.95);
+}
+
+.clock-progress-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.12);
+  overflow: hidden;
+  position: relative;
+  margin-top: -6px;
+}
+
+.clock-progress-meter {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(96, 165, 250, 0.9), rgba(37, 99, 235, 0.9));
+  transition: width 0.35s ease;
+}
+
+.clock-shell.active.focus .clock-progress-meter {
+  background: linear-gradient(90deg, rgba(134, 239, 172, 0.95), rgba(16, 185, 129, 0.95));
+}
+
+.clock-shell.active.break .clock-progress-meter {
+  background: linear-gradient(90deg, rgba(251, 191, 36, 0.95), rgba(249, 115, 22, 0.95));
+}
+
+.clock-meta-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: rgba(226, 232, 240, 0.7);
+  margin-top: 4px;
+}
+
+.clock-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.clock-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.clock-actions.primary {
+  justify-content: space-between;
+}
+
+.clock-actions.secondary {
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.action-button {
+  flex: 1;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
   -webkit-app-region: no-drag;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  z-index: 10;
-  pointer-events: auto;
-  opacity: 0;
 }
 
-.clock-container:hover .close-btn {
-  opacity: 1;
+.action-button.primary {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.9), rgba(14, 165, 233, 0.95));
+  color: #0f172a;
+  box-shadow: 0 10px 18px rgba(14, 165, 233, 0.35);
 }
 
-.close-btn:hover {
-  background: #ff4444;
-  color: white;
-  transform: scale(1.1);
+.action-button.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 22px rgba(14, 165, 233, 0.45);
 }
 
-/* Minimalist animations */
-@keyframes pulse-minimal {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
+.action-button.secondary {
+  background: rgba(15, 23, 42, 0.55);
+  color: #f8fafc;
+  border-color: rgba(148, 163, 184, 0.25);
 }
 
-.clock-container.active .clock-time {
-  animation: pulse-minimal 3s infinite;
+.action-button.secondary:hover {
+  border-color: rgba(148, 163, 184, 0.5);
+  background: rgba(30, 41, 59, 0.65);
+}
+
+.action-button.ghost {
+  flex: 0;
+  background: rgba(15, 23, 42, 0.3);
+  color: rgba(226, 232, 240, 0.85);
+  border-color: rgba(148, 163, 184, 0.18);
+  padding: 8px 12px;
+}
+
+.action-button.ghost:hover {
+  color: #f8fafc;
+  border-color: rgba(148, 163, 184, 0.4);
+  background: rgba(30, 41, 59, 0.45);
+}
+
+.action-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+@media (max-width: 320px) {
+  .clock-shell {
+    padding: 14px;
+  }
+
+  .clock-actions {
+    flex-direction: column;
+  }
+
+  .action-button {
+    width: 100%;
+  }
 }

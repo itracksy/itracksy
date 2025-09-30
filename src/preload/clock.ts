@@ -4,6 +4,8 @@ import {
   CLOCK_UPDATE_CHANNEL,
   CLOCK_SHOW_CHANNEL,
   CLOCK_SHOW_MAIN_CHANNEL,
+  CLOCK_TOGGLE_PIN_CHANNEL,
+  CLOCK_GET_STATE_CHANNEL,
 } from "@/helpers/ipc/clock/clock-channels";
 import { contextBridge, ipcRenderer } from "electron";
 
@@ -43,4 +45,8 @@ contextBridge.exposeInMainWorld("electronClock", {
     ipcRenderer.removeAllListeners(CLOCK_UPDATE_CHANNEL);
     ipcRenderer.removeAllListeners(CLOCK_SHOW_CHANNEL);
   },
+
+  togglePin: () => ipcRenderer.invoke(CLOCK_TOGGLE_PIN_CHANNEL),
+
+  getState: () => ipcRenderer.invoke(CLOCK_GET_STATE_CHANNEL),
 });

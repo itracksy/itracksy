@@ -1,10 +1,15 @@
 /// <reference path="../../../forge.env.d.ts" />
 import { logger } from "@/helpers/logger";
-import { BrowserWindow, screen } from "electron";
+import { BrowserWindow, screen, ipcMain } from "electron";
+import {
+  CLOCK_TOGGLE_PIN_CHANNEL,
+  CLOCK_GET_STATE_CHANNEL,
+} from "@/helpers/ipc/clock/clock-channels";
 import path from "path";
 
 let clockWindow: BrowserWindow | null = null;
 let isClockVisible = false;
+let isPinned = true;
 
 export function createClockWindow(): BrowserWindow {
   console.log("Creating clock window");
@@ -23,8 +28,8 @@ export function createClockWindow(): BrowserWindow {
   const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
 
   // Clock window dimensions - consistent for both idle and active states
-  const windowWidth = 96;
-  const windowHeight = 34;
+  const windowWidth = 280;
+  const windowHeight = 160;
 
   // Position in top-right corner with some margin
   const x = screenWidth - windowWidth - 20;
@@ -38,16 +43,18 @@ export function createClockWindow(): BrowserWindow {
     frame: false,
     transparent: true,
     backgroundColor: "rgba(0, 0, 0, 0)", // Fully transparent background
-    alwaysOnTop: true,
+    alwaysOnTop: isPinned,
     skipTaskbar: true,
-    resizable: false,
+    resizable: true,
+    minWidth: 220,
+    minHeight: 140,
     movable: true,
     minimizable: false,
     maximizable: false,
     closable: true,
     focusable: true,
     show: false,
-    hasShadow: false, // Disable shadow for cleaner transparent look
+    hasShadow: true,
     webPreferences: {
       preload: preload,
       contextIsolation: true,
@@ -139,3 +146,26 @@ export function toggleClockWindow(): void {
     showClockWindow();
   }
 }
+
+function registerClockIpcHandlers(): void {
+  ipcMain.handle(CLOCK_TOGGLE_PIN_CHANNEL, () => {
+    isPinned = !isPinned;
+    if (clockWindow && !clockWindow.isDestroyed()) {
+      clockWindow.setAlwaysOnTop(isPinned, "screen-saver");
+      if (isPinned) {
+        clockWindow.moveTop();
+      }
+    }
+    return { isPinned };
+  });
+
+  ipcMain.handle(CLOCK_GET_STATE_CHANNEL, () => {
+    return {
+      isPinned,
+      isVisible: isClockWindowVisible(),
+      bounds: clockWindow?.getBounds() ?? null,
+    };
+  });
+}
+
+registerClockIpcHandlers();

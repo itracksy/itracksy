@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 
 interface TimeEntry {
   id: string;
@@ -37,6 +37,13 @@ interface ClockState {
   dailyProgress: DailyProgress | null;
 }
 
+const FOCUS_DEFAULT_MINUTES = 25;
+const BREAK_DEFAULT_MINUTES = 5;
+const PIN_ICON = {
+  pinned: "📌",
+  unpinned: "📍",
+} as const;
+
 const ClockApp: React.FC = () => {
   const [clockState, setClockState] = useState<ClockState>({
     activeEntry: null,
@@ -46,6 +53,14 @@ const ClockApp: React.FC = () => {
     focusTarget: null,
     dailyProgress: null,
   });
+  const [isPinned, setIsPinned] = useState<boolean>(true);
+
+  const electronClock = useMemo(() => {
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+    return window.electronClock;
+  }, []);
 
   // Update current time every second
   useEffect(() => {
@@ -56,67 +71,132 @@ const ClockApp: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Listen for updates from main process
-  useEffect(() => {
-    const electronClock = (window as any).electronClock;
-
-    if (electronClock) {
-      const handleUpdate = (data: any) => {
-        setClockState((prev) => ({
-          ...prev,
-          activeEntry: data.activeEntry,
-          elapsedSeconds: data.elapsedSeconds || 0,
-          isRunning: !!data.activeEntry && !data.activeEntry.endTime,
-          focusTarget: data.focusTarget || prev.focusTarget,
-          dailyProgress: data.dailyProgress || prev.dailyProgress,
-        }));
-      };
-
-      electronClock.onUpdate(handleUpdate);
-
-      return () => {
-        electronClock.removeAllListeners();
-      };
-    }
-  }, []);
-
-  const handleHide = useCallback(async (event: React.MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    if ((window as any).electronClock) {
-      try {
-        await (window as any).electronClock.hide();
-      } catch (error) {
-        console.error("Failed to hide clock:", error);
-      }
-    }
-  }, []);
-
-  const handleShowMain = useCallback(async (event: React.MouseEvent) => {
-    // Don't trigger if clicking on the close button
-    if ((event.target as HTMLElement).closest(".close-btn")) {
+  const refreshWindowState = useCallback(async () => {
+    if (!electronClock?.getState) {
       return;
     }
 
-    event.preventDefault();
-    event.stopPropagation();
-
-    if ((window as any).electronClock) {
-      try {
-        await (window as any).electronClock.showMain();
-      } catch (error) {
-        console.error("Failed to show main window:", error);
-      }
+    try {
+      const state = await electronClock.getState();
+      setIsPinned(state.isPinned);
+    } catch (error) {
+      console.error("Failed to get clock window state", error);
     }
-  }, []);
+  }, [electronClock]);
 
-  const handleContainerClick = useCallback(
-    (event: React.MouseEvent) => {
-      handleShowMain(event);
+  // Listen for updates from main process
+  useEffect(() => {
+    if (!electronClock) {
+      return;
+    }
+
+    const handleUpdate = (data: any) => {
+      setClockState((prev) => ({
+        ...prev,
+        activeEntry: data.activeEntry,
+        elapsedSeconds: data.elapsedSeconds || 0,
+        isRunning: !!data.activeEntry && !data.activeEntry.endTime,
+        focusTarget: data.focusTarget || prev.focusTarget,
+        dailyProgress: data.dailyProgress || prev.dailyProgress,
+      }));
+    };
+
+    electronClock.onUpdate(handleUpdate);
+    void refreshWindowState();
+
+    return () => {
+      electronClock.removeAllListeners?.();
+    };
+  }, [electronClock, refreshWindowState]);
+
+  const handleHide = useCallback(async () => {
+    if (!electronClock?.hide) {
+      return;
+    }
+
+    try {
+      await electronClock.hide();
+    } catch (error) {
+      console.error("Failed to hide clock:", error);
+    }
+  }, [electronClock]);
+
+  const handleShowMain = useCallback(async () => {
+    if (!electronClock?.showMain) {
+      return;
+    }
+    try {
+      await electronClock.showMain();
+    } catch (error) {
+      console.error("Failed to show main window:", error);
+    }
+  }, [electronClock]);
+
+  const handleTogglePin = useCallback(async () => {
+    if (!electronClock?.togglePin) {
+      return;
+    }
+
+    try {
+      const state = await electronClock.togglePin();
+      setIsPinned(state.isPinned);
+    } catch (error) {
+      console.error("Failed to toggle clock pin state", error);
+    }
+  }, [electronClock]);
+
+  const executeControl = useCallback(
+    async (action: string, data?: unknown) => {
+      if (!electronClock?.control) {
+        return;
+      }
+
+      try {
+        await electronClock.control(action, data);
+      } catch (error) {
+        console.error(`Failed to execute clock action: ${action}`, error);
+      }
     },
-    [handleShowMain]
+    [electronClock]
   );
+
+  const handleStartFocus = useCallback(() => {
+    const targetMinutes = clockState.activeEntry?.targetDuration || FOCUS_DEFAULT_MINUTES;
+    void executeControl("start", {
+      isFocusMode: true,
+      targetDuration: targetMinutes,
+      description: "Focus Session",
+    });
+  }, [clockState.activeEntry, executeControl]);
+
+  const handleStartBreak = useCallback(() => {
+    void executeControl("start", {
+      isFocusMode: false,
+      targetDuration: BREAK_DEFAULT_MINUTES,
+      description: "Break",
+    });
+  }, [executeControl]);
+
+  const handlePause = useCallback(() => {
+    void executeControl("pause");
+  }, [executeControl]);
+
+  const handleStop = useCallback(() => {
+    void executeControl("stop");
+  }, [executeControl]);
+
+  const handleResume = useCallback(() => {
+    const isFocusMode = clockState.activeEntry?.isFocusMode ?? true;
+    const targetDuration = clockState.activeEntry?.targetDuration ?? FOCUS_DEFAULT_MINUTES;
+    const description = clockState.activeEntry?.description ?? (isFocusMode ? "Focus Session" : "Break");
+    void executeControl("resume", {
+      isFocusMode,
+      targetDuration,
+      description,
+    });
+  }, [clockState.activeEntry, executeControl]);
+
+  const electronAvailable = Boolean(electronClock);
 
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -191,52 +271,105 @@ const ClockApp: React.FC = () => {
 
   const { activeEntry, isRunning, focusTarget, dailyProgress } = clockState;
   const remainingTime = getRemainingTime();
-  const progress = getProgress();
+  const activeProgress = getProgress();
 
   if (!activeEntry || activeEntry.endTime) {
     // Idle state - show daily target and progress
     const hasTarget = focusTarget && dailyProgress;
-    const dailyProgressPercent = dailyProgress?.progressPercentage || 0;
+    const dailyProgressPercent = dailyProgress?.progressPercentage ?? 0;
 
     return (
-      <div
-        className="clock-container idle"
-        onClick={handleContainerClick}
-        title="Click to open iTracksy"
-      >
-        <div className="clock-content">
+      <div className={`clock-shell idle ${isPinned ? "pinned" : "unpinned"}`}>
+        <header className="clock-header no-drag">
+          <div className="clock-status">
+            <span className="clock-mode-icon">⏱️</span>
+            <div className="clock-mode-text">
+              <span className="clock-mode-label">Pomodoro Ready</span>
+              <span className="clock-subtitle">
+                {hasTarget
+                  ? `Today: ${formatMinutes(dailyProgress?.completedMinutes || 0)} / ${formatMinutes(
+                      focusTarget?.targetMinutes || FOCUS_DEFAULT_MINUTES
+                    )}`
+                  : "Plan your next focus sprint"}
+              </span>
+            </div>
+          </div>
+          <div className="clock-toolbar">
+            <button
+              type="button"
+              className="icon-button no-drag"
+              onClick={handleTogglePin}
+              title={isPinned ? "Unpin window" : "Pin window"}
+            >
+              {isPinned ? PIN_ICON.pinned : PIN_ICON.unpinned}
+            </button>
+            <button
+              type="button"
+              className="icon-button no-drag"
+              onClick={handleHide}
+              title="Hide"
+            >
+              ✕
+            </button>
+          </div>
+        </header>
+
+        <section className="clock-body no-drag">
           {hasTarget ? (
-            <>
-              <div className="clock-target">
-                <span className="clock-title">Target</span>
-                <span className="target-icon">🎯</span>
-                <span className="target-text">{formatMinutes(focusTarget.targetMinutes)}</span>
+            <div className="daily-progress-card">
+              <div className="daily-progress-header">
+                <span className="daily-progress-title">Today's Focus</span>
+                <span className="daily-progress-percentage">{Math.round(dailyProgressPercent)}%</span>
               </div>
-              <div className="clock-daily-progress">
-                <div className="progress-info">
-                  <span className="progress-text">
-                    {formatMinutes(dailyProgress.completedMinutes)} /{" "}
-                    {formatMinutes(dailyProgress.targetMinutes)}
-                  </span>
-                </div>
-                <div className="progress-bar-container">
-                  <div
-                    className="progress-bar-fill"
-                    style={{ width: `${Math.min(dailyProgressPercent, 100)}%` }}
-                  />
-                </div>
+              <div className="daily-progress-bar">
+                <div
+                  className="daily-progress-fill"
+                  style={{ width: `${Math.min(dailyProgressPercent, 100)}%` }}
+                />
               </div>
-            </>
+              <div className="daily-progress-meta">
+                <span>{formatMinutes(dailyProgress?.completedMinutes || 0)} completed</span>
+                <span>{formatMinutes(dailyProgress?.remainingMinutes || 0)} to go</span>
+              </div>
+            </div>
           ) : (
-            <>
-              <span className="clock-icon">⏱️</span>
-              <span className="clock-status">Ready</span>
-            </>
+            <div className="clock-ready-card">
+              <span className="ready-title">Stay on track</span>
+              <span className="ready-text">Launch a focus or break session from here.</span>
+            </div>
           )}
-        </div>
-        <button className="close-btn" onClick={handleHide} title="Hide">
-          ✕
-        </button>
+        </section>
+
+        <footer className="clock-footer no-drag">
+          <div className="clock-actions primary">
+            <button
+              type="button"
+              className="action-button primary"
+              onClick={handleStartFocus}
+              disabled={!electronAvailable}
+            >
+              Start Focus
+            </button>
+            <button
+              type="button"
+              className="action-button secondary"
+              onClick={handleStartBreak}
+              disabled={!electronAvailable}
+            >
+              Start Break
+            </button>
+          </div>
+          <div className="clock-actions secondary">
+            <button
+              type="button"
+              className="action-button ghost"
+              onClick={handleShowMain}
+              disabled={!electronAvailable}
+            >
+              Open iTracksy
+            </button>
+          </div>
+        </footer>
       </div>
     );
   }
@@ -245,35 +378,109 @@ const ClockApp: React.FC = () => {
   const mode = activeEntry.isFocusMode ? "focus" : "break";
   const modeIcon = activeEntry.isFocusMode ? "🎯" : "☕";
   const unlimited = isUnlimitedSession();
+  const timerLabel = unlimited ? "Elapsed time" : activeEntry.isFocusMode ? "Focus remaining" : "Break remaining";
+  const statusText = activeEntry.isFocusMode
+    ? clockState.isRunning
+      ? "Focused and flowing"
+      : "Focus paused"
+    : clockState.isRunning
+    ? "Enjoy your break"
+    : "Break paused";
+  const progress = getProgress();
+  const targetMinutes = activeEntry.targetDuration || (activeEntry.isFocusMode ? FOCUS_DEFAULT_MINUTES : BREAK_DEFAULT_MINUTES);
 
   return (
-    <div
-      className={`clock-container active ${mode} ${unlimited ? "unlimited" : ""}`}
-      onClick={handleContainerClick}
-      title="Click to show main window"
-    >
-      <div className="clock-content">
-        <span className="clock-icon">{modeIcon}</span>
-        <div className="clock-info">
-          <div className="clock-time">
-            {unlimited ? (
-              <>
-                {formatTime(remainingTime)} <span className="unlimited-indicator">∞</span>
-              </>
-            ) : (
-              formatTime(remainingTime)
-            )}
+    <div className={`clock-shell active ${mode} ${isPinned ? "pinned" : "unpinned"}`}>
+      <header className="clock-header no-drag">
+        <div className="clock-status">
+          <span className="clock-mode-icon">{modeIcon}</span>
+          <div className="clock-mode-text">
+            <span className="clock-mode-label">{activeEntry.isFocusMode ? "Focus Session" : "Break Session"}</span>
+            <span className="clock-subtitle">{statusText}</span>
           </div>
-          {!unlimited && (
-            <div className="clock-progress">
-              <div className="clock-progress-bar" style={{ width: `${progress}%` }} />
-            </div>
+        </div>
+        <div className="clock-toolbar">
+          <button
+            type="button"
+            className="icon-button no-drag"
+            onClick={handleTogglePin}
+            title={isPinned ? "Unpin window" : "Pin window"}
+          >
+            {isPinned ? "📌" : "📍"}
+          </button>
+          <button
+            type="button"
+            className="icon-button no-drag"
+            onClick={handleHide}
+            title="Hide"
+          >
+            ✕
+          </button>
+        </div>
+      </header>
+
+      <section className="clock-body no-drag">
+        <div className="clock-timer-wrapper">
+          <span className="clock-timer-label">{timerLabel}</span>
+          <div className="clock-timer-display">
+            {formatTime(remainingTime)}
+            {unlimited && <span className="unlimited-indicator">∞</span>}
+          </div>
+        </div>
+        {!unlimited && (
+          <div className="clock-progress-track">
+            <div className="clock-progress-meter" style={{ width: `${activeProgress}%` }} />
+          </div>
+        )}
+        <div className="clock-meta-row">
+          <span className="clock-meta-item">
+            Target: {targetMinutes > 0 ? formatMinutes(targetMinutes) : "Unlimited"}
+          </span>
+          <span className="clock-meta-item">{clockState.isRunning ? "Running" : "Paused"}</span>
+        </div>
+      </section>
+
+      <footer className="clock-footer no-drag">
+        <div className="clock-actions primary">
+          {clockState.isRunning ? (
+            <>
+              <button
+                type="button"
+                className="action-button primary"
+                onClick={handlePause}
+              >
+                Pause
+              </button>
+              <button type="button" className="action-button secondary" onClick={handleStop}>
+                Stop
+              </button>
+            </>
+          ) : (
+            <>
+              <button type="button" className="action-button primary" onClick={handleResume}>
+                Resume
+              </button>
+              <button type="button" className="action-button secondary" onClick={handleStop}>
+                End Session
+              </button>
+            </>
           )}
         </div>
-      </div>
-      <button className="close-btn" onClick={handleHide} title="Hide">
-        ✕
-      </button>
+        <div className="clock-actions secondary">
+          {activeEntry.isFocusMode ? (
+            <button type="button" className="action-button ghost" onClick={handleStartBreak}>
+              Start Break
+            </button>
+          ) : (
+            <button type="button" className="action-button ghost" onClick={handleStartFocus}>
+              Back to Focus
+            </button>
+          )}
+          <button type="button" className="action-button ghost" onClick={handleShowMain}>
+            Open iTracksy
+          </button>
+        </div>
+      </footer>
     </div>
   );
 };
