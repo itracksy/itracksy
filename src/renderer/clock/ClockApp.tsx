@@ -207,14 +207,29 @@ const ClockApp: React.FC = () => {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
+  const getElapsedSeconds = (): number => {
+    const entry = clockState.activeEntry;
+    if (!entry) {
+      return 0;
+    }
+
+    const computedElapsed = Math.max(0, Math.floor((clockState.currentTime - entry.startTime) / 1000));
+    const baseElapsed = clockState.elapsedSeconds > 0 ? clockState.elapsedSeconds : computedElapsed;
+
+    if (!clockState.isRunning) {
+      if (entry.endTime) {
+        return Math.max(0, Math.floor((entry.endTime - entry.startTime) / 1000));
+      }
+      return baseElapsed;
+    }
+
+    return computedElapsed;
+  };
+
   const getRemainingTime = (): number => {
     if (!clockState.activeEntry || clockState.activeEntry.endTime) return 0;
 
-    // Use elapsedSeconds from main process if available, otherwise calculate locally
-    const elapsed =
-      clockState.elapsedSeconds > 0
-        ? clockState.elapsedSeconds
-        : Math.floor((clockState.currentTime - clockState.activeEntry.startTime) / 1000);
+    const elapsed = getElapsedSeconds();
 
     // Handle unlimited sessions (targetDuration = 0)
     if (clockState.activeEntry.targetDuration === 0) {
@@ -233,11 +248,7 @@ const ClockApp: React.FC = () => {
       return 0;
     }
 
-    // Use elapsedSeconds from main process if available, otherwise calculate locally
-    const elapsed =
-      clockState.elapsedSeconds > 0
-        ? clockState.elapsedSeconds
-        : Math.floor((clockState.currentTime - clockState.activeEntry.startTime) / 1000);
+    const elapsed = getElapsedSeconds();
     const target = clockState.activeEntry.targetDuration * 60; // Convert to seconds
     return Math.min((elapsed / target) * 100, 100);
   };
@@ -250,7 +261,7 @@ const ClockApp: React.FC = () => {
       return false;
     }
 
-    const elapsed = Math.floor((clockState.currentTime - clockState.activeEntry.startTime) / 1000);
+    const elapsed = getElapsedSeconds();
     const target = clockState.activeEntry.targetDuration * 60;
     return elapsed > target;
   };
@@ -365,23 +376,23 @@ const ClockApp: React.FC = () => {
 
   return (
     <div className={`clock-shell active ${mode} ${isPinned ? "pinned" : "unpinned"} ${isMinimalView ? "minimal" : ""} ${isCompactLayout ? "compact" : ""}`}>
-      <header className="clock-header no-drag">
-        <div className="clock-status">
-          <span className="clock-mode-icon">{modeIcon}</span>
-          <div className="clock-mode-text">
-            <span className="clock-mode-label">{activeEntry.isFocusMode ? "Focus" : "Break"}</span>
+      {!isMinimalView && (
+        <header className="clock-header no-drag">
+          <div className="clock-status">
+            <span className="clock-mode-icon">{modeIcon}</span>
+            <div className="clock-mode-text">
+              <span className="clock-mode-label">{activeEntry.isFocusMode ? "Focus" : "Break"}</span>
+            </div>
           </div>
-        </div>
-        <div className="clock-toolbar">
-          <button
-            type="button"
-            className="icon-button no-drag"
-            onClick={handleTogglePin}
-            title={isPinned ? "Unpin window" : "Pin window"}
-          >
-            {isPinned ? "📌" : "📍"}
-          </button>
-          {!isMinimalView && (
+          <div className="clock-toolbar">
+            <button
+              type="button"
+              className="icon-button no-drag"
+              onClick={handleTogglePin}
+              title={isPinned ? "Unpin window" : "Pin window"}
+            >
+              {isPinned ? "📌" : "📍"}
+            </button>
             <button
               type="button"
               className="icon-button no-drag"
@@ -390,17 +401,17 @@ const ClockApp: React.FC = () => {
             >
               🌀
             </button>
-          )}
-          <button
-            type="button"
-            className="icon-button no-drag"
-            onClick={handleHide}
-            title="Hide"
-          >
-            ✕
-          </button>
-        </div>
-      </header>
+            <button
+              type="button"
+              className="icon-button no-drag"
+              onClick={handleHide}
+              title="Hide"
+            >
+              ✕
+            </button>
+          </div>
+        </header>
+      )}
 
       <section className={`clock-body no-drag ${isMinimalView ? "minimal" : ""}`}>
         <button
@@ -409,10 +420,13 @@ const ClockApp: React.FC = () => {
           onClick={handleToggleView}
         >
           {!isMinimalView && <span className="clock-timer-label">{timerLabel}</span>}
-          <span className="clock-timer-display">
-            {formatTime(remainingTime)}
-            {unlimited && <span className="unlimited-indicator">∞</span>}
-          </span>
+          <div className={`clock-timer-content ${isMinimalView ? "minimal" : ""}`}>
+            {isMinimalView && <span className="clock-mode-icon minimal">{modeIcon}</span>}
+            <span className="clock-timer-display">
+              {formatTime(remainingTime)}
+              {unlimited && <span className="unlimited-indicator">∞</span>}
+            </span>
+          </div>
           {!isMinimalView && <span className="timer-hint">Click for minimal view</span>}
         </button>
         {!unlimited && !isMinimalView && (

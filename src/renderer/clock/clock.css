@@ -50,6 +50,10 @@ body {
   display: none;
 }
 
+.clock-shell.minimal .clock-header {
+  display: none;
+}
+
 .clock-shell.minimal .clock-body {
   flex: 1;
   justify-content: center;
@@ -62,7 +66,6 @@ body {
 }
 
 .clock-shell:hover {
-  transform: translateY(-1px);
   box-shadow: 0 22px 55px rgba(15, 23, 42, 0.45);
 }
 
@@ -141,6 +144,23 @@ body {
 
 .clock-body.minimal {
   gap: 8px;
+}
+
+.clock-timer-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  justify-content: center;
+}
+
+.clock-timer-content.minimal {
+  justify-content: center;
+}
+
+.clock-mode-icon.minimal {
+  font-size: 24px;
+  filter: drop-shadow(0 3px 6px rgba(14, 116, 144, 0.45));
 }
 
 .daily-progress-card,

@@ -1,12 +1,13 @@
 /// <reference path="../../../forge.env.d.ts" />
 import { logger } from "@/helpers/logger";
-import { BrowserWindow, screen, ipcMain } from "electron";
+import { BrowserWindow, screen, ipcMain, app } from "electron";
 import {
   CLOCK_TOGGLE_PIN_CHANNEL,
   CLOCK_GET_STATE_CHANNEL,
   CLOCK_SET_SIZE_MODE_CHANNEL,
 } from "@/helpers/ipc/clock/clock-channels";
 import path from "path";
+import { existsSync, readFileSync, writeFileSync } from "fs";
 
 type ClockSizeMode = "detailed" | "minimal";
 
@@ -21,18 +22,103 @@ const SIZE_PRESETS: Record<ClockSizeMode, { width: number; height: number; minWi
   },
   minimal: {
     width: 200,
-    height: 148,
+    height: 105,
     minWidth: 200,
-    minHeight: 148,
+    minHeight: 105,
     maxWidth: 200,
-    maxHeight: 148,
+    maxHeight: 105,
   },
+};
+
+interface ClockWindowBounds {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+interface ClockWindowState {
+  readonly bounds?: ClockWindowBounds;
+  readonly sizeMode?: ClockSizeMode;
+  readonly isPinned?: boolean;
+}
+
+const CLOCK_STATE_FILE_NAME = "clock-window-state.json";
+let cachedClockWindowState: ClockWindowState | null = null;
+
+const getClockWindowStateFilePath = (): string => {
+  const directory: string = app.getPath("userData");
+  return path.join(directory, CLOCK_STATE_FILE_NAME);
+};
+
+const loadClockWindowState = (): ClockWindowState => {
+  try {
+    const filePath: string = getClockWindowStateFilePath();
+    if (!existsSync(filePath)) {
+      return {};
+    }
+    const rawState: string = readFileSync(filePath, "utf-8");
+    if (!rawState.trim()) {
+      return {};
+    }
+    const parsedState: ClockWindowState = JSON.parse(rawState) as ClockWindowState;
+    return parsedState;
+  } catch (error) {
+    logger.warn("Clock: Failed to load window state", { error });
+    return {};
+  }
+};
+
+const getClockWindowState = (): ClockWindowState => {
+  if (!cachedClockWindowState) {
+    cachedClockWindowState = loadClockWindowState();
+  }
+  return cachedClockWindowState;
+};
+
+const saveClockWindowState = (partialState: Partial<ClockWindowState>): void => {
+  const currentState: ClockWindowState = getClockWindowState();
+  const nextState: ClockWindowState = {
+    ...currentState,
+    ...partialState,
+    bounds: partialState.bounds ?? currentState.bounds,
+  };
+  cachedClockWindowState = nextState;
+  try {
+    const filePath: string = getClockWindowStateFilePath();
+    writeFileSync(filePath, JSON.stringify(nextState, null, 2), "utf-8");
+  } catch (error) {
+    logger.warn("Clock: Failed to save window state", { error });
+  }
 };
 
 let clockWindow: BrowserWindow | null = null;
 let isClockVisible = false;
-let isPinned = true;
-let currentSizeMode: ClockSizeMode = "detailed";
+let boundsSaveTimeout: NodeJS.Timeout | null = null;
+
+const initialState: ClockWindowState = getClockWindowState();
+let isPinned = initialState.isPinned ?? true;
+let currentSizeMode: ClockSizeMode = initialState.sizeMode ?? "detailed";
+
+const getWindowBoundsSnapshot = (win: BrowserWindow): ClockWindowBounds => {
+  const { x, y, width, height } = win.getBounds();
+  return { x, y, width, height };
+};
+
+const scheduleBoundsSave = (): void => {
+  if (!clockWindow || clockWindow.isDestroyed()) {
+    return;
+  }
+  if (boundsSaveTimeout) {
+    clearTimeout(boundsSaveTimeout);
+  }
+  boundsSaveTimeout = setTimeout(() => {
+    if (!clockWindow || clockWindow.isDestroyed()) {
+      return;
+    }
+    saveClockWindowState({ bounds: getWindowBoundsSnapshot(clockWindow) });
+  }, 200);
+};
 
 function getSizePreset(mode: ClockSizeMode) {
   return SIZE_PRESETS[mode];
@@ -43,7 +129,7 @@ function calculateAnchorX(originalX: number, originalWidth: number, targetWidth:
   return Math.max(0, newX);
 }
 
-function applySizeMode(mode: ClockSizeMode, reposition = true): void {
+function applySizeMode(mode: ClockSizeMode, reposition = true, persist = true): void {
   if (!clockWindow) {
     currentSizeMode = mode;
     return;
@@ -56,12 +142,18 @@ function applySizeMode(mode: ClockSizeMode, reposition = true): void {
 
   if (!reposition) {
     clockWindow.setSize(preset.width, preset.height);
+    if (persist) {
+      saveClockWindowState({ sizeMode: mode, bounds: getWindowBoundsSnapshot(clockWindow) });
+    }
     return;
   }
 
   const bounds = clockWindow.getBounds();
   const x = calculateAnchorX(bounds.x, bounds.width, preset.width);
   clockWindow.setBounds({ x, y: bounds.y, width: preset.width, height: preset.height });
+  if (persist) {
+    saveClockWindowState({ sizeMode: mode, bounds: getWindowBoundsSnapshot(clockWindow) });
+  }
 }
 
 export function createClockWindow(): BrowserWindow {
@@ -73,6 +165,10 @@ export function createClockWindow(): BrowserWindow {
     return clockWindow;
   }
 
+  const savedState = getClockWindowState();
+  isPinned = savedState.isPinned ?? isPinned;
+  currentSizeMode = savedState.sizeMode ?? currentSizeMode;
+
   const preload = path.join(__dirname, "./preload/clock.js");
   console.log("Clock: Preload path:", preload);
 
@@ -82,12 +178,15 @@ export function createClockWindow(): BrowserWindow {
 
   // Clock window dimensions - consistent for both idle and active states
   const initialPreset = getSizePreset(currentSizeMode);
-  const windowWidth = initialPreset.width;
-  const windowHeight = initialPreset.height;
+  const savedBounds = savedState.bounds;
+  const windowWidth = savedBounds?.width ?? initialPreset.width;
+  const windowHeight = savedBounds?.height ?? initialPreset.height;
 
   // Position in top-right corner with some margin
-  const x = screenWidth - windowWidth - 20;
-  const y = 20;
+  const defaultX = screenWidth - windowWidth - 20;
+  const defaultY = 20;
+  const x = savedBounds?.x ?? defaultX;
+  const y = savedBounds?.y ?? defaultY;
 
   clockWindow = new BrowserWindow({
     width: windowWidth,
@@ -134,17 +233,37 @@ export function createClockWindow(): BrowserWindow {
     clockWindow.loadFile(path.join(__dirname, `../renderer/${rendererDir}/index.html`));
   }
 
+  applySizeMode(currentSizeMode, false, false);
+  if (savedBounds) {
+    clockWindow.setBounds(savedBounds);
+  }
+
+  clockWindow.on("move", scheduleBoundsSave);
+  clockWindow.on("resize", scheduleBoundsSave);
+  clockWindow.on("close", () => {
+    if (clockWindow && !clockWindow.isDestroyed()) {
+      saveClockWindowState({ bounds: getWindowBoundsSnapshot(clockWindow) });
+    }
+    if (boundsSaveTimeout) {
+      clearTimeout(boundsSaveTimeout);
+      boundsSaveTimeout = null;
+    }
+  });
+
   // Handle window events
   clockWindow.on("closed", () => {
     console.log("Clock window closed");
     clockWindow = null;
     isClockVisible = false;
+    if (boundsSaveTimeout) {
+      clearTimeout(boundsSaveTimeout);
+      boundsSaveTimeout = null;
+    }
   });
 
   clockWindow.on("show", () => {
     isClockVisible = true;
   });
-
   clockWindow.on("hide", () => {
     isClockVisible = false;
   });
@@ -173,6 +292,7 @@ export function showClockWindow(): void {
     clockWindow.show();
     clockWindow.focus();
     isClockVisible = true;
+    clockWindow.setAlwaysOnTop(isPinned, "screen-saver");
   }
 }
 
@@ -214,6 +334,7 @@ function registerClockIpcHandlers(): void {
         clockWindow.moveTop();
       }
     }
+    saveClockWindowState({ isPinned });
     return { isPinned, sizeMode: currentSizeMode };
   });
 
@@ -221,7 +342,7 @@ function registerClockIpcHandlers(): void {
     return {
       isPinned,
       isVisible: isClockWindowVisible(),
-      bounds: clockWindow?.getBounds() ?? null,
+      bounds: clockWindow?.getBounds() ?? getClockWindowState().bounds ?? null,
       sizeMode: currentSizeMode,
     };
   });
