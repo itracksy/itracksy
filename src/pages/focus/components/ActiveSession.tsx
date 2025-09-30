@@ -18,8 +18,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAtom } from "jotai";
-import { selectedBoardIdAtom, selectedItemIdAtom } from "@/context/board";
+import {
+  selectedBoardIdAtom,
+  selectedItemIdAtom,
+  playStartSoundAtom,
+  playIntervalSoundAtom,
+  playCompletionSoundAtom,
+  playBreakStartSoundAtom,
+  playBreakCompletionSoundAtom,
+} from "@/context/board";
 import { trpcClient } from "@/utils/trpc";
+import { usePomodoroSounds } from "@/hooks/usePomodoroSounds";
 
 const warningMessages = [
   "⏰ Tick tock! Time's flying!",
@@ -44,6 +53,7 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
   const { toast } = useToast();
 
   const [duration, setDuration] = useState("00:00");
+  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
   const [isTimeExceeded, setIsTimeExceeded] = useState(false);
   const [warningMessage, setWarningMessage] = useState(warningMessages[0]);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
@@ -51,6 +61,11 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
   const [pendingResumeEntry, setPendingResumeEntry] = useState<TimeEntryWithRelations | null>(null);
   const [selectedBoardId, setSelectedBoardId] = useAtom(selectedBoardIdAtom);
   const [selectedItemId, setSelectedItemId] = useAtom(selectedItemIdAtom);
+  const [playStartSound] = useAtom(playStartSoundAtom);
+  const [playIntervalSound] = useAtom(playIntervalSoundAtom);
+  const [playCompletionSound] = useAtom(playCompletionSoundAtom);
+  const [playBreakStartSound] = useAtom(playBreakStartSoundAtom);
+  const [playBreakCompletionSound] = useAtom(playBreakCompletionSoundAtom);
 
   const updateTimeEntryMutation = useUpdateTimeEntryMutation();
 
@@ -192,6 +207,18 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
     }
   };
 
+  usePomodoroSounds({
+    isFocusMode: Boolean(activeTimeEntry?.isFocusMode),
+    targetMinutes: activeTimeEntry?.targetDuration ?? 0,
+    remainingSeconds: activeTimeEntry ? remainingSeconds : null,
+    sessionId: activeTimeEntry?.id ?? "idle",
+    playStartSound,
+    playIntervalSound,
+    playCompletionSound,
+    playBreakStartSound,
+    playBreakCompletionSound,
+  });
+
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
 
@@ -218,11 +245,13 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
             );
           }
           setIsTimeExceeded(false);
+          setRemainingSeconds(null);
           return;
         }
 
         const secondsDiff =
           minutes * 60 - Math.floor((now.getTime() - startTimeDate.getTime()) / 1000);
+        setRemainingSeconds(secondsDiff);
 
         // Format time differently for negative values
         if (secondsDiff <= 0) {
@@ -236,6 +265,7 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
             queryClient.invalidateQueries({ queryKey: ["timeEntries"] });
             setDuration("00:00");
             setIsTimeExceeded(false);
+            setRemainingSeconds(0);
             return;
           } else {
             if (hours > 0) {
@@ -277,6 +307,12 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
         clearInterval(intervalId);
       }
     };
+  }, [activeTimeEntry]);
+
+  useEffect(() => {
+    if (!activeTimeEntry) {
+      setRemainingSeconds(null);
+    }
   }, [activeTimeEntry]);
 
   // Listen for resume pending event from main process
