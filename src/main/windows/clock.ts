@@ -4,12 +4,65 @@ import { BrowserWindow, screen, ipcMain } from "electron";
 import {
   CLOCK_TOGGLE_PIN_CHANNEL,
   CLOCK_GET_STATE_CHANNEL,
+  CLOCK_SET_SIZE_MODE_CHANNEL,
 } from "@/helpers/ipc/clock/clock-channels";
 import path from "path";
+
+type ClockSizeMode = "detailed" | "minimal";
+
+const SIZE_PRESETS: Record<ClockSizeMode, { width: number; height: number; minWidth: number; minHeight: number; maxWidth: number; maxHeight: number }> = {
+  detailed: {
+    width: 340,
+    height: 250,
+    minWidth: 340,
+    minHeight: 250,
+    maxWidth: 340,
+    maxHeight: 250,
+  },
+  minimal: {
+    width: 200,
+    height: 148,
+    minWidth: 200,
+    minHeight: 148,
+    maxWidth: 200,
+    maxHeight: 148,
+  },
+};
 
 let clockWindow: BrowserWindow | null = null;
 let isClockVisible = false;
 let isPinned = true;
+let currentSizeMode: ClockSizeMode = "detailed";
+
+function getSizePreset(mode: ClockSizeMode) {
+  return SIZE_PRESETS[mode];
+}
+
+function calculateAnchorX(originalX: number, originalWidth: number, targetWidth: number): number {
+  const newX = originalX + originalWidth - targetWidth;
+  return Math.max(0, newX);
+}
+
+function applySizeMode(mode: ClockSizeMode, reposition = true): void {
+  if (!clockWindow) {
+    currentSizeMode = mode;
+    return;
+  }
+
+  currentSizeMode = mode;
+  const preset = getSizePreset(mode);
+  clockWindow.setMinimumSize(preset.minWidth, preset.minHeight);
+  clockWindow.setMaximumSize(preset.maxWidth, preset.maxHeight);
+
+  if (!reposition) {
+    clockWindow.setSize(preset.width, preset.height);
+    return;
+  }
+
+  const bounds = clockWindow.getBounds();
+  const x = calculateAnchorX(bounds.x, bounds.width, preset.width);
+  clockWindow.setBounds({ x, y: bounds.y, width: preset.width, height: preset.height });
+}
 
 export function createClockWindow(): BrowserWindow {
   console.log("Creating clock window");
@@ -28,8 +81,9 @@ export function createClockWindow(): BrowserWindow {
   const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
 
   // Clock window dimensions - consistent for both idle and active states
-  const windowWidth = 280;
-  const windowHeight = 160;
+  const initialPreset = getSizePreset(currentSizeMode);
+  const windowWidth = initialPreset.width;
+  const windowHeight = initialPreset.height;
 
   // Position in top-right corner with some margin
   const x = screenWidth - windowWidth - 20;
@@ -46,8 +100,10 @@ export function createClockWindow(): BrowserWindow {
     alwaysOnTop: isPinned,
     skipTaskbar: true,
     resizable: true,
-    minWidth: 220,
-    minHeight: 140,
+    minWidth: initialPreset.minWidth,
+    minHeight: initialPreset.minHeight,
+    maxWidth: initialPreset.maxWidth,
+    maxHeight: initialPreset.maxHeight,
     movable: true,
     minimizable: false,
     maximizable: false,
@@ -64,6 +120,8 @@ export function createClockWindow(): BrowserWindow {
     vibrancy: "under-window", // macOS vibrancy effect
     visualEffectState: "active",
   });
+
+  applySizeMode(currentSizeMode, false);
 
   // Load the clock app
   if (CLOCK_WINDOW_VITE_DEV_SERVER_URL) {
@@ -156,7 +214,7 @@ function registerClockIpcHandlers(): void {
         clockWindow.moveTop();
       }
     }
-    return { isPinned };
+    return { isPinned, sizeMode: currentSizeMode };
   });
 
   ipcMain.handle(CLOCK_GET_STATE_CHANNEL, () => {
@@ -164,6 +222,17 @@ function registerClockIpcHandlers(): void {
       isPinned,
       isVisible: isClockWindowVisible(),
       bounds: clockWindow?.getBounds() ?? null,
+      sizeMode: currentSizeMode,
+    };
+  });
+
+  ipcMain.handle(CLOCK_SET_SIZE_MODE_CHANNEL, (_event, mode: ClockSizeMode) => {
+    if (mode !== "detailed" && mode !== "minimal") {
+      throw new Error(`Unsupported clock size mode: ${mode}`);
+    }
+    applySizeMode(mode);
+    return {
+      sizeMode: currentSizeMode,
     };
   });
 }

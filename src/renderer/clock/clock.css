@@ -1,6 +1,6 @@
 body {
   margin: 0;
-  padding: 12px;
+  padding: 0;
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: #f8fafc;
   background: transparent;
@@ -28,6 +28,7 @@ body {
   border-color: rgba(94, 234, 212, 0.4);
 }
 
+
 .clock-shell.active.focus {
   border-color: rgba(134, 239, 172, 0.4);
   box-shadow: 0 18px 45px rgba(21, 128, 61, 0.35);
@@ -36,6 +37,23 @@ body {
 .clock-shell.active.break {
   border-color: rgba(253, 230, 138, 0.4);
   box-shadow: 0 18px 45px rgba(234, 179, 8, 0.35);
+}
+
+.clock-shell.minimal {
+  padding: 18px;
+  gap: 8px;
+}
+
+.clock-shell.minimal .clock-footer,
+.clock-shell.minimal .clock-meta-row,
+.clock-shell.minimal .clock-progress-track {
+  display: none;
+}
+
+.clock-shell.minimal .clock-body {
+  flex: 1;
+  justify-content: center;
+  align-items: stretch;
 }
 
 .clock-shell.unpinned {
@@ -121,6 +139,10 @@ body {
   gap: 14px;
 }
 
+.clock-body.minimal {
+  gap: 8px;
+}
+
 .daily-progress-card,
 .clock-ready-card,
 .clock-timer-wrapper {
@@ -203,6 +225,44 @@ body {
   gap: 6px;
 }
 
+.timer-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  padding: 18px 20px 15px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(15, 23, 42, 0.45);
+  color: inherit;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  text-align: left;
+}
+
+.timer-toggle:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.35);
+  border-color: rgba(148, 163, 184, 0.35);
+}
+
+.timer-toggle.minimal {
+  padding: 16px 18px;
+  align-items: center;
+  text-align: center;
+  background: rgba(15, 23, 42, 0.65);
+}
+
+.timer-hint {
+  font-size: 11px;
+  color: rgba(226, 232, 240, 0.55);
+}
+
+.clock-shell.minimal .timer-hint {
+  font-size: 10px;
+  color: rgba(226, 232, 240, 0.4);
+}
+
 .clock-timer-label {
   font-size: 12px;
   color: rgba(226, 232, 240, 0.75);
@@ -265,6 +325,11 @@ body {
 .clock-actions {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
+}
+
+.clock-footer.compact .clock-actions.secondary {
+  display: none;
 }
 
 .clock-actions.primary {
@@ -287,6 +352,16 @@ body {
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
   -webkit-app-region: no-drag;
+}
+
+.clock-footer.compact .action-button {
+  flex: 1 1 100%;
+  text-align: center;
+}
+
+.clock-footer.compact .action-button.primary,
+.clock-footer.compact .action-button.secondary {
+  width: 100%;
 }
 
 .action-button.primary {
@@ -342,5 +417,15 @@ body {
 
   .action-button {
     width: 100%;
+  }
+}
+
+@media (max-width: 320px) {
+  .clock-footer {
+    gap: 8px;
+  }
+
+  .clock-footer .clock-actions.secondary {
+    display: none;
   }
 }

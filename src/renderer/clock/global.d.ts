@@ -10,7 +10,10 @@ interface ElectronClock {
     isPinned: boolean;
     isVisible: boolean;
     bounds: { x: number; y: number; width: number; height: number } | null;
+    sizeMode: "detailed" | "minimal";
   }>;
+  setSizeMode: (mode: "detailed" | "minimal") => Promise<{ sizeMode: "detailed" | "minimal" }>;
+  setContentSize: (payload: { width: number; height: number; mode: "detailed" | "minimal" }) => Promise<void>;
 }
 
 declare global {

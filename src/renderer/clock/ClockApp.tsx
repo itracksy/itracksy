@@ -54,6 +54,8 @@ const ClockApp: React.FC = () => {
     dailyProgress: null,
   });
   const [isPinned, setIsPinned] = useState<boolean>(true);
+  const [isMinimalView, setIsMinimalView] = useState<boolean>(false);
+  const [isCompactLayout, setIsCompactLayout] = useState<boolean>(false);
 
   const electronClock = useMemo(() => {
     if (typeof window === "undefined") {
@@ -62,13 +64,41 @@ const ClockApp: React.FC = () => {
     return window.electronClock;
   }, []);
 
-  // Update current time every second
+  // Update current time aligned to real seconds to avoid drift
   useEffect(() => {
-    const interval = setInterval(() => {
-      setClockState((prev) => ({ ...prev, currentTime: Date.now() }));
-    }, 1000);
+    let timeoutId: number | undefined;
 
-    return () => clearInterval(interval);
+    const updateNow = () => {
+      setClockState((prev) => ({ ...prev, currentTime: Date.now() }));
+    };
+
+    const scheduleNextTick = () => {
+      const now = Date.now();
+      const msUntilNextSecond = 1000 - (now % 1000);
+      timeoutId = window.setTimeout(() => {
+        updateNow();
+        scheduleNextTick();
+      }, msUntilNextSecond);
+    };
+
+    updateNow();
+    scheduleNextTick();
+
+    return () => {
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsCompactLayout(window.innerWidth < 340);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const refreshWindowState = useCallback(async () => {
@@ -79,6 +109,7 @@ const ClockApp: React.FC = () => {
     try {
       const state = await electronClock.getState();
       setIsPinned(state.isPinned);
+      setIsMinimalView(state.sizeMode === "minimal");
     } catch (error) {
       console.error("Failed to get clock window state", error);
     }
@@ -108,6 +139,15 @@ const ClockApp: React.FC = () => {
       electronClock.removeAllListeners?.();
     };
   }, [electronClock, refreshWindowState]);
+
+  useEffect(() => {
+    if (!clockState.activeEntry || clockState.activeEntry.endTime) {
+      setIsMinimalView(false);
+      void electronClock?.setSizeMode?.("detailed");
+    } else {
+      void electronClock?.setSizeMode?.(isMinimalView ? "minimal" : "detailed");
+    }
+  }, [clockState.activeEntry, electronClock, isMinimalView]);
 
   const handleHide = useCallback(async () => {
     if (!electronClock?.hide) {
@@ -145,58 +185,16 @@ const ClockApp: React.FC = () => {
     }
   }, [electronClock]);
 
-  const executeControl = useCallback(
-    async (action: string, data?: unknown) => {
-      if (!electronClock?.control) {
-        return;
-      }
-
-      try {
-        await electronClock.control(action, data);
-      } catch (error) {
-        console.error(`Failed to execute clock action: ${action}`, error);
-      }
-    },
-    [electronClock]
-  );
-
-  const handleStartFocus = useCallback(() => {
-    const targetMinutes = clockState.activeEntry?.targetDuration || FOCUS_DEFAULT_MINUTES;
-    void executeControl("start", {
-      isFocusMode: true,
-      targetDuration: targetMinutes,
-      description: "Focus Session",
+  const handleToggleView = useCallback(() => {
+    if (!clockState.activeEntry || clockState.activeEntry.endTime) {
+      return;
+    }
+    setIsMinimalView((prev) => {
+      const next = !prev;
+      void electronClock?.setSizeMode?.(next ? "minimal" : "detailed");
+      return next;
     });
-  }, [clockState.activeEntry, executeControl]);
-
-  const handleStartBreak = useCallback(() => {
-    void executeControl("start", {
-      isFocusMode: false,
-      targetDuration: BREAK_DEFAULT_MINUTES,
-      description: "Break",
-    });
-  }, [executeControl]);
-
-  const handlePause = useCallback(() => {
-    void executeControl("pause");
-  }, [executeControl]);
-
-  const handleStop = useCallback(() => {
-    void executeControl("stop");
-  }, [executeControl]);
-
-  const handleResume = useCallback(() => {
-    const isFocusMode = clockState.activeEntry?.isFocusMode ?? true;
-    const targetDuration = clockState.activeEntry?.targetDuration ?? FOCUS_DEFAULT_MINUTES;
-    const description = clockState.activeEntry?.description ?? (isFocusMode ? "Focus Session" : "Break");
-    void executeControl("resume", {
-      isFocusMode,
-      targetDuration,
-      description,
-    });
-  }, [clockState.activeEntry, executeControl]);
-
-  const electronAvailable = Boolean(electronClock);
+  }, [clockState.activeEntry]);
 
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -271,7 +269,7 @@ const ClockApp: React.FC = () => {
 
   const { activeEntry, isRunning, focusTarget, dailyProgress } = clockState;
   const remainingTime = getRemainingTime();
-  const activeProgress = getProgress();
+  const progressPercent = getProgress();
 
   if (!activeEntry || activeEntry.endTime) {
     // Idle state - show daily target and progress
@@ -340,32 +338,9 @@ const ClockApp: React.FC = () => {
           )}
         </section>
 
-        <footer className="clock-footer no-drag">
-          <div className="clock-actions primary">
-            <button
-              type="button"
-              className="action-button primary"
-              onClick={handleStartFocus}
-              disabled={!electronAvailable}
-            >
-              Start Focus
-            </button>
-            <button
-              type="button"
-              className="action-button secondary"
-              onClick={handleStartBreak}
-              disabled={!electronAvailable}
-            >
-              Start Break
-            </button>
-          </div>
+        <footer className={`clock-footer no-drag ${isCompactLayout ? "compact" : ""}`}>
           <div className="clock-actions secondary">
-            <button
-              type="button"
-              className="action-button ghost"
-              onClick={handleShowMain}
-              disabled={!electronAvailable}
-            >
+            <button type="button" className="action-button ghost" onClick={handleShowMain}>
               Open iTracksy
             </button>
           </div>
@@ -378,7 +353,7 @@ const ClockApp: React.FC = () => {
   const mode = activeEntry.isFocusMode ? "focus" : "break";
   const modeIcon = activeEntry.isFocusMode ? "🎯" : "☕";
   const unlimited = isUnlimitedSession();
-  const timerLabel = unlimited ? "Elapsed time" : activeEntry.isFocusMode ? "Focus remaining" : "Break remaining";
+  const timerLabel = unlimited ? "Elapsed time" : activeEntry.isFocusMode ? "Focus" : "Break";
   const statusText = activeEntry.isFocusMode
     ? clockState.isRunning
       ? "Focused and flowing"
@@ -386,17 +361,15 @@ const ClockApp: React.FC = () => {
     : clockState.isRunning
     ? "Enjoy your break"
     : "Break paused";
-  const progress = getProgress();
   const targetMinutes = activeEntry.targetDuration || (activeEntry.isFocusMode ? FOCUS_DEFAULT_MINUTES : BREAK_DEFAULT_MINUTES);
 
   return (
-    <div className={`clock-shell active ${mode} ${isPinned ? "pinned" : "unpinned"}`}>
+    <div className={`clock-shell active ${mode} ${isPinned ? "pinned" : "unpinned"} ${isMinimalView ? "minimal" : ""} ${isCompactLayout ? "compact" : ""}`}>
       <header className="clock-header no-drag">
         <div className="clock-status">
           <span className="clock-mode-icon">{modeIcon}</span>
           <div className="clock-mode-text">
-            <span className="clock-mode-label">{activeEntry.isFocusMode ? "Focus Session" : "Break Session"}</span>
-            <span className="clock-subtitle">{statusText}</span>
+            <span className="clock-mode-label">{activeEntry.isFocusMode ? "Focus" : "Break"}</span>
           </div>
         </div>
         <div className="clock-toolbar">
@@ -408,6 +381,16 @@ const ClockApp: React.FC = () => {
           >
             {isPinned ? "📌" : "📍"}
           </button>
+          {!isMinimalView && (
+            <button
+              type="button"
+              className="icon-button no-drag"
+              onClick={handleShowMain}
+              title="Open iTracksy"
+            >
+              🌀
+            </button>
+          )}
           <button
             type="button"
             className="icon-button no-drag"
@@ -419,68 +402,35 @@ const ClockApp: React.FC = () => {
         </div>
       </header>
 
-      <section className="clock-body no-drag">
-        <div className="clock-timer-wrapper">
-          <span className="clock-timer-label">{timerLabel}</span>
-          <div className="clock-timer-display">
+      <section className={`clock-body no-drag ${isMinimalView ? "minimal" : ""}`}>
+        <button
+          type="button"
+          className={`timer-toggle ${isMinimalView ? "minimal" : ""}`}
+          onClick={handleToggleView}
+        >
+          {!isMinimalView && <span className="clock-timer-label">{timerLabel}</span>}
+          <span className="clock-timer-display">
             {formatTime(remainingTime)}
             {unlimited && <span className="unlimited-indicator">∞</span>}
-          </div>
-        </div>
-        {!unlimited && (
+          </span>
+          {!isMinimalView && <span className="timer-hint">Click for minimal view</span>}
+        </button>
+        {!unlimited && !isMinimalView && (
           <div className="clock-progress-track">
-            <div className="clock-progress-meter" style={{ width: `${activeProgress}%` }} />
+            <div className="clock-progress-meter" style={{ width: `${progressPercent}%` }} />
           </div>
         )}
-        <div className="clock-meta-row">
-          <span className="clock-meta-item">
-            Target: {targetMinutes > 0 ? formatMinutes(targetMinutes) : "Unlimited"}
-          </span>
-          <span className="clock-meta-item">{clockState.isRunning ? "Running" : "Paused"}</span>
-        </div>
+        {!isMinimalView && (
+          <div className="clock-meta-row">
+            <span className="clock-meta-item">
+              Target: {targetMinutes > 0 ? formatMinutes(targetMinutes) : "Unlimited"}
+            </span>
+            <span className="clock-meta-item">{clockState.isRunning ? "Running" : "Paused"}</span>
+          </div>
+        )}
       </section>
 
-      <footer className="clock-footer no-drag">
-        <div className="clock-actions primary">
-          {clockState.isRunning ? (
-            <>
-              <button
-                type="button"
-                className="action-button primary"
-                onClick={handlePause}
-              >
-                Pause
-              </button>
-              <button type="button" className="action-button secondary" onClick={handleStop}>
-                Stop
-              </button>
-            </>
-          ) : (
-            <>
-              <button type="button" className="action-button primary" onClick={handleResume}>
-                Resume
-              </button>
-              <button type="button" className="action-button secondary" onClick={handleStop}>
-                End Session
-              </button>
-            </>
-          )}
-        </div>
-        <div className="clock-actions secondary">
-          {activeEntry.isFocusMode ? (
-            <button type="button" className="action-button ghost" onClick={handleStartBreak}>
-              Start Break
-            </button>
-          ) : (
-            <button type="button" className="action-button ghost" onClick={handleStartFocus}>
-              Back to Focus
-            </button>
-          )}
-          <button type="button" className="action-button ghost" onClick={handleShowMain}>
-            Open iTracksy
-          </button>
-        </div>
-      </footer>
+      {!isMinimalView && <footer className={`clock-footer no-drag ${isCompactLayout ? "compact" : ""}`} />}
     </div>
   );
 };

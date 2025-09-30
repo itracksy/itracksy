@@ -6,6 +6,8 @@ import {
   CLOCK_SHOW_MAIN_CHANNEL,
   CLOCK_TOGGLE_PIN_CHANNEL,
   CLOCK_GET_STATE_CHANNEL,
+  CLOCK_SET_SIZE_MODE_CHANNEL,
+  CLOCK_SET_CONTENT_SIZE_CHANNEL,
 } from "@/helpers/ipc/clock/clock-channels";
 import { contextBridge, ipcRenderer } from "electron";
 
@@ -49,4 +51,9 @@ contextBridge.exposeInMainWorld("electronClock", {
   togglePin: () => ipcRenderer.invoke(CLOCK_TOGGLE_PIN_CHANNEL),
 
   getState: () => ipcRenderer.invoke(CLOCK_GET_STATE_CHANNEL),
+
+  setSizeMode: (mode: "detailed" | "minimal") => ipcRenderer.invoke(CLOCK_SET_SIZE_MODE_CHANNEL, mode),
+
+  setContentSize: (payload: { width: number; height: number; mode: "detailed" | "minimal" }) =>
+    ipcRenderer.invoke(CLOCK_SET_CONTENT_SIZE_CHANNEL, payload),
 });
