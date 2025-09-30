@@ -6,7 +6,7 @@ import { TimeEntryWithRelations } from "@/types/projects";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { Cloud, Clock, AlertTriangle, Tag, History } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { BoardSelector } from "@/components/tracking/BoardSelector";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -68,6 +68,18 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
   const [playBreakCompletionSound] = useAtom(playBreakCompletionSoundAtom);
 
   const updateTimeEntryMutation = useUpdateTimeEntryMutation();
+
+  const handleShowClock = useCallback(async () => {
+    try {
+      await trpcClient.window.showClock.mutate();
+    } catch (error) {
+      toast({
+        title: "Unable to show clock",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
 
   // Check for resume requirements when component mounts
   useEffect(() => {
@@ -388,6 +400,15 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
         </Button>
         <Button onClick={handleStopTimeEntry} variant="default" className="flex-1">
           STOP {activeTimeEntry.isFocusMode ? "FOCUS" : "BREAK"}
+        </Button>
+        <Button
+          onClick={() => {
+            void handleShowClock();
+          }}
+          variant="secondary"
+          className="flex-1"
+        >
+          SHOW CLOCK
         </Button>
       </div>
 

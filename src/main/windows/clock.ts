@@ -14,19 +14,19 @@ type ClockSizeMode = "detailed" | "minimal";
 const SIZE_PRESETS: Record<ClockSizeMode, { width: number; height: number; minWidth: number; minHeight: number; maxWidth: number; maxHeight: number }> = {
   detailed: {
     width: 340,
-    height: 250,
+    height: 230,
     minWidth: 340,
-    minHeight: 250,
+    minHeight: 230,
     maxWidth: 340,
-    maxHeight: 250,
+    maxHeight: 230,
   },
   minimal: {
     width: 200,
-    height: 105,
+    height: 109,
     minWidth: 200,
-    minHeight: 105,
+    minHeight: 109,
     maxWidth: 200,
-    maxHeight: 105,
+    maxHeight: 109,
   },
 };
 

@@ -419,7 +419,6 @@ const ClockApp: React.FC = () => {
           className={`timer-toggle ${isMinimalView ? "minimal" : ""}`}
           onClick={handleToggleView}
         >
-          {!isMinimalView && <span className="clock-timer-label">{timerLabel}</span>}
           <div className={`clock-timer-content ${isMinimalView ? "minimal" : ""}`}>
             {isMinimalView && <span className="clock-mode-icon minimal">{modeIcon}</span>}
             <span className="clock-timer-display">

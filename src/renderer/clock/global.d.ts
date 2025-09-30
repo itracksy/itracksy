@@ -1,6 +1,7 @@
 interface ElectronClock {
   control: (action: string, data?: unknown) => Promise<unknown>;
   hide: () => Promise<void>;
+  show: () => Promise<void>;
   showMain: () => Promise<void>;
   onUpdate: (callback: (data: any) => void) => void;
   onShow: (callback: () => void) => void;

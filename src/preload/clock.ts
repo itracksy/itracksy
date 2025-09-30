@@ -23,6 +23,11 @@ contextBridge.exposeInMainWorld("electronClock", {
     return ipcRenderer.invoke(CLOCK_HIDE_CHANNEL);
   },
 
+  // Function to show the clock window
+  show: () => {
+    return ipcRenderer.invoke(CLOCK_SHOW_CHANNEL);
+  },
+
   // Function to show the main window
   showMain: () => {
     return ipcRenderer.invoke(CLOCK_SHOW_MAIN_CHANNEL);
