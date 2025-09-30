@@ -188,6 +188,15 @@ export function createClockWindow(): BrowserWindow {
   const x = savedBounds?.x ?? defaultX;
   const y = savedBounds?.y ?? defaultY;
 
+  // Platform-specific options for cross-platform compatibility
+  const platformOptions: Partial<Electron.BrowserWindowConstructorOptions> = {};
+
+  // macOS-specific visual effects
+  if (process.platform === 'darwin') {
+    platformOptions.vibrancy = "under-window";
+    platformOptions.visualEffectState = "active";
+  }
+
   clockWindow = new BrowserWindow({
     width: windowWidth,
     height: windowHeight,
@@ -216,8 +225,7 @@ export function createClockWindow(): BrowserWindow {
       nodeIntegration: false,
       backgroundThrottling: false, // Prevent throttling for smooth animations
     },
-    vibrancy: "under-window", // macOS vibrancy effect
-    visualEffectState: "active",
+    ...platformOptions, // Apply platform-specific options
   });
 
   applySizeMode(currentSizeMode, false);
@@ -292,7 +300,17 @@ export function showClockWindow(): void {
     clockWindow.show();
     clockWindow.focus();
     isClockVisible = true;
-    clockWindow.setAlwaysOnTop(isPinned, "screen-saver");
+
+    // Set always-on-top with platform-safe error handling
+    try {
+      if (process.platform === 'darwin') {
+        clockWindow.setAlwaysOnTop(isPinned, "screen-saver");
+      } else {
+        clockWindow.setAlwaysOnTop(isPinned);
+      }
+    } catch (error) {
+      logger.warn("Clock: Failed to set always-on-top", { error, isPinned });
+    }
   }
 }
 
@@ -329,9 +347,17 @@ function registerClockIpcHandlers(): void {
   ipcMain.handle(CLOCK_TOGGLE_PIN_CHANNEL, () => {
     isPinned = !isPinned;
     if (clockWindow && !clockWindow.isDestroyed()) {
-      clockWindow.setAlwaysOnTop(isPinned, "screen-saver");
-      if (isPinned) {
-        clockWindow.moveTop();
+      try {
+        if (process.platform === 'darwin') {
+          clockWindow.setAlwaysOnTop(isPinned, "screen-saver");
+        } else {
+          clockWindow.setAlwaysOnTop(isPinned);
+        }
+        if (isPinned) {
+          clockWindow.moveTop();
+        }
+      } catch (error) {
+        logger.warn("Clock: Failed to toggle always-on-top", { error, isPinned });
       }
     }
     saveClockWindowState({ isPinned });
