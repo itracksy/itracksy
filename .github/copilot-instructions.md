@@ -11,7 +11,6 @@ Apply the [general coding guidelines](./general-coding.instructions.md) to all c
 - Use TypeScript for all new code
 - Follow functional programming principles where possible
 - Use interfaces for data structures and type definitions
-- Prefer immutable data (const, readonly)
 - Use optional chaining (?.) and nullish coalescing (??) operators
 - No using `any` type; use specific types or generics
 
