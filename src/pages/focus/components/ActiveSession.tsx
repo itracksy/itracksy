@@ -6,7 +6,7 @@ import { TimeEntryWithRelations } from "@/types/projects";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { Cloud, Clock, AlertTriangle, Tag, History } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { BoardSelector } from "@/components/tracking/BoardSelector";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -18,8 +18,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAtom } from "jotai";
-import { selectedBoardIdAtom, selectedItemIdAtom } from "@/context/board";
+import {
+  selectedBoardIdAtom,
+  selectedItemIdAtom,
+  playStartSoundAtom,
+  playIntervalSoundAtom,
+  playCompletionSoundAtom,
+  playBreakStartSoundAtom,
+  playBreakCompletionSoundAtom,
+} from "@/context/board";
 import { trpcClient } from "@/utils/trpc";
+import { usePomodoroSounds } from "@/hooks/usePomodoroSounds";
 
 const warningMessages = [
   "⏰ Tick tock! Time's flying!",
@@ -44,6 +53,7 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
   const { toast } = useToast();
 
   const [duration, setDuration] = useState("00:00");
+  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
   const [isTimeExceeded, setIsTimeExceeded] = useState(false);
   const [warningMessage, setWarningMessage] = useState(warningMessages[0]);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
@@ -51,8 +61,25 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
   const [pendingResumeEntry, setPendingResumeEntry] = useState<TimeEntryWithRelations | null>(null);
   const [selectedBoardId, setSelectedBoardId] = useAtom(selectedBoardIdAtom);
   const [selectedItemId, setSelectedItemId] = useAtom(selectedItemIdAtom);
+  const [playStartSound] = useAtom(playStartSoundAtom);
+  const [playIntervalSound] = useAtom(playIntervalSoundAtom);
+  const [playCompletionSound] = useAtom(playCompletionSoundAtom);
+  const [playBreakStartSound] = useAtom(playBreakStartSoundAtom);
+  const [playBreakCompletionSound] = useAtom(playBreakCompletionSoundAtom);
 
   const updateTimeEntryMutation = useUpdateTimeEntryMutation();
+
+  const handleShowClock = useCallback(async () => {
+    try {
+      await trpcClient.window.showClock.mutate();
+    } catch (error) {
+      toast({
+        title: "Unable to show clock",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
 
   // Check for resume requirements when component mounts
   useEffect(() => {
@@ -192,6 +219,18 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
     }
   };
 
+  usePomodoroSounds({
+    isFocusMode: Boolean(activeTimeEntry?.isFocusMode),
+    targetMinutes: activeTimeEntry?.targetDuration ?? 0,
+    remainingSeconds: activeTimeEntry ? remainingSeconds : null,
+    sessionId: activeTimeEntry?.id ?? "idle",
+    playStartSound,
+    playIntervalSound,
+    playCompletionSound,
+    playBreakStartSound,
+    playBreakCompletionSound,
+  });
+
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
 
@@ -218,11 +257,13 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
             );
           }
           setIsTimeExceeded(false);
+          setRemainingSeconds(null);
           return;
         }
 
         const secondsDiff =
           minutes * 60 - Math.floor((now.getTime() - startTimeDate.getTime()) / 1000);
+        setRemainingSeconds(secondsDiff);
 
         // Format time differently for negative values
         if (secondsDiff <= 0) {
@@ -236,6 +277,7 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
             queryClient.invalidateQueries({ queryKey: ["timeEntries"] });
             setDuration("00:00");
             setIsTimeExceeded(false);
+            setRemainingSeconds(0);
             return;
           } else {
             if (hours > 0) {
@@ -277,6 +319,12 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
         clearInterval(intervalId);
       }
     };
+  }, [activeTimeEntry]);
+
+  useEffect(() => {
+    if (!activeTimeEntry) {
+      setRemainingSeconds(null);
+    }
   }, [activeTimeEntry]);
 
   // Listen for resume pending event from main process
@@ -352,6 +400,15 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
         </Button>
         <Button onClick={handleStopTimeEntry} variant="default" className="flex-1">
           STOP {activeTimeEntry.isFocusMode ? "FOCUS" : "BREAK"}
+        </Button>
+        <Button
+          onClick={() => {
+            void handleShowClock();
+          }}
+          variant="secondary"
+          className="flex-1"
+        >
+          SHOW CLOCK
         </Button>
       </div>
 

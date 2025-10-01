@@ -116,7 +116,7 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
     >
       <SidebarHeader className="text-sm font-semibold text-tracksy-blue dark:text-white"></SidebarHeader>
 
-      <SidebarContent className="pt-7">
+      <SidebarContent className="pt-7 pr-10 ml-2 mr-5">
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>

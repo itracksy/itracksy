@@ -2,7 +2,7 @@ import { z } from "zod";
 import { protectedProcedure, t } from "../trpc";
 import { BrowserWindow, Tray } from "electron";
 import { logger } from "../../helpers/logger";
-import { hideClockWindow } from "../../main/windows/clock";
+import { hideClockWindow, showClockWindow } from "../../main/windows/clock";
 
 // Global references to main window and tray
 let mainWindowRef: BrowserWindow | null = null;
@@ -97,4 +97,14 @@ export const windowRouter = t.router({
         throw error;
       }
     }),
+
+  showClock: protectedProcedure.mutation(async () => {
+    try {
+      showClockWindow();
+      return { success: true };
+    } catch (error) {
+      logger.error("Failed to show clock window", { error });
+      throw error;
+    }
+  }),
 });
