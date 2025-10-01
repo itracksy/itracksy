@@ -85,6 +85,12 @@ const packagerConfig: ForgePackagerOptions = {
 
 // Configure macOS-specific settings (both development and production)
 if (process.platform === "darwin") {
+  const entitlementsPath = path.join(__dirname, "entitlements.plist");
+  const appleSigningIdentity =
+    process.env.APPLE_SIGNING_IDENTITY && process.env.APPLE_SIGNING_IDENTITY.trim().length > 0
+      ? process.env.APPLE_SIGNING_IDENTITY
+      : "Developer ID Application";
+
   // Add Info.plist keys for Apple Events usage
   packagerConfig.extendInfo = {
     NSAppleEventsUsageDescription:
@@ -98,10 +104,10 @@ if (process.platform === "darwin") {
   if (process.env["NODE_ENV"] === "production") {
     packagerConfig.osxSign = {
       // Options for codesigning the application
-      optionsForFile: (filePath: string) => ({
-        identity: "Developer ID Application", // Use your Developer ID
-        entitlements: path.join(__dirname, "entitlements.plist"),
-        "entitlements-inherit": path.join(__dirname, "entitlements.plist"),
+      optionsForFile: () => ({
+        identity: appleSigningIdentity,
+        entitlements: entitlementsPath,
+        "entitlements-inherit": entitlementsPath,
         hardenedRuntime: true,
         "gatekeeper-assess": false,
         // Ensure proper signing of all components
@@ -132,16 +138,47 @@ if (process.platform === "darwin") {
   } else {
     // Development signing configuration
     packagerConfig.osxSign = {
-      optionsForFile: (filePath: string) => ({
-        identity: "Developer ID Application", // Or use your development certificate
-        entitlements: path.join(__dirname, "entitlements.plist"),
-        "entitlements-inherit": path.join(__dirname, "entitlements.plist"),
+      optionsForFile: () => ({
+        identity: appleSigningIdentity,
+        entitlements: entitlementsPath,
+        "entitlements-inherit": entitlementsPath,
         hardenedRuntime: true,
         "gatekeeper-assess": false,
       }),
     };
   }
 }
+
+const makers: ForgeConfig["makers"] = (() => {
+  if (process.platform === "darwin") {
+    return [
+      new MakerDMG({
+        icon: path.resolve(__dirname, "resources", "icon.icns"),
+        format: "ULFO", // Use a different format that works better with permissions
+        overwrite: true,
+      }),
+      new MakerZIP({
+        // Generate ZIP files required by update.electronjs.org
+        // Must match pattern: .*-(mac|darwin|osx).*.zip
+        // This will create ZIP files for macOS builds
+        // Note: MakerZIP works with all platforms, so it should create ZIP files
+      }),
+    ];
+  }
+
+  if (process.platform === "win32") {
+    return [
+      new MakerSquirrel({
+        setupIcon: path.resolve(__dirname, "resources", "icon.ico"),
+        iconUrl: "https://raw.githubusercontent.com/hunght/itracksy/main/resources/icon.ico",
+        loadingGif: path.resolve(__dirname, "resources", "icon_64x64.png"),
+      }),
+      new MakerZIP({}),
+    ];
+  }
+
+  return [new MakerDeb({}), new MakerRpm({}), new MakerZIP({})];
+})();
 
 // Main Electron Forge configuration
 const config: ForgeConfig = {
@@ -306,26 +343,7 @@ const config: ForgeConfig = {
   // Rebuild configuration
   rebuildConfig: {},
   // Makers for different platforms
-  makers: [
-    new MakerSquirrel({
-      setupIcon: path.resolve(__dirname, "resources", "icon.ico"),
-      iconUrl: "https://raw.githubusercontent.com/hunght/itracksy/main/resources/icon.ico",
-      loadingGif: path.resolve(__dirname, "resources", "icon_64x64.png"),
-    }),
-    new MakerDMG({
-      icon: path.resolve(__dirname, "resources", "icon.icns"),
-      format: "ULFO", // Use a different format that works better with permissions
-      overwrite: true,
-    }),
-    new MakerZIP({
-      // Generate ZIP files required by update.electronjs.org
-      // Must match pattern: .*-(mac|darwin|osx).*.zip
-      // This will create ZIP files for macOS builds
-      // Note: MakerZIP works with all platforms, so it should create ZIP files
-    }),
-    new MakerRpm({}),
-    new MakerDeb({}),
-  ],
+  makers,
   // Publishers for different platforms
 
   publishers: [

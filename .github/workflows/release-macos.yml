@@ -27,13 +27,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Rosetta 2 (for x64 builds)
+        if: matrix.arch == 'x64'
+        run: sudo softwareupdate --install-rosetta --agree-to-license
+
       - name: Install architecture-specific dependencies
         run: |
-          # Install architecture-specific dependencies based on target architecture using --cpu and --os flags
-          if [ "${{ matrix.arch }}" == "x64" ]; then
-            npm i --cpu=x64 --os=darwin @libsql/client-darwin@npm:@libsql/client --no-save
-          elif [ "${{ matrix.arch }}" == "arm64" ]; then
-            npm i --cpu=arm64 --os=darwin @libsql/client-darwin@npm:@libsql/client --no-save
+          set -euo pipefail
+          ARCH="${{ matrix.arch }}"
+
+          # Ensure the correct libsql native binary is present for the target architecture
+          if [ "$ARCH" == "x64" ]; then
+            npm install --no-save --cpu=x64 --os=darwin @libsql/darwin-x64
+          elif [ "$ARCH" == "arm64" ]; then
+            npm install --no-save --cpu=arm64 --os=darwin @libsql/darwin-arm64
+          else
+            echo "Unsupported architecture: $ARCH"
+            exit 1
           fi
 
       - name: Create data directories
@@ -50,6 +60,7 @@ jobs:
           P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
+          set -euo pipefail
           # Create variables
           CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
@@ -84,9 +95,13 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
           NODE_ENV: production
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ARCH: ${{ matrix.arch }}
+          npm_config_arch: ${{ matrix.arch }}
+          npm_config_target_arch: ${{ matrix.arch }}
+          npm_config_target_platform: darwin
 
           VITE_AXIOM_TOKEN: ${{ secrets.VITE_AXIOM_TOKEN }}
           VITE_AXIOM_ORG_ID: ${{ secrets.VITE_AXIOM_ORG_ID }}
@@ -94,6 +109,7 @@ jobs:
           VITE_PUBLIC_POSTHOG_KEY: ${{ secrets.VITE_PUBLIC_POSTHOG_KEY }}
           VITE_PUBLIC_POSTHOG_HOST: ${{ secrets.VITE_PUBLIC_POSTHOG_HOST }}
         run: |
+          set -euo pipefail
           echo "Setting up notarization environment..."
           echo "Building for architecture: $ARCH"
           echo "Checking for entitlements.plist..."
@@ -109,7 +125,7 @@ jobs:
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" $RUNNER_TEMP/app-signing.keychain-db
 
           # Build with the specific architecture
-          npm run publish -- --arch=$ARCH
+          npm run publish -- --platform=darwin --arch=$ARCH
 
       - name: Clean up keychain
         run: |
