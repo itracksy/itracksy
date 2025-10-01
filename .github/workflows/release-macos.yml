@@ -38,9 +38,9 @@ jobs:
 
           # Ensure the correct libsql native binary is present for the target architecture
           if [ "$ARCH" == "x64" ]; then
-            npm_config_platform=darwin npm_config_arch=x64 npm install --no-save @libsql/darwin-x64
+            npm install --no-save --force --platform=darwin --arch=x64 @libsql/darwin-x64
           elif [ "$ARCH" == "arm64" ]; then
-            npm_config_platform=darwin npm_config_arch=arm64 npm install --no-save @libsql/darwin-arm64
+            npm install --no-save --force --platform=darwin --arch=arm64 @libsql/darwin-arm64
           else
             echo "Unsupported architecture: $ARCH"
             exit 1
