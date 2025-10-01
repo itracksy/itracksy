@@ -4,6 +4,10 @@ import {
   CLOCK_UPDATE_CHANNEL,
   CLOCK_SHOW_CHANNEL,
   CLOCK_SHOW_MAIN_CHANNEL,
+  CLOCK_TOGGLE_PIN_CHANNEL,
+  CLOCK_GET_STATE_CHANNEL,
+  CLOCK_SET_SIZE_MODE_CHANNEL,
+  CLOCK_SET_CONTENT_SIZE_CHANNEL,
 } from "@/helpers/ipc/clock/clock-channels";
 import { contextBridge, ipcRenderer } from "electron";
 
@@ -17,6 +21,11 @@ contextBridge.exposeInMainWorld("electronClock", {
   // Function to hide the clock window
   hide: () => {
     return ipcRenderer.invoke(CLOCK_HIDE_CHANNEL);
+  },
+
+  // Function to show the clock window
+  show: () => {
+    return ipcRenderer.invoke(CLOCK_SHOW_CHANNEL);
   },
 
   // Function to show the main window
@@ -43,4 +52,13 @@ contextBridge.exposeInMainWorld("electronClock", {
     ipcRenderer.removeAllListeners(CLOCK_UPDATE_CHANNEL);
     ipcRenderer.removeAllListeners(CLOCK_SHOW_CHANNEL);
   },
+
+  togglePin: () => ipcRenderer.invoke(CLOCK_TOGGLE_PIN_CHANNEL),
+
+  getState: () => ipcRenderer.invoke(CLOCK_GET_STATE_CHANNEL),
+
+  setSizeMode: (mode: "detailed" | "minimal") => ipcRenderer.invoke(CLOCK_SET_SIZE_MODE_CHANNEL, mode),
+
+  setContentSize: (payload: { width: number; height: number; mode: "detailed" | "minimal" }) =>
+    ipcRenderer.invoke(CLOCK_SET_CONTENT_SIZE_CHANNEL, payload),
 });

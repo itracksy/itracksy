@@ -23,6 +23,15 @@ export const addClockEventListeners = () => {
   safelyRegisterListener(CLOCK_SHOW_CHANNEL, async (_event) => {
     try {
       showClockWindow();
+      const userId = await getCurrentUserIdLocalStorage();
+      if (userId) {
+        const activeEntry = await getActiveTimeEntry(userId);
+        if (activeEntry) {
+          const timestamp = Date.now();
+          const elapsedSeconds = Math.max(0, Math.floor((timestamp - activeEntry.startTime) / 1000));
+          await sendClockUpdate({ activeEntry, action: "refresh", timestamp, elapsedSeconds });
+        }
+      }
       return { success: true };
     } catch (error) {
       logger.error("Failed to show clock", { error });
@@ -117,10 +126,15 @@ export const addClockEventListeners = () => {
 
       // Send update to clock window
       const updatedEntry = await getActiveTimeEntry(userId);
+      const timestamp = Date.now();
+      const elapsedSeconds =
+        updatedEntry && !updatedEntry.endTime ? Math.max(0, Math.floor((timestamp - updatedEntry.startTime) / 1000)) : 0;
+
       await sendClockUpdate({
         activeEntry: updatedEntry,
         action,
-        timestamp: Date.now(),
+        timestamp,
+        elapsedSeconds,
       });
 
       return { success: true, result };
