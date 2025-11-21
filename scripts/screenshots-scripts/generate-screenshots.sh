@@ -64,6 +64,27 @@ done
 # Ensure we're in the project root
 cd "$(dirname "$0")/../.." || exit
 
+# Safeguard the development database (local.db) so screenshot runs don't mutate or truncate it
+DB_PATH="./local.db"
+DB_BACKUP_PATH="./.screenshots-local.db.bak"
+RESTORE_DB=false
+
+restore_db() {
+  if [ "$RESTORE_DB" = true ] && [ -f "$DB_BACKUP_PATH" ]; then
+    if [ -f "$DB_PATH" ]; then
+      rm -f "$DB_PATH"
+    fi
+    mv "$DB_BACKUP_PATH" "$DB_PATH"
+    echo "♻️  Restored local.db from backup"
+  fi
+}
+
+if [ -f "$DB_PATH" ]; then
+  cp "$DB_PATH" "$DB_BACKUP_PATH"
+  RESTORE_DB=true
+  trap restore_db EXIT
+fi
+
 # Check for .env file and load environment variables
 if [ -f ".env" ]; then
   echo "📚 Loading environment variables from .env file..."

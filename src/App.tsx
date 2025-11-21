@@ -18,6 +18,10 @@ import { getConfig } from "./config/env";
 
 import { getAppVersion } from "./helpers/version";
 
+if (typeof window !== "undefined") {
+  (window as any).__ITRACKSY_ROUTER__ = router;
+}
+
 // Initialize PostHog with enhanced CSP compatibility
 posthog.init(getConfig("posthogKey"), {
   api_host: getConfig("posthogHost"),

@@ -42,6 +42,40 @@ if (!fs.existsSync(screenshotsDir)) {
   fs.mkdirSync(screenshotsDir, { recursive: true });
 }
 
+test.describe.configure({ mode: "serial" });
+
+const waitForRouterReady = async () => {
+  await page.waitForFunction(
+    () => Boolean((window as any).__ITRACKSY_ROUTER__),
+    undefined,
+    { timeout: 20000 }
+  );
+};
+
+const navigateToRoute = async (route: string) => {
+  await waitForRouterReady();
+  await page.evaluate(
+    async (targetRoute) => {
+      const router = (window as any).__ITRACKSY_ROUTER__;
+      if (!router) {
+        throw new Error("Router instance not available.");
+      }
+      await router.navigate({ to: targetRoute });
+    },
+    route
+  );
+  await page.waitForSelector(`[data-route="${route}"]`, { timeout: 20000 });
+  await page.waitForTimeout(1500);
+};
+
+const captureRouteScreenshot = async (route: string, filename: string) => {
+  await navigateToRoute(route);
+  await page.screenshot({
+    path: path.join(screenshotsDir, filename),
+    fullPage: true,
+  });
+};
+
 test.beforeAll(async () => {
   // Try to find latest build, fallback to dev build
   let latestBuild;
@@ -104,6 +138,7 @@ test.beforeAll(async () => {
 
   // Wait for the app to fully load
   await page.waitForLoadState("networkidle");
+  await waitForRouterReady();
   // Extra wait for sidebar to be fully rendered
   await page.waitForTimeout(2000);
 });
@@ -113,181 +148,49 @@ test.afterAll(async () => {
 });
 
 test("Screenshot Activity Tracking feature", async () => {
-  // Navigate to Activity Tracking page (Focus Session)
-  await page.locator('a[href="/"]').click();
-  await page.waitForLoadState("networkidle");
-
-  // Allow time for data to load and animations to complete
-  await page.waitForTimeout(1500);
-
-  // Take screenshot of the Activity Tracking view
-  await page.screenshot({
-    path: path.join(screenshotsDir, "activity-tracking.png"),
-    fullPage: true,
-  });
+  await captureRouteScreenshot("/", "activity-tracking.png");
 });
 
 test("Screenshot Time Analytics Dashboard", async () => {
-  // Navigate to Time Analytics page using the link href
-  await page.locator('a[href="/dashboard"]').click();
-  await page.waitForLoadState("networkidle");
-
-  // Make sure charts and data are fully loaded
-  await page.waitForTimeout(2000);
-
-  // Take screenshot of the Time Analytics view
-  await page.screenshot({
-    path: path.join(screenshotsDir, "time-analytics.png"),
-    fullPage: true,
-  });
+  await captureRouteScreenshot("/dashboard", "time-analytics.png");
 });
 
 test("Screenshot Project Management feature", async () => {
-  // Navigate to Projects/Kanban page using the link href
-  await page.locator('a[href="/projects"]').click();
-  await page.waitForLoadState("networkidle");
-
-  // Make sure boards are fully loaded
-  await page.waitForTimeout(1500);
-
-  // Take screenshot of the Project Management view
-  await page.screenshot({
-    path: path.join(screenshotsDir, "project-management.png"),
-    fullPage: true,
-  });
+  await captureRouteScreenshot("/projects", "project-management.png");
 });
 
 test("Screenshot Activity Classification feature", async () => {
-  // Navigate to Activity Classification page using the link href
-  await page.locator('a[href="/classify"]').click();
-  await page.waitForLoadState("networkidle");
-
-  // Make sure classification data is fully loaded
-  await page.waitForTimeout(1500);
-
-  // Take screenshot of the Activity Classification view
-  await page.screenshot({
-    path: path.join(screenshotsDir, "activity-classification.png"),
-    fullPage: true,
-  });
+  await captureRouteScreenshot("/classify", "activity-classification.png");
 });
 
 test("Screenshot Rule-Based Classification feature", async () => {
-  // Navigate to Rule Book page using the link href
-  await page.locator('a[href="/rule-book"]').click();
-  await page.waitForLoadState("networkidle");
-
-  // Make sure rule data is fully loaded
-  await page.waitForTimeout(1500);
-
-  // Take screenshot of the Rule-Based Classification view
-  await page.screenshot({
-    path: path.join(screenshotsDir, "rule-classification.png"),
-    fullPage: true,
-  });
+  await captureRouteScreenshot("/rule-book", "rule-classification.png");
 });
 
 test("Screenshot Categorization Overview", async () => {
-  // Navigate to Categorization main page
-  await page.locator('a[href="/categorization"]').click();
-  await page.waitForLoadState("networkidle");
-
-  // Wait for categories to load
-  await page.waitForTimeout(1500);
-
-  // Take screenshot of the Categorization view
-  await page.screenshot({
-    path: path.join(screenshotsDir, "categorization-overview.png"),
-    fullPage: true,
-  });
+  await captureRouteScreenshot("/categorization", "categorization-overview.png");
 });
 
 test("Screenshot Category Management", async () => {
-  // Navigate to Category Management page
-  await page.goto("/#/categorization/manage");
-  await page.waitForLoadState("networkidle");
-
-  // Wait for category management interface to load
-  await page.waitForTimeout(1500);
-
-  // Take screenshot of the Category Management view
-  await page.screenshot({
-    path: path.join(screenshotsDir, "category-management.png"),
-    fullPage: true,
-  });
+  await captureRouteScreenshot("/categorization/manage", "category-management.png");
 });
 
 test("Screenshot Uncategorized Activities", async () => {
-  // Navigate to Uncategorized Activities page
-  await page.goto("/#/categorization/uncategorized");
-  await page.waitForLoadState("networkidle");
-
-  // Wait for uncategorized activities to load
-  await page.waitForTimeout(1500);
-
-  // Take screenshot of the Uncategorized Activities view
-  await page.screenshot({
-    path: path.join(screenshotsDir, "uncategorized-activities.png"),
-    fullPage: true,
-  });
+  await captureRouteScreenshot("/categorization/uncategorized", "uncategorized-activities.png");
 });
 
 test("Screenshot Reports Page", async () => {
-  // Navigate to Reports page
-  await page.locator('a[href="/reports"]').click();
-  await page.waitForLoadState("networkidle");
-
-  // Wait for reports to load
-  await page.waitForTimeout(2000);
-
-  // Take screenshot of the Reports view
-  await page.screenshot({
-    path: path.join(screenshotsDir, "reports.png"),
-    fullPage: true,
-  });
+  await captureRouteScreenshot("/reports", "reports.png");
 });
 
 test("Screenshot Music/Focus Enhancement Page", async () => {
-  // Navigate to Music page
-  await page.locator('a[href="/music"]').click();
-  await page.waitForLoadState("networkidle");
-
-  // Wait for music interface to load
-  await page.waitForTimeout(1500);
-
-  // Take screenshot of the Music view
-  await page.screenshot({
-    path: path.join(screenshotsDir, "music-focus.png"),
-    fullPage: true,
-  });
+  await captureRouteScreenshot("/music", "music-focus.png");
 });
 
 test("Screenshot Scheduling Page", async () => {
-  // Navigate to Scheduling page
-  await page.locator('a[href="/scheduling"]').click();
-  await page.waitForLoadState("networkidle");
-
-  // Wait for scheduling interface to load
-  await page.waitForTimeout(1500);
-
-  // Take screenshot of the Scheduling view
-  await page.screenshot({
-    path: path.join(screenshotsDir, "scheduling.png"),
-    fullPage: true,
-  });
+  await captureRouteScreenshot("/scheduling", "scheduling.png");
 });
 
 test("Screenshot Settings Page", async () => {
-  // Navigate to Settings page
-  await page.locator('a[href="/settings"]').click();
-  await page.waitForLoadState("networkidle");
-
-  // Wait for settings to load
-  await page.waitForTimeout(1500);
-
-  // Take screenshot of the Settings view
-  await page.screenshot({
-    path: path.join(screenshotsDir, "settings.png"),
-    fullPage: true,
-  });
+  await captureRouteScreenshot("/settings", "settings.png");
 });
