@@ -4,7 +4,7 @@ import { getDatabasePath } from "../../utils/paths";
 import * as schema from "./schema";
 
 let client: Client | null = null;
-let dbInstance: ReturnType<typeof drizzle> | null = null;
+let dbInstance: ReturnType<typeof drizzle<typeof schema>> | null = null;
 
 /**
  * Initialize the database client and drizzle instance
@@ -35,7 +35,8 @@ function getDb() {
 }
 
 // Export a Proxy that checks initialization on every access
-const db = new Proxy({} as ReturnType<typeof drizzle>, {
+// Type it properly so TypeScript knows about the schema
+const db = new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
   get(target, prop) {
     const instance = getDb();
     return (instance as any)[prop];
@@ -43,4 +44,4 @@ const db = new Proxy({} as ReturnType<typeof drizzle>, {
 });
 
 export default db;
-export type Database = ReturnType<typeof drizzle>;
+export type Database = ReturnType<typeof drizzle<typeof schema>>;
