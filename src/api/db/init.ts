@@ -3,7 +3,6 @@ import fs from "fs";
 import path from "path";
 import { app } from "electron";
 import { getDatabasePath } from "../../utils/paths";
-import db from ".";
 import { logger } from "../../helpers/logger";
 
 const initDb = async () => {
@@ -25,6 +24,11 @@ const initDb = async () => {
     fs.writeFileSync(dbPath, "");
   }
 
+  // Initialize the database client now that the file exists
+  logger.info("Initializing database client...");
+  const { initializeDbClient } = await import(".");
+  const dbInstance = initializeDbClient();
+
   // Get migrations path based on environment
   const migrationsPath = app.isPackaged
     ? path.join(process.resourcesPath, "drizzle")
@@ -33,7 +37,7 @@ const initDb = async () => {
   logger.info("Migrations folder path:", migrationsPath);
 
   // Run migrations
-  await migrate(db, { migrationsFolder: migrationsPath });
+  await migrate(dbInstance, { migrationsFolder: migrationsPath });
   logger.info("Database migrations completed successfully");
 };
 

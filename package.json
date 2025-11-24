@@ -17,6 +17,7 @@
     "win-build": "cross-env PLATFORM=win32 npm run make",
     "mac-build": "cross-env PLATFORM=darwin npm run make",
     "clean:out": "powershell -Command \"Stop-Process -Name itracksy -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 2; Remove-Item -Path out -Force -Recurse -ErrorAction SilentlyContinue\"",
+    "package:auto": "./scripts/package-and-open.sh",
     "publish": "electron-forge publish",
     "prett": "prettier . --write",
     "storybook": "storybook dev -p 6006",
