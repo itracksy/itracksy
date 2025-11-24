@@ -18,6 +18,9 @@ import {
   TreePine,
   Volume2,
   Clock,
+  Download,
+  Sparkles,
+  ArrowRight,
 } from "lucide-react";
 
 interface MusicItem {
@@ -196,6 +199,22 @@ export default function MusicPage() {
     }
   };
 
+  const handleOpenLearnifyTube = async () => {
+    try {
+      await trpcClient.utils.openExternalUrl.mutate({ url: "https://www.learnifytube.com/" });
+      toast({
+        title: "Opening LearnifyTube",
+        description: "Download and play YouTube videos offline!",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to open LearnifyTube. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getTabIcon = (tab: string) => {
     switch (tab) {
       case "focus":
@@ -232,6 +251,56 @@ export default function MusicPage() {
           </p>
         </div>
       </div>
+
+      {/* LearnifyTube Promotional Banner */}
+      <Card className="overflow-hidden border-2 border-tracksy-gold/20 bg-gradient-to-br from-tracksy-gold/5 via-transparent to-tracksy-blue/5">
+        <CardContent className="p-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex-1 space-y-2">
+              <div className="flex items-center gap-2">
+                <Download className="h-5 w-5 text-tracksy-gold" />
+                <Badge className="bg-tracksy-gold text-white hover:bg-tracksy-gold/90">
+                  New App
+                </Badge>
+                <Sparkles className="h-4 w-4 text-tracksy-gold" />
+              </div>
+              <h3 className="text-xl font-bold text-tracksy-blue dark:text-white">
+                Try LearnifyTube - Download & Play YouTube Videos Offline
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                Never worry about internet connectivity again! Download your favorite focus music, educational content, and more.
+                Play anytime, anywhere - perfect for deep work sessions.
+              </p>
+              <div className="flex flex-wrap gap-2 pt-2">
+                <Badge variant="outline" className="gap-1">
+                  <Download className="h-3 w-3" />
+                  Offline Playback
+                </Badge>
+                <Badge variant="outline" className="gap-1">
+                  <Music className="h-3 w-3" />
+                  High Quality Audio
+                </Badge>
+                <Badge variant="outline" className="gap-1">
+                  <Sparkles className="h-3 w-3" />
+                  Easy to Use
+                </Badge>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2 md:flex-shrink-0">
+              <Button
+                onClick={handleOpenLearnifyTube}
+                className="gap-2 bg-tracksy-gold text-white hover:bg-tracksy-gold/90"
+                size="lg"
+              >
+                <Download className="h-4 w-4" />
+                Get LearnifyTube
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+              <p className="text-center text-xs text-gray-500">Free to download</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="mb-6 flex items-center gap-4">
         <div className="flex-1">
