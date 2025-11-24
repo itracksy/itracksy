@@ -297,6 +297,8 @@ export function showClockWindow(): void {
 
   if (clockWindow) {
     console.log("Showing clock window");
+    // Re-enable mouse events before showing
+    clockWindow.setIgnoreMouseEvents(false);
     clockWindow.show();
     clockWindow.focus();
     isClockVisible = true;
@@ -317,6 +319,8 @@ export function showClockWindow(): void {
 export function hideClockWindow(): void {
   if (clockWindow && !clockWindow.isDestroyed() && isClockVisible) {
     console.log("Hiding clock window");
+    // Release mouse events before hiding to prevent ghost regions
+    clockWindow.setIgnoreMouseEvents(true);
     clockWindow.hide();
     isClockVisible = false;
   }
@@ -325,6 +329,8 @@ export function hideClockWindow(): void {
 export function closeClockWindow(): void {
   if (clockWindow && !clockWindow.isDestroyed()) {
     console.log("Closing clock window");
+    // Release mouse events before closing to prevent ghost regions
+    clockWindow.setIgnoreMouseEvents(true);
     clockWindow.close();
     clockWindow = null;
     isClockVisible = false;
