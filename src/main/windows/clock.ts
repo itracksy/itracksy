@@ -251,6 +251,12 @@ export function createClockWindow(): BrowserWindow {
   clockWindow.on("close", () => {
     if (clockWindow && !clockWindow.isDestroyed()) {
       saveClockWindowState({ bounds: getWindowBoundsSnapshot(clockWindow) });
+      // Ignore mouse events to prevent ghost window
+      try {
+        clockWindow.setIgnoreMouseEvents(true);
+      } catch (error) {
+        logger.warn("Clock: Failed to ignore mouse events on close", { error });
+      }
     }
     if (boundsSaveTimeout) {
       clearTimeout(boundsSaveTimeout);
@@ -271,9 +277,25 @@ export function createClockWindow(): BrowserWindow {
 
   clockWindow.on("show", () => {
     isClockVisible = true;
+    // Ensure mouse events are enabled when showing
+    if (clockWindow && !clockWindow.isDestroyed()) {
+      try {
+        clockWindow.setIgnoreMouseEvents(false);
+      } catch (error) {
+        logger.warn("Clock: Failed to enable mouse events on show", { error });
+      }
+    }
   });
   clockWindow.on("hide", () => {
     isClockVisible = false;
+    // Ignore mouse events when hiding to prevent ghost window
+    if (clockWindow && !clockWindow.isDestroyed()) {
+      try {
+        clockWindow.setIgnoreMouseEvents(true);
+      } catch (error) {
+        logger.warn("Clock: Failed to ignore mouse events on hide", { error });
+      }
+    }
   });
 
   // Open DevTools for debugging in development
@@ -297,8 +319,14 @@ export function showClockWindow(): void {
 
   if (clockWindow) {
     console.log("Showing clock window");
-    // Re-enable mouse events before showing
-    clockWindow.setIgnoreMouseEvents(false);
+
+    // Re-enable mouse events when showing the window
+    try {
+      clockWindow.setIgnoreMouseEvents(false);
+    } catch (error) {
+      logger.warn("Clock: Failed to enable mouse events", { error });
+    }
+
     clockWindow.show();
     clockWindow.focus();
     isClockVisible = true;
@@ -319,8 +347,14 @@ export function showClockWindow(): void {
 export function hideClockWindow(): void {
   if (clockWindow && !clockWindow.isDestroyed() && isClockVisible) {
     console.log("Hiding clock window");
-    // Release mouse events before hiding to prevent ghost regions
-    clockWindow.setIgnoreMouseEvents(true);
+
+    // Ignore mouse events before hiding to prevent ghost window issue
+    try {
+      clockWindow.setIgnoreMouseEvents(true);
+    } catch (error) {
+      logger.warn("Clock: Failed to ignore mouse events", { error });
+    }
+
     clockWindow.hide();
     isClockVisible = false;
   }
@@ -329,8 +363,14 @@ export function hideClockWindow(): void {
 export function closeClockWindow(): void {
   if (clockWindow && !clockWindow.isDestroyed()) {
     console.log("Closing clock window");
-    // Release mouse events before closing to prevent ghost regions
-    clockWindow.setIgnoreMouseEvents(true);
+
+    // Ignore mouse events before closing to prevent ghost window issue
+    try {
+      clockWindow.setIgnoreMouseEvents(true);
+    } catch (error) {
+      logger.warn("Clock: Failed to ignore mouse events before close", { error });
+    }
+
     clockWindow.close();
     clockWindow = null;
     isClockVisible = false;
