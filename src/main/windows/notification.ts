@@ -9,7 +9,8 @@ export function createNotificationWindow(): BrowserWindow {
   // Don't create multiple notification windows
   if (notificationWindow && !notificationWindow.isDestroyed()) {
     console.log("Reusing existing notification window");
-    notificationWindow.focus();
+    // We do NOT automatically show/focus here anymore.
+    // Consumers must call showNotificationWindow() explicitly.
     return notificationWindow;
   }
   const preload = path.join(__dirname, "./preload/notification.js");
@@ -17,7 +18,6 @@ export function createNotificationWindow(): BrowserWindow {
   console.log("Creating new notification window");
 
   // Get the primary display to position the notification
-  const { screen } = require("electron");
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
 
@@ -35,6 +35,7 @@ export function createNotificationWindow(): BrowserWindow {
     skipTaskbar: true,
     resizable: true,
     transparent: true,
+    show: false, // Start hidden to prevent ghost window
     webPreferences: {
       preload: preload,
       contextIsolation: true,
@@ -72,6 +73,7 @@ export function createNotificationWindow(): BrowserWindow {
       html {
         overflow: hidden !important;
         scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
       }
 
       * {
@@ -89,7 +91,7 @@ export function createNotificationWindow(): BrowserWindow {
   // Open DevTools for debugging
   if (process.env.NODE_ENV === "development") {
     console.log("Opening notification window DevTools");
-    notificationWindow.webContents.openDevTools();
+    notificationWindow.webContents.openDevTools({ mode: "detach" });
   }
 
   return notificationWindow;
@@ -100,9 +102,42 @@ export function getNotificationWindow(): BrowserWindow | null {
   return notificationWindow;
 }
 
+export function showNotificationWindow(): void {
+  if (notificationWindow && !notificationWindow.isDestroyed()) {
+    console.log("Showing notification window");
+    // Ensure we capture mouse events when showing
+    try {
+      notificationWindow.setIgnoreMouseEvents(false);
+    } catch (error) {
+      console.error("Failed to enable mouse events:", error);
+    }
+    notificationWindow.show();
+    notificationWindow.focus();
+  }
+}
+
+export function hideNotificationWindow(): void {
+  if (notificationWindow && !notificationWindow.isDestroyed()) {
+    console.log("Hiding notification window");
+    // Ignore mouse events to prevent ghost window
+    try {
+      notificationWindow.setIgnoreMouseEvents(true);
+    } catch (error) {
+      console.error("Failed to ignore mouse events:", error);
+    }
+    notificationWindow.hide();
+  }
+}
+
 export function closeNotificationWindow(): void {
   if (notificationWindow && !notificationWindow.isDestroyed()) {
     console.log("Closing notification window");
+    // Ignore mouse events before closing to prevent ghost window
+    try {
+      notificationWindow.setIgnoreMouseEvents(true);
+    } catch (error) {
+      console.error("Failed to ignore mouse events before close:", error);
+    }
     notificationWindow.close();
     notificationWindow = null;
   }

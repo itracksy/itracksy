@@ -10,6 +10,7 @@ import {
   session,
   ipcMain,
   dialog,
+  globalShortcut,
 } from "electron";
 import { createIPCHandler } from "electron-trpc/main";
 import registerListeners from "./helpers/ipc/listeners-register";
@@ -186,6 +187,15 @@ async function createTray() {
       label: "Toggle Clock",
       click: () => {
         toggleClockWindow();
+      },
+    },
+    { type: "separator" },
+    {
+      label: "Debug Ghost Windows",
+      click: () => {
+        import("./main/debug-windows").then(({ debugGhostWindows }) => {
+          debugGhostWindows();
+        });
       },
     },
     { type: "separator" },
@@ -398,6 +408,13 @@ app.whenReady().then(async () => {
   await createTray();
   createWindow();
 
+  // Register a global shortcut to debug ghost windows
+  globalShortcut.register("CommandOrControl+Shift+Alt+D", () => {
+    import("./main/debug-windows").then(({ debugGhostWindows }) => {
+      debugGhostWindows();
+    });
+  });
+
   // Modify CSP to allow scripts from PostHog and inline scripts
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
@@ -477,6 +494,7 @@ app.whenReady().then(async () => {
 // Handle app quit
 app.on("before-quit", () => {
   isQuiting = true;
+  globalShortcut.unregisterAll();
 });
 
 //osX only

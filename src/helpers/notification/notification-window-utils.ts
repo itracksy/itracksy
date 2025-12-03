@@ -1,4 +1,4 @@
-import { createNotificationWindow } from "../../main/windows/notification";
+import { createNotificationWindow, showNotificationWindow } from "../../main/windows/notification";
 import { NOTIFICATION_SHOW_CHANNEL } from "../ipc/notification/notification-channels";
 import { logger } from "../logger";
 
@@ -33,9 +33,13 @@ export const sendNotificationToWindow = async (data: NotificationData): Promise<
     if (notificationWindow.webContents.isLoading()) {
       notificationWindow.webContents.once("did-finish-load", () => {
         notificationWindow.webContents.send(NOTIFICATION_SHOW_CHANNEL, data);
+        // Ensure window is shown safely after load
+        showNotificationWindow();
       });
     } else {
       notificationWindow.webContents.send(NOTIFICATION_SHOW_CHANNEL, data);
+      // Ensure window is shown safely
+      showNotificationWindow();
     }
 
     return true;
