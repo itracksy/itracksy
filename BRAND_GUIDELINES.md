@@ -19,9 +19,9 @@ itracksy is a modern productivity and time tracking application designed to help
 ## 🎨 Primary Brand Colors
 
 ### Primary Purple
-**Hex:** `#8B5CF6`  
-**RGB:** `rgb(139, 92, 246)`  
-**HSL:** `hsl(262, 88%, 66%)`  
+**Hex:** `#8B5CF6`
+**RGB:** `rgb(139, 92, 246)`
+**HSL:** `hsl(262, 88%, 66%)`
 **Tailwind:** `violet-500`
 
 **Usage:**
@@ -34,9 +34,9 @@ itracksy is a modern productivity and time tracking application designed to help
 ---
 
 ### Secondary Pink
-**Hex:** `#EC4899`  
-**RGB:** `rgb(236, 72, 153)`  
-**HSL:** `hsl(330, 81%, 60%)`  
+**Hex:** `#EC4899`
+**RGB:** `rgb(236, 72, 153)`
+**HSL:** `hsl(330, 81%, 60%)`
 **Tailwind:** `pink-500`
 
 **Usage:**
@@ -49,9 +49,9 @@ itracksy is a modern productivity and time tracking application designed to help
 ---
 
 ### Cyan
-**Hex:** `#06B6D4`  
-**RGB:** `rgb(6, 182, 212)`  
-**HSL:** `hsl(187, 94%, 43%)`  
+**Hex:** `#06B6D4`
+**RGB:** `rgb(6, 182, 212)`
+**HSL:** `hsl(187, 94%, 43%)`
 **Tailwind:** `cyan-500`
 
 **Usage:**
@@ -64,9 +64,9 @@ itracksy is a modern productivity and time tracking application designed to help
 ---
 
 ### Blue
-**Hex:** `#3B82F6`  
-**RGB:** `rgb(59, 130, 246)`  
-**HSL:** `hsl(217, 91%, 60%)`  
+**Hex:** `#3B82F6`
+**RGB:** `rgb(59, 130, 246)`
+**HSL:** `hsl(217, 91%, 60%)`
 **Tailwind:** `blue-500`
 
 **Usage:**
@@ -78,9 +78,9 @@ itracksy is a modern productivity and time tracking application designed to help
 ---
 
 ### Success Green
-**Hex:** `#10B981`  
-**RGB:** `rgb(16, 185, 129)`  
-**HSL:** `hsl(160, 84%, 39%)`  
+**Hex:** `#10B981`
+**RGB:** `rgb(16, 185, 129)`
+**HSL:** `hsl(160, 84%, 39%)`
 **Tailwind:** `emerald-500`
 
 **Usage:**
@@ -97,53 +97,53 @@ itracksy is a modern productivity and time tracking application designed to help
 ### Grayscale
 
 #### Gray 50 (Lightest)
-**Hex:** `#F9FAFB`  
-**RGB:** `rgb(249, 250, 251)`  
+**Hex:** `#F9FAFB`
+**RGB:** `rgb(249, 250, 251)`
 **Usage:** Backgrounds, subtle surfaces
 
 #### Gray 100
-**Hex:** `#F3F4F6`  
-**RGB:** `rgb(243, 244, 246)`  
+**Hex:** `#F3F4F6`
+**RGB:** `rgb(243, 244, 246)`
 **Usage:** Secondary backgrounds
 
 #### Gray 200
-**Hex:** `#E5E7EB`  
-**RGB:** `rgb(229, 231, 235)`  
+**Hex:** `#E5E7EB`
+**RGB:** `rgb(229, 231, 235)`
 **Usage:** Borders, dividers
 
 #### Gray 300
-**Hex:** `#D1D5DB`  
-**RGB:** `rgb(209, 213, 219)`  
+**Hex:** `#D1D5DB`
+**RGB:** `rgb(209, 213, 219)`
 **Usage:** Disabled states, subtle borders
 
 #### Gray 400
-**Hex:** `#9CA3AF`  
-**RGB:** `rgb(156, 163, 175)`  
+**Hex:** `#9CA3AF`
+**RGB:** `rgb(156, 163, 175)`
 **Usage:** Placeholders, secondary text
 
 #### Gray 500
-**Hex:** `#6B7280`  
-**RGB:** `rgb(107, 114, 128)`  
+**Hex:** `#6B7280`
+**RGB:** `rgb(107, 114, 128)`
 **Usage:** Tertiary text, icons
 
 #### Gray 600
-**Hex:** `#4B5563`  
-**RGB:** `rgb(75, 85, 99)`  
+**Hex:** `#4B5563`
+**RGB:** `rgb(75, 85, 99)`
 **Usage:** Secondary text
 
 #### Gray 700
-**Hex:** `#374151`  
-**RGB:** `rgb(55, 65, 81)`  
+**Hex:** `#374151`
+**RGB:** `rgb(55, 65, 81)`
 **Usage:** Primary text
 
 #### Gray 800
-**Hex:** `#1F2937`  
-**RGB:** `rgb(31, 41, 55)`  
+**Hex:** `#1F2937`
+**RGB:** `rgb(31, 41, 55)`
 **Usage:** Headers, emphasis
 
 #### Gray 900 (Darkest)
-**Hex:** `#111827`  
-**RGB:** `rgb(17, 24, 39)`  
+**Hex:** `#111827`
+**RGB:** `rgb(17, 24, 39)`
 **Usage:** Strong emphasis, dark mode backgrounds
 
 ---
@@ -151,21 +151,21 @@ itracksy is a modern productivity and time tracking application designed to help
 ### Semantic Colors
 
 #### Error Red
-**Hex:** `#EF4444`  
-**RGB:** `rgb(239, 68, 68)`  
-**Tailwind:** `red-500`  
+**Hex:** `#EF4444`
+**RGB:** `rgb(239, 68, 68)`
+**Tailwind:** `red-500`
 **Usage:** Error messages, destructive actions, warnings
 
 #### Warning Orange
-**Hex:** `#F59E0B`  
-**RGB:** `rgb(245, 158, 11)`  
-**Tailwind:** `amber-500`  
+**Hex:** `#F59E0B`
+**RGB:** `rgb(245, 158, 11)`
+**Tailwind:** `amber-500`
 **Usage:** Warning messages, caution states
 
 #### Info Blue
-**Hex:** `#3B82F6`  
-**RGB:** `rgb(59, 130, 246)`  
-**Tailwind:** `blue-500`  
+**Hex:** `#3B82F6`
+**RGB:** `rgb(59, 130, 246)`
+**Tailwind:** `blue-500`
 **Usage:** Informational messages, tooltips
 
 ---
@@ -198,14 +198,14 @@ background: linear-gradient(135deg, #10B981 0%, #06B6D4 100%);
 
 #### Primary Font (Sans-serif)
 ```css
-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
              'Helvetica Neue', Arial, sans-serif;
 ```
 **Usage:** Body text, UI elements, general content
 
 #### Monospace Font
 ```css
-font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', 
+font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono',
              Consolas, 'Courier New', monospace;
 ```
 **Usage:** Time displays, code snippets, technical data
@@ -288,11 +288,11 @@ font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono',
 - **Print:** 0.5 inch × 0.5 inch
 
 ### Logo Don'ts
-❌ Don't change the colors  
-❌ Don't rotate or skew  
-❌ Don't add effects (shadows, outlines)  
-❌ Don't place on busy backgrounds  
-❌ Don't stretch or compress  
+❌ Don't change the colors
+❌ Don't rotate or skew
+❌ Don't add effects (shadows, outlines)
+❌ Don't place on busy backgrounds
+❌ Don't stretch or compress
 
 ---
 
@@ -347,7 +347,7 @@ background: white;
 border: 1px solid #E5E7EB;
 border-radius: 12px;
 padding: 24px;
-box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 
+box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07),
             0 10px 15px rgba(0, 0, 0, 0.05);
 ```
 
@@ -357,25 +357,25 @@ box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07),
 
 #### Small Shadow
 ```css
-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 
+box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1),
             0 1px 2px rgba(0, 0, 0, 0.06);
 ```
 
 #### Medium Shadow
 ```css
-box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 
+box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07),
             0 2px 4px rgba(0, 0, 0, 0.06);
 ```
 
 #### Large Shadow
 ```css
-box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1), 
+box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1),
             0 4px 6px rgba(0, 0, 0, 0.05);
 ```
 
 #### XL Shadow
 ```css
-box-shadow: 0 20px 25px rgba(0, 0, 0, 0.1), 
+box-shadow: 0 20px 25px rgba(0, 0, 0, 0.1),
             0 10px 10px rgba(0, 0, 0, 0.04);
 ```
 
