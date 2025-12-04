@@ -1,0 +1,31 @@
+# itracksy Lefthook Configuration
+
+pre-commit:
+  parallel: true
+  commands:
+    type-check:
+      run: npm run type-check
+
+    # Format files with Prettier
+    format:
+      glob: "**/*.{ts,tsx,json,css}"
+      run: npx prettier --write {staged_files}
+      stage_fixed: true
+
+    # Run tests for changed files
+    test:
+      glob: "src/**/*.{ts,tsx}"
+      exclude: '\.(test|spec)\.(ts|tsx)$'
+      run: npx jest --bail --findRelatedTests --passWithNoTests {staged_files}
+
+commit-msg:
+  commands:
+    message-validation:
+      run: |
+        msg=$(cat {1})
+        if [ ${#msg} -lt 10 ]; then
+          echo "❌ Commit message too short (minimum 10 characters)"
+          exit 1
+        fi
+        echo "✅ Commit message validated"
+

@@ -61,6 +61,24 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
     const sortedItems = useMemo(() => [...items].sort((a, b) => a.order - b.order), [items]);
     const hasItems = items.length > 0;
 
+    // Calculate column metrics
+    const columnMetrics = useMemo(() => {
+      let totalEstimatedMinutes = 0;
+      let totalCompletedMinutes = 0;
+
+      items.forEach((item) => {
+        if (item.estimatedMinutes) {
+          totalEstimatedMinutes += item.estimatedMinutes;
+        }
+      });
+
+      return {
+        cardCount: items.length,
+        estimatedHours: totalEstimatedMinutes / 60,
+        completedHours: totalCompletedMinutes / 60,
+      };
+    }, [items]);
+
     const handleDelete = async () => {
       const confirmed = await confirm({
         title: "Delete Column",
@@ -230,6 +248,16 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
                 });
               }}
             />
+
+            {/* Column Metrics */}
+            <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+              <span>
+                {columnMetrics.cardCount} card{columnMetrics.cardCount !== 1 ? "s" : ""}
+              </span>
+              {columnMetrics.estimatedHours > 0 && (
+                <span>Est: {columnMetrics.estimatedHours.toFixed(1)}h</span>
+              )}
+            </div>
           </div>
 
           <ul ref={listRef} className="flex-grow overflow-auto">
@@ -245,6 +273,9 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
                 columnId={columnId}
                 previousOrder={items[index - 1] ? items[index - 1].order : 0}
                 nextOrder={items[index + 1] ? items[index + 1].order : item.order + 1}
+                dueDate={item.dueDate}
+                estimatedMinutes={item.estimatedMinutes}
+                subtasks={item.subtasks}
               />
             ))}
           </ul>

@@ -41,7 +41,8 @@
     "db:migrate": "tsx src/api/db/migrate.ts",
     "db:apply": "npm run db:generate && npm run db:migrate",
     "db:verify": "tsx src/api/db/migrate.ts --verify-only",
-    "db:debug": "DEBUG=drizzle:* npm run db:migrate"
+    "db:debug": "DEBUG=drizzle:* npm run db:migrate",
+    "postinstall": "lefthook install || true"
   },
   "author": "HungHoang <hth321@gmail.com>",
   "license": "MIT",
@@ -94,6 +95,7 @@
     "electron-playwright-helpers": "^1.8.2",
     "jest": "^30.1.1",
     "jest-environment-jsdom": "^30.1.1",
+    "lefthook": "2.0.2",
     "png-to-ico": "^3.0.1",
     "postcss": "^8.4.47",
     "prettier": "^3.6.2",

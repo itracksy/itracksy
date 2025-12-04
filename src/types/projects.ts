@@ -14,6 +14,14 @@ export type ItemInsert = typeof items.$inferInsert;
 export type TimeEntryInsert = typeof timeEntries.$inferInsert;
 export type ActivityInsert = typeof activities.$inferInsert;
 
+// Subtask type
+export type Subtask = {
+  id: string;
+  title: string;
+  completed: boolean;
+  createdAt: number;
+};
+
 // Extended types for nested relationships
 export type BoardWithRelations = Board & {
   columns: Column[];
@@ -22,6 +30,11 @@ export type BoardWithRelations = Board & {
 
 export type TimeEntryWithRelations = TimeEntry & {
   item: Item | null;
+};
+
+// Item with parsed subtasks
+export type ItemWithSubtasks = Item & {
+  parsedSubtasks: Subtask[];
 };
 
 // Table update types

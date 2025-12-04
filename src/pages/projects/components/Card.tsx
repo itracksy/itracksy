@@ -1,8 +1,16 @@
 import invariant from "tiny-invariant";
-import { forwardRef, useState, useEffect } from "react";
+import { forwardRef, useState, useEffect, useMemo } from "react";
 
 import { CONTENT_TYPES } from "@/types";
-import { TrashIcon, PlayIcon, StopIcon, TimerIcon } from "@radix-ui/react-icons";
+import {
+  TrashIcon,
+  PlayIcon,
+  StopIcon,
+  TimerIcon,
+  CalendarIcon,
+  ClockIcon,
+  CheckCircledIcon,
+} from "@radix-ui/react-icons";
 import { useDeleteItemMutation, useUpdateItemMutation } from "@/hooks/useBoardQueries";
 import { formatDuration } from "@/utils/timeUtils";
 import {
@@ -15,6 +23,12 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useConfirmationDialog } from "@/components/providers/ConfirmationDialog";
 import { ItemDetailDialog } from "./ItemDetailDialog";
+import {
+  formatDeadlineWithCountdown,
+  getDeadlineColorClass,
+  formatEstimatedTime,
+} from "@/utils/dateUtils";
+import { Subtask } from "@/types/projects";
 
 import { targetMinutesAtom } from "@/context/board";
 import { useAtomValue } from "jotai";
@@ -28,10 +42,28 @@ interface CardProps {
   order: number;
   nextOrder: number;
   previousOrder: number;
+  dueDate?: number | null;
+  estimatedMinutes?: number | null;
+  subtasks?: string | null;
 }
 
 export const Card = forwardRef<HTMLLIElement, CardProps>(
-  ({ title, content, id, columnId, boardId, order, nextOrder, previousOrder }, ref) => {
+  (
+    {
+      title,
+      content,
+      id,
+      columnId,
+      boardId,
+      order,
+      nextOrder,
+      previousOrder,
+      dueDate,
+      estimatedMinutes,
+      subtasks,
+    },
+    ref
+  ) => {
     const targetMinutes = useAtomValue(targetMinutesAtom);
     const [acceptDrop, setAcceptDrop] = useState<"none" | "top" | "bottom">("none");
     const [totalDuration, setTotalDuration] = useState<string>("00:00:00");
@@ -45,6 +77,25 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
     const { data: timeEntries = [] } = useTimeEntriesForItem(id);
     const { toast } = useToast();
     const { confirm } = useConfirmationDialog();
+
+    // Parse subtasks
+    const parsedSubtasks = useMemo<Subtask[]>(() => {
+      if (!subtasks) return [];
+      try {
+        return JSON.parse(subtasks);
+      } catch {
+        return [];
+      }
+    }, [subtasks]);
+
+    // Calculate subtask completion
+    const subtaskProgress = useMemo(() => {
+      if (parsedSubtasks.length === 0) return null;
+      const completed = parsedSubtasks.filter((st) => st.completed).length;
+      const total = parsedSubtasks.length;
+      const percentage = Math.round((completed / total) * 100);
+      return { completed, total, percentage };
+    }, [parsedSubtasks]);
 
     useEffect(() => {
       if (!timeEntries.length) return;
@@ -72,12 +123,15 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
         return;
       }
 
+      // Use estimated time if available, otherwise use default target minutes
+      const duration = estimatedMinutes || targetMinutes;
+
       createTimeEntry.mutate({
         itemId: id,
         boardId,
         startTime: Date.now(),
         isFocusMode: true,
-        targetDuration: targetMinutes,
+        targetDuration: duration,
       });
     };
 
@@ -173,11 +227,42 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
             event.stopPropagation();
           }}
         >
-          <h3 className="font-medium">{title}</h3>
+          <h3 className="pr-6 font-medium">{title}</h3>
           <div
             className="prose prose-sm mt-2 max-h-16 overflow-hidden text-muted-foreground"
             dangerouslySetInnerHTML={{ __html: content || "&nbsp;" }}
           />
+
+          {/* Deadline Display */}
+          {dueDate && (
+            <div
+              className={`mt-2 flex items-center gap-1 text-xs ${getDeadlineColorClass(dueDate)}`}
+            >
+              <CalendarIcon className="h-3 w-3" />
+              <span className="font-medium">{formatDeadlineWithCountdown(dueDate)}</span>
+            </div>
+          )}
+
+          {/* Estimated Time Display */}
+          {estimatedMinutes && (
+            <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
+              <ClockIcon className="h-3 w-3" />
+              <span>Estimated: {formatEstimatedTime(estimatedMinutes)}</span>
+            </div>
+          )}
+
+          {/* Subtasks Progress */}
+          {subtaskProgress && (
+            <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
+              <CheckCircledIcon className="h-3 w-3" />
+              <span>
+                {subtaskProgress.percentage}% - {subtaskProgress.completed}/{subtaskProgress.total}{" "}
+                completed
+              </span>
+            </div>
+          )}
+
+          {/* Timer Section */}
           <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
             <TimerIcon className="h-4 w-4" />
             {activeTimeEntry?.itemId === id ? (
@@ -202,22 +287,23 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
               ) : (
                 <>
                   <PlayIcon className="mr-1 h-3 w-3" />
-                  Start
+                  {estimatedMinutes ? `Start (${formatEstimatedTime(estimatedMinutes)})` : "Start"}
                 </>
               )}
             </Button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDelete();
-              }}
-              aria-label="Delete card"
-              className="absolute right-4 top-4 flex items-center gap-2 text-muted-foreground hover:text-destructive"
-              type="button"
-            >
-              <TrashIcon />
-            </button>
           </div>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete();
+            }}
+            aria-label="Delete card"
+            className="absolute right-2 top-2 flex items-center gap-2 text-muted-foreground hover:text-destructive"
+            type="button"
+          >
+            <TrashIcon />
+          </button>
         </div>
 
         <ItemDetailDialog
@@ -231,6 +317,9 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
             columnId,
             order,
             createdAt: null,
+            dueDate: dueDate ?? null,
+            estimatedMinutes: estimatedMinutes ?? null,
+            subtasks: subtasks ?? null,
           }}
         />
       </li>

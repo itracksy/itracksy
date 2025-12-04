@@ -113,6 +113,13 @@
       "when": 1755879109803,
       "tag": "0015_groovy_phil_sheldon",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "6",
+      "when": 1764814444491,
+      "tag": "0016_supreme_jackpot",
+      "breakpoints": true
     }
   ]
 }

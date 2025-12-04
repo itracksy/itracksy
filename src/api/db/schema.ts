@@ -44,6 +44,9 @@ export const items = sqliteTable("items", {
     .references(() => columns.id, { onDelete: "cascade" }),
   order: integer("order").notNull(),
   createdAt: integer("created_at"),
+  dueDate: integer("due_date"), // Unix timestamp for deadline
+  estimatedMinutes: integer("estimated_minutes"), // Estimated time in minutes
+  subtasks: text("subtasks"), // JSON array of subtasks
 });
 
 export const timeEntries = sqliteTable("time_entries", {
