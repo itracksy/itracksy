@@ -428,6 +428,33 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Advanced Settings</CardTitle>
+          <CardDescription>
+            Developer tools and debugging options.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Debug Ghost Windows</Label>
+              <p className="text-sm text-muted-foreground">
+                Identify and highlight invisible windows that might be blocking interactions.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                await trpcClient.window.debugGhostWindows.mutate();
+              }}
+            >
+              Run Debugger
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <AboutSection />
     </div>
   );

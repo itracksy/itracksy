@@ -107,4 +107,15 @@ export const windowRouter = t.router({
       throw error;
     }
   }),
+
+  debugGhostWindows: protectedProcedure.mutation(async () => {
+    try {
+      const { debugGhostWindows } = await import("../../main/debug-windows");
+      debugGhostWindows();
+      return { success: true };
+    } catch (error) {
+      logger.error("Failed to debug ghost windows", { error });
+      throw error;
+    }
+  }),
 });
