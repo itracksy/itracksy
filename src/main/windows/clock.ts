@@ -11,7 +11,17 @@ import { existsSync, readFileSync, writeFileSync } from "fs";
 
 type ClockSizeMode = "detailed" | "minimal";
 
-const SIZE_PRESETS: Record<ClockSizeMode, { width: number; height: number; minWidth: number; minHeight: number; maxWidth: number; maxHeight: number }> = {
+const SIZE_PRESETS: Record<
+  ClockSizeMode,
+  {
+    width: number;
+    height: number;
+    minWidth: number;
+    minHeight: number;
+    maxWidth: number;
+    maxHeight: number;
+  }
+> = {
   detailed: {
     width: 340,
     height: 230,
@@ -192,10 +202,10 @@ export function createClockWindow(): BrowserWindow {
   const platformOptions: Partial<Electron.BrowserWindowConstructorOptions> = {};
 
   // macOS-specific visual effects
-  if (process.platform === 'darwin') {
-    platformOptions.vibrancy = "under-window";
-    platformOptions.visualEffectState = "active";
-  }
+  // if (process.platform === 'darwin') {
+  //   platformOptions.vibrancy = "under-window";
+  //   platformOptions.visualEffectState = "active";
+  // }
 
   clockWindow = new BrowserWindow({
     width: windowWidth,
@@ -333,7 +343,7 @@ export function showClockWindow(): void {
 
     // Set always-on-top with platform-safe error handling
     try {
-      if (process.platform === 'darwin') {
+      if (process.platform === "darwin") {
         clockWindow.setAlwaysOnTop(isPinned, "screen-saver");
       } else {
         clockWindow.setAlwaysOnTop(isPinned);
@@ -394,7 +404,7 @@ function registerClockIpcHandlers(): void {
     isPinned = !isPinned;
     if (clockWindow && !clockWindow.isDestroyed()) {
       try {
-        if (process.platform === 'darwin') {
+        if (process.platform === "darwin") {
           clockWindow.setAlwaysOnTop(isPinned, "screen-saver");
         } else {
           clockWindow.setAlwaysOnTop(isPinned);

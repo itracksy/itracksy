@@ -42,6 +42,7 @@
     "db:apply": "npm run db:generate && npm run db:migrate",
     "db:verify": "tsx src/api/db/migrate.ts --verify-only",
     "db:debug": "DEBUG=drizzle:* npm run db:migrate",
+    "icons:generate": "node scripts/svg-to-icons.js",
     "postinstall": "lefthook install || true"
   },
   "author": "HungHoang <hth321@gmail.com>",
