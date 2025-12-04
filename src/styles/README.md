@@ -202,3 +202,4 @@ All colors automatically adapt to dark mode. No extra classes needed:
 - Global styles: [global.css](./global.css)
 
 
+
