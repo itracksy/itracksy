@@ -19,8 +19,8 @@ export function AboutSection() {
 
   const handleOpenLogFile = async () => {
     try {
-      const content = await trpcClient.utils.getLogFileContent.query();
-      setLogContent(content);
+      const result = await trpcClient.utils.getLogFileContent.query();
+      setLogContent(result.content);
       setIsLogDialogOpen(true);
     } catch (error) {
       console.error("Failed to load log file:", error);

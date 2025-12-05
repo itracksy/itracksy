@@ -96,11 +96,24 @@ export const utilsRouter = t.router({
   // Get log file content
   getLogFileContent: protectedProcedure.query(async () => {
     try {
-      const logFileContent = await logger.getFileContent();
-      return logFileContent;
+      const content = await logger.getFileContent();
+      const path = logger.getFilePath();
+      const exists = fs.existsSync(path);
+      return { content, path, exists };
     } catch (error) {
       logger.error("Failed to get log file content", error);
       throw error;
+    }
+  }),
+
+  // Clear log file content
+  clearLogFile: protectedProcedure.mutation(async () => {
+    try {
+      await logger.clearLogFile();
+      return { success: true };
+    } catch (error) {
+      logger.error("Failed to clear log file", error);
+      return { success: false, error: String(error) };
     }
   }),
 
@@ -130,7 +143,7 @@ export const utilsRouter = t.router({
 
         // If no input, just show the empty window
         if (window) {
-            showNotificationWindow();
+          showNotificationWindow();
         }
 
         return { success: !!window };

@@ -14,6 +14,7 @@ import { UncategorizedActivities } from "@/pages/categorization/components/Uncat
 import ReportsPage from "@/pages/reports/ReportsPage";
 import MusicPage from "@/pages/music/index";
 import SchedulingPage from "@/pages/scheduling/index";
+import LogPage from "@/pages/app-logs/index";
 
 export const DashboardRoute = createRoute({
   getParentRoute: () => RootRoute,
@@ -96,6 +97,12 @@ export const SchedulingRoute = createRoute({
   component: SchedulingPage,
 });
 
+export const LogsRoute = createRoute({
+  getParentRoute: () => RootRoute,
+  path: "/logs",
+  component: LogPage,
+});
+
 export const rootTree = RootRoute.addChildren([
   FocusRoute,
   DashboardRoute,
@@ -110,4 +117,5 @@ export const rootTree = RootRoute.addChildren([
   ReportsRoute,
   MusicRoute,
   SchedulingRoute,
+  LogsRoute,
 ]);

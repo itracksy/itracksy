@@ -12,6 +12,7 @@ import {
   FileText,
   Music,
   CalendarClock,
+  ScrollText,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
@@ -83,6 +84,11 @@ const items = [
     url: "/reports",
   },
   {
+    title: "Logs",
+    icon: ScrollText,
+    url: "/logs",
+  },
+  {
     title: "Settings",
     icon: Settings,
     url: "/settings",
@@ -116,7 +122,7 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
     >
       <SidebarHeader className="text-sm font-semibold text-tracksy-blue dark:text-white"></SidebarHeader>
 
-      <SidebarContent className="pt-7 pr-10 ml-2 mr-5">
+      <SidebarContent className="ml-2 mr-5 pr-10 pt-7">
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>

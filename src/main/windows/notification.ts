@@ -5,17 +5,23 @@ import path from "path";
 let notificationWindow: BrowserWindow | null = null;
 
 export function createNotificationWindow(): BrowserWindow {
-  console.log("Creating notification window");
+  console.log("[NotificationWindow] createNotificationWindow called");
   // Don't create multiple notification windows
   if (notificationWindow && !notificationWindow.isDestroyed()) {
-    console.log("Reusing existing notification window");
+    const isVisible = notificationWindow.isVisible();
+    const bounds = notificationWindow.getBounds();
+    console.log("[NotificationWindow] Reusing existing window", {
+      id: notificationWindow.id,
+      isVisible,
+      bounds,
+    });
     // We do NOT automatically show/focus here anymore.
     // Consumers must call showNotificationWindow() explicitly.
     return notificationWindow;
   }
   const preload = path.join(__dirname, "./preload/notification.js");
-  console.log("Notification: Preload path:", preload);
-  console.log("Creating new notification window");
+  console.log("[NotificationWindow] Preload path:", preload);
+  console.log("[NotificationWindow] Creating NEW notification window");
 
   // Get the primary display to position the notification
   const primaryDisplay = screen.getPrimaryDisplay();
@@ -84,15 +90,33 @@ export function createNotificationWindow(): BrowserWindow {
   });
 
   notificationWindow.on("closed", () => {
-    console.log("Notification window closed");
+    console.log("[NotificationWindow] Window closed event");
     notificationWindow = null;
+  });
+
+  notificationWindow.on("show", () => {
+    console.log("[NotificationWindow] Window show event", {
+      bounds: notificationWindow?.getBounds(),
+      isVisible: notificationWindow?.isVisible(),
+    });
+  });
+
+  notificationWindow.on("hide", () => {
+    console.log("[NotificationWindow] Window hide event");
   });
 
   // Open DevTools for debugging
   if (process.env.NODE_ENV === "development") {
-    console.log("Opening notification window DevTools");
+    console.log("[NotificationWindow] Opening DevTools");
     notificationWindow.webContents.openDevTools({ mode: "detach" });
   }
+
+  const bounds = notificationWindow.getBounds();
+  console.log("[NotificationWindow] New window created", {
+    id: notificationWindow.id,
+    bounds,
+    show: false,
+  });
 
   return notificationWindow;
 }
@@ -104,41 +128,80 @@ export function getNotificationWindow(): BrowserWindow | null {
 
 export function showNotificationWindow(): void {
   if (notificationWindow && !notificationWindow.isDestroyed()) {
-    console.log("Showing notification window");
+    const wasVisible = notificationWindow.isVisible();
+    const bounds = notificationWindow.getBounds();
+    console.log("[NotificationWindow] showNotificationWindow called", {
+      wasVisible,
+      bounds,
+      id: notificationWindow.id,
+    });
+
     // Ensure we capture mouse events when showing
     try {
       notificationWindow.setIgnoreMouseEvents(false);
+      console.log("[NotificationWindow] setIgnoreMouseEvents(false) - mouse events ENABLED");
     } catch (error) {
-      console.error("Failed to enable mouse events:", error);
+      console.error("[NotificationWindow] Failed to enable mouse events:", error);
     }
+
     notificationWindow.show();
     notificationWindow.focus();
+
+    console.log("[NotificationWindow] show() and focus() called, window should be visible now");
+  } else {
+    console.warn(
+      "[NotificationWindow] showNotificationWindow called but window doesn't exist or is destroyed"
+    );
   }
 }
 
 export function hideNotificationWindow(): void {
   if (notificationWindow && !notificationWindow.isDestroyed()) {
-    console.log("Hiding notification window");
+    const wasVisible = notificationWindow.isVisible();
+    console.log("[NotificationWindow] hideNotificationWindow called", {
+      wasVisible,
+      id: notificationWindow.id,
+    });
+
     // Ignore mouse events to prevent ghost window
     try {
       notificationWindow.setIgnoreMouseEvents(true);
+      console.log("[NotificationWindow] setIgnoreMouseEvents(true) - mouse events DISABLED");
     } catch (error) {
-      console.error("Failed to ignore mouse events:", error);
+      console.error("[NotificationWindow] Failed to ignore mouse events:", error);
     }
+
     notificationWindow.hide();
+    console.log("[NotificationWindow] hide() called, window should be hidden now");
   }
 }
 
 export function closeNotificationWindow(): void {
   if (notificationWindow && !notificationWindow.isDestroyed()) {
-    console.log("Closing notification window");
+    const wasVisible = notificationWindow.isVisible();
+    const bounds = notificationWindow.getBounds();
+    console.log("[NotificationWindow] closeNotificationWindow called", {
+      wasVisible,
+      bounds,
+      id: notificationWindow.id,
+    });
+
     // Ignore mouse events before closing to prevent ghost window
     try {
       notificationWindow.setIgnoreMouseEvents(true);
+      console.log(
+        "[NotificationWindow] setIgnoreMouseEvents(true) - mouse events DISABLED before close"
+      );
     } catch (error) {
-      console.error("Failed to ignore mouse events before close:", error);
+      console.error("[NotificationWindow] Failed to ignore mouse events before close:", error);
     }
+
     notificationWindow.close();
     notificationWindow = null;
+    console.log("[NotificationWindow] close() called and window reference set to null");
+  } else {
+    console.warn(
+      "[NotificationWindow] closeNotificationWindow called but window doesn't exist or is destroyed"
+    );
   }
 }

@@ -186,4 +186,8 @@ export class ServerLogger {
       return "";
     }
   }
+
+  getFilePath(): string {
+    return this.logPath;
+  }
 }
