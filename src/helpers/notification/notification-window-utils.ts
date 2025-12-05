@@ -33,13 +33,18 @@ export const sendNotificationToWindow = async (data: NotificationData): Promise<
     if (notificationWindow.webContents.isLoading()) {
       notificationWindow.webContents.once("did-finish-load", () => {
         notificationWindow.webContents.send(NOTIFICATION_SHOW_CHANNEL, data);
-        // Ensure window is shown safely after load
-        showNotificationWindow();
+        // Give renderer a moment to process and render the notification content
+        setTimeout(() => {
+          showNotificationWindow();
+        }, 100);
       });
     } else {
       notificationWindow.webContents.send(NOTIFICATION_SHOW_CHANNEL, data);
-      // Ensure window is shown safely
-      showNotificationWindow();
+      // Give renderer a moment to process and render the notification content
+      // This prevents showing an empty window before content is rendered
+      setTimeout(() => {
+        showNotificationWindow();
+      }, 100);
     }
 
     return true;
