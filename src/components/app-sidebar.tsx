@@ -16,6 +16,9 @@ import {
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { trpcClient } from "@/utils/trpc";
+import type { SidebarItem } from "@/lib/types/user-preferences";
 
 import {
   Sidebar,
@@ -32,31 +35,49 @@ import {
 } from "@/components/ui/sidebar";
 import { BottomSideBar } from "./BottomSideBar";
 
-// This is sample data.
-const items = [
+// Sidebar item ID mapping
+const SIDEBAR_ITEM_MAP: Record<SidebarItem, string> = {
+  "focus-session": "Focus Session",
+  scheduling: "Scheduling",
+  projects: "Projects",
+  categorization: "Categorization",
+  classify: "Classify",
+  analytics: "Analytics",
+  "focus-music": "Focus Music",
+  reports: "Reports",
+  logs: "Logs",
+  settings: "Settings",
+};
+
+// All available sidebar items
+const ALL_ITEMS = [
   {
+    id: "focus-session" as SidebarItem,
     title: "Focus Session",
     icon: Timer,
     url: "/",
     isActive: true,
   },
   {
+    id: "scheduling" as SidebarItem,
     title: "Scheduling",
     icon: CalendarClock,
     url: "/scheduling",
   },
-
   {
+    id: "projects" as SidebarItem,
     title: "Projects",
     icon: FolderClosed,
     url: "/projects",
   },
   {
+    id: "categorization" as SidebarItem,
     title: "Categorization",
     icon: Tags,
     url: "/categorization",
   },
   {
+    id: "classify" as SidebarItem,
     title: "Classify",
     icon: Target,
     url: "/classify",
@@ -69,26 +90,31 @@ const items = [
     ],
   },
   {
+    id: "analytics" as SidebarItem,
     title: "Analytics",
     icon: BarChart,
     url: "/dashboard",
   },
   {
+    id: "focus-music" as SidebarItem,
     title: "Focus Music",
     icon: Music,
     url: "/music",
   },
   {
+    id: "reports" as SidebarItem,
     title: "Reports",
     icon: FileText,
     url: "/reports",
   },
   {
+    id: "logs" as SidebarItem,
     title: "Logs",
     icon: ScrollText,
     url: "/logs",
   },
   {
+    id: "settings" as SidebarItem,
     title: "Settings",
     icon: Settings,
     url: "/settings",
@@ -98,6 +124,14 @@ const items = [
 export function AppSidebar({ className, ...props }: React.ComponentProps<typeof Sidebar>) {
   const [activeItem, setActiveItem] = React.useState<string | null>(null);
   const [openSubMenus, setOpenSubMenus] = React.useState<Set<string>>(new Set());
+
+  // Load user preferences
+  const { data: preferences } = useQuery({
+    queryKey: ["user.getPreferences"],
+    queryFn: async () => {
+      return trpcClient.user.getPreferences.query();
+    },
+  });
 
   const toggleSubMenu = (itemTitle: string) => {
     setOpenSubMenus((prev) => {
@@ -110,6 +144,13 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
       return newSet;
     });
   };
+
+  // Filter items based on user preferences
+  const visibleItems = React.useMemo(() => {
+    if (!preferences) return ALL_ITEMS;
+
+    return ALL_ITEMS.filter((item) => preferences.sidebar.visibleItems.includes(item.id));
+  }, [preferences]);
 
   return (
     <Sidebar
@@ -124,7 +165,7 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
 
       <SidebarContent className="ml-2 mr-5 pr-10 pt-7">
         <SidebarMenu>
-          {items.map((item) => (
+          {visibleItems.map((item) => (
             <SidebarMenuItem key={item.title}>
               {item.subItems ? (
                 <>

@@ -3,12 +3,17 @@ import {
   NOTIFICATION_CLOSE_CHANNEL,
   NOTIFICATION_ACTION_CHANNEL,
   NOTIFICATION_EXTEND_SESSION_CHANNEL,
+  NOTIFICATION_READY_CHANNEL,
 } from "./notification-channels";
 
 import { safelyRegisterListener } from "../safelyRegisterListener";
-import { closeNotificationWindow } from "../../../main/windows/notification";
+import {
+  closeNotificationWindow,
+  showNotificationWindow,
+} from "../../../main/windows/notification";
 import { sendNotificationToWindow } from "../../notification/notification-window-utils";
 import { logger } from "../../logger";
+import { ipcMain } from "electron";
 
 export const addNotificationEventListeners = () => {
   logger.debug("NotificationListeners: Adding notification listeners");
@@ -64,6 +69,16 @@ export const addNotificationEventListeners = () => {
     } catch (error) {
       logger.error("Failed to extend session", { error, data });
       throw error;
+    }
+  });
+
+  // Notification ready handler - renderer signals it's ready to be shown
+  ipcMain.on(NOTIFICATION_READY_CHANNEL, () => {
+    try {
+      logger.info("[NotificationWindow] Renderer notified ready, showing window now");
+      showNotificationWindow();
+    } catch (error) {
+      logger.error("[NotificationWindow] Failed to show window when renderer ready", { error });
     }
   });
 };

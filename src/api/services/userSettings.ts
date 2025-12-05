@@ -7,6 +7,8 @@ import { logger } from "../../helpers/logger";
 import { boards } from "../db/schema";
 import { createBoard, createColumn, createItem } from "../services/board";
 import { nanoid } from "nanoid";
+import type { UserPreferences } from "../../lib/types/user-preferences";
+import { DEFAULT_USER_PREFERENCES } from "../../lib/types/user-preferences";
 
 const USER_SETTINGS_KEYS = {
   isWarningPopupEnable: "user.isWarningPopupEnable",
@@ -14,6 +16,7 @@ const USER_SETTINGS_KEYS = {
   isTimeExceededNotificationEnabled: "user.isTimeExceededNotificationEnabled",
   lastUpdateActivity: "user.lastUpdateActivity",
   currentUserId: "user.currentUserId",
+  userPreferences: "user.preferences",
 };
 
 // Check if the platform is macOS
@@ -318,3 +321,74 @@ export const getUserBlockedDomains = async (userId: string) => {
   const result = await db.select().from(blockedDomains).where(eq(blockedDomains.userId, userId));
   return result;
 };
+
+/**
+ * Get user preferences with defaults
+ */
+export async function getUserPreferences(): Promise<UserPreferences> {
+  try {
+    const stored = await getValue(USER_SETTINGS_KEYS.userPreferences);
+    if (!stored) {
+      return DEFAULT_USER_PREFERENCES;
+    }
+
+    const preferences = JSON.parse(stored) as UserPreferences;
+
+    // Merge with defaults to ensure all fields exist (for version upgrades)
+    return {
+      ...DEFAULT_USER_PREFERENCES,
+      ...preferences,
+      sidebar: { ...DEFAULT_USER_PREFERENCES.sidebar, ...preferences.sidebar },
+      appearance: { ...DEFAULT_USER_PREFERENCES.appearance, ...preferences.appearance },
+      notifications: { ...DEFAULT_USER_PREFERENCES.notifications, ...preferences.notifications },
+      focus: { ...DEFAULT_USER_PREFERENCES.focus, ...preferences.focus },
+    };
+  } catch (error) {
+    logger.error("[getUserPreferences] Error loading preferences", { error });
+    return DEFAULT_USER_PREFERENCES;
+  }
+}
+
+/**
+ * Update user preferences (partial update supported)
+ */
+export async function updateUserPreferences(
+  updates: Partial<UserPreferences>
+): Promise<UserPreferences> {
+  try {
+    const current = await getUserPreferences();
+
+    const updated: UserPreferences = {
+      ...current,
+      ...updates,
+      sidebar: { ...current.sidebar, ...updates.sidebar },
+      appearance: { ...current.appearance, ...updates.appearance },
+      notifications: { ...current.notifications, ...updates.notifications },
+      focus: { ...current.focus, ...updates.focus },
+      lastUpdated: Date.now(),
+      version: 1,
+    };
+
+    await setValue(USER_SETTINGS_KEYS.userPreferences, JSON.stringify(updated));
+    logger.info("[updateUserPreferences] Preferences updated", { updates });
+
+    return updated;
+  } catch (error) {
+    logger.error("[updateUserPreferences] Error updating preferences", { error, updates });
+    throw error;
+  }
+}
+
+/**
+ * Reset preferences to defaults
+ */
+export async function resetUserPreferences(): Promise<UserPreferences> {
+  try {
+    await setValue(USER_SETTINGS_KEYS.userPreferences, JSON.stringify(DEFAULT_USER_PREFERENCES));
+    logger.info("[resetUserPreferences] Preferences reset to defaults");
+    return DEFAULT_USER_PREFERENCES;
+  } catch (error) {
+    logger.error("[resetUserPreferences] Error resetting preferences", { error });
+    throw error;
+  }
+}

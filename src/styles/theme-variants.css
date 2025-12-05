@@ -1,0 +1,313 @@
+/**
+ * Theme Variants for itracksy
+ *
+ * This file defines different theme variants that users can choose from
+ * to customize their experience. Each variant provides a complete color palette
+ * that works in both light and dark modes.
+ */
+
+/* ============================================
+   DEFAULT THEME (Brand Colors)
+   ============================================ */
+[data-theme-variant="default"] {
+  --variant-primary: 139 92 246; /* #8B5CF6 - Purple */
+  --variant-secondary: 236 72 153; /* #EC4899 - Pink */
+  --variant-accent: 6 182 212; /* #06B6D4 - Cyan */
+  --variant-success: 16 185 129; /* #10B981 - Green */
+  --variant-warning: 245 158 11; /* #F59E0B - Amber */
+  --variant-destructive: 239 68 68; /* #EF4444 - Red */
+}
+
+/* ============================================
+   PROFESSIONAL THEME
+   ============================================ */
+[data-theme-variant="professional"] {
+  --variant-primary: 30 64 175; /* #1E40AF - Deep Blue */
+  --variant-secondary: 59 130 246; /* #3B82F6 - Blue */
+  --variant-accent: 8 145 178; /* #0891B2 - Cyan */
+  --variant-success: 5 150 105; /* #059669 - Green */
+  --variant-warning: 217 119 6; /* #D97706 - Orange */
+  --variant-destructive: 185 28 28; /* #B91C1C - Dark Red */
+}
+
+[data-theme-variant="professional"].light {
+  --background: 248 250 252; /* #F8FAFC */
+  --foreground: 15 23 42; /* #0F172A */
+  --muted: 241 245 249; /* #F1F5F9 */
+  --muted-foreground: 100 116 139; /* #64748B */
+}
+
+[data-theme-variant="professional"].dark {
+  --background: 15 23 42; /* #0F172A */
+  --foreground: 248 250 252; /* #F8FAFC */
+  --muted: 30 41 59; /* #1E293B */
+  --muted-foreground: 148 163 184; /* #94A3B8 */
+}
+
+/* ============================================
+   COMFORT THEME
+   ============================================ */
+[data-theme-variant="comfort"] {
+  --variant-primary: 217 119 6; /* #D97706 - Amber */
+  --variant-secondary: 245 158 11; /* #F59E0B - Yellow */
+  --variant-accent: 16 185 129; /* #10B981 - Green */
+  --variant-success: 34 197 94; /* #22C55E - Light Green */
+  --variant-warning: 251 146 60; /* #FB923C - Orange */
+  --variant-destructive: 220 38 38; /* #DC2626 - Red */
+}
+
+[data-theme-variant="comfort"].light {
+  --background: 255 251 235; /* #FFFBEB - Warm white */
+  --foreground: 120 53 15; /* #78350F - Dark brown */
+  --muted: 254 243 199; /* #FEF3C7 */
+  --muted-foreground: 146 64 14; /* #92400E */
+  --card: 255 255 255; /* #FFFFFF */
+  --card-foreground: 120 53 15; /* #78350F */
+}
+
+[data-theme-variant="comfort"].dark {
+  --background: 28 25 23; /* #1C1917 - Warm dark */
+  --foreground: 250 250 249; /* #FAFAF9 */
+  --muted: 41 37 36; /* #292524 */
+  --muted-foreground: 168 162 158; /* #A8A29E */
+  --card: 41 37 36; /* #292524 */
+  --card-foreground: 250 250 249; /* #FAFAF9 */
+}
+
+/* ============================================
+   VIBRANT THEME
+   ============================================ */
+[data-theme-variant="vibrant"] {
+  --variant-primary: 220 38 38; /* #DC2626 - Red */
+  --variant-secondary: 245 158 11; /* #F59E0B - Amber */
+  --variant-accent: 16 185 129; /* #10B981 - Green */
+  --variant-success: 34 197 94; /* #22C55E - Bright Green */
+  --variant-warning: 234 179 8; /* #EAB308 - Yellow */
+  --variant-destructive: 153 27 27; /* #991B1B - Dark Red */
+}
+
+[data-theme-variant="vibrant"].light {
+  --background: 255 255 255; /* #FFFFFF - Pure white */
+  --foreground: 0 0 0; /* #000000 - Pure black */
+  --muted: 243 244 246; /* #F3F4F6 */
+  --muted-foreground: 55 65 81; /* #374151 */
+  --border: 0 0 0; /* #000000 - High contrast */
+}
+
+[data-theme-variant="vibrant"].dark {
+  --background: 0 0 0; /* #000000 - Pure black */
+  --foreground: 255 255 255; /* #FFFFFF - Pure white */
+  --muted: 31 41 55; /* #1F2937 */
+  --muted-foreground: 209 213 219; /* #D1D5DB */
+  --border: 255 255 255; /* #FFFFFF - High contrast */
+}
+
+/* ============================================
+   MINIMAL THEME
+   ============================================ */
+[data-theme-variant="minimal"] {
+  --variant-primary: 55 65 81; /* #374151 - Gray */
+  --variant-secondary: 107 114 128; /* #6B7280 - Light Gray */
+  --variant-accent: 156 163 175; /* #9CA3AF - Lighter Gray */
+  --variant-success: 75 85 99; /* #4B5563 - Dark Gray */
+  --variant-warning: 107 114 128; /* #6B7280 - Gray */
+  --variant-destructive: 31 41 55; /* #1F2937 - Darker Gray */
+}
+
+[data-theme-variant="minimal"].light {
+  --background: 255 255 255; /* #FFFFFF */
+  --foreground: 17 24 39; /* #111827 */
+  --muted: 249 250 251; /* #F9FAFB */
+  --muted-foreground: 107 114 128; /* #6B7280 */
+  --card: 255 255 255; /* #FFFFFF */
+  --card-foreground: 17 24 39; /* #111827 */
+  --border: 229 231 235; /* #E5E7EB */
+}
+
+[data-theme-variant="minimal"].dark {
+  --background: 17 24 39; /* #111827 */
+  --foreground: 249 250 251; /* #F9FAFB */
+  --muted: 31 41 55; /* #1F2937 */
+  --muted-foreground: 156 163 175; /* #9CA3AF */
+  --card: 31 41 55; /* #1F2937 */
+  --card-foreground: 249 250 251; /* #F9FAFB */
+  --border: 55 65 81; /* #374151 */
+}
+
+/* ============================================
+   NATURE THEME
+   ============================================ */
+[data-theme-variant="nature"] {
+  --variant-primary: 5 150 105; /* #059669 - Green */
+  --variant-secondary: 16 185 129; /* #10B981 - Light Green */
+  --variant-accent: 20 184 166; /* #14B8A6 - Teal */
+  --variant-success: 34 197 94; /* #22C55E - Bright Green */
+  --variant-warning: 234 179 8; /* #EAB308 - Yellow */
+  --variant-destructive: 220 38 38; /* #DC2626 - Red */
+}
+
+[data-theme-variant="nature"].light {
+  --background: 240 253 244; /* #F0FDF4 - Light green tint */
+  --foreground: 6 78 59; /* #064E3B - Dark green */
+  --muted: 220 252 231; /* #DCFCE7 */
+  --muted-foreground: 22 101 52; /* #166534 */
+  --card: 255 255 255; /* #FFFFFF */
+  --card-foreground: 6 78 59; /* #064E3B */
+}
+
+[data-theme-variant="nature"].dark {
+  --background: 6 78 59; /* #064E3B - Dark green */
+  --foreground: 240 253 244; /* #F0FDF4 */
+  --muted: 20 83 45; /* #14532D */
+  --muted-foreground: 187 247 208; /* #BBF7D0 */
+  --card: 20 83 45; /* #14532D */
+  --card-foreground: 240 253 244; /* #F0FDF4 */
+}
+
+/* ============================================
+   APPLY VARIANT COLORS TO PRIMARY/SECONDARY
+   ============================================ */
+[data-theme-variant] {
+  --primary: var(--variant-primary);
+  --primary-foreground: 255 255 255; /* White text on primary */
+
+  --secondary: var(--variant-secondary);
+  --secondary-foreground: 255 255 255; /* White text on secondary */
+
+  --accent: var(--variant-accent);
+  --accent-foreground: 255 255 255; /* White text on accent */
+
+  --success: var(--variant-success);
+  --success-foreground: 255 255 255;
+
+  --warning: var(--variant-warning);
+  --warning-foreground: 255 255 255;
+
+  --destructive: var(--variant-destructive);
+  --destructive-foreground: 255 255 255;
+}
+
+/* ============================================
+   FONT SCALE VARIANTS
+   ============================================ */
+[data-font-scale="small"] {
+  --font-scale: 0.875; /* 87.5% */
+  font-size: 14px;
+}
+
+[data-font-scale="normal"] {
+  --font-scale: 1; /* 100% */
+  font-size: 16px;
+}
+
+[data-font-scale="large"] {
+  --font-scale: 1.125; /* 112.5% */
+  font-size: 18px;
+}
+
+[data-font-scale="x-large"] {
+  --font-scale: 1.25; /* 125% */
+  font-size: 20px;
+}
+
+/* ============================================
+   UI SIZE VARIANTS
+   ============================================ */
+[data-ui-size="compact"] {
+  --spacing-unit: 0.75rem;
+  --padding-sm: 0.375rem;
+  --padding-md: 0.5rem;
+  --padding-lg: 0.75rem;
+  --gap-sm: 0.375rem;
+  --gap-md: 0.5rem;
+  --gap-lg: 0.75rem;
+}
+
+[data-ui-size="comfortable"] {
+  --spacing-unit: 1rem;
+  --padding-sm: 0.5rem;
+  --padding-md: 0.75rem;
+  --padding-lg: 1rem;
+  --gap-sm: 0.5rem;
+  --gap-md: 0.75rem;
+  --gap-lg: 1rem;
+}
+
+[data-ui-size="spacious"] {
+  --spacing-unit: 1.25rem;
+  --padding-sm: 0.75rem;
+  --padding-md: 1rem;
+  --padding-lg: 1.5rem;
+  --gap-sm: 0.75rem;
+  --gap-md: 1rem;
+  --gap-lg: 1.5rem;
+}
+
+/* ============================================
+   ANIMATION SPEED VARIANTS
+   ============================================ */
+[data-animation-speed="none"] * {
+  animation-duration: 0s !important;
+  transition-duration: 0s !important;
+}
+
+[data-animation-speed="reduced"] {
+  --transition-speed: 0.1s;
+  --animation-speed: 0.2s;
+}
+
+[data-animation-speed="normal"] {
+  --transition-speed: 0.2s;
+  --animation-speed: 0.3s;
+}
+
+[data-animation-speed="enhanced"] {
+  --transition-speed: 0.3s;
+  --animation-speed: 0.5s;
+}
+
+/* ============================================
+   ROUNDED CORNERS PREFERENCE
+   ============================================ */
+[data-rounded-corners="false"] {
+  --radius: 0px;
+}
+
+[data-rounded-corners="false"] * {
+  border-radius: 0 !important;
+}
+
+/* ============================================
+   REDUCED MOTION SUPPORT
+   ============================================ */
+[data-reduced-motion="true"] *,
+[data-reduced-motion="true"] *::before,
+[data-reduced-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* ============================================
+   FONT FAMILY VARIANTS
+   ============================================ */
+[data-font-family="default"] {
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+[data-font-family="sans"] {
+  --font-sans: "Inter", "Helvetica Neue", Arial, sans-serif;
+}
+
+[data-font-family="mono"] {
+  --font-sans: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+}
+
+[data-font-family="dyslexic"] {
+  --font-sans: "OpenDyslexic", "Comic Sans MS", sans-serif;
+  letter-spacing: 0.05em;
+  word-spacing: 0.1em;
+  line-height: 1.8;
+}

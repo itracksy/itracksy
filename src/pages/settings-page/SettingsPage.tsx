@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 
 import { Switch } from "@/components/ui/switch";
 import { AboutSection } from "@/pages/settings-page/components/AboutSection";
+import { CustomizationSection } from "@/pages/settings-page/components/CustomizationSection";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -207,6 +208,8 @@ export default function SettingsPage() {
 
       <h1 className="text-3xl font-bold text-foreground">Settings</h1>
       <p className="mt-2 text-muted-foreground">Configure your application settings</p>
+
+      <CustomizationSection />
 
       <Card>
         <CardHeader>
@@ -431,9 +434,7 @@ export default function SettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Advanced Settings</CardTitle>
-          <CardDescription>
-            Developer tools and debugging options.
-          </CardDescription>
+          <CardDescription>Developer tools and debugging options.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">

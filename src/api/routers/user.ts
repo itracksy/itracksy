@@ -9,6 +9,9 @@ import {
   setPermissions,
   updateUserSettings,
   getDetailedPermissionStatus,
+  getUserPreferences,
+  updateUserPreferences,
+  resetUserPreferences,
 } from "../services/userSettings";
 
 const trackingSettingsSchema = z.object({
@@ -116,5 +119,97 @@ export const userRouter = t.router({
       .where(and(eq(blockedApps.appName, input), eq(blockedApps.userId, ctx.userId)));
 
     return { success: true };
+  }),
+
+  // User Preferences Management
+  getPreferences: protectedProcedure.query(async () => {
+    return getUserPreferences();
+  }),
+
+  updatePreferences: protectedProcedure
+    .input(
+      z.object({
+        sidebar: z
+          .object({
+            visibleItems: z
+              .array(
+                z.enum([
+                  "focus-session",
+                  "scheduling",
+                  "projects",
+                  "categorization",
+                  "classify",
+                  "analytics",
+                  "focus-music",
+                  "reports",
+                  "logs",
+                  "settings",
+                ])
+              )
+              .optional(),
+            collapsed: z.boolean().optional(),
+            pinnedItems: z
+              .array(
+                z.enum([
+                  "focus-session",
+                  "scheduling",
+                  "projects",
+                  "categorization",
+                  "classify",
+                  "analytics",
+                  "focus-music",
+                  "reports",
+                  "logs",
+                  "settings",
+                ])
+              )
+              .optional(),
+          })
+          .optional(),
+        appearance: z
+          .object({
+            themeMode: z.enum(["light", "dark"]).optional(),
+            themeVariant: z
+              .enum(["default", "professional", "comfort", "vibrant", "minimal", "nature"])
+              .optional(),
+            fontScale: z.enum(["small", "normal", "large", "x-large"]).optional(),
+            fontFamily: z.enum(["default", "sans", "mono", "dyslexic"]).optional(),
+            uiSize: z.enum(["compact", "comfortable", "spacious"]).optional(),
+            showAnimations: z.enum(["none", "reduced", "normal", "enhanced"]).optional(),
+            reducedMotion: z.boolean().optional(),
+            compactMode: z.boolean().optional(),
+            showIcons: z.boolean().optional(),
+            roundedCorners: z.boolean().optional(),
+          })
+          .optional(),
+        notifications: z
+          .object({
+            soundEnabled: z.boolean().optional(),
+            soundVolume: z.number().min(0).max(100).optional(),
+            showDesktopNotifications: z.boolean().optional(),
+            showInAppNotifications: z.boolean().optional(),
+            focusReminders: z.boolean().optional(),
+            breakReminders: z.boolean().optional(),
+            goalAchievements: z.boolean().optional(),
+          })
+          .optional(),
+        focus: z
+          .object({
+            defaultFocusDuration: z.number().min(1).max(240).optional(),
+            defaultBreakDuration: z.number().min(1).max(60).optional(),
+            autoStartBreaks: z.boolean().optional(),
+            autoStartNextSession: z.boolean().optional(),
+            dimInactiveWindows: z.boolean().optional(),
+            hideDistractions: z.boolean().optional(),
+          })
+          .optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      return updateUserPreferences(input as any);
+    }),
+
+  resetPreferences: protectedProcedure.mutation(async () => {
+    return resetUserPreferences();
   }),
 });

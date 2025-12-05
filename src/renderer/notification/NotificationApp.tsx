@@ -46,6 +46,19 @@ const NotificationApp: React.FC = () => {
     }
   }, []);
 
+  // Notify main process when notification content is rendered and ready to show
+  useEffect(() => {
+    if (notificationData && window.electronNotification?.notifyReady) {
+      console.log(
+        "NotificationApp: Notification data rendered, notifying main process to show window"
+      );
+      // Use requestAnimationFrame to ensure DOM has been painted
+      requestAnimationFrame(() => {
+        window.electronNotification?.notifyReady();
+      });
+    }
+  }, [notificationData]);
+
   // Auto-close timer (only if autoDismiss is enabled)
   useEffect(() => {
     if (notificationData && notificationData.autoDismiss && timeLeft > 0) {

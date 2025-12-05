@@ -49,21 +49,14 @@ export const sendNotificationToWindow = async (data: NotificationData): Promise<
       notificationWindow.webContents.once("did-finish-load", () => {
         logger.info("[NotificationWindow] Window loaded, sending IPC message");
         notificationWindow.webContents.send(NOTIFICATION_SHOW_CHANNEL, data);
-        // Give renderer a moment to process and render the notification content
-        setTimeout(() => {
-          logger.info("[NotificationWindow] Calling showNotificationWindow after 100ms delay");
-          showNotificationWindow();
-        }, 100);
+        logger.info(
+          "[NotificationWindow] IPC message sent, renderer will notify when ready to show"
+        );
       });
     } else {
       logger.info("[NotificationWindow] Window already loaded, sending IPC message immediately");
       notificationWindow.webContents.send(NOTIFICATION_SHOW_CHANNEL, data);
-      // Give renderer a moment to process and render the notification content
-      // This prevents showing an empty window before content is rendered
-      setTimeout(() => {
-        logger.info("[NotificationWindow] Calling showNotificationWindow after 100ms delay");
-        showNotificationWindow();
-      }, 100);
+      logger.info("[NotificationWindow] IPC message sent, renderer will notify when ready to show");
     }
 
     return true;

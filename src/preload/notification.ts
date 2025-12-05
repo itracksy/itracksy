@@ -5,6 +5,7 @@ import {
   NOTIFICATION_ACTION_CHANNEL,
   NOTIFICATION_SHOW_CHANNEL,
   NOTIFICATION_EXTEND_SESSION_CHANNEL,
+  NOTIFICATION_READY_CHANNEL,
 } from "../helpers/ipc/notification/notification-channels";
 
 // Add debug logging to preload script
@@ -33,6 +34,12 @@ contextBridge.exposeInMainWorld("electronNotification", {
   extendSession: (minutesToAdd: number) => {
     console.log("Extending session by", minutesToAdd, "minutes");
     return ipcRenderer.invoke(NOTIFICATION_EXTEND_SESSION_CHANNEL, { minutesToAdd });
+  },
+
+  // Function to notify main process that renderer is ready to show
+  notifyReady: () => {
+    console.log("Notifying main process that notification is rendered and ready");
+    ipcRenderer.send(NOTIFICATION_READY_CHANNEL);
   },
 
   // Function to listen for show-notification events
