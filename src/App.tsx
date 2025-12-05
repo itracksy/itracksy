@@ -15,6 +15,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "./hooks/useAuth";
 import { getConfig } from "./config/env";
+import { useAppearancePreferences } from "./hooks/useAppearancePreferences";
 
 import { getAppVersion } from "./helpers/version";
 
@@ -75,6 +76,9 @@ syncThemeWithLocal().catch(console.error);
 
 function AuthenticatedApp() {
   const { i18n } = useTranslation();
+
+  // Apply appearance preferences (font, layout, animations)
+  useAppearancePreferences();
 
   useEffect(() => {
     updateAppLanguage(i18n);

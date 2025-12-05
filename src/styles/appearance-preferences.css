@@ -1,0 +1,241 @@
+/**
+ * Appearance Preferences CSS
+ *
+ * This file handles font scaling, UI sizing, and animation preferences.
+ * Does NOT include theme variants - those are disabled for now.
+ */
+
+/* ============================================
+   FONT SCALE VARIANTS
+   ============================================ */
+[data-font-scale="small"] {
+  --font-scale: 0.875; /* 87.5% */
+  font-size: 14px;
+}
+
+[data-font-scale="normal"] {
+  --font-scale: 1; /* 100% */
+  font-size: 16px;
+}
+
+[data-font-scale="large"] {
+  --font-scale: 1.125; /* 112.5% */
+  font-size: 18px;
+}
+
+[data-font-scale="x-large"] {
+  --font-scale: 1.25; /* 125% */
+  font-size: 20px;
+}
+
+/* ============================================
+   UI SIZE VARIANTS
+   ============================================ */
+[data-ui-size="compact"] {
+  --spacing-unit: 0.75;
+}
+
+[data-ui-size="compact"] .space-y-1 > * + * {
+  margin-top: calc(0.25rem * 0.75);
+}
+[data-ui-size="compact"] .space-y-2 > * + * {
+  margin-top: calc(0.5rem * 0.75);
+}
+[data-ui-size="compact"] .space-y-3 > * + * {
+  margin-top: calc(0.75rem * 0.75);
+}
+[data-ui-size="compact"] .space-y-4 > * + * {
+  margin-top: calc(1rem * 0.75);
+}
+[data-ui-size="compact"] .space-y-6 > * + * {
+  margin-top: calc(1.5rem * 0.75);
+}
+[data-ui-size="compact"] .space-y-8 > * + * {
+  margin-top: calc(2rem * 0.75);
+}
+[data-ui-size="compact"] .gap-2 {
+  gap: calc(0.5rem * 0.75);
+}
+[data-ui-size="compact"] .gap-4 {
+  gap: calc(1rem * 0.75);
+}
+[data-ui-size="compact"] .gap-6 {
+  gap: calc(1.5rem * 0.75);
+}
+[data-ui-size="compact"] .p-4 {
+  padding: calc(1rem * 0.75);
+}
+[data-ui-size="compact"] .p-6 {
+  padding: calc(1.5rem * 0.75);
+}
+[data-ui-size="compact"] .px-4 {
+  padding-left: calc(1rem * 0.75);
+  padding-right: calc(1rem * 0.75);
+}
+[data-ui-size="compact"] .py-3 {
+  padding-top: calc(0.75rem * 0.75);
+  padding-bottom: calc(0.75rem * 0.75);
+}
+
+[data-ui-size="comfortable"] {
+  --spacing-unit: 1;
+}
+
+[data-ui-size="spacious"] {
+  --spacing-unit: 1.25;
+}
+
+[data-ui-size="spacious"] .space-y-1 > * + * {
+  margin-top: calc(0.25rem * 1.25);
+}
+[data-ui-size="spacious"] .space-y-2 > * + * {
+  margin-top: calc(0.5rem * 1.25);
+}
+[data-ui-size="spacious"] .space-y-3 > * + * {
+  margin-top: calc(0.75rem * 1.25);
+}
+[data-ui-size="spacious"] .space-y-4 > * + * {
+  margin-top: calc(1rem * 1.25);
+}
+[data-ui-size="spacious"] .space-y-6 > * + * {
+  margin-top: calc(1.5rem * 1.25);
+}
+[data-ui-size="spacious"] .space-y-8 > * + * {
+  margin-top: calc(2rem * 1.25);
+}
+[data-ui-size="spacious"] .gap-2 {
+  gap: calc(0.5rem * 1.25);
+}
+[data-ui-size="spacious"] .gap-4 {
+  gap: calc(1rem * 1.25);
+}
+[data-ui-size="spacious"] .gap-6 {
+  gap: calc(1.5rem * 1.25);
+}
+[data-ui-size="spacious"] .p-4 {
+  padding: calc(1rem * 1.25);
+}
+[data-ui-size="spacious"] .p-6 {
+  padding: calc(1.5rem * 1.25);
+}
+[data-ui-size="spacious"] .px-4 {
+  padding-left: calc(1rem * 1.25);
+  padding-right: calc(1rem * 1.25);
+}
+[data-ui-size="spacious"] .py-3 {
+  padding-top: calc(0.75rem * 1.25);
+  padding-bottom: calc(0.75rem * 1.25);
+}
+
+/* ============================================
+   ANIMATION SPEED VARIANTS
+   ============================================ */
+[data-animation-speed="none"] *,
+[data-animation-speed="none"] *::before,
+[data-animation-speed="none"] *::after {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+}
+
+[data-animation-speed="reduced"] * {
+  animation-duration: 0.1s !important;
+  transition-duration: 0.1s !important;
+}
+
+[data-animation-speed="reduced"] *::before,
+[data-animation-speed="reduced"] *::after {
+  animation-duration: 0.1s !important;
+  transition-duration: 0.1s !important;
+}
+
+[data-animation-speed="normal"] {
+  /* Default Tailwind speeds - no override needed */
+}
+
+[data-animation-speed="enhanced"] * {
+  animation-duration: 0.4s !important;
+  transition-duration: 0.4s !important;
+}
+
+[data-animation-speed="enhanced"] *::before,
+[data-animation-speed="enhanced"] *::after {
+  animation-duration: 0.4s !important;
+  transition-duration: 0.4s !important;
+}
+
+/* ============================================
+   ROUNDED CORNERS PREFERENCE
+   ============================================ */
+[data-rounded-corners="false"] {
+  --radius: 0px;
+}
+
+[data-rounded-corners="false"] * {
+  border-radius: 0 !important;
+}
+
+/* ============================================
+   REDUCED MOTION SUPPORT (Accessibility)
+   ============================================ */
+[data-reduced-motion="true"] *,
+[data-reduced-motion="true"] *::before,
+[data-reduced-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  transition-delay: 0s !important;
+  scroll-behavior: auto !important;
+}
+
+/* Also respect system preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================
+   FONT FAMILY VARIANTS
+   ============================================ */
+[data-font-family="default"] {
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+[data-font-family="sans"] {
+  --font-sans: "Inter", "Helvetica Neue", Arial, sans-serif;
+}
+
+[data-font-family="mono"] {
+  --font-sans: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+}
+
+[data-font-family="dyslexic"] {
+  --font-sans: "OpenDyslexic", "Comic Sans MS", sans-serif;
+  letter-spacing: 0.05em;
+  word-spacing: 0.1em;
+  line-height: 1.8;
+}
+
+/* ============================================
+   HIDE ICONS PREFERENCE
+   ============================================ */
+.hide-icons [data-slot="icon"],
+.hide-icons .lucide {
+  display: none;
+}
+
+/* ============================================
+   COMPACT MODE
+   ============================================ */
+.compact-mode {
+  /* Add compact mode specific styles here if needed */
+}
