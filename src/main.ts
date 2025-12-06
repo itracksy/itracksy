@@ -111,6 +111,7 @@ async function createTray() {
 
   if (isDev) {
     // In development mode, use the root project directory
+    // __dirname in bundled code points to out/main, so go up to project root
     const rootDir = path.resolve(path.join(__dirname, "..", ".."));
     iconPath =
       process.platform === "win32"
@@ -139,22 +140,59 @@ async function createTray() {
     logger.error("Main: Icon file does not exist at path", iconPath);
     logger.debug("Main: __dirname value:", __dirname);
     logger.debug("Main: Resolved absolute path:", path.resolve(iconPath));
+    logger.debug("Main: process.cwd():", process.cwd());
+    logger.debug("Main: app.getAppPath():", app.getAppPath());
 
-    // Try alternative paths for macOS
-    if (process.platform === "darwin" && !isDev) {
-      const altPaths = [
-        path.join(process.resourcesPath, "resources", "icon_16x16.png"),
-        path.join(app.getAppPath(), "resources", "icon_16x16.png"),
-        path.join(__dirname, "../../resources/icon_16x16.png"),
-      ];
+    // Try alternative paths
+    const altPaths: string[] = [];
 
-      for (const altPath of altPaths) {
-        logger.debug("Main: Trying alternative path:", altPath);
-        if (fs.existsSync(altPath)) {
-          iconPath = altPath;
-          logger.debug("Main: Found icon at alternative path:", iconPath);
-          break;
-        }
+    if (isDev) {
+      // Development mode fallbacks
+      altPaths.push(
+        path.join(
+          process.cwd(),
+          "resources",
+          process.platform === "win32" ? "icon.ico" : "icon_16x16.png"
+        ),
+        path.join(
+          app.getAppPath(),
+          "resources",
+          process.platform === "win32" ? "icon.ico" : "icon_16x16.png"
+        ),
+        path.join(
+          __dirname,
+          "../../resources",
+          process.platform === "win32" ? "icon.ico" : "icon_16x16.png"
+        ),
+        path.join(
+          __dirname,
+          "../../../resources",
+          process.platform === "win32" ? "icon.ico" : "icon_16x16.png"
+        )
+      );
+    } else {
+      // Production mode fallbacks
+      if (process.platform === "darwin") {
+        altPaths.push(
+          path.join(process.resourcesPath, "resources", "icon_16x16.png"),
+          path.join(app.getAppPath(), "resources", "icon_16x16.png"),
+          path.join(__dirname, "../../resources/icon_16x16.png")
+        );
+      } else {
+        altPaths.push(
+          path.join(__dirname, "../resources/icon.ico"),
+          path.join(process.resourcesPath, "resources", "icon.ico"),
+          path.join(app.getAppPath(), "resources", "icon.ico")
+        );
+      }
+    }
+
+    for (const altPath of altPaths) {
+      logger.debug("Main: Trying alternative path:", altPath);
+      if (fs.existsSync(altPath)) {
+        iconPath = altPath;
+        logger.debug("Main: Found icon at alternative path:", iconPath);
+        break;
       }
     }
 
