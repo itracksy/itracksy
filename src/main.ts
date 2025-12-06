@@ -112,7 +112,7 @@ async function createTray() {
   if (isDev) {
     // In development mode, use the root project directory
     // __dirname in bundled code points to out/main, so go up to project root
-    const rootDir = path.resolve(path.join(__dirname, "..", ".."));
+    const rootDir = app.getAppPath();
     iconPath =
       process.platform === "win32"
         ? path.join(rootDir, "resources", "icon.ico")
