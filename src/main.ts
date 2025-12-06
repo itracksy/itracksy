@@ -119,8 +119,9 @@ async function createTray() {
   } else {
     // In production mode
     if (process.platform === "darwin") {
-      // For macOS, use the Contents/Resources directory
-      iconPath = path.join(process.resourcesPath, "icon_16x16.png");
+      // For macOS, use the Contents/Resources/resources directory
+      // (extraResource copies the resources folder into the app bundle)
+      iconPath = path.join(process.resourcesPath, "resources", "icon_16x16.png");
       logger.debug("Main: Using macOS production path:", iconPath);
     } else {
       // For Windows and other platforms
