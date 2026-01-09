@@ -1,223 +1,206 @@
 /**
  * Theme Variants for itracksy
  *
- * This file defines different theme variants that users can choose from
- * to customize their experience. Each variant provides a complete color palette
- * that works in both light and dark modes.
+ * Each theme provides a complete, calming color palette
+ * optimized for focus and productivity work.
  */
 
 /* ============================================
-   DEFAULT THEME (Brand Colors)
+   DEFAULT THEME (Natural - Our base theme)
+   Calm slate blue and teal
    ============================================ */
 [data-theme-variant="default"] {
-  --variant-primary: 139 92 246; /* #8B5CF6 - Purple */
-  --variant-secondary: 236 72 153; /* #EC4899 - Pink */
-  --variant-accent: 6 182 212; /* #06B6D4 - Cyan */
-  --variant-success: 16 185 129; /* #10B981 - Green */
-  --variant-warning: 245 158 11; /* #F59E0B - Amber */
-  --variant-destructive: 239 68 68; /* #EF4444 - Red */
+  /* Uses the base CSS variables - no overrides needed */
 }
 
 /* ============================================
-   PROFESSIONAL THEME
+   OCEAN THEME
+   Cool blues inspired by calm waters
    ============================================ */
-[data-theme-variant="professional"] {
-  --variant-primary: 30 64 175; /* #1E40AF - Deep Blue */
-  --variant-secondary: 59 130 246; /* #3B82F6 - Blue */
-  --variant-accent: 8 145 178; /* #0891B2 - Cyan */
-  --variant-success: 5 150 105; /* #059669 - Green */
-  --variant-warning: 217 119 6; /* #D97706 - Orange */
-  --variant-destructive: 185 28 28; /* #B91C1C - Dark Red */
+[data-theme-variant="ocean"] {
+  --variant-primary: 200 60% 45%;
+  --variant-accent: 190 50% 50%;
 }
 
-.light[data-theme-variant="professional"],
-:root.light[data-theme-variant="professional"] {
-  --background: 248 250 252 !important; /* #F8FAFC */
-  --foreground: 15 23 42 !important; /* #0F172A */
-  --muted: 241 245 249 !important; /* #F1F5F9 */
-  --muted-foreground: 100 116 139 !important; /* #64748B */
+.light[data-theme-variant="ocean"],
+:root.light[data-theme-variant="ocean"] {
+  --primary: 200 60% 45%;
+  --accent: 190 50% 50%;
+  --sidebar-primary: 200 60% 45%;
+  --sidebar-accent: 200 30% 95%;
+  --sidebar-accent-foreground: 200 60% 35%;
 }
 
-.dark[data-theme-variant="professional"],
-:root.dark[data-theme-variant="professional"] {
-  --background: 15 23 42 !important; /* #0F172A */
-  --foreground: 248 250 252 !important; /* #F8FAFC */
-  --muted: 30 41 59 !important; /* #1E293B */
-  --muted-foreground: 148 163 184 !important; /* #94A3B8 */
+.dark[data-theme-variant="ocean"],
+:root.dark[data-theme-variant="ocean"] {
+  --primary: 200 50% 55%;
+  --accent: 190 45% 50%;
+  --sidebar-primary: 200 50% 55%;
+  --sidebar-accent: 200 30% 18%;
+  --sidebar-accent-foreground: 200 50% 70%;
 }
 
 /* ============================================
-   COMFORT THEME
+   FOREST THEME
+   Earthy greens for a natural feel
    ============================================ */
-[data-theme-variant="comfort"] {
-  --variant-primary: 217 119 6; /* #D97706 - Amber */
-  --variant-secondary: 245 158 11; /* #F59E0B - Yellow */
-  --variant-accent: 16 185 129; /* #10B981 - Green */
-  --variant-success: 34 197 94; /* #22C55E - Light Green */
-  --variant-warning: 251 146 60; /* #FB923C - Orange */
-  --variant-destructive: 220 38 38; /* #DC2626 - Red */
+[data-theme-variant="forest"] {
+  --variant-primary: 150 40% 40%;
+  --variant-accent: 140 35% 45%;
 }
 
-.light[data-theme-variant="comfort"],
-:root.light[data-theme-variant="comfort"] {
-  --background: 255 251 235 !important; /* #FFFBEB - Warm white */
-  --foreground: 120 53 15 !important; /* #78350F - Dark brown */
-  --muted: 254 243 199 !important; /* #FEF3C7 */
-  --muted-foreground: 146 64 14 !important; /* #92400E */
-  --card: 255 255 255 !important; /* #FFFFFF */
-  --card-foreground: 120 53 15 !important; /* #78350F */
+.light[data-theme-variant="forest"],
+:root.light[data-theme-variant="forest"] {
+  --primary: 150 40% 40%;
+  --accent: 140 35% 45%;
+  --success: 150 40% 40%;
+  --sidebar-primary: 150 40% 40%;
+  --sidebar-accent: 150 25% 95%;
+  --sidebar-accent-foreground: 150 40% 30%;
 }
 
-.dark[data-theme-variant="comfort"],
-:root.dark[data-theme-variant="comfort"] {
-  --background: 28 25 23 !important; /* #1C1917 - Warm dark */
-  --foreground: 250 250 249 !important; /* #FAFAF9 */
-  --muted: 41 37 36 !important; /* #292524 */
-  --muted-foreground: 168 162 158 !important; /* #A8A29E */
-  --card: 41 37 36 !important; /* #292524 */
-  --card-foreground: 250 250 249 !important; /* #FAFAF9 */
+.dark[data-theme-variant="forest"],
+:root.dark[data-theme-variant="forest"] {
+  --primary: 150 35% 50%;
+  --accent: 140 30% 50%;
+  --success: 150 35% 50%;
+  --sidebar-primary: 150 35% 50%;
+  --sidebar-accent: 150 25% 18%;
+  --sidebar-accent-foreground: 150 35% 65%;
 }
 
 /* ============================================
-   VIBRANT THEME
+   LAVENDER THEME
+   Soft purple for creative minds
    ============================================ */
-[data-theme-variant="vibrant"] {
-  --variant-primary: 220 38 38; /* #DC2626 - Red */
-  --variant-secondary: 245 158 11; /* #F59E0B - Amber */
-  --variant-accent: 16 185 129; /* #10B981 - Green */
-  --variant-success: 34 197 94; /* #22C55E - Bright Green */
-  --variant-warning: 234 179 8; /* #EAB308 - Yellow */
-  --variant-destructive: 153 27 27; /* #991B1B - Dark Red */
+[data-theme-variant="lavender"] {
+  --variant-primary: 270 35% 55%;
+  --variant-accent: 280 30% 60%;
 }
 
-.light[data-theme-variant="vibrant"],
-:root.light[data-theme-variant="vibrant"] {
-  --background: 255 255 255 !important; /* #FFFFFF - Pure white */
-  --foreground: 0 0 0 !important; /* #000000 - Pure black */
-  --muted: 243 244 246 !important; /* #F3F4F6 */
-  --muted-foreground: 55 65 81 !important; /* #374151 */
-  --border: 0 0 0 !important; /* #000000 - High contrast */
+.light[data-theme-variant="lavender"],
+:root.light[data-theme-variant="lavender"] {
+  --primary: 270 35% 55%;
+  --accent: 280 30% 60%;
+  --sidebar-primary: 270 35% 55%;
+  --sidebar-accent: 270 25% 95%;
+  --sidebar-accent-foreground: 270 35% 45%;
 }
 
-.dark[data-theme-variant="vibrant"],
-:root.dark[data-theme-variant="vibrant"] {
-  --background: 0 0 0 !important; /* #000000 - Pure black */
-  --foreground: 255 255 255 !important; /* #FFFFFF - Pure white */
-  --muted: 31 41 55 !important; /* #1F2937 */
-  --muted-foreground: 209 213 219 !important; /* #D1D5DB */
-  --border: 255 255 255 !important; /* #FFFFFF - High contrast */
+.dark[data-theme-variant="lavender"],
+:root.dark[data-theme-variant="lavender"] {
+  --primary: 270 30% 60%;
+  --accent: 280 25% 60%;
+  --sidebar-primary: 270 30% 60%;
+  --sidebar-accent: 270 20% 18%;
+  --sidebar-accent-foreground: 270 30% 75%;
 }
 
 /* ============================================
-   MINIMAL THEME
+   SUNSET THEME
+   Warm oranges and corals
    ============================================ */
-[data-theme-variant="minimal"] {
-  --variant-primary: 55 65 81; /* #374151 - Gray */
-  --variant-secondary: 107 114 128; /* #6B7280 - Light Gray */
-  --variant-accent: 156 163 175; /* #9CA3AF - Lighter Gray */
-  --variant-success: 75 85 99; /* #4B5563 - Dark Gray */
-  --variant-warning: 107 114 128; /* #6B7280 - Gray */
-  --variant-destructive: 31 41 55; /* #1F2937 - Darker Gray */
+[data-theme-variant="sunset"] {
+  --variant-primary: 25 50% 50%;
+  --variant-accent: 15 45% 55%;
 }
 
-.light[data-theme-variant="minimal"],
-:root.light[data-theme-variant="minimal"] {
-  --background: 255 255 255 !important; /* #FFFFFF */
-  --foreground: 17 24 39 !important; /* #111827 */
-  --muted: 249 250 251 !important; /* #F9FAFB */
-  --muted-foreground: 107 114 128 !important; /* #6B7280 */
-  --card: 255 255 255 !important; /* #FFFFFF */
-  --card-foreground: 17 24 39 !important; /* #111827 */
-  --border: 229 231 235 !important; /* #E5E7EB */
+.light[data-theme-variant="sunset"],
+:root.light[data-theme-variant="sunset"] {
+  --primary: 25 50% 50%;
+  --accent: 15 45% 55%;
+  --warning: 25 50% 50%;
+  --sidebar-primary: 25 50% 50%;
+  --sidebar-accent: 25 30% 95%;
+  --sidebar-accent-foreground: 25 50% 40%;
 }
 
-.dark[data-theme-variant="minimal"],
-:root.dark[data-theme-variant="minimal"] {
-  --background: 17 24 39 !important; /* #111827 */
-  --foreground: 249 250 251 !important; /* #F9FAFB */
-  --muted: 31 41 55 !important; /* #1F2937 */
-  --muted-foreground: 156 163 175 !important; /* #9CA3AF */
-  --card: 31 41 55 !important; /* #1F2937 */
-  --card-foreground: 249 250 251 !important; /* #F9FAFB */
-  --border: 55 65 81 !important; /* #374151 */
+.dark[data-theme-variant="sunset"],
+:root.dark[data-theme-variant="sunset"] {
+  --primary: 25 45% 55%;
+  --accent: 15 40% 55%;
+  --warning: 25 45% 55%;
+  --sidebar-primary: 25 45% 55%;
+  --sidebar-accent: 25 25% 18%;
+  --sidebar-accent-foreground: 25 45% 70%;
 }
 
 /* ============================================
-   NATURE THEME
+   ROSE THEME
+   Soft pinks for a gentle feel
    ============================================ */
-[data-theme-variant="nature"] {
-  --variant-primary: 5 150 105; /* #059669 - Green */
-  --variant-secondary: 16 185 129; /* #10B981 - Light Green */
-  --variant-accent: 20 184 166; /* #14B8A6 - Teal */
-  --variant-success: 34 197 94; /* #22C55E - Bright Green */
-  --variant-warning: 234 179 8; /* #EAB308 - Yellow */
-  --variant-destructive: 220 38 38; /* #DC2626 - Red */
+[data-theme-variant="rose"] {
+  --variant-primary: 350 40% 55%;
+  --variant-accent: 340 35% 60%;
 }
 
-.light[data-theme-variant="nature"],
-:root.light[data-theme-variant="nature"] {
-  --background: 240 253 244 !important; /* #F0FDF4 - Light green tint */
-  --foreground: 6 78 59 !important; /* #064E3B - Dark green */
-  --muted: 220 252 231 !important; /* #DCFCE7 */
-  --muted-foreground: 22 101 52 !important; /* #166534 */
-  --card: 255 255 255 !important; /* #FFFFFF */
-  --card-foreground: 6 78 59 !important; /* #064E3B */
+.light[data-theme-variant="rose"],
+:root.light[data-theme-variant="rose"] {
+  --primary: 350 40% 55%;
+  --accent: 340 35% 60%;
+  --sidebar-primary: 350 40% 55%;
+  --sidebar-accent: 350 25% 95%;
+  --sidebar-accent-foreground: 350 40% 45%;
 }
 
-.dark[data-theme-variant="nature"],
-:root.dark[data-theme-variant="nature"] {
-  --background: 6 78 59 !important; /* #064E3B - Dark green */
-  --foreground: 240 253 244 !important; /* #F0FDF4 */
-  --muted: 20 83 45 !important; /* #14532D */
-  --muted-foreground: 187 247 208 !important; /* #BBF7D0 */
-  --card: 20 83 45 !important; /* #14532D */
-  --card-foreground: 240 253 244 !important; /* #F0FDF4 */
+.dark[data-theme-variant="rose"],
+:root.dark[data-theme-variant="rose"] {
+  --primary: 350 35% 58%;
+  --accent: 340 30% 60%;
+  --sidebar-primary: 350 35% 58%;
+  --sidebar-accent: 350 20% 18%;
+  --sidebar-accent-foreground: 350 35% 72%;
 }
 
 /* ============================================
-   APPLY VARIANT COLORS TO PRIMARY/SECONDARY
+   MONOCHROME THEME
+   Pure grayscale for minimal distraction
    ============================================ */
-:root[data-theme-variant],
-html[data-theme-variant] {
-  --primary: var(--variant-primary) !important;
-  --primary-foreground: 255 255 255 !important; /* White text on primary */
+[data-theme-variant="monochrome"] {
+  --variant-primary: 0 0% 35%;
+  --variant-accent: 0 0% 45%;
+}
 
-  --secondary: var(--variant-secondary) !important;
-  --secondary-foreground: 255 255 255 !important; /* White text on secondary */
+.light[data-theme-variant="monochrome"],
+:root.light[data-theme-variant="monochrome"] {
+  --primary: 0 0% 35%;
+  --accent: 0 0% 45%;
+  --sidebar-primary: 0 0% 35%;
+  --sidebar-accent: 0 0% 95%;
+  --sidebar-accent-foreground: 0 0% 25%;
+  --ring: 0 0% 35%;
+}
 
-  --accent: var(--variant-accent) !important;
-  --accent-foreground: 255 255 255 !important; /* White text on accent */
-
-  --success: var(--variant-success) !important;
-  --success-foreground: 255 255 255 !important;
-
-  --warning: var(--variant-warning) !important;
-  --warning-foreground: 255 255 255 !important;
-
-  --destructive: var(--variant-destructive) !important;
-  --destructive-foreground: 255 255 255 !important;
+.dark[data-theme-variant="monochrome"],
+:root.dark[data-theme-variant="monochrome"] {
+  --primary: 0 0% 60%;
+  --accent: 0 0% 55%;
+  --sidebar-primary: 0 0% 60%;
+  --sidebar-accent: 0 0% 18%;
+  --sidebar-accent-foreground: 0 0% 80%;
+  --ring: 0 0% 60%;
 }
 
 /* ============================================
    FONT SCALE VARIANTS
    ============================================ */
 [data-font-scale="small"] {
-  --font-scale: 0.875; /* 87.5% */
+  --font-scale: 0.875;
   font-size: 14px;
 }
 
 [data-font-scale="normal"] {
-  --font-scale: 1; /* 100% */
+  --font-scale: 1;
   font-size: 16px;
 }
 
 [data-font-scale="large"] {
-  --font-scale: 1.125; /* 112.5% */
+  --font-scale: 1.125;
   font-size: 18px;
 }
 
 [data-font-scale="x-large"] {
-  --font-scale: 1.25; /* 125% */
+  --font-scale: 1.25;
   font-size: 20px;
 }
 
@@ -226,32 +209,14 @@ html[data-theme-variant] {
    ============================================ */
 [data-ui-size="compact"] {
   --spacing-unit: 0.75rem;
-  --padding-sm: 0.375rem;
-  --padding-md: 0.5rem;
-  --padding-lg: 0.75rem;
-  --gap-sm: 0.375rem;
-  --gap-md: 0.5rem;
-  --gap-lg: 0.75rem;
 }
 
 [data-ui-size="comfortable"] {
   --spacing-unit: 1rem;
-  --padding-sm: 0.5rem;
-  --padding-md: 0.75rem;
-  --padding-lg: 1rem;
-  --gap-sm: 0.5rem;
-  --gap-md: 0.75rem;
-  --gap-lg: 1rem;
 }
 
 [data-ui-size="spacious"] {
   --spacing-unit: 1.25rem;
-  --padding-sm: 0.75rem;
-  --padding-md: 1rem;
-  --padding-lg: 1.5rem;
-  --gap-sm: 0.75rem;
-  --gap-md: 1rem;
-  --gap-lg: 1.5rem;
 }
 
 /* ============================================

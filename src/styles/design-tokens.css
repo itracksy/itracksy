@@ -8,50 +8,51 @@
 :root {
   /* ===========================
      PRIMARY BRAND COLORS
+     Natural, calming palette for focus
      =========================== */
-  --color-primary-purple: #8b5cf6;
-  --color-secondary-pink: #ec4899;
-  --color-cyan: #06b6d4;
-  --color-blue: #3b82f6;
-  --color-success-green: #10b981;
+  --color-primary-blue: #5a7a99;
+  --color-secondary-teal: #4a9a8c;
+  --color-cyan: #5a9aa0;
+  --color-blue: #4a8ab0;
+  --color-success-green: #4a9a6a;
 
   /* ===========================
      SEMANTIC COLORS
      =========================== */
-  --color-error: #ef4444;
-  --color-warning: #f59e0b;
-  --color-info: #3b82f6;
-  --color-success: #10b981;
+  --color-error: #c45a5a;
+  --color-warning: #c4944a;
+  --color-info: #4a8ab0;
+  --color-success: #4a9a6a;
 
   /* ===========================
-     GRAYSCALE
+     GRAYSCALE - True neutrals
      =========================== */
-  --color-gray-50: #f9fafb;
-  --color-gray-100: #f3f4f6;
-  --color-gray-200: #e5e7eb;
-  --color-gray-300: #d1d5db;
-  --color-gray-400: #9ca3af;
-  --color-gray-500: #6b7280;
-  --color-gray-600: #4b5563;
-  --color-gray-700: #374151;
-  --color-gray-800: #1f2937;
-  --color-gray-900: #111827;
+  --color-gray-50: #fafafa;
+  --color-gray-100: #f5f5f5;
+  --color-gray-200: #e5e5e5;
+  --color-gray-300: #d4d4d4;
+  --color-gray-400: #a3a3a3;
+  --color-gray-500: #737373;
+  --color-gray-600: #525252;
+  --color-gray-700: #404040;
+  --color-gray-800: #262626;
+  --color-gray-900: #171717;
 
   /* ===========================
      TEXT COLORS
      =========================== */
-  --color-text-primary: var(--color-gray-900);
-  --color-text-secondary: var(--color-gray-600);
-  --color-text-tertiary: var(--color-gray-500);
-  --color-text-disabled: var(--color-gray-400);
+  --color-text-primary: #262626;
+  --color-text-secondary: #525252;
+  --color-text-tertiary: #737373;
+  --color-text-disabled: #a3a3a3;
   --color-text-inverse: #ffffff;
 
   /* ===========================
      BACKGROUND COLORS
      =========================== */
-  --color-bg-primary: #ffffff;
-  --color-bg-secondary: var(--color-gray-50);
-  --color-bg-tertiary: var(--color-gray-100);
+  --color-bg-primary: #fafafa;
+  --color-bg-secondary: #ffffff;
+  --color-bg-tertiary: #f5f5f5;
   --color-bg-elevated: #ffffff;
 
   /* ===========================
@@ -59,14 +60,14 @@
      =========================== */
   --color-border-primary: var(--color-gray-200);
   --color-border-secondary: var(--color-gray-300);
-  --color-border-focus: var(--color-primary-purple);
+  --color-border-focus: var(--color-primary-blue);
 
   /* ===========================
-     GRADIENTS
+     GRADIENTS - Subtle, natural
      =========================== */
-  --gradient-primary: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
-  --gradient-secondary: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
-  --gradient-success: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+  --gradient-primary: linear-gradient(135deg, #5a7a99 0%, #4a9a8c 100%);
+  --gradient-secondary: linear-gradient(135deg, #5a9aa0 0%, #4a8ab0 100%);
+  --gradient-success: linear-gradient(135deg, #4a9a6a 0%, #4a9a8c 100%);
 
   /* ===========================
      SHADOWS
@@ -158,30 +159,33 @@
    =========================== */
 [data-theme="dark"],
 .dark {
-  /* Background Colors */
-  --color-bg-primary: var(--color-gray-900);
-  --color-bg-secondary: var(--color-gray-800);
-  --color-bg-tertiary: var(--color-gray-700);
-  --color-bg-elevated: var(--color-gray-800);
+  /* Background Colors - Calm dark theme */
+  --color-bg-primary: #121212;
+  --color-bg-secondary: #1a1a1a;
+  --color-bg-tertiary: #242424;
+  --color-bg-elevated: #1a1a1a;
 
-  /* Text Colors */
-  --color-text-primary: var(--color-gray-50);
-  --color-text-secondary: var(--color-gray-200);
-  --color-text-tertiary: var(--color-gray-400);
-  --color-text-disabled: var(--color-gray-500);
-  --color-text-inverse: var(--color-gray-900);
+  /* Text Colors - Comfortable contrast */
+  --color-text-primary: #ebebeb;
+  --color-text-secondary: #b3b3b3;
+  --color-text-tertiary: #8c8c8c;
+  --color-text-disabled: #666666;
+  --color-text-inverse: #121212;
 
   /* Border Colors */
-  --color-border-primary: var(--color-gray-700);
-  --color-border-secondary: var(--color-gray-600);
+  --color-border-primary: #2e2e2e;
+  --color-border-secondary: #404040;
 
-  /* Shadows (darker for dark mode) */
+  /* Primary color adjustment for dark mode */
+  --color-primary-blue: #7a9ab9;
+
+  /* Shadows (subtle for dark mode) */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.5);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5), 0 4px 6px rgba(0, 0, 0, 0.4);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.5), 0 10px 10px rgba(0, 0, 0, 0.4);
-  --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.75);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4), 0 4px 6px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.4), 0 10px 10px rgba(0, 0, 0, 0.3);
+  --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.5);
 }
 
 /* ===========================

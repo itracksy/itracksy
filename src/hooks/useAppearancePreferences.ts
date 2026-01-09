@@ -3,8 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { trpcClient } from "@/utils/trpc";
 
 /**
- * Hook to apply appearance preferences (font, layout, animations)
- * Does NOT handle theme variants - those are disabled for now
+ * Hook to apply appearance preferences (font, layout, animations, theme variant)
  */
 export function useAppearancePreferences() {
   const { data: preferences } = useQuery({
@@ -19,6 +18,9 @@ export function useAppearancePreferences() {
 
     const root = document.documentElement;
     const { appearance } = preferences;
+
+    // Apply theme variant
+    root.setAttribute("data-theme-variant", appearance.themeVariant || "default");
 
     // Apply font scale
     root.setAttribute("data-font-scale", appearance.fontScale);

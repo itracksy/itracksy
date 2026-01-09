@@ -4,12 +4,13 @@
  */
 
 export type ThemeVariant =
-  | "default" // Standard brand theme (purple/pink)
-  | "professional" // Subtle blues and grays
-  | "comfort" // Warm, easy on the eyes
-  | "vibrant" // High contrast, energetic
-  | "minimal" // Clean, distraction-free
-  | "nature"; // Greens and earth tones
+  | "default" // Natural slate blue (base theme)
+  | "ocean" // Cool blues inspired by calm waters
+  | "forest" // Earthy greens for a natural feel
+  | "lavender" // Soft purple for creative minds
+  | "sunset" // Warm oranges and corals
+  | "rose" // Soft pinks for a gentle feel
+  | "monochrome"; // Pure grayscale for minimal distraction
 
 export type ThemeMode = "light" | "dark";
 
@@ -174,75 +175,87 @@ export interface ThemeVariantDefinition {
 
 export const THEME_VARIANTS: Record<ThemeVariant, ThemeVariantDefinition> = {
   default: {
-    name: "Default",
-    description: "Classic itracksy brand colors - purple and pink gradient",
+    name: "Natural",
+    description: "Calm slate blue - balanced and professional",
     colors: {
-      primary: "#8B5CF6",
-      secondary: "#EC4899",
-      accent: "#06B6D4",
-      background: "#FFFFFF",
-      foreground: "#111827",
+      primary: "#5a7a99",
+      secondary: "#4a9a8c",
+      accent: "#4a9a8c",
+      background: "#fafafa",
+      foreground: "#262626",
     },
-    bestFor: ["Modern", "Professional", "Brand consistency"],
+    bestFor: ["Focus", "Professional", "All-purpose"],
   },
-  professional: {
-    name: "Professional",
-    description: "Subtle blues and grays for a business environment",
+  ocean: {
+    name: "Ocean",
+    description: "Cool blues inspired by calm waters",
     colors: {
-      primary: "#1E40AF",
-      secondary: "#3B82F6",
-      accent: "#0891B2",
-      background: "#F8FAFC",
-      foreground: "#0F172A",
+      primary: "#3d8eb9",
+      secondary: "#4aa3a3",
+      accent: "#4aa3a3",
+      background: "#fafafa",
+      foreground: "#262626",
     },
-    bestFor: ["Business", "Corporate", "Minimal distraction"],
+    bestFor: ["Calm", "Clarity", "Deep work"],
   },
-  comfort: {
-    name: "Comfort",
-    description: "Warm tones that are easy on the eyes for extended use",
+  forest: {
+    name: "Forest",
+    description: "Earthy greens for a natural, grounded feel",
     colors: {
-      primary: "#D97706",
-      secondary: "#F59E0B",
-      accent: "#10B981",
-      background: "#FFFBEB",
-      foreground: "#78350F",
+      primary: "#4a9a6a",
+      secondary: "#5a9a7a",
+      accent: "#5a9a7a",
+      background: "#fafafa",
+      foreground: "#262626",
     },
-    bestFor: ["Long sessions", "Eye comfort", "Warm atmosphere"],
+    bestFor: ["Nature", "Balance", "Wellness"],
   },
-  vibrant: {
-    name: "Vibrant",
-    description: "High contrast and energetic colors for maximum focus",
+  lavender: {
+    name: "Lavender",
+    description: "Soft purple tones for creative minds",
     colors: {
-      primary: "#DC2626",
-      secondary: "#F59E0B",
-      accent: "#10B981",
-      background: "#FFFFFF",
-      foreground: "#000000",
+      primary: "#8a6aaa",
+      secondary: "#9a7aba",
+      accent: "#9a7aba",
+      background: "#fafafa",
+      foreground: "#262626",
     },
-    bestFor: ["Energy boost", "High visibility", "Creative work"],
+    bestFor: ["Creative", "Inspiration", "Gentle focus"],
   },
-  minimal: {
-    name: "Minimal",
-    description: "Clean, distraction-free monochrome aesthetic",
+  sunset: {
+    name: "Sunset",
+    description: "Warm oranges and corals for an energizing feel",
     colors: {
-      primary: "#374151",
-      secondary: "#6B7280",
-      accent: "#9CA3AF",
-      background: "#FFFFFF",
-      foreground: "#111827",
+      primary: "#bf7a4a",
+      secondary: "#c9684a",
+      accent: "#c9684a",
+      background: "#fafafa",
+      foreground: "#262626",
     },
-    bestFor: ["Focus", "Simplicity", "Distraction-free"],
+    bestFor: ["Energy", "Warmth", "Motivation"],
   },
-  nature: {
-    name: "Nature",
-    description: "Calming greens and earth tones for a natural feel",
+  rose: {
+    name: "Rose",
+    description: "Soft pinks for a gentle, caring atmosphere",
     colors: {
-      primary: "#059669",
-      secondary: "#10B981",
-      accent: "#14B8A6",
-      background: "#F0FDF4",
-      foreground: "#064E3B",
+      primary: "#b96a7a",
+      secondary: "#c97a8a",
+      accent: "#c97a8a",
+      background: "#fafafa",
+      foreground: "#262626",
     },
-    bestFor: ["Calm", "Wellness", "Natural atmosphere"],
+    bestFor: ["Gentle", "Comfort", "Self-care"],
+  },
+  monochrome: {
+    name: "Monochrome",
+    description: "Pure grayscale for minimal distraction",
+    colors: {
+      primary: "#595959",
+      secondary: "#737373",
+      accent: "#737373",
+      background: "#fafafa",
+      foreground: "#262626",
+    },
+    bestFor: ["Focus", "Simplicity", "No distraction"],
   },
 };

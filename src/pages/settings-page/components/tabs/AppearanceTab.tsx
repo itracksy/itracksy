@@ -10,10 +10,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Type, Maximize2, Zap } from "lucide-react";
+import { Type, Maximize2, Zap, Palette, Check } from "lucide-react";
 import { setTheme, getCurrentTheme } from "@/helpers/theme_helpers";
 import { SunIcon, MoonIcon } from "@radix-ui/react-icons";
-import type { UserPreferences } from "@/lib/types/user-preferences";
+import type { UserPreferences, ThemeVariant } from "@/lib/types/user-preferences";
+import { THEME_VARIANTS } from "@/lib/types/user-preferences";
+import { cn } from "@/lib/utils";
 
 interface AppearanceTabProps {
   preferences: UserPreferences;
@@ -64,6 +66,59 @@ export function AppearanceTab({ preferences, updatePreferences }: AppearanceTabP
             <MoonIcon className="h-4 w-4" />
             Dark
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Color Theme */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Palette className="h-5 w-5" />
+            Color Theme
+          </CardTitle>
+          <CardDescription>Choose a color palette that suits your style</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {(Object.keys(THEME_VARIANTS) as ThemeVariant[]).map((variant) => {
+              const theme = THEME_VARIANTS[variant];
+              const isSelected = preferences.appearance.themeVariant === variant;
+              return (
+                <button
+                  key={variant}
+                  onClick={() =>
+                    updatePreferences({
+                      appearance: { themeVariant: variant },
+                    })
+                  }
+                  className={cn(
+                    "relative flex flex-col items-start rounded-lg border-2 p-3 text-left transition-all hover:border-primary/50",
+                    isSelected ? "border-primary bg-primary/5" : "border-border"
+                  )}
+                >
+                  {isSelected && (
+                    <div className="absolute right-2 top-2">
+                      <Check className="h-4 w-4 text-primary" />
+                    </div>
+                  )}
+                  <div className="mb-2 flex gap-1">
+                    <div
+                      className="h-5 w-5 rounded-full"
+                      style={{ backgroundColor: theme.colors.primary }}
+                    />
+                    <div
+                      className="h-5 w-5 rounded-full"
+                      style={{ backgroundColor: theme.colors.secondary }}
+                    />
+                  </div>
+                  <span className="text-sm font-medium">{theme.name}</span>
+                  <span className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+                    {theme.description}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </CardContent>
       </Card>
 

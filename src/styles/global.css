@@ -1,5 +1,6 @@
 @import "./design-tokens.css";
 @import "./appearance-preferences.css";
+@import "./theme-variants.css";
 
 @tailwind base;
 @tailwind components;
@@ -56,135 +57,136 @@
     src: url("../assets/fonts/geist/Geist-UltraBlack.woff2") format("woff2");
   }
   :root {
-    /* Brand Colors - converted to HSL for Tailwind compatibility */
-    /* Primary Purple #8B5CF6 */
-    --brand-primary: 262 88% 66%;
-    /* Secondary Pink #EC4899 */
-    --brand-secondary: 330 81% 60%;
-    /* Cyan #06B6D4 */
-    --brand-cyan: 187 94% 43%;
-    /* Blue #3B82F6 */
-    --brand-blue: 217 91% 60%;
-    /* Success Green #10B981 */
-    --brand-success: 160 84% 39%;
+    /* Brand Colors - Calm, natural palette */
+    /* Primary Slate Blue */
+    --brand-primary: 215 25% 45%;
+    /* Secondary Teal */
+    --brand-secondary: 174 40% 45%;
+    /* Cyan */
+    --brand-cyan: 187 40% 45%;
+    /* Blue */
+    --brand-blue: 210 50% 50%;
+    /* Success Green */
+    --brand-success: 152 45% 42%;
 
-    /* Sidebar - Using brand purple tones */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 262 10% 26%;
-    --sidebar-primary: 262 88% 66%;
+    /* Sidebar - Clean, neutral */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 30%;
+    --sidebar-primary: 215 25% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 262 88% 95%;
-    --sidebar-accent-foreground: 262 88% 66%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 262 88% 66%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 20%;
+    --sidebar-border: 0 0% 92%;
+    --sidebar-ring: 215 25% 45%;
   }
   .dark {
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 262 10% 90%;
-    --sidebar-primary: 262 88% 66%;
+    /* Sidebar - Calm dark */
+    --sidebar-background: 0 0% 8%;
+    --sidebar-foreground: 0 0% 85%;
+    --sidebar-primary: 215 30% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 47% 15%;
-    --sidebar-accent-foreground: 262 88% 66%;
-    --sidebar-border: 222 47% 15%;
-    --sidebar-ring: 262 88% 66%;
+    --sidebar-accent: 0 0% 14%;
+    --sidebar-accent-foreground: 0 0% 90%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 215 30% 55%;
   }
 }
 
 @layer base {
   :root {
-    /* Light Mode - Using brand colors */
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
+    /* Light Mode - Natural, calming design for focus */
+    --background: 0 0% 98%;
+    --foreground: 0 0% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 0 0% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 0 0% 15%;
 
-    /* Primary = Brand Purple */
-    --primary: 262 88% 66%;
+    /* Primary - Calm slate blue */
+    --primary: 215 25% 45%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary = Brand Pink */
-    --secondary: 330 81% 60%;
-    --secondary-foreground: 0 0% 100%;
+    /* Secondary - Neutral for backgrounds/badges */
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 25%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
 
-    /* Accent = Brand Cyan */
-    --accent: 187 94% 43%;
+    /* Accent - Soft teal for subtle highlights */
+    --accent: 174 40% 45%;
     --accent-foreground: 0 0% 100%;
 
-    /* Destructive = Error Red */
-    --destructive: 0 84% 60%;
+    /* Destructive = Muted red */
+    --destructive: 0 65% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Success = Brand Green */
-    --success: 160 84% 39%;
+    /* Success = Natural green */
+    --success: 152 45% 42%;
     --success-foreground: 0 0% 100%;
 
-    /* Info = Brand Blue */
-    --info: 217 91% 60%;
+    /* Info = Calm blue */
+    --info: 210 50% 50%;
     --info-foreground: 0 0% 100%;
 
-    /* Warning = Amber */
-    --warning: 38 92% 50%;
+    /* Warning = Soft amber */
+    --warning: 38 70% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 262 88% 66%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 215 25% 45%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
   }
 
   .dark {
-    /* Dark Mode - Using brand colors with dark backgrounds */
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
+    /* Dark Mode - Calm, easy on eyes */
+    --background: 0 0% 7%;
+    --foreground: 0 0% 92%;
 
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 92%;
 
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 92%;
 
-    /* Primary = Brand Purple (same in dark mode) */
-    --primary: 262 88% 66%;
+    /* Primary - Soft slate blue for dark */
+    --primary: 215 30% 55%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary = Brand Pink (same in dark mode) */
-    --secondary: 330 81% 60%;
-    --secondary-foreground: 0 0% 100%;
+    /* Secondary - Subtle dark */
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 80%;
 
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 55%;
 
-    /* Accent = Brand Cyan (same in dark mode) */
-    --accent: 187 94% 43%;
+    /* Accent - Soft teal */
+    --accent: 174 35% 45%;
     --accent-foreground: 0 0% 100%;
 
-    /* Destructive = Error Red (darker) */
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
+    /* Destructive = Muted red */
+    --destructive: 0 55% 45%;
+    --destructive-foreground: 0 0% 100%;
 
-    /* Success = Brand Green (same in dark mode) */
-    --success: 160 84% 39%;
+    /* Success = Natural green */
+    --success: 152 40% 45%;
     --success-foreground: 0 0% 100%;
 
-    /* Info = Brand Blue (same in dark mode) */
-    --info: 217 91% 60%;
+    /* Info = Calm blue */
+    --info: 210 45% 55%;
     --info-foreground: 0 0% 100%;
 
-    /* Warning = Amber */
-    --warning: 38 92% 50%;
+    /* Warning = Soft amber */
+    --warning: 38 60% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 262 88% 66%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 215 30% 55%;
   }
 }
 
