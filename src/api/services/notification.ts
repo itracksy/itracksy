@@ -10,6 +10,7 @@ import db from "../db";
 import { getLastNotification } from "./notifications";
 import { getTitleTimeEntry } from "../db/timeEntryExt";
 import { sendNotificationToWindow } from "../../helpers/notification/notification-window-utils";
+import { getUserPreferences } from "./userSettings";
 
 export const sendNotification = async (
   options: Omit<NotificationInsert, "id"> & {
@@ -19,13 +20,23 @@ export const sendNotification = async (
       action: () => Promise<void>;
       variant?: "primary" | "secondary" | "success" | "warning";
     }>;
+    skipPreferenceCheck?: boolean; // For critical notifications that should always show
   },
   timeoutMs?: number,
   autoDismiss?: boolean
 ) => {
   try {
-    // Store notification in database (exclude sessionEndTime and actions as they're UI-only)
-    const { sessionEndTime, actions, ...dbOptions } = options;
+    // Check user preferences for notifications (unless skipPreferenceCheck is true)
+    if (!options.skipPreferenceCheck) {
+      const preferences = await getUserPreferences();
+      if (!preferences.notifications.showDesktopNotifications) {
+        logger.debug("[sendNotification] Desktop notifications disabled by user preference");
+        return false;
+      }
+    }
+
+    // Store notification in database (exclude sessionEndTime, actions, and skipPreferenceCheck as they're UI-only)
+    const { sessionEndTime, actions, skipPreferenceCheck, ...dbOptions } = options;
     await db.insert(notifications).values({
       ...dbOptions,
       id: nanoid(),
@@ -61,6 +72,13 @@ const motivationalMessages = [
 ];
 
 export const sendNotificationWhenNoActiveEntry = async (userId: string) => {
+  // Check if focus reminders are enabled in user preferences
+  const preferences = await getUserPreferences();
+  if (!preferences.notifications.focusReminders) {
+    logger.debug("[sendNotificationWhenNoActiveEntry] Focus reminders disabled by user preference");
+    return;
+  }
+
   const lastTimeEntry = await getLastWorkingTimeEntry(userId);
   const lastNotification = await getLastNotification(userId, "remind_last_time_entry");
   const now = new Date();
@@ -113,6 +131,14 @@ export const sendNotificationService = async (
   secondsRemaining: number
 ): Promise<void> => {
   if (!timeEntry.targetDuration) {
+    return;
+  }
+
+  // Check appropriate preference based on session type
+  const preferences = await getUserPreferences();
+  const preferenceKey = timeEntry.isFocusMode ? "focusReminders" : "breakReminders";
+  if (!preferences.notifications[preferenceKey]) {
+    logger.debug(`[sendNotificationService] ${preferenceKey} disabled by user preference`);
     return;
   }
 

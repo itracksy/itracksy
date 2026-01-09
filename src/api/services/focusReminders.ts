@@ -1,12 +1,20 @@
 import { shouldSendReminder } from "./focusTargets";
 import { sendNotification } from "./notification";
 import { logger } from "../../helpers/logger";
+import { getUserPreferences } from "./userSettings";
 
 /**
  * Check and send focus reminder if needed for a specific user
  */
 export async function checkAndSendFocusReminder(userId: string): Promise<boolean> {
   try {
+    // Check if focus reminders are enabled in user preferences
+    const preferences = await getUserPreferences();
+    if (!preferences.notifications.focusReminders) {
+      logger.debug("[checkAndSendFocusReminder] Focus reminders disabled by user preference");
+      return false;
+    }
+
     const reminderCheck = await shouldSendReminder(userId);
 
     if (reminderCheck.shouldSend && reminderCheck.message) {
@@ -49,6 +57,15 @@ export async function sendTargetCompletedNotification(
   targetMinutes: number
 ): Promise<void> {
   try {
+    // Check if goal achievements notifications are enabled in user preferences
+    const preferences = await getUserPreferences();
+    if (!preferences.notifications.goalAchievements) {
+      logger.debug(
+        "[sendTargetCompletedNotification] Goal achievements notifications disabled by user preference"
+      );
+      return;
+    }
+
     const congratsMessages = [
       `🎉 Congratulations! You've completed your ${targetMinutes}-minute focus goal for today!`,
       `🏆 Target achieved! You've successfully focused for ${targetMinutes} minutes today. Well done!`,
@@ -91,6 +108,13 @@ export async function sendDailyStartNotification(
   targetMinutes: number
 ): Promise<void> {
   try {
+    // Check if focus reminders are enabled in user preferences
+    const preferences = await getUserPreferences();
+    if (!preferences.notifications.focusReminders) {
+      logger.debug("[sendDailyStartNotification] Focus reminders disabled by user preference");
+      return;
+    }
+
     const startMessages = [
       `🚀 Great start! You've begun working toward your ${targetMinutes}-minute focus goal today!`,
       `💪 Nice! Your focus journey for today has begun. ${targetMinutes} minutes is your target!`,
