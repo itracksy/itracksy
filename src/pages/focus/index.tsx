@@ -13,7 +13,6 @@ import {
   selectedBoardIdAtom,
   targetMinutesAtom,
   isUnlimitedFocusAtom,
-  isUnlimitedBreakAtom,
   playStartSoundAtom,
   playIntervalSoundAtom,
   playCompletionSoundAtom,
@@ -40,12 +39,15 @@ export default function FocusPage() {
   const [activeTab, setActiveTab] = useState<"focus" | "break">("focus");
   const [autoStopEnabled, setAutoStopEnabled] = useAtom(autoStopEnabledsAtom);
   const [isUnlimitedFocus, setIsUnlimitedFocus] = useAtom(isUnlimitedFocusAtom);
-  const [isUnlimitedBreak, setIsUnlimitedBreak] = useAtom(isUnlimitedBreakAtom);
   const [playStartSoundEnabled, setPlayStartSoundEnabled] = useAtom(playStartSoundAtom);
   const [playIntervalSoundEnabled, setPlayIntervalSoundEnabled] = useAtom(playIntervalSoundAtom);
-  const [playCompletionSoundEnabled, setPlayCompletionSoundEnabled] = useAtom(playCompletionSoundAtom);
-  const [playBreakStartSoundEnabled, setPlayBreakStartSoundEnabled] = useAtom(playBreakStartSoundAtom);
-  const [playBreakCompletionSoundEnabled, setPlayBreakCompletionSoundEnabled] = useAtom(playBreakCompletionSoundAtom);
+  const [playCompletionSoundEnabled, setPlayCompletionSoundEnabled] =
+    useAtom(playCompletionSoundAtom);
+  const [playBreakStartSoundEnabled, setPlayBreakStartSoundEnabled] =
+    useAtom(playBreakStartSoundAtom);
+  const [playBreakCompletionSoundEnabled, setPlayBreakCompletionSoundEnabled] = useAtom(
+    playBreakCompletionSoundAtom
+  );
   const { data: activeTimeEntry, isLoading } = useActiveTimeEntry();
   const createTimeEntry = useCreateTimeEntryMutation();
   const { data: lastTimeEntry } = useLastTimeEntry();
@@ -54,7 +56,8 @@ export default function FocusPage() {
   useEffect(() => {
     if (!activeTimeEntry) {
       const minutes = activeTab === "focus" ? targetMinutes : breakMinutes;
-      const isUnlimited = activeTab === "focus" ? isUnlimitedFocus : isUnlimitedBreak;
+      // Only focus sessions can be unlimited, breaks always have a duration
+      const isUnlimited = activeTab === "focus" && isUnlimitedFocus;
 
       if (isUnlimited) {
         setDuration("∞");
@@ -66,18 +69,11 @@ export default function FocusPage() {
         setActiveTab(lastTimeEntry.isFocusMode ? "break" : "focus");
       }
     }
-  }, [
-    targetMinutes,
-    breakMinutes,
-    activeTab,
-    activeTimeEntry,
-    lastTimeEntry,
-    isUnlimitedFocus,
-    isUnlimitedBreak,
-  ]);
+  }, [targetMinutes, breakMinutes, activeTab, activeTimeEntry, lastTimeEntry, isUnlimitedFocus]);
 
   const handleStartSession = async () => {
-    const isUnlimited = activeTab === "focus" ? isUnlimitedFocus : isUnlimitedBreak;
+    // Only focus sessions can be unlimited, breaks always have a duration
+    const isUnlimited = activeTab === "focus" && isUnlimitedFocus;
     const minutes = isUnlimited ? 0 : activeTab === "focus" ? targetMinutes : breakMinutes;
     const { description, boardId, itemId } = getTimeEntryData();
 
@@ -161,8 +157,38 @@ export default function FocusPage() {
                     </TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="focus" className="space-y-3 pt-2">
-                    {/* Timer Display - Reduced size */}
+                  <TabsContent value="focus" className="space-y-4 pt-2">
+                    {/* Mode Selector - Timed vs Unlimited */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => setIsUnlimitedFocus(false)}
+                        className={`flex flex-col items-center gap-1 rounded-lg border-2 p-3 transition-all ${
+                          !isUnlimitedFocus
+                            ? "border-[#E5A853] bg-[#E5A853]/10"
+                            : "border-gray-200 hover:border-gray-300 dark:border-gray-700"
+                        }`}
+                      >
+                        <span className="text-lg font-semibold text-gray-700 dark:text-white">
+                          ⏱️ Timed
+                        </span>
+                        <span className="text-xs text-gray-500">Set a duration</span>
+                      </button>
+                      <button
+                        onClick={() => setIsUnlimitedFocus(true)}
+                        className={`flex flex-col items-center gap-1 rounded-lg border-2 p-3 transition-all ${
+                          isUnlimitedFocus
+                            ? "border-[#E5A853] bg-[#E5A853]/10"
+                            : "border-gray-200 hover:border-gray-300 dark:border-gray-700"
+                        }`}
+                      >
+                        <span className="text-lg font-semibold text-gray-700 dark:text-white">
+                          ∞ Unlimited
+                        </span>
+                        <span className="text-xs text-gray-500">Track all day</span>
+                      </button>
+                    </div>
+
+                    {/* Timer Display */}
                     <div className="relative mx-auto aspect-square w-36">
                       <div className="absolute inset-0 rounded-full border-[12px] border-gray-100"></div>
                       <div className="absolute inset-0 rounded-full border-[12px] border-[#E5A853]"></div>
@@ -173,96 +199,80 @@ export default function FocusPage() {
                       </div>
                     </div>
 
-                    {/* Duration Slider - More compact */}
-                    <Card className="shadow-sm">
-                      <CardContent className="px-4 py-3">
-                        <div className="mb-2 flex items-center justify-between">
-                          <Label className="text-sm font-medium">Focus Duration</Label>
-                          <div className="flex items-center gap-2">
+                    {/* Duration Slider - Only for timed mode */}
+                    {!isUnlimitedFocus ? (
+                      <Card className="shadow-sm">
+                        <CardContent className="px-4 py-3">
+                          <div className="mb-2 flex items-center justify-between">
+                            <Label className="text-sm font-medium">Duration</Label>
                             <span className="font-mono text-sm text-gray-500">
-                              {isUnlimitedFocus ? "Unlimited" : `${targetMinutes} minutes`}
+                              {targetMinutes} minutes
                             </span>
-                            <div className="flex items-center gap-1">
-                              <Label htmlFor="unlimited-focus" className="text-xs text-gray-500">
-                                ∞
-                              </Label>
-                              <Switch
-                                id="unlimited-focus"
-                                checked={isUnlimitedFocus}
-                                onCheckedChange={setIsUnlimitedFocus}
-                              />
-                            </div>
                           </div>
-                        </div>
-                        {!isUnlimitedFocus && (
-                          <>
-                            <Slider
-                              value={[targetMinutes]}
-                              onValueChange={(values) => setTargetMinutes(values[0])}
-                              min={5}
-                              max={480}
-                              step={5}
-                              className="py-2"
-                            />
-                            <div className="flex justify-between text-xs text-gray-500">
-                              <span>5m</span>
-                              <span>8h</span>
-                            </div>
-                          </>
-                        )}
-                      </CardContent>
-                    </Card>
+                          <Slider
+                            value={[targetMinutes]}
+                            onValueChange={(values) => setTargetMinutes(values[0])}
+                            min={5}
+                            max={480}
+                            step={5}
+                            className="py-2"
+                          />
+                          <div className="flex justify-between text-xs text-gray-500">
+                            <span>5m</span>
+                            <span>8h</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <div className="rounded-lg border border-dashed border-[#E5A853]/50 bg-[#E5A853]/5 p-4">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          <span className="font-medium text-gray-700 dark:text-gray-300">
+                            Continuous Background Tracking
+                          </span>
+                        </p>
+                        <ul className="mt-2 space-y-1 text-xs text-gray-500">
+                          <li>• Runs silently in the background</li>
+                          <li>• Auto-starts with app if enabled in System Settings</li>
+                          <li>• Tracks all your activities throughout the day</li>
+                          <li>• Stop manually when you're done working</li>
+                        </ul>
+                      </div>
+                    )}
                   </TabsContent>
 
-                  <TabsContent value="break" className="space-y-4 pt-4">
-                    {/* Timer Display */}
-                    <div className="relative mx-auto aspect-square w-48">
-                      <div className="absolute inset-0 rounded-full border-[16px] border-gray-100"></div>
-                      <div className="absolute inset-0 rounded-full border-[16px] border-[#2B4474]"></div>
+                  <TabsContent value="break" className="space-y-3 pt-2">
+                    {/* Timer Display - Compact like Focus tab */}
+                    <div className="relative mx-auto aspect-square w-36">
+                      <div className="absolute inset-0 rounded-full border-[12px] border-gray-100"></div>
+                      <div className="absolute inset-0 rounded-full border-[12px] border-[#2B4474]"></div>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="font-mono text-4xl font-medium text-gray-700 dark:text-white">
+                        <span className="font-mono text-3xl font-medium text-gray-700 dark:text-white">
                           {duration}
                         </span>
                       </div>
                     </div>
 
-                    {/* Break Duration Slider */}
-                    <Card>
-                      <CardContent className="pt-6">
+                    {/* Break Duration Slider - Compact */}
+                    <Card className="shadow-sm">
+                      <CardContent className="px-4 py-3">
                         <div className="mb-2 flex items-center justify-between">
                           <Label className="text-sm font-medium">Break Duration</Label>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-sm text-gray-500">
-                              {isUnlimitedBreak ? "Unlimited" : `${breakMinutes} minutes`}
-                            </span>
-                            <div className="flex items-center gap-1">
-                              <Label htmlFor="unlimited-break" className="text-xs text-gray-500">
-                                ∞
-                              </Label>
-                              <Switch
-                                id="unlimited-break"
-                                checked={isUnlimitedBreak}
-                                onCheckedChange={setIsUnlimitedBreak}
-                              />
-                            </div>
-                          </div>
+                          <span className="font-mono text-sm text-gray-500">
+                            {breakMinutes} minutes
+                          </span>
                         </div>
-                        {!isUnlimitedBreak && (
-                          <>
-                            <Slider
-                              value={[breakMinutes]}
-                              onValueChange={(values) => setBreakMinutes(values[0])}
-                              min={1}
-                              max={120}
-                              step={1}
-                              className="py-4"
-                            />
-                            <div className="flex justify-between text-xs text-gray-500">
-                              <span>1m</span>
-                              <span>2h</span>
-                            </div>
-                          </>
-                        )}
+                        <Slider
+                          value={[breakMinutes]}
+                          onValueChange={(values) => setBreakMinutes(values[0])}
+                          min={1}
+                          max={60}
+                          step={1}
+                          className="py-2"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>1m</span>
+                          <span>1h</span>
+                        </div>
                       </CardContent>
                     </Card>
                   </TabsContent>
@@ -279,28 +289,24 @@ export default function FocusPage() {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-10 w-10 text-gray-500 hover:text-gray-700 mr-5"
+                      className="mr-5 h-10 w-10 text-gray-500 hover:text-gray-700"
                       aria-label="Focus session settings"
                     >
                       <Settings2 className="h-5 w-5" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent align="start" className="w-64 space-y-3 mt-2">
+                  <PopoverContent align="start" className="mt-2 w-64 space-y-3">
                     <div>
                       <div className="mt-1 flex items-center justify-between">
                         <span className="text-xs text-gray-400">
-                          {(activeTab === "focus" ? isUnlimitedFocus : isUnlimitedBreak)
+                          {activeTab === "focus" && isUnlimitedFocus
                             ? "Disabled for unlimited sessions"
-                            : "Automatically end session"
-                          }
+                            : "Automatically end session"}
                         </span>
                         <Switch
-                          checked={
-                            autoStopEnabled &&
-                            !(activeTab === "focus" ? isUnlimitedFocus : isUnlimitedBreak)
-                          }
+                          checked={autoStopEnabled && !(activeTab === "focus" && isUnlimitedFocus)}
                           onCheckedChange={setAutoStopEnabled}
-                          disabled={activeTab === "focus" ? isUnlimitedFocus : isUnlimitedBreak}
+                          disabled={activeTab === "focus" && isUnlimitedFocus}
                         />
                       </div>
                     </div>

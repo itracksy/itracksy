@@ -28,7 +28,10 @@ export const addClockEventListeners = () => {
         const activeEntry = await getActiveTimeEntry(userId);
         if (activeEntry) {
           const timestamp = Date.now();
-          const elapsedSeconds = Math.max(0, Math.floor((timestamp - activeEntry.startTime) / 1000));
+          const elapsedSeconds = Math.max(
+            0,
+            Math.floor((timestamp - activeEntry.startTime) / 1000)
+          );
           await sendClockUpdate({ activeEntry, action: "refresh", timestamp, elapsedSeconds });
         }
       }
@@ -128,7 +131,9 @@ export const addClockEventListeners = () => {
       const updatedEntry = await getActiveTimeEntry(userId);
       const timestamp = Date.now();
       const elapsedSeconds =
-        updatedEntry && !updatedEntry.endTime ? Math.max(0, Math.floor((timestamp - updatedEntry.startTime) / 1000)) : 0;
+        updatedEntry && !updatedEntry.endTime
+          ? Math.max(0, Math.floor((timestamp - updatedEntry.startTime) / 1000))
+          : 0;
 
       await sendClockUpdate({
         activeEntry: updatedEntry,
@@ -162,11 +167,20 @@ export const sendClockUpdate = async (data: any) => {
         dailyProgress = await getTodaysFocusProgress(userId);
       }
 
-      // Include focus data in the update
+      // Get pause state
+      const { getPausedSession, isSessionManuallyPaused } = await import(
+        "../../../api/services/sessionPause"
+      );
+      const pausedSession = getPausedSession();
+
+      // Include focus data and pause state in the update
       const updateData = {
         ...data,
         focusTarget,
         dailyProgress,
+        isPaused: !!pausedSession,
+        isManuallyPaused: isSessionManuallyPaused(),
+        pausedAt: pausedSession?.pausedAt ?? null,
       };
 
       clockWindow.webContents.send(CLOCK_UPDATE_CHANNEL, updateData);

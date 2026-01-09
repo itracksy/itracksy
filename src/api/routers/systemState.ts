@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { t, protectedProcedure } from "../trpc";
 import { getSystemState } from "../services/systemMonitor";
-import { getPausedSession } from "../services/sessionPause";
+import { getPausedSession, isSessionManuallyPaused } from "../services/sessionPause";
 
 export const systemStateRouter = t.router({
   getSystemState: protectedProcedure.query(async () => {
@@ -11,6 +11,7 @@ export const systemStateRouter = t.router({
     return {
       ...systemState,
       hasPausedSession: !!pausedSession,
+      isManuallyPaused: isSessionManuallyPaused(),
       pausedSessionId: pausedSession?.timeEntryId || null,
       pausedAt: pausedSession?.pausedAt || null,
     };
@@ -22,7 +23,8 @@ export const systemStateRouter = t.router({
     const pausedSession = getPausedSession();
 
     // Check if system is active and there's a paused session
-    if (systemState.isActive && pausedSession) {
+    // Don't show resume dialog for manual pauses - user controls those via the PAUSE/RESUME button
+    if (systemState.isActive && pausedSession && !pausedSession.isManualPause) {
       const activeEntry = await getActiveTimeEntry(ctx.userId!);
       // Only show resume dialog if there's an active entry that matches the paused session
       if (activeEntry && activeEntry.id === pausedSession.timeEntryId && !activeEntry.endTime) {

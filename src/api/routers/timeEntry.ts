@@ -129,4 +129,25 @@ export const timeEntryRouter = t.router({
         return { success: true, message: "Session dismissed" };
       }
     }),
+
+  manualPause: protectedProcedure.mutation(async () => {
+    const { manualPauseSession } = await import("../services/sessionPause");
+    return manualPauseSession();
+  }),
+
+  manualResume: protectedProcedure.mutation(async () => {
+    const { manualResumeSession } = await import("../services/sessionPause");
+    return manualResumeSession();
+  }),
+
+  getPauseState: protectedProcedure.query(async () => {
+    const { getPausedSession, isSessionManuallyPaused } = await import("../services/sessionPause");
+    const paused = getPausedSession();
+    return {
+      isPaused: !!paused,
+      isManuallyPaused: isSessionManuallyPaused(),
+      pausedAt: paused?.pausedAt ?? null,
+      timeEntryId: paused?.timeEntryId ?? null,
+    };
+  }),
 });

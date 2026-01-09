@@ -43,6 +43,9 @@ interface ClockState {
   currentTime: number;
   elapsedSeconds: number; // Add elapsed seconds from main process
   isRunning: boolean;
+  isPaused: boolean;
+  isManuallyPaused: boolean;
+  pausedAt: number | null;
   focusTarget: FocusTarget | null;
   dailyProgress: DailyProgress | null;
 }
@@ -56,6 +59,9 @@ const ClockApp: React.FC = () => {
     currentTime: Date.now(),
     elapsedSeconds: 0,
     isRunning: false,
+    isPaused: false,
+    isManuallyPaused: false,
+    pausedAt: null,
     focusTarget: null,
     dailyProgress: null,
   });
@@ -132,7 +138,10 @@ const ClockApp: React.FC = () => {
         ...prev,
         activeEntry: data.activeEntry,
         elapsedSeconds: data.elapsedSeconds || 0,
-        isRunning: !!data.activeEntry && !data.activeEntry.endTime,
+        isRunning: !!data.activeEntry && !data.activeEntry.endTime && !data.isPaused,
+        isPaused: data.isPaused || false,
+        isManuallyPaused: data.isManuallyPaused || false,
+        pausedAt: data.pausedAt || null,
         focusTarget: data.focusTarget || prev.focusTarget,
         dailyProgress: data.dailyProgress || prev.dailyProgress,
       }));
@@ -217,6 +226,11 @@ const ClockApp: React.FC = () => {
     const entry = clockState.activeEntry;
     if (!entry) {
       return 0;
+    }
+
+    // If paused, calculate elapsed time up to pause moment
+    if (clockState.isPaused && clockState.pausedAt) {
+      return Math.max(0, Math.floor((clockState.pausedAt - entry.startTime) / 1000));
     }
 
     const computedElapsed = Math.max(
@@ -374,12 +388,16 @@ const ClockApp: React.FC = () => {
   const unlimited = isUnlimitedSession();
   const timerLabel = unlimited ? "Elapsed time" : activeEntry.isFocusMode ? "Focus" : "Break";
   const statusText = activeEntry.isFocusMode
-    ? clockState.isRunning
-      ? "Focused and flowing"
-      : "Focus paused"
-    : clockState.isRunning
-      ? "Enjoy your break"
-      : "Break paused";
+    ? clockState.isPaused
+      ? "Focus paused"
+      : clockState.isRunning
+        ? "Focused and flowing"
+        : "Focus ready"
+    : clockState.isPaused
+      ? "Break paused"
+      : clockState.isRunning
+        ? "Enjoy your break"
+        : "Break ready";
   const targetMinutes =
     activeEntry.targetDuration ||
     (activeEntry.isFocusMode ? FOCUS_DEFAULT_MINUTES : BREAK_DEFAULT_MINUTES);
@@ -457,7 +475,9 @@ const ClockApp: React.FC = () => {
             <span className="clock-meta-item">
               Target: {targetMinutes > 0 ? formatMinutes(targetMinutes) : "Unlimited"}
             </span>
-            <span className="clock-meta-item">{clockState.isRunning ? "Running" : "Paused"}</span>
+            <span className="clock-meta-item">
+              {clockState.isPaused ? "Paused" : clockState.isRunning ? "Running" : "Ready"}
+            </span>
           </div>
         )}
       </section>

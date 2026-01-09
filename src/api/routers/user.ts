@@ -170,7 +170,7 @@ export const userRouter = t.router({
           .object({
             themeMode: z.enum(["light", "dark"]).optional(),
             themeVariant: z
-              .enum(["default", "professional", "comfort", "vibrant", "minimal", "nature"])
+              .enum(["default", "ocean", "forest", "lavender", "sunset", "rose", "monochrome"])
               .optional(),
             fontScale: z.enum(["small", "normal", "large", "x-large"]).optional(),
             fontFamily: z.enum(["default", "sans", "mono", "dyslexic"]).optional(),

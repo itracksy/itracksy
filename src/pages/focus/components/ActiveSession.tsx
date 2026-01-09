@@ -5,8 +5,8 @@ import { useUpdateTimeEntryMutation } from "@/hooks/useTimeEntryQueries";
 import { TimeEntryWithRelations } from "@/types/projects";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { Cloud, Clock, AlertTriangle, Tag, History } from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
+import { Cloud, AlertTriangle, Tag, Pause, Play } from "lucide-react";
+import { useEffect, useState } from "react";
 import { BoardSelector } from "@/components/tracking/BoardSelector";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -59,6 +59,8 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [showResumeDialog, setShowResumeDialog] = useState(false);
   const [pendingResumeEntry, setPendingResumeEntry] = useState<TimeEntryWithRelations | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const [pausedAt, setPausedAt] = useState<number | null>(null);
   const [selectedBoardId, setSelectedBoardId] = useAtom(selectedBoardIdAtom);
   const [selectedItemId, setSelectedItemId] = useAtom(selectedItemIdAtom);
   const [playStartSound] = useAtom(playStartSoundAtom);
@@ -68,18 +70,6 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
   const [playBreakCompletionSound] = useAtom(playBreakCompletionSoundAtom);
 
   const updateTimeEntryMutation = useUpdateTimeEntryMutation();
-
-  const handleShowClock = useCallback(async () => {
-    try {
-      await trpcClient.window.showClock.mutate();
-    } catch (error) {
-      toast({
-        title: "Unable to show clock",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
-        variant: "destructive",
-      });
-    }
-  }, [toast]);
 
   // Check for resume requirements when component mounts
   useEffect(() => {
@@ -219,6 +209,82 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
     }
   };
 
+  const handlePauseSession = async () => {
+    try {
+      const result = await trpcClient.timeEntry.manualPause.mutate();
+      if (result.success) {
+        setIsPaused(true);
+        setPausedAt(result.pausedAt);
+        toast({
+          title: "Session Paused",
+          description: "Your session has been paused. Click Resume to continue.",
+        });
+      } else {
+        toast({
+          title: "Failed to pause session",
+          description: result.error || "An error occurred",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Failed to pause session",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleResumeFromPause = async () => {
+    try {
+      const result = await trpcClient.timeEntry.manualResume.mutate();
+      if (result.success) {
+        setIsPaused(false);
+        setPausedAt(null);
+        const pausedSeconds = Math.floor(result.adjustedBy / 1000);
+        toast({
+          title: "Session Resumed",
+          description: `Session resumed. ${pausedSeconds} seconds of pause time excluded.`,
+        });
+        queryClient.invalidateQueries({ queryKey: ["timeEntries"] });
+      } else {
+        toast({
+          title: "Failed to resume session",
+          description: result.error || "An error occurred",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Failed to resume session",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Poll for pause state
+  useEffect(() => {
+    const checkPauseState = async () => {
+      try {
+        const result = await trpcClient.timeEntry.getPauseState.query();
+        if (result.isPaused && result.timeEntryId === activeTimeEntry?.id) {
+          setIsPaused(true);
+          setPausedAt(result.pausedAt);
+        } else if (!result.isPaused && isPaused) {
+          setIsPaused(false);
+          setPausedAt(null);
+        }
+      } catch (error) {
+        console.error("Failed to check pause state:", error);
+      }
+    };
+
+    checkPauseState();
+    const interval = setInterval(checkPauseState, 2000);
+    return () => clearInterval(interval);
+  }, [activeTimeEntry?.id, isPaused]);
+
   usePomodoroSounds({
     isFocusMode: Boolean(activeTimeEntry?.isFocusMode),
     targetMinutes: activeTimeEntry?.targetDuration ?? 0,
@@ -236,7 +302,8 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
 
     if (activeTimeEntry) {
       const updateTimer = () => {
-        const now = new Date();
+        // Use pausedAt time if paused, otherwise use current time
+        const now = isPaused && pausedAt ? new Date(pausedAt) : new Date();
         const startTimeDate = new Date(activeTimeEntry.startTime);
         const minutes = activeTimeEntry.targetDuration ?? 0;
 
@@ -272,8 +339,8 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
           const mins = Math.floor((absDiff % 3600) / 60);
           const secs = absDiff % 60;
 
-          // Only stop if autoStopEnabled is true
-          if (secondsDiff < 0 && activeTimeEntry.autoStopEnabled) {
+          // Only stop if autoStopEnabled is true and not paused
+          if (secondsDiff < 0 && activeTimeEntry.autoStopEnabled && !isPaused) {
             queryClient.invalidateQueries({ queryKey: ["timeEntries"] });
             setDuration("00:00");
             setIsTimeExceeded(false);
@@ -319,7 +386,7 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
         clearInterval(intervalId);
       }
     };
-  }, [activeTimeEntry]);
+  }, [activeTimeEntry, isPaused, pausedAt]);
 
   useEffect(() => {
     if (!activeTimeEntry) {
@@ -371,7 +438,13 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
           <span className="font-mono text-4xl font-medium text-[#2B4474] dark:text-white">
             {duration}
           </span>
-          {isTimeExceeded && (
+          {isPaused && (
+            <div className="flex flex-col items-center space-y-1">
+              <Pause className="h-5 w-5 text-[#E5A853]" />
+              <span className="text-sm font-medium text-[#E5A853]">PAUSED</span>
+            </div>
+          )}
+          {isTimeExceeded && !isPaused && (
             <div className="flex flex-col items-center space-y-1">
               <AlertTriangle className="h-5 w-5 animate-bounce text-[#E5A853]" />
               <span
@@ -388,27 +461,38 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
       </div>
 
       {/* Action Buttons */}
-      <div className="mt-4 flex space-x-4 pt-8">
-        {/* Extend Time Button - disabled for unlimited sessions */}
+      <div className="mt-4 flex flex-wrap justify-center gap-3 pt-6">
+        {/* Extend Time Button - only show for timed sessions */}
+        {(activeTimeEntry.targetDuration ?? 0) > 0 && (
+          <Button
+            onClick={handleExtendTime}
+            variant="outline"
+            className="min-w-[100px]"
+            disabled={isPaused}
+          >
+            +5 MIN
+          </Button>
+        )}
+        {/* Pause/Resume Button */}
         <Button
-          onClick={handleExtendTime}
-          variant="outline"
-          className="flex-1"
-          disabled={(activeTimeEntry.targetDuration ?? 0) === 0}
+          onClick={isPaused ? handleResumeFromPause : handlePauseSession}
+          variant={isPaused ? "default" : "outline"}
+          className="min-w-[100px]"
         >
-          {(activeTimeEntry.targetDuration ?? 0) === 0 ? "UNLIMITED" : "+5 MINUTES"}
+          {isPaused ? (
+            <>
+              <Play className="mr-1 h-4 w-4" />
+              RESUME
+            </>
+          ) : (
+            <>
+              <Pause className="mr-1 h-4 w-4" />
+              PAUSE
+            </>
+          )}
         </Button>
-        <Button onClick={handleStopTimeEntry} variant="default" className="flex-1">
-          STOP {activeTimeEntry.isFocusMode ? "FOCUS" : "BREAK"}
-        </Button>
-        <Button
-          onClick={() => {
-            void handleShowClock();
-          }}
-          variant="secondary"
-          className="flex-1"
-        >
-          SHOW CLOCK
+        <Button onClick={handleStopTimeEntry} variant="default" className="min-w-[100px]">
+          STOP
         </Button>
       </div>
 

@@ -6,6 +6,7 @@ interface PausedSession {
   timeEntryId: string;
   pausedAt: number;
   originalStartTime: number;
+  isManualPause: boolean;
 }
 
 let pausedSession: PausedSession | null = null;
@@ -30,6 +31,7 @@ export const pauseActiveSession = async (): Promise<void> => {
       timeEntryId: activeEntry.id,
       pausedAt: Date.now(),
       originalStartTime: activeEntry.startTime,
+      isManualPause: false,
     };
 
     logger.info(
@@ -95,4 +97,106 @@ export const getPausedSession = (): PausedSession | null => {
  */
 export const clearPausedSession = (): void => {
   pausedSession = null;
+};
+
+/**
+ * Check if the current session is manually paused
+ */
+export const isSessionManuallyPaused = (): boolean => {
+  return pausedSession?.isManualPause ?? false;
+};
+
+/**
+ * Manually pause the current active session
+ */
+export const manualPauseSession = async (): Promise<{
+  success: boolean;
+  pausedAt: number | null;
+  error?: string;
+}> => {
+  try {
+    const userId = await getCurrentUserIdLocalStorage();
+    if (!userId) {
+      return { success: false, pausedAt: null, error: "No user found" };
+    }
+
+    const activeEntry = await getActiveTimeEntry(userId);
+    if (!activeEntry || activeEntry.endTime) {
+      return { success: false, pausedAt: null, error: "No active session to pause" };
+    }
+
+    // If already paused, just return success with existing pausedAt
+    if (pausedSession && pausedSession.timeEntryId === activeEntry.id) {
+      return { success: true, pausedAt: pausedSession.pausedAt };
+    }
+
+    const now = Date.now();
+    pausedSession = {
+      timeEntryId: activeEntry.id,
+      pausedAt: now,
+      originalStartTime: activeEntry.startTime,
+      isManualPause: true,
+    };
+
+    logger.info(
+      `[SessionPause] Manually paused session ${activeEntry.id} at ${new Date(now).toISOString()}`
+    );
+
+    return { success: true, pausedAt: now };
+  } catch (error) {
+    logger.error("[SessionPause] Error manually pausing session", { error });
+    return {
+      success: false,
+      pausedAt: null,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+};
+
+/**
+ * Manually resume the current paused session
+ */
+export const manualResumeSession = async (): Promise<{
+  success: boolean;
+  adjustedBy: number;
+  error?: string;
+}> => {
+  try {
+    if (!pausedSession) {
+      return { success: false, adjustedBy: 0, error: "No paused session found" };
+    }
+
+    const userId = await getCurrentUserIdLocalStorage();
+    if (!userId) {
+      return { success: false, adjustedBy: 0, error: "No user found" };
+    }
+
+    const activeEntry = await getActiveTimeEntry(userId);
+    if (!activeEntry || activeEntry.id !== pausedSession.timeEntryId) {
+      pausedSession = null;
+      return { success: false, adjustedBy: 0, error: "Session has changed or ended" };
+    }
+
+    const pausedDuration = Date.now() - pausedSession.pausedAt;
+    const newStartTime = pausedSession.originalStartTime + pausedDuration;
+
+    await updateTimeEntry(activeEntry.id, {
+      startTime: newStartTime,
+    });
+
+    logger.info(
+      `[SessionPause] Manually resumed session ${activeEntry.id}, adjusted start time by ${Math.floor(pausedDuration / 1000)} seconds`
+    );
+
+    pausedSession = null;
+    return { success: true, adjustedBy: pausedDuration };
+  } catch (error) {
+    logger.error("[SessionPause] Error manually resuming session", { error });
+    pausedSession = null;
+    return {
+      success: false,
+      adjustedBy: 0,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
 };
