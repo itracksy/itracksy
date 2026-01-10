@@ -11,16 +11,18 @@ import { TimeRange } from "@/types/time";
 
 interface HourlyFocusChartProps {
   timeRange: TimeRange;
+  boardId?: string;
 }
 
-export default function HourlyFocusChart({ timeRange }: HourlyFocusChartProps) {
+export default function HourlyFocusChart({ timeRange, boardId }: HourlyFocusChartProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { data: hourlyData, isLoading } = useQuery({
-    queryKey: ["dashboard.getFocusedTimeByHour"],
+    queryKey: ["dashboard.getFocusedTimeByHour", timeRange.start, timeRange.end, boardId],
     queryFn: async () => {
       const data = await trpcClient.dashboard.getFocusedTimeByHour.query({
         startDate: timeRange.start,
         endDate: timeRange.end,
+        boardId,
       });
 
       return data;

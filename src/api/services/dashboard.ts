@@ -6,7 +6,8 @@ import { gte, desc, and, eq, sql, lte, isNull, isNotNull } from "drizzle-orm";
 export const getFocusedTimeByHour = async (
   startDate: number,
   endDate: number,
-  userId: string
+  userId: string,
+  boardId?: string
 ): Promise<
   {
     hour: number;
@@ -33,44 +34,54 @@ export const getFocusedTimeByHour = async (
   const hourExpr = sql`strftime('%H', datetime(${activities.timestamp} / 1000 + ${-timezoneOffset * 60}, 'unixepoch'))`;
   const hourCast = sql<number>`cast(${hourExpr} as integer)`;
 
+  // Build base conditions
+  const baseConditions = [
+    gte(activities.timestamp, startOfDay.getTime()),
+    lte(activities.timestamp, endOfDay.getTime()),
+    eq(activities.userId, userId),
+  ];
+
+  // Add board filter if specified
+  if (boardId) {
+    baseConditions.push(eq(timeEntries.boardId, boardId));
+  }
+
   // First get hourly summaries for focus mode
-  const focusHourSummaries = await db
+  const focusQuery = db
     .select({
       hour: hourCast,
       totalFocusedTime: sql<number>`sum(${activities.duration})`,
     })
-    .from(activities)
-    .where(
-      and(
-        gte(activities.timestamp, startOfDay.getTime()),
-        lte(activities.timestamp, endOfDay.getTime()),
-        eq(activities.userId, userId),
-        eq(activities.isFocusMode, true)
-      )
-    )
+    .from(activities);
+
+  if (boardId) {
+    focusQuery.leftJoin(timeEntries, eq(activities.timeEntryId, timeEntries.id));
+  }
+
+  const focusHourSummaries = await focusQuery
+    .where(and(...baseConditions, eq(activities.isFocusMode, true)))
     .groupBy(hourExpr)
     .orderBy(hourCast);
 
   // Get hourly summaries for break mode
-  const breakHourSummaries = await db
+  const breakQuery = db
     .select({
       hour: hourCast,
       totalBreakTime: sql<number>`sum(${activities.duration})`,
     })
-    .from(activities)
-    .where(
-      and(
-        gte(activities.timestamp, startOfDay.getTime()),
-        lte(activities.timestamp, endOfDay.getTime()),
-        eq(activities.userId, userId),
-        eq(activities.isFocusMode, false)
-      )
-    )
+    .from(activities);
+
+  if (boardId) {
+    breakQuery.leftJoin(timeEntries, eq(activities.timeEntryId, timeEntries.id));
+  }
+
+  const breakHourSummaries = await breakQuery
+    .where(and(...baseConditions, eq(activities.isFocusMode, false)))
     .groupBy(hourExpr)
     .orderBy(hourCast);
 
   // Then get detailed activities for each hour
-  const detailedActivities = await db
+  const detailQuery = db
     .select({
       hour: hourCast,
       title: activities.title,
@@ -78,14 +89,14 @@ export const getFocusedTimeByHour = async (
       duration: activities.duration,
       isFocusMode: activities.isFocusMode,
     })
-    .from(activities)
-    .where(
-      and(
-        gte(activities.timestamp, startOfDay.getTime()),
-        lte(activities.timestamp, endOfDay.getTime()),
-        eq(activities.userId, userId)
-      )
-    )
+    .from(activities);
+
+  if (boardId) {
+    detailQuery.leftJoin(timeEntries, eq(activities.timeEntryId, timeEntries.id));
+  }
+
+  const detailedActivities = await detailQuery
+    .where(and(...baseConditions))
     .orderBy(desc(activities.duration))
     .limit(15);
 
@@ -121,7 +132,12 @@ export const getFocusedTimeByHour = async (
     .sort((a, b) => a.hour - b.hour);
 };
 
-export const reportProjectByDay = async (startDate: number, endDate: number, userId: string) => {
+export const reportProjectByDay = async (
+  startDate: number,
+  endDate: number,
+  userId: string,
+  boardId?: string
+) => {
   const startDateTime = new Date(startDate);
   startDateTime.setHours(0, 0, 0, 0);
 
@@ -159,7 +175,8 @@ export const reportProjectByDay = async (startDate: number, endDate: number, use
         lte(timeEntries.startTime, endDateTime.getTime()),
         eq(timeEntries.userId, userId),
         isNotNull(timeEntries.boardId),
-        isNotNull(timeEntries.itemId)
+        isNotNull(timeEntries.itemId),
+        ...(boardId ? [eq(timeEntries.boardId, boardId)] : [])
       )
     )
     .groupBy(boards.id, items.id)

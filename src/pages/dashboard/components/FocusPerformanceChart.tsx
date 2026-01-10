@@ -31,6 +31,7 @@ type ChartType = "line" | "bar";
 
 interface FocusPerformanceChartProps {
   timeRange: TimeRange;
+  boardId?: string;
 }
 
 interface FocusPerformanceData {
@@ -75,18 +76,25 @@ function formatDate(dateStr: string, period: PeriodType): string {
   }
 }
 
-export default function FocusPerformanceChart({ timeRange }: FocusPerformanceChartProps) {
+export default function FocusPerformanceChart({ timeRange, boardId }: FocusPerformanceChartProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [period, setPeriod] = useState<PeriodType>("daily");
   const [chartType, setChartType] = useState<ChartType>("line");
 
   const { data: performanceData, isLoading } = useQuery({
-    queryKey: ["dashboard.getFocusPerformanceByPeriod", timeRange.start, timeRange.end, period],
+    queryKey: [
+      "dashboard.getFocusPerformanceByPeriod",
+      timeRange.start,
+      timeRange.end,
+      period,
+      boardId,
+    ],
     queryFn: async () => {
       const data = await trpcClient.dashboard.getFocusPerformanceByPeriod.query({
         startDate: timeRange.start,
         endDate: timeRange.end,
         period,
+        boardId,
       });
       return data;
     },

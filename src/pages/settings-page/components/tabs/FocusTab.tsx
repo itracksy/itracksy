@@ -1,10 +1,19 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAtom } from "jotai";
 import { trpcClient } from "@/utils/trpc";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import type { UserPreferences } from "@/lib/types/user-preferences";
+import {
+  autoStopEnabledsAtom,
+  playStartSoundAtom,
+  playIntervalSoundAtom,
+  playCompletionSoundAtom,
+  playBreakStartSoundAtom,
+  playBreakCompletionSoundAtom,
+} from "@/context/board";
 
 interface FocusTabProps {
   preferences: UserPreferences;
@@ -13,6 +22,14 @@ interface FocusTabProps {
 
 export function FocusTab({ preferences, updatePreferences }: FocusTabProps) {
   const queryClient = useQueryClient();
+  const [autoStopEnabled, setAutoStopEnabled] = useAtom(autoStopEnabledsAtom);
+  const [playStartSound, setPlayStartSound] = useAtom(playStartSoundAtom);
+  const [playIntervalSound, setPlayIntervalSound] = useAtom(playIntervalSoundAtom);
+  const [playCompletionSound, setPlayCompletionSound] = useAtom(playCompletionSoundAtom);
+  const [playBreakStartSound, setPlayBreakStartSound] = useAtom(playBreakStartSoundAtom);
+  const [playBreakCompletionSound, setPlayBreakCompletionSound] = useAtom(
+    playBreakCompletionSoundAtom
+  );
 
   const { data: activitySettings = null } = useQuery({
     queryKey: ["user.getActivitySettings"],
@@ -159,6 +176,16 @@ export function FocusTab({ preferences, updatePreferences }: FocusTabProps) {
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
+              <Label>Automatically End Session</Label>
+              <p className="text-sm text-muted-foreground">
+                Automatically end session when target duration is reached
+              </p>
+            </div>
+            <Switch checked={autoStopEnabled} onCheckedChange={setAutoStopEnabled} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
               <Label>Auto-Start Breaks</Label>
               <p className="text-sm text-muted-foreground">
                 Automatically start break timer after focus session
@@ -188,6 +215,67 @@ export function FocusTab({ preferences, updatePreferences }: FocusTabProps) {
                   focus: { autoStartNextSession: checked },
                 })
               }
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Session Sounds</CardTitle>
+          <CardDescription>Configure audio feedback for focus sessions</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Play Start Sound</Label>
+              <p className="text-sm text-muted-foreground">
+                Play a sound when a focus session starts
+              </p>
+            </div>
+            <Switch checked={playStartSound} onCheckedChange={setPlayStartSound} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Play 10-Minute Sounds</Label>
+              <p className="text-sm text-muted-foreground">
+                Play interval sounds every 10 minutes during focus
+              </p>
+            </div>
+            <Switch checked={playIntervalSound} onCheckedChange={setPlayIntervalSound} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Play Completion Sound</Label>
+              <p className="text-sm text-muted-foreground">
+                Play a sound when focus session completes
+              </p>
+            </div>
+            <Switch checked={playCompletionSound} onCheckedChange={setPlayCompletionSound} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Play Break Start Sound</Label>
+              <p className="text-sm text-muted-foreground">
+                Play a sound when a break session starts
+              </p>
+            </div>
+            <Switch checked={playBreakStartSound} onCheckedChange={setPlayBreakStartSound} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Play Break Completion Sound</Label>
+              <p className="text-sm text-muted-foreground">
+                Play a sound when break session completes
+              </p>
+            </div>
+            <Switch
+              checked={playBreakCompletionSound}
+              onCheckedChange={setPlayBreakCompletionSound}
             />
           </div>
         </CardContent>

@@ -1,6 +1,6 @@
 import db from "../db";
 import { activities, timeEntries } from "../db/schema";
-import { gte, lte, and, eq, sql } from "drizzle-orm";
+import { gte, lte, and, eq, sql, type SQL } from "drizzle-orm";
 
 export type FocusPerformancePeriod = "daily" | "weekly" | "monthly";
 
@@ -17,7 +17,8 @@ export const getFocusPerformanceByPeriod = async (
   startDate: number,
   endDate: number,
   userId: string,
-  period: FocusPerformancePeriod = "daily"
+  period: FocusPerformancePeriod = "daily",
+  boardId?: string
 ): Promise<FocusPerformanceDataPoint[]> => {
   const startOfPeriod = new Date(startDate);
   startOfPeriod.setHours(0, 0, 0, 0);
@@ -48,22 +49,35 @@ export const getFocusPerformanceByPeriod = async (
       break;
   }
 
+  // Build query conditions
+  const conditions: SQL[] = [
+    gte(activities.timestamp, startOfPeriod.getTime()),
+    lte(activities.timestamp, endOfPeriod.getTime()),
+    eq(activities.userId, userId),
+  ];
+
+  // Add board filter if specified
+  if (boardId) {
+    conditions.push(eq(timeEntries.boardId, boardId));
+  }
+
   // Get focus time data grouped by period
-  const focusData = await db
+  const query = db
     .select({
       date: dateExpr,
       totalFocusTime: sql<number>`SUM(CASE WHEN ${activities.isFocusMode} = 1 THEN ${activities.duration} ELSE 0 END)`,
       productiveTime: sql<number>`SUM(CASE WHEN ${activities.isFocusMode} = 1 AND ${activities.rating} = 1 THEN ${activities.duration} ELSE 0 END)`,
       totalSessions: sql<number>`COUNT(DISTINCT CASE WHEN ${activities.isFocusMode} = 1 THEN ${activities.timeEntryId} ELSE NULL END)`,
     })
-    .from(activities)
-    .where(
-      and(
-        gte(activities.timestamp, startOfPeriod.getTime()),
-        lte(activities.timestamp, endOfPeriod.getTime()),
-        eq(activities.userId, userId)
-      )
-    )
+    .from(activities);
+
+  // Join with timeEntries if filtering by board
+  if (boardId) {
+    query.leftJoin(timeEntries, eq(activities.timeEntryId, timeEntries.id));
+  }
+
+  const focusData = await query
+    .where(and(...conditions))
     .groupBy(dateExpr)
     .orderBy(dateExpr);
 

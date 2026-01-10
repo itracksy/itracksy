@@ -61,16 +61,18 @@ function isProjectChartItem(item: ChartDataItem): item is ProjectChartItem {
 
 interface ProjectTimeChartProps {
   timeRange: TimeRange;
+  boardId?: string;
 }
 
-export default function ProjectTimeChart({ timeRange }: ProjectTimeChartProps) {
+export default function ProjectTimeChart({ timeRange, boardId }: ProjectTimeChartProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { data: report } = useQuery({
-    queryKey: ["dashboard.reportProjectByDay", timeRange.start, timeRange.end],
+    queryKey: ["dashboard.reportProjectByDay", timeRange.start, timeRange.end, boardId],
     queryFn: async () => {
       const data = await trpcClient.dashboard.reportProjectByDay.query({
         startDate: timeRange.start,
         endDate: timeRange.end,
+        boardId,
       });
       return data;
     },
@@ -224,7 +226,7 @@ export default function ProjectTimeChart({ timeRange }: ProjectTimeChartProps) {
                         {project.displayDuration}
                       </span>
                     </div>
-                    <div className="mt-2 ml-5">
+                    <div className="ml-5 mt-2">
                       {isProjectChartItem(project) &&
                         project.tasks.map((task) => (
                           <div key={task.name} className="flex justify-between text-sm">

@@ -13,21 +13,14 @@ import {
   selectedBoardIdAtom,
   targetMinutesAtom,
   isUnlimitedFocusAtom,
-  playStartSoundAtom,
-  playIntervalSoundAtom,
-  playCompletionSoundAtom,
-  playBreakStartSoundAtom,
-  playBreakCompletionSoundAtom,
 } from "@/context/board";
 
 import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Brain, Coffee, History, Settings2 } from "lucide-react";
+import { Brain, Coffee, History } from "lucide-react";
 import { ActiveSession } from "./components/ActiveSession";
 import { FocusTargetWidget } from "./components/FocusTargetWidget";
 import { SessionReviewDialog } from "./components/SessionReviewDialog";
@@ -37,17 +30,8 @@ export default function FocusPage() {
   const [breakMinutes, setBreakMinutes] = useAtom(breakDurationAtom);
   const [duration, setDuration] = useState<string>(`${targetMinutes}:00`);
   const [activeTab, setActiveTab] = useState<"focus" | "break">("focus");
-  const [autoStopEnabled, setAutoStopEnabled] = useAtom(autoStopEnabledsAtom);
+  const [autoStopEnabled] = useAtom(autoStopEnabledsAtom);
   const [isUnlimitedFocus, setIsUnlimitedFocus] = useAtom(isUnlimitedFocusAtom);
-  const [playStartSoundEnabled, setPlayStartSoundEnabled] = useAtom(playStartSoundAtom);
-  const [playIntervalSoundEnabled, setPlayIntervalSoundEnabled] = useAtom(playIntervalSoundAtom);
-  const [playCompletionSoundEnabled, setPlayCompletionSoundEnabled] =
-    useAtom(playCompletionSoundAtom);
-  const [playBreakStartSoundEnabled, setPlayBreakStartSoundEnabled] =
-    useAtom(playBreakStartSoundAtom);
-  const [playBreakCompletionSoundEnabled, setPlayBreakCompletionSoundEnabled] = useAtom(
-    playBreakCompletionSoundAtom
-  );
   const { data: activeTimeEntry, isLoading } = useActiveTimeEntry();
   const createTimeEntry = useCreateTimeEntryMutation();
   const { data: lastTimeEntry } = useLastTimeEntry();
@@ -281,88 +265,14 @@ export default function FocusPage() {
             </div>
 
             {/* Start Button */}
-
-            <div className="pt-0">
-              <div className="flex items-center justify-between">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="mr-5 h-10 w-10 text-gray-500 hover:text-gray-700"
-                      aria-label="Focus session settings"
-                    >
-                      <Settings2 className="h-5 w-5" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent align="start" className="mt-2 w-64 space-y-3">
-                    <div>
-                      <div className="mt-1 flex items-center justify-between">
-                        <span className="text-xs text-gray-400">
-                          {activeTab === "focus" && isUnlimitedFocus
-                            ? "Disabled for unlimited sessions"
-                            : "Automatically end session"}
-                        </span>
-                        <Switch
-                          checked={autoStopEnabled && !(activeTab === "focus" && isUnlimitedFocus)}
-                          onCheckedChange={setAutoStopEnabled}
-                          disabled={activeTab === "focus" && isUnlimitedFocus}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs text-gray-500">Play start sound</Label>
-                      <Switch
-                        checked={playStartSoundEnabled}
-                        onCheckedChange={setPlayStartSoundEnabled}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs text-gray-500">Play 10-minute sounds</Label>
-                      <Switch
-                        checked={playIntervalSoundEnabled}
-                        onCheckedChange={setPlayIntervalSoundEnabled}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs text-gray-500">Play completion sound</Label>
-                      <Switch
-                        checked={playCompletionSoundEnabled}
-                        onCheckedChange={setPlayCompletionSoundEnabled}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs text-gray-500">Play break start sound</Label>
-                      <Switch
-                        checked={playBreakStartSoundEnabled}
-                        onCheckedChange={setPlayBreakStartSoundEnabled}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs text-gray-500">Play break completion sound</Label>
-                      <Switch
-                        checked={playBreakCompletionSoundEnabled}
-                        onCheckedChange={setPlayBreakCompletionSoundEnabled}
-                      />
-                    </div>
-                  </PopoverContent>
-                </Popover>
-
-                <Button
-                  onClick={handleStartSession}
-                  disabled={!!activeTimeEntry}
-                  className="flex-1 bg-[#E5A853] py-6 text-white hover:bg-[#d09641]"
-                  size="lg"
-                >
-                  START {activeTab === "focus" ? "FOCUS" : "BREAK"}
-                </Button>
-              </div>
-            </div>
+            <Button
+              onClick={handleStartSession}
+              disabled={!!activeTimeEntry}
+              className="w-full bg-[#E5A853] py-6 text-white hover:bg-[#d09641]"
+              size="lg"
+            >
+              START {activeTab === "focus" ? "FOCUS" : "BREAK"}
+            </Button>
           </>
         )}
       </div>

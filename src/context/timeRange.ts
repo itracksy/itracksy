@@ -12,3 +12,6 @@ export const selectedAnalyticsTimeRangeAtom = atom<TimeRange>({
   end: Date.now(),
   value: "today",
 });
+
+// Board filter for analytics - undefined means all boards
+export const selectedAnalyticsBoardIdAtom = atom<string | undefined>(undefined);

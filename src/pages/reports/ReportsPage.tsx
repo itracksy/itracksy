@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Calendar, Download, Filter, Search } from "lucide-react";
+import { Calendar, Download, Filter, Plus, Search } from "lucide-react";
 import { format } from "date-fns";
 
 import { Button } from "@/components/ui/button";
@@ -14,13 +14,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import TimeRangeSelector from "@/components/TimeRangeSelector";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcClient } from "@/utils/trpc";
 import { useToast } from "@/hooks/use-toast";
 import { TimeRange } from "@/types/time";
+import { ManualFocusEntryDialog } from "@/components/tracking/ManualFocusEntryDialog";
 
 export default function ReportsPage() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedProject, setSelectedProject] = useState<string>("all");
   const [timeRange, setTimeRange] = useState<TimeRange>({
     start: new Date().setHours(0, 0, 0, 0),
@@ -28,6 +30,15 @@ export default function ReportsPage() {
     value: "today",
   });
   const [isExporting, setIsExporting] = useState(false);
+  const [isManualEntryOpen, setIsManualEntryOpen] = useState(false);
+
+  const handleManualEntryClose = (open: boolean) => {
+    setIsManualEntryOpen(open);
+    if (!open) {
+      // Refresh the preview data when dialog closes
+      queryClient.invalidateQueries({ queryKey: ["timeEntries", "preview"] });
+    }
+  };
 
   // Fetch projects for the dropdown
   const { data: projects = [] } = useQuery({
@@ -186,6 +197,7 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6 p-6">
+      <ManualFocusEntryDialog open={isManualEntryOpen} onOpenChange={handleManualEntryClose} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Reports</h1>
@@ -193,14 +205,24 @@ export default function ReportsPage() {
             Export time entries with detailed project and productivity information
           </p>
         </div>
-        <Button
-          onClick={handleExport}
-          disabled={isExporting || previewData.length === 0}
-          className="flex items-center gap-2"
-        >
-          <Download className="h-4 w-4" />
-          {isExporting ? "Exporting..." : "Export CSV"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setIsManualEntryOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Add Time
+          </Button>
+          <Button
+            onClick={handleExport}
+            disabled={isExporting || previewData.length === 0}
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            {isExporting ? "Exporting..." : "Export CSV"}
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
