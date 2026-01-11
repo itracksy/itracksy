@@ -9,6 +9,10 @@ export interface BlockingNotificationData {
   userId: string;
   timeEntryId: string;
   appOrDomain: string;
+  appName?: string;
+  domain?: string;
+  ruleId?: string;
+  ruleName?: string;
 }
 
 /**

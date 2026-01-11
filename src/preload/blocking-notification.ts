@@ -21,6 +21,12 @@ contextBridge.exposeInMainWorld("electronBlockingNotification", {
     return ipcRenderer.invoke(BLOCKING_NOTIFICATION_CLOSE_CHANNEL);
   },
 
+  // Function to open main window and navigate to a specific route
+  openMainWindow: (route?: string) => {
+    console.log("Opening main window with route:", route);
+    return ipcRenderer.invoke("open-main-window", route);
+  },
+
   // Function to listen for show-blocking-notification events
   onNotification: (callback: (data: any) => void) => {
     console.log("Setting up blocking notification listener");

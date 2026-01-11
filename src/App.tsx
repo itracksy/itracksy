@@ -84,6 +84,30 @@ function AuthenticatedApp() {
     updateAppLanguage(i18n);
   }, [i18n]);
 
+  // Listen for navigation events from main process (e.g., from blocking notification)
+  useEffect(() => {
+    if ((window as any).electronNavigation) {
+      const cleanup = (window as any).electronNavigation.onNavigateTo((route: string) => {
+        console.log("Navigating to route:", route);
+
+        // Parse the route to extract path and search params
+        const url = new URL(route, "http://localhost");
+        const path = url.pathname;
+        const searchParams: Record<string, string> = {};
+        url.searchParams.forEach((value, key) => {
+          searchParams[key] = value;
+        });
+
+        // Navigate with properly separated path and search params
+        router.navigate({
+          to: path,
+          search: Object.keys(searchParams).length > 0 ? searchParams : undefined,
+        });
+      });
+      return cleanup;
+    }
+  }, []);
+
   return <RouterProvider router={router} />;
 }
 

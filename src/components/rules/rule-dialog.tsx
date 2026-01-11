@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 
 import {
   Dialog,
@@ -11,32 +10,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { HelpCircle, Focus, Globe, Tag } from "lucide-react";
+import { HelpCircle, Check, X, Globe, AppWindow } from "lucide-react";
 import { ruleFormSchema, RuleFormValues } from "@/types/rule";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 type RuleDialogProps = {
   open: boolean;
@@ -62,6 +42,7 @@ export function RuleDialog({
       description: "",
       rating: 0,
       active: true,
+      titleCondition: "contains",
     },
   });
 
@@ -70,382 +51,225 @@ export function RuleDialog({
   }, [defaultValues]);
 
   function handleSubmit(values: RuleFormValues) {
+    // Auto-generate name from pattern if not provided
+    const pattern = values.domain || values.appName || values.title || "Rule";
+    if (!values.name) {
+      values.name = `Rule for ${pattern}`;
+    }
     onSubmit(values);
   }
 
+  // Determine if this looks like a browser (has domain) or app
+  const hasDomain = !!form.watch("domain");
+  const hasAppName = !!form.watch("appName");
+  const isWebsite = hasDomain || (!hasAppName && mode === "create");
+
+  // Get the display pattern for the header
+  const getDisplayPattern = () => {
+    if (hasDomain) return form.watch("domain");
+    if (hasAppName) return form.watch("appName");
+    return null;
+  };
+
+  const displayPattern = getDisplayPattern();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] w-[95vw] overflow-hidden p-0 sm:max-w-[600px]">
-        <DialogHeader className="px-4 py-3">
+      <DialogContent className="sm:max-w-[420px]">
+        <DialogHeader>
           <DialogTitle className="text-lg">
-            {mode === "edit" ? "Edit Rule" : "Create New Rule"}
+            {mode === "edit" ? "Edit Rule" : "Create Rule"}
           </DialogTitle>
-          <DialogDescription className="text-xs">
-            {mode === "edit"
-              ? "Update your activity classification rule"
-              : "Create a rule to automatically classify activities"}
+          <DialogDescription className="text-sm">
+            {displayPattern ? (
+              <span className="flex items-center gap-2">
+                {hasDomain ? (
+                  <Globe className="h-4 w-4 text-blue-500" />
+                ) : (
+                  <AppWindow className="h-4 w-4 text-purple-500" />
+                )}
+                <span className="font-medium text-foreground">{displayPattern}</span>
+              </span>
+            ) : (
+              "Classify activities by matching patterns"
+            )}
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[calc(85vh-9rem)]">
-          <div className="px-4 py-2">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
-                <Tabs defaultValue="conditions" className="w-full">
-                  <TabsList className="grid h-8 w-full grid-cols-2">
-                    <TabsTrigger
-                      value="conditions"
-                      className="flex items-center gap-1 py-1.5 text-xs"
-                    >
-                      <Focus className="h-3 w-3" />
-                      <span>Matching Conditions</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="details" className="flex items-center gap-1 py-1.5 text-xs">
-                      <Tag className="h-3 w-3" />
-                      <span>Rule Details</span>
-                    </TabsTrigger>
-                  </TabsList>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            {/* Pattern Input */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Match Pattern</span>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-[250px] p-3 text-xs">
+                      Enter a website domain (e.g., facebook.com) or app name (e.g., Slack).
+                      Activities containing this text will be classified.
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
 
-                  <TabsContent value="conditions" className="space-y-3 pt-3">
-                    <Card className="overflow-hidden shadow-sm">
-                      <CardHeader className="p-3 pb-1">
-                        <CardTitle className="text-sm">Application Matching</CardTitle>
-                        <CardDescription className="text-xs">
-                          Set conditions for matching apps and websites
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-3 p-3 pt-1">
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                          <FormField
-                            control={form.control}
-                            name="appName"
-                            render={({ field }) => (
-                              <FormItem className="space-y-1">
-                                <FormLabel className="text-xs">Application Name</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    className="h-8 text-sm"
-                                    placeholder="e.g., Chrome, Safari"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage className="text-[10px]" />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name="domain"
-                            render={({ field }) => (
-                              <FormItem className="flex flex-col space-y-1">
-                                <div className="flex items-center gap-1">
-                                  <FormLabel className="text-xs">Domain</FormLabel>
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <HelpCircle className="h-3 w-3 text-muted-foreground" />
-                                      </TooltipTrigger>
-                                      <TooltipContent side="top" className="w-40 p-2 text-[10px]">
-                                        Enter a website domain like "facebook.com"
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                </div>
-                                <FormControl>
-                                  <div className="flex items-center">
-                                    <Globe className="mr-1 h-3 w-3 text-muted-foreground" />
-                                    <Input
-                                      className="h-8 text-sm"
-                                      placeholder="e.g., facebook.com"
-                                      {...field}
-                                    />
-                                  </div>
-                                </FormControl>
-                                <FormMessage className="text-[10px]" />
-                              </FormItem>
-                            )}
+              {/* Show domain field for websites, appName for apps */}
+              {isWebsite ? (
+                <FormField
+                  control={form.control}
+                  name="domain"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <div className="relative">
+                          <Globe className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                          <Input
+                            className="pl-10"
+                            placeholder="e.g., facebook.com, youtube.com"
+                            {...field}
                           />
                         </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="overflow-hidden shadow-sm">
-                      <CardHeader className="p-3 pb-1">
-                        <CardTitle className="text-sm">Content Matching</CardTitle>
-                        <CardDescription className="text-xs">
-                          Match based on title content
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-3 p-3 pt-1">
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                          <FormField
-                            control={form.control}
-                            name="titleCondition"
-                            render={({ field }) => (
-                              <FormItem className="space-y-1">
-                                <FormLabel className="text-xs">
-                                  Title Condition (Optional)
-                                </FormLabel>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value || ""}
-                                  value={field.value || ""}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger className="h-8 text-sm">
-                                      <SelectValue placeholder="Select" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="contains">Contains</SelectItem>
-                                    <SelectItem value="startsWith">Starts with</SelectItem>
-                                    <SelectItem value="endsWith">Ends with</SelectItem>
-                                    <SelectItem value="equals">Equals</SelectItem>
-                                    <SelectItem value="=">Equals (=)</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage className="text-[10px]" />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name="title"
-                            render={({ field }) => (
-                              <FormItem className="space-y-1">
-                                <FormLabel className="text-xs">Title Text</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    className="h-8 text-sm"
-                                    placeholder="e.g., News Feed"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage className="text-[10px]" />
-                              </FormItem>
-                            )}
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : (
+                <FormField
+                  control={form.control}
+                  name="appName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <div className="relative">
+                          <AppWindow className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                          <Input
+                            className="pl-10"
+                            placeholder="e.g., Slack, Discord, Figma"
+                            {...field}
                           />
                         </div>
-                      </CardContent>
-                    </Card>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
-                    <Card className="overflow-hidden shadow-sm">
-                      <CardHeader className="p-3 pb-1">
-                        <CardTitle className="text-sm">Duration</CardTitle>
-                        <CardDescription className="text-xs">
-                          Match based on activity duration
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-3 p-3 pt-1">
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                          <FormField
-                            control={form.control}
-                            name="durationCondition"
-                            render={({ field }) => (
-                              <FormItem className="space-y-1">
-                                <FormLabel className="text-xs">Condition (Optional)</FormLabel>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value || ""}
-                                  value={field.value || ""}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger className="h-8 text-sm">
-                                      <SelectValue placeholder="Select" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value=">">Greater than</SelectItem>
-                                    <SelectItem value="<">Less than</SelectItem>
-                                    <SelectItem value="=">Equal to</SelectItem>
-                                    <SelectItem value=">=">Greater than or equal</SelectItem>
-                                    <SelectItem value="<=">Less than or equal</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage className="text-[10px]" />
-                              </FormItem>
-                            )}
-                          />
+              {/* Optional: Title contains for more specific matching */}
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        className="text-sm"
+                        placeholder="Window title contains... (optional)"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-                          <FormField
-                            control={form.control}
-                            name="duration"
-                            render={({ field }) => (
-                              <FormItem className="space-y-1">
-                                <FormLabel className="text-xs">Seconds</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    className="h-8 text-sm"
-                                    type="number"
-                                    placeholder="Duration in seconds"
-                                    {...field}
-                                    onChange={(e) =>
-                                      field.onChange(
-                                        e.target.value === "" ? undefined : Number(e.target.value)
-                                      )
-                                    }
-                                  />
-                                </FormControl>
-                                <FormMessage className="text-[10px]" />
-                              </FormItem>
-                            )}
-                          />
+            {/* Classification */}
+            <FormField
+              control={form.control}
+              name="rating"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="mb-3 text-sm font-medium">Classification</div>
+                  <FormControl>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => field.onChange(1)}
+                        className={cn(
+                          "flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all",
+                          field.value === 1
+                            ? "border-green-500 bg-green-500/10"
+                            : "border-muted hover:border-green-500/50 hover:bg-green-500/5"
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            "flex h-10 w-10 items-center justify-center rounded-full",
+                            field.value === 1
+                              ? "bg-green-500 text-white"
+                              : "bg-green-500/20 text-green-500"
+                          )}
+                        >
+                          <Check className="h-5 w-5" />
                         </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-
-                  <TabsContent value="details" className="space-y-3 pt-3">
-                    <Card className="overflow-hidden shadow-sm">
-                      <CardHeader className="p-3 pb-1">
-                        <CardTitle className="text-sm">Basic Information</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3 p-3 pt-1">
-                        <FormField
-                          control={form.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem className="space-y-1">
-                              <FormLabel className="text-xs">Rule Name</FormLabel>
-                              <FormControl>
-                                <Input
-                                  className="h-8 text-sm"
-                                  placeholder="e.g., Social Media Sites"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage className="text-[10px]" />
-                            </FormItem>
+                        <span
+                          className={cn(
+                            "text-sm font-medium",
+                            field.value === 1
+                              ? "text-green-600 dark:text-green-400"
+                              : "text-muted-foreground"
                           )}
-                        />
+                        >
+                          Productive
+                        </span>
+                      </button>
 
-                        <FormField
-                          control={form.control}
-                          name="description"
-                          render={({ field }) => (
-                            <FormItem className="space-y-1">
-                              <FormLabel className="text-xs">Description</FormLabel>
-                              <FormControl>
-                                <Input
-                                  className="h-8 text-sm"
-                                  placeholder="e.g., Identifies websites"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage className="text-[10px]" />
-                              <FormMessage className="text-[10px]" />
-                            </FormItem>
+                      <button
+                        type="button"
+                        onClick={() => field.onChange(0)}
+                        className={cn(
+                          "flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all",
+                          field.value === 0
+                            ? "border-red-500 bg-red-500/10"
+                            : "border-muted hover:border-red-500/50 hover:bg-red-500/5"
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            "flex h-10 w-10 items-center justify-center rounded-full",
+                            field.value === 0
+                              ? "bg-red-500 text-white"
+                              : "bg-red-500/20 text-red-500"
                           )}
-                        />
-                      </CardContent>
-                    </Card>
-
-                    <Card className="overflow-hidden shadow-sm">
-                      <CardHeader className="p-3 pb-1">
-                        <CardTitle className="text-sm">Activity Classification</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3 p-3 pt-1">
-                        <FormField
-                          control={form.control}
-                          name="rating"
-                          render={({ field }) => (
-                            <FormItem className="space-y-1">
-                              <FormLabel className="text-xs">Productivity Rating</FormLabel>
-                              <FormControl>
-                                <div className="grid grid-cols-2 gap-2 rounded-md border p-1">
-                                  <div
-                                    className={`flex cursor-pointer flex-col items-center justify-center rounded-md p-2 transition-colors ${
-                                      field.value === 1
-                                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                                        : "bg-muted/40"
-                                    }`}
-                                    onClick={() => field.onChange(1)}
-                                  >
-                                    <div className="rounded-full border border-green-500/50 bg-green-100/50 p-1 dark:border-green-500/30 dark:bg-green-900/20">
-                                      <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="24"
-                                        height="24"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        className="h-3 w-3 text-green-600 dark:text-green-400"
-                                      >
-                                        <polyline points="20 6 9 17 4 12" />
-                                      </svg>
-                                    </div>
-                                    <span className="mt-1 text-xs font-medium">Productive</span>
-                                  </div>
-
-                                  <div
-                                    className={`flex cursor-pointer flex-col items-center justify-center rounded-md p-2 transition-colors ${
-                                      field.value === 0
-                                        ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
-                                        : "bg-muted/40"
-                                    }`}
-                                    onClick={() => field.onChange(0)}
-                                  >
-                                    <div className="rounded-full border border-red-500/50 bg-red-100/50 p-1 dark:border-red-500/30 dark:bg-red-900/20">
-                                      <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="24"
-                                        height="24"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        className="h-3 w-3 text-red-600 dark:text-red-400"
-                                      >
-                                        <path d="M18 6 6 18" />
-                                        <path d="m6 6 12 12" />
-                                      </svg>
-                                    </div>
-                                    <span className="mt-1 text-xs font-medium">Distracting</span>
-                                  </div>
-                                </div>
-                              </FormControl>
-                              <FormMessage className="text-[10px]" />
-                            </FormItem>
+                        >
+                          <X className="h-5 w-5" />
+                        </div>
+                        <span
+                          className={cn(
+                            "text-sm font-medium",
+                            field.value === 0
+                              ? "text-red-600 dark:text-red-400"
+                              : "text-muted-foreground"
                           )}
-                        />
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                </Tabs>
-              </form>
-            </Form>
-          </div>
-        </ScrollArea>
+                        >
+                          Distracting
+                        </span>
+                      </button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <DialogFooter className="border-t p-3">
-          <div className="flex w-full flex-row gap-2 sm:justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => onOpenChange(false)}
-              className="h-8 flex-1 text-xs sm:flex-none"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              size="sm"
-              disabled={isSubmitting}
-              onClick={form.handleSubmit(handleSubmit)}
-              className="h-8 flex-1 text-xs sm:flex-none"
-            >
-              {mode === "edit" ? "Update" : "Create"}
-            </Button>
-          </div>
-        </DialogFooter>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-[#E5A853] hover:bg-[#d09641]"
+              >
+                {mode === "edit" ? "Update" : "Create"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

@@ -11,6 +11,7 @@ import {
 } from "../../../main/windows/blocking-notification";
 import { sendBlockingNotificationToWindow } from "../../blocking-notification/blocking-notification-utils";
 import { logger } from "../../logger";
+import { showMainWindow } from "../../../main";
 
 // Store the response resolver for the current blocking notification
 let currentResponseResolver: ((value: number) => void) | null = null;
@@ -70,6 +71,21 @@ export const addBlockingNotificationEventListeners = () => {
       return { success: true };
     } catch (error) {
       logger.error("Failed to handle blocking notification close", { error });
+      throw error;
+    }
+  });
+
+  // Open main window handler (for navigating to edit rules etc.)
+  safelyRegisterListener("open-main-window", async (_event, route?: string) => {
+    try {
+      logger.debug("Open main window requested", { route });
+
+      // Show and focus the main window with optional route navigation
+      showMainWindow(route);
+
+      return { success: true, route };
+    } catch (error) {
+      logger.error("Failed to open main window", { error, route });
       throw error;
     }
   });

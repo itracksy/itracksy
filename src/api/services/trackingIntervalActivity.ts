@@ -220,7 +220,8 @@ export const startTracking = async (): Promise<void> => {
       const url = transformedActivities.url?.toLowerCase();
       const extractedDomain = url ? extractDomainWindows(url) : null;
 
-      const appName = transformedActivities.ownerName.toLowerCase();
+      // Keep original case for appName to match rules correctly
+      const appName = transformedActivities.ownerName;
 
       // Define rule with a default value to avoid reference errors
 
@@ -249,6 +250,10 @@ export const startTracking = async (): Promise<void> => {
           userId,
           timeEntryId: activeEntry.id,
           appOrDomain: isBlockedDomain ? (extractedDomain ?? "unknown") : appName,
+          appName: appName,
+          domain: extractedDomain ?? undefined,
+          ruleId: rule?.id,
+          ruleName: rule?.name,
         });
       }
     } catch (error) {
@@ -295,12 +300,20 @@ function showNotificationWarningBlock({
   userId,
   timeEntryId,
   appOrDomain,
+  appName,
+  domain,
+  ruleId,
+  ruleName,
 }: {
   title: string;
   detail: string;
   userId: string;
   timeEntryId: string;
   appOrDomain: string;
+  appName?: string;
+  domain?: string;
+  ruleId?: string;
+  ruleName?: string;
 }) {
   createNotification({
     title,
@@ -318,6 +331,10 @@ function showNotificationWarningBlock({
     userId,
     timeEntryId,
     appOrDomain,
+    appName,
+    domain,
+    ruleId,
+    ruleName,
   })
     .then(async (response: number) => {
       lastNotificationTime = Date.now();

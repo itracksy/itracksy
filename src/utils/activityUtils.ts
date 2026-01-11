@@ -40,20 +40,29 @@ export function doesActivityMatchRule(activity: Activity, rule: RuleFormValues):
     if (!title || isEmpty(title)) {
       return true;
     }
+    // Case-insensitive comparison for better matching
+    const activityTitleLower = activity.title.toLowerCase();
+    const ruleTitleLower = title.toLowerCase();
+
     if (condition === "contains") {
-      return activity.title.includes(title);
+      return activityTitleLower.includes(ruleTitleLower);
     } else if (condition === "equals") {
-      return activity.title === title;
+      return activityTitleLower === ruleTitleLower;
     } else if (condition === "startsWith") {
-      return activity.title.startsWith(title);
+      return activityTitleLower.startsWith(ruleTitleLower);
     } else if (condition === "endsWith") {
-      return activity.title.endsWith(title);
+      return activityTitleLower.endsWith(ruleTitleLower);
     }
     return false;
   };
 
   const isAppNameValid = (appName: string): boolean => {
-    return activity.ownerName === appName;
+    // If rule has no appName, it applies to any app
+    if (!appName || appName.trim() === "") {
+      return true;
+    }
+    // Case-insensitive comparison for app name
+    return activity.ownerName.toLowerCase() === appName.toLowerCase();
   };
 
   /**

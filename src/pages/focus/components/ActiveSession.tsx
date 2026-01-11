@@ -5,7 +5,7 @@ import { useUpdateTimeEntryMutation } from "@/hooks/useTimeEntryQueries";
 import { TimeEntryWithRelations } from "@/types/projects";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { Cloud, AlertTriangle, Tag, Pause, Play } from "lucide-react";
+import { AlertTriangle, Tag, Pause, Play } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BoardSelector } from "@/components/tracking/BoardSelector";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -407,35 +407,74 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
     }
   }, []);
 
+  // Calculate progress percentage
+  const getProgressPercentage = () => {
+    if (!activeTimeEntry) return 0;
+    const targetMinutes = activeTimeEntry.targetDuration ?? 0;
+    if (targetMinutes === 0) return 100; // Unlimited session shows full ring
+
+    const totalSeconds = targetMinutes * 60;
+    const elapsed = totalSeconds - (remainingSeconds ?? totalSeconds);
+    return Math.min(100, Math.max(0, (elapsed / totalSeconds) * 100));
+  };
+
+  const progressPercentage = getProgressPercentage();
+  const circumference = 2 * Math.PI * 120; // radius = 120
+  const strokeDashoffset = circumference - (progressPercentage / 100) * circumference;
+
   return (
     <>
       {/* Active Session Display */}
       <div className="text-center">
-        <h2 className="mb-4 text-xl font-medium text-[#2B4474] dark:text-white">Current Session</h2>
-        <div className="rounded-lg border border-[#E5A853]/20 bg-white p-4 shadow-sm dark:bg-gray-800">
+        <h2 className="mb-6 text-xl font-medium text-[#2B4474] dark:text-white">Current Session</h2>
+        <div className="mb-10 inline-block rounded-full border border-[#E5A853]/30 bg-[#E5A853]/10 px-5 py-2.5">
           <div className="flex items-center justify-center gap-2 text-[#2B4474] dark:text-white">
-            <span className="h-2 w-2 rounded-full bg-[#E5A853]"></span>
-            {getTitleTimeEntry(activeTimeEntry)}
+            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#E5A853]"></span>
+            <span className="font-medium">{getTitleTimeEntry(activeTimeEntry)}</span>
             {(activeTimeEntry.targetDuration ?? 0) === 0 && (
-              <span className="ml-2 rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-600 dark:bg-blue-900 dark:text-blue-300">
-                ∞ Unlimited
+              <span className="ml-1 rounded-full bg-blue-500/20 px-2 py-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">
+                ∞
               </span>
             )}
           </div>
         </div>
       </div>
 
-      {/* Timer Display */}
-      <div className="relative mx-auto aspect-square w-64">
-        <div className="absolute inset-0 rounded-full border-[16px] border-[#E5A853]/20"></div>
-        <div
-          className="absolute inset-0 rounded-full border-[16px] border-[#E5A853]"
-          style={{
-            clipPath: `polygon(50% 50%, 50% 0, ${50 + 50 * Math.cos(Math.PI / 2)}% ${50 - 50 * Math.sin(Math.PI / 2)}%)`,
-          }}
-        ></div>
+      {/* Timer Display with Progress Ring */}
+      <div className="relative mx-auto h-64 w-64">
+        {/* SVG Progress Ring */}
+        <svg className="absolute inset-0 -rotate-90" viewBox="0 0 256 256">
+          {/* Background circle */}
+          <circle
+            cx="128"
+            cy="128"
+            r="120"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="12"
+            className="text-[#E5A853]/20"
+          />
+          {/* Progress circle */}
+          <circle
+            cx="128"
+            cy="128"
+            r="120"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="12"
+            strokeLinecap="round"
+            className={isTimeExceeded ? "text-red-500" : "text-[#E5A853]"}
+            style={{
+              strokeDasharray: circumference,
+              strokeDashoffset: isTimeExceeded ? 0 : strokeDashoffset,
+              transition: "stroke-dashoffset 0.5s ease-in-out",
+            }}
+          />
+        </svg>
+
+        {/* Timer content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-          <span className="font-mono text-4xl font-medium text-[#2B4474] dark:text-white">
+          <span className="font-mono text-5xl font-bold text-[#2B4474] dark:text-white">
             {duration}
           </span>
           {isPaused && (
@@ -446,9 +485,9 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
           )}
           {isTimeExceeded && !isPaused && (
             <div className="flex flex-col items-center space-y-1">
-              <AlertTriangle className="h-5 w-5 animate-bounce text-[#E5A853]" />
+              <AlertTriangle className="h-5 w-5 animate-bounce text-red-500" />
               <span
-                className="text-sm font-medium text-[#E5A853] transition-all duration-300"
+                className="max-w-[180px] text-center text-xs font-medium text-red-500 transition-all duration-300"
                 style={{
                   animation: "warning 2s infinite",
                 }}
@@ -456,6 +495,11 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
                 {warningMessage}
               </span>
             </div>
+          )}
+          {!isPaused && !isTimeExceeded && (activeTimeEntry.targetDuration ?? 0) > 0 && (
+            <span className="text-xs text-muted-foreground">
+              {Math.round(progressPercentage)}% complete
+            </span>
           )}
         </div>
       </div>
@@ -496,24 +540,9 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
         </Button>
       </div>
 
-      {/* Raining Letters Button */}
-      {!activeTimeEntry.isFocusMode && (
-        <button
-          onClick={() => navigate({ to: "/raining-letters" })}
-          className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-lg bg-gradient-to-r from-[#2B4474] to-[#E5A853] p-4 font-medium text-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-[#E5A853]/20"
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-[#2B4474] to-[#E5A853] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-          <Cloud className="h-6 w-6 animate-bounce transition-transform duration-300 group-hover:scale-110" />
-          <span className="relative z-10 text-lg font-bold text-white">Take a Magical Break</span>
-          <div className="absolute -inset-1 -z-10 animate-pulse opacity-25 blur">
-            <div className="h-full w-full bg-gradient-to-r from-[#2B4474] via-[#3d5990] to-[#E5A853]" />
-          </div>
-        </button>
-      )}
-
       {/* Task Assignment Section */}
       {activeTimeEntry.isFocusMode && (
-        <Card className="shadow-sm">
+        <Card className="mt-6 shadow-sm">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-sm font-medium">

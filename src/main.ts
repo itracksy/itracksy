@@ -62,11 +62,23 @@ export function getTray(): Tray | null {
 }
 
 /**
- * Show and focus the main window
+ * Show and focus the main window, optionally navigating to a specific route
  */
-export function showMainWindow(): void {
+// Helper to get mainWindow reference (bypasses TypeScript control flow narrowing)
+function getMainWindow(): BrowserWindow | null {
+  return mainWindow;
+}
+
+export function showMainWindow(route?: string): void {
   if (!mainWindow) {
     createWindow();
+    // If route is provided and we just created the window, navigate after load
+    const window = getMainWindow();
+    if (route && window) {
+      window.webContents.once("did-finish-load", () => {
+        window.webContents.send("navigate-to", route);
+      });
+    }
     return;
   }
 
@@ -93,6 +105,11 @@ export function showMainWindow(): void {
     mainWindow.setAlwaysOnTop(true);
     mainWindow.setAlwaysOnTop(false);
     mainWindow.moveTop();
+  }
+
+  // Navigate to the specified route if provided
+  if (route) {
+    mainWindow.webContents.send("navigate-to", route);
   }
 }
 

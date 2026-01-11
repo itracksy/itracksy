@@ -1,14 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { ChevronDown, ChevronUp, Monitor, CheckCircle, XCircle } from "lucide-react";
+import { useState } from "react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Monitor,
+  ThumbsUp,
+  ThumbsDown,
+  Globe,
+  MoreHorizontal,
+} from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { formatTime } from "@/lib/utils";
-import { Toggle } from "@/components/ui/toggle";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { RulesBadge } from "./rules-badge";
-import { RulesInfo } from "./rules-info";
 import { ActivityRule, GroupActivity } from "@/types/activity";
 import { OnClassify } from "@/types/classify";
 import { isNonEmptyObject } from "@/utils/value-checks";
@@ -47,22 +54,21 @@ export function ActivityGroup({
   // Group activities by domain
   const domainGroups = groupActivity.domains;
   const isBrowser = isNonEmptyObject(domainGroups);
+
   // Calculate app-level statistics
   const totalAppTime = activities.reduce((total, activity) => total + activity.duration, 0);
-  const classifiedActivities = activities.filter((a) => a.rating !== null).length;
-  const allClassified = classifiedActivities === activities.length;
-  const anyClassified = classifiedActivities > 0;
-
-  // Check if all activities in the app are productive
-  const productiveActivities = activities.filter((a) => a.rating === 1).length;
-  const allProductive = productiveActivities === activities.length && allClassified;
-  const allDistracted = productiveActivities === 0 && allClassified;
+  const domainTime = Object.values(domainGroups).reduce(
+    (total, group) => total + group.activities.reduce((t, a) => t + a.duration, 0),
+    0
+  );
+  const totalTime = totalAppTime + domainTime;
 
   // Check if there's a rule for this app
   const appRule = groupActivity.rule;
 
   // Handle app-level classification
-  const handleAppClassification = (isProductive: boolean) => {
+  const handleAppClassification = (isProductive: boolean, e: React.MouseEvent) => {
+    e.stopPropagation();
     onClassify({
       ruleId: appRule?.id ?? null,
       appName,
@@ -88,7 +94,6 @@ export function ActivityGroup({
       ...Object.values(groupActivity.domains).flatMap((d) => d.activities),
     ],
     onSuccess: () => {
-      // Close dialog and refresh data
       setRuleDialog({ isOpen: false, acitivityId: null, prefillValues: undefined });
       queryClient.invalidateQueries({ queryKey: ["activities"] });
     },
@@ -99,91 +104,97 @@ export function ActivityGroup({
     createRuleMutation.mutate(values);
   };
 
+  const domainCount = Object.keys(domainGroups).length;
+  const activityCount = activities.length;
+
   return (
     <div className="bg-white dark:bg-gray-800" data-activitygroup>
       <div
-        className="flex cursor-pointer items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+        className="flex cursor-pointer items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50"
         onClick={() => setExpanded(!expanded)}
       >
-        <div className="flex items-center gap-3">
-          <div className="rounded-md bg-[#2B4474] p-2">
-            <Monitor className="h-5 w-5 text-white" />
-          </div>
+        {/* Expand Icon */}
+        <div className="text-gray-400 dark:text-gray-500">
+          {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        </div>
 
+        {/* App Icon */}
+        <div
+          className={cn(
+            "rounded-lg p-2",
+            appRule?.rating === 1
+              ? "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"
+              : appRule?.rating === 0
+                ? "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
+                : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+          )}
+        >
+          <Monitor className="h-4 w-4" />
+        </div>
+
+        {/* App Info */}
+        <div className="flex-1">
           <div className="flex items-center gap-2">
-            <h4 className="font-medium text-gray-900 dark:text-gray-100">{appName}</h4>
+            <span className="font-medium text-gray-900 dark:text-gray-100">{appName}</span>
             {appRule && !isBrowser && <RulesBadge isProductive={appRule.rating === 1} />}
           </div>
-
-          <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{formatTime(totalAppTime)}</p>
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+            <span>{formatTime(totalTime)}</span>
+            {isBrowser && (
+              <>
+                <span>·</span>
+                <span>
+                  {domainCount} {domainCount === 1 ? "site" : "sites"}
+                </span>
+              </>
+            )}
+            {!isBrowser && activityCount > 1 && (
+              <>
+                <span>·</span>
+                <span>{activityCount} activities</span>
+              </>
+            )}
           </div>
+        </div>
 
-          {!allClassified && (
-            <span
+        {/* Classification Buttons */}
+        {!isBrowser && (
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={(e) => handleAppClassification(true, e)}
               className={cn(
-                "rounded-full px-2 py-0.5 text-xs",
-                anyClassified
-                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
-                  : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
+                "h-8 px-3",
+                appRule?.rating === 1
+                  ? "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400"
+                  : "text-gray-500 hover:bg-green-50 hover:text-green-600 dark:text-gray-400"
               )}
             >
-              {anyClassified ? "Partially Classified" : "Unclassified"}
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-3">
-          {!isBrowser ? (
-            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-              <Toggle
-                pressed={allProductive}
-                onPressedChange={() => handleAppClassification(true)}
-                className={cn(
-                  appRule?.rating === 1
-                    ? "border-green-200 bg-green-100 text-green-800 dark:border-green-800 dark:bg-green-900/30 dark:text-green-300"
-                    : "",
-                  "h-8 border px-2"
-                )}
-                aria-label="Mark all app activities as productive"
-              >
-                <CheckCircle className="mr-1 h-4 w-4" />
-                Productive
-              </Toggle>
-
-              <Toggle
-                pressed={allDistracted}
-                onPressedChange={() => handleAppClassification(false)}
-                className={cn(
-                  appRule?.rating === 0
-                    ? "border-red-200 bg-red-100 text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300"
-                    : "",
-                  "h-8 border px-2"
-                )}
-                aria-label="Mark all app activities as distracting"
-              >
-                <XCircle className="mr-1 h-4 w-4" />
-                Distracting
-              </Toggle>
-
-              <RulesInfo />
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">It is browser</span>
-            </div>
-          )}
-
-          {expanded ? (
-            <ChevronUp className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-          ) : (
-            <ChevronDown className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-          )}
-        </div>
+              <ThumbsUp className="mr-1.5 h-3.5 w-3.5" />
+              Productive
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={(e) => handleAppClassification(false, e)}
+              className={cn(
+                "h-8 px-3",
+                appRule?.rating === 0
+                  ? "bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400"
+                  : "text-gray-500 hover:bg-red-50 hover:text-red-600 dark:text-gray-400"
+              )}
+            >
+              <ThumbsDown className="mr-1.5 h-3.5 w-3.5" />
+              Distracting
+            </Button>
+          </div>
+        )}
       </div>
 
-      {expanded && (
-        <div className="divide-y border-t pl-12 dark:divide-gray-700 dark:border-gray-700">
+      {/* Domain Groups (for browsers) */}
+      {expanded && isBrowser && (
+        <div className="divide-y border-t bg-gray-50 dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-800/50">
           {Object.entries(domainGroups).map(([domain, domainActivities]) => (
             <DomainGroup
               key={`${sessionId}-${appName}-${domain}`}
@@ -193,7 +204,6 @@ export function ActivityGroup({
                   acitivityId: activity.timestamp,
                   prefillValues: {
                     appName,
-
                     title: activity.title,
                     duration: 0,
                     rating: domainActivities.rule?.rating === 1 ? 0 : 1,
@@ -215,13 +225,14 @@ export function ActivityGroup({
           ))}
         </div>
       )}
-      {expanded && (
-        <div className="divide-y border-t dark:divide-gray-700 dark:border-gray-700">
+
+      {/* Individual Activities (for non-browsers) */}
+      {expanded && !isBrowser && activities.length > 0 && (
+        <div className="divide-y border-t bg-gray-50 dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-800/50">
           {activities.map((activity) => (
             <ActivityItem
               onUpsertRule={(ruleId) => {
                 if (ruleId) {
-                  // If ruleId has value, fetch rule details from trpcClient
                   trpcClient.activity.getRuleById.query({ ruleId }).then((rule) => {
                     if (rule) {
                       setRuleDialog({

@@ -10,20 +10,20 @@ import { useAtom } from "jotai";
 import {
   autoStopEnabledsAtom,
   breakDurationAtom,
-  selectedBoardIdAtom,
   targetMinutesAtom,
   isUnlimitedFocusAtom,
 } from "@/context/board";
 
 import { Slider } from "@/components/ui/slider";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Brain, Coffee, History } from "lucide-react";
+import { Brain, Coffee, History, Play, Timer, Infinity } from "lucide-react";
 import { ActiveSession } from "./components/ActiveSession";
 import { FocusTargetWidget } from "./components/FocusTargetWidget";
 import { SessionReviewDialog } from "./components/SessionReviewDialog";
+import { ActivityHeatmap } from "@/pages/dashboard/components/ActivityHeatmap";
+import { cn } from "@/lib/utils";
 
 export default function FocusPage() {
   const [targetMinutes, setTargetMinutes] = useAtom(targetMinutesAtom);
@@ -40,7 +40,6 @@ export default function FocusPage() {
   useEffect(() => {
     if (!activeTimeEntry) {
       const minutes = activeTab === "focus" ? targetMinutes : breakMinutes;
-      // Only focus sessions can be unlimited, breaks always have a duration
       const isUnlimited = activeTab === "focus" && isUnlimitedFocus;
 
       if (isUnlimited) {
@@ -56,7 +55,6 @@ export default function FocusPage() {
   }, [targetMinutes, breakMinutes, activeTab, activeTimeEntry, lastTimeEntry, isUnlimitedFocus]);
 
   const handleStartSession = async () => {
-    // Only focus sessions can be unlimited, breaks always have a duration
     const isUnlimited = activeTab === "focus" && isUnlimitedFocus;
     const minutes = isUnlimited ? 0 : activeTab === "focus" ? targetMinutes : breakMinutes;
     const { description, boardId, itemId } = getTimeEntryData();
@@ -69,7 +67,7 @@ export default function FocusPage() {
         itemId,
         targetDuration: minutes,
         isFocusMode: activeTab === "focus",
-        autoStopEnabled: isUnlimited ? false : autoStopEnabled, // Disable auto-stop for unlimited sessions
+        autoStopEnabled: isUnlimited ? false : autoStopEnabled,
       });
 
       const mode = activeTab === "focus" ? "Focus" : "Break";
@@ -92,7 +90,6 @@ export default function FocusPage() {
       description: string | undefined;
     } {
       if (activeTab === "focus") {
-        // Default case - no task selected, just start focus session
         return {
           boardId: undefined,
           itemId: undefined,
@@ -104,177 +101,201 @@ export default function FocusPage() {
     }
   };
 
+  // If there's an active session, show it prominently
+  if (activeTimeEntry) {
+    return (
+      <div className="min-h-screen bg-transparent p-6 md:p-8 lg:p-10">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid gap-8 lg:grid-cols-[1fr,400px] lg:gap-12">
+            {/* Active Session */}
+            <div className="flex flex-col items-center justify-center">
+              <ActiveSession activeTimeEntry={activeTimeEntry} />
+              {/* Session Review Button */}
+              <SessionReviewDialog
+                session={activeTimeEntry}
+                trigger={
+                  <Button variant="outline" size="sm" className="mt-6 gap-2">
+                    <History className="h-4 w-4" />
+                    Review Current Session
+                  </Button>
+                }
+              />
+            </div>
+
+            {/* Right Column - Stats & Heatmap */}
+            <div className="space-y-6">
+              <FocusTargetWidget />
+              <ActivityHeatmap compact />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-screen flex-col items-center bg-transparent p-4">
-      <div className="w-full max-w-md space-y-6">
-        {/* Focus Target Widget - always shown */}
-        <FocusTargetWidget />
-
-        {/* Session Review Button */}
-        {(activeTimeEntry || lastTimeEntry?.isFocusMode) && (
-          <SessionReviewDialog
-            session={activeTimeEntry || (lastTimeEntry?.isFocusMode ? lastTimeEntry : null)}
-            trigger={
-              <Button variant="outline" size="sm" className="w-full gap-2">
-                <History className="h-4 w-4" />
-                {activeTimeEntry ? "Review Current Session" : "Review Last Session"}
-              </Button>
-            }
-          />
-        )}
-
-        {activeTimeEntry ? (
-          <ActiveSession activeTimeEntry={activeTimeEntry} />
-        ) : (
-          <>
-            <div>
-              <div className="pt-0">
-                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "focus" | "break")}>
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="focus" className="flex items-center gap-2">
-                      <Brain className="h-4 w-4" />
-                      Focus
-                    </TabsTrigger>
-                    <TabsTrigger value="break" className="flex items-center gap-2">
-                      <Coffee className="h-4 w-4" />
-                      Break
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="focus" className="space-y-4 pt-2">
-                    {/* Mode Selector - Timed vs Unlimited */}
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        onClick={() => setIsUnlimitedFocus(false)}
-                        className={`flex flex-col items-center gap-1 rounded-lg border-2 p-3 transition-all ${
-                          !isUnlimitedFocus
-                            ? "border-[#E5A853] bg-[#E5A853]/10"
-                            : "border-gray-200 hover:border-gray-300 dark:border-gray-700"
-                        }`}
-                      >
-                        <span className="text-lg font-semibold text-gray-700 dark:text-white">
-                          ⏱️ Timed
-                        </span>
-                        <span className="text-xs text-gray-500">Set a duration</span>
-                      </button>
-                      <button
-                        onClick={() => setIsUnlimitedFocus(true)}
-                        className={`flex flex-col items-center gap-1 rounded-lg border-2 p-3 transition-all ${
-                          isUnlimitedFocus
-                            ? "border-[#E5A853] bg-[#E5A853]/10"
-                            : "border-gray-200 hover:border-gray-300 dark:border-gray-700"
-                        }`}
-                      >
-                        <span className="text-lg font-semibold text-gray-700 dark:text-white">
-                          ∞ Unlimited
-                        </span>
-                        <span className="text-xs text-gray-500">Track all day</span>
-                      </button>
-                    </div>
-
-                    {/* Timer Display */}
-                    <div className="relative mx-auto aspect-square w-36">
-                      <div className="absolute inset-0 rounded-full border-[12px] border-gray-100"></div>
-                      <div className="absolute inset-0 rounded-full border-[12px] border-[#E5A853]"></div>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="font-mono text-3xl font-medium text-gray-700 dark:text-white">
-                          {duration}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Duration Slider - Only for timed mode */}
-                    {!isUnlimitedFocus ? (
-                      <Card className="shadow-sm">
-                        <CardContent className="px-4 py-3">
-                          <div className="mb-2 flex items-center justify-between">
-                            <Label className="text-sm font-medium">Duration</Label>
-                            <span className="font-mono text-sm text-gray-500">
-                              {targetMinutes} minutes
-                            </span>
-                          </div>
-                          <Slider
-                            value={[targetMinutes]}
-                            onValueChange={(values) => setTargetMinutes(values[0])}
-                            min={5}
-                            max={480}
-                            step={5}
-                            className="py-2"
-                          />
-                          <div className="flex justify-between text-xs text-gray-500">
-                            <span>5m</span>
-                            <span>8h</span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ) : (
-                      <div className="rounded-lg border border-dashed border-[#E5A853]/50 bg-[#E5A853]/5 p-4">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          <span className="font-medium text-gray-700 dark:text-gray-300">
-                            Continuous Background Tracking
-                          </span>
-                        </p>
-                        <ul className="mt-2 space-y-1 text-xs text-gray-500">
-                          <li>• Runs silently in the background</li>
-                          <li>• Auto-starts with app if enabled in System Settings</li>
-                          <li>• Tracks all your activities throughout the day</li>
-                          <li>• Stop manually when you're done working</li>
-                        </ul>
-                      </div>
-                    )}
-                  </TabsContent>
-
-                  <TabsContent value="break" className="space-y-3 pt-2">
-                    {/* Timer Display - Compact like Focus tab */}
-                    <div className="relative mx-auto aspect-square w-36">
-                      <div className="absolute inset-0 rounded-full border-[12px] border-gray-100"></div>
-                      <div className="absolute inset-0 rounded-full border-[12px] border-[#2B4474]"></div>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="font-mono text-3xl font-medium text-gray-700 dark:text-white">
-                          {duration}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Break Duration Slider - Compact */}
-                    <Card className="shadow-sm">
-                      <CardContent className="px-4 py-3">
-                        <div className="mb-2 flex items-center justify-between">
-                          <Label className="text-sm font-medium">Break Duration</Label>
-                          <span className="font-mono text-sm text-gray-500">
-                            {breakMinutes} minutes
-                          </span>
-                        </div>
-                        <Slider
-                          value={[breakMinutes]}
-                          onValueChange={(values) => setBreakMinutes(values[0])}
-                          min={1}
-                          max={60}
-                          step={1}
-                          className="py-2"
-                        />
-                        <div className="flex justify-between text-xs text-gray-500">
-                          <span>1m</span>
-                          <span>1h</span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                </Tabs>
+    <div className="min-h-screen bg-transparent p-6 md:p-8 lg:p-10">
+      <div className="mx-auto max-w-6xl">
+        <div className="grid gap-8 lg:grid-cols-[1fr,400px] lg:gap-12">
+          {/* Left Column - Timer Controls */}
+          <div className="flex flex-col">
+            {/* Mode Toggle - Focus/Break */}
+            <div className="mb-8 flex justify-center">
+              <div className="inline-flex rounded-full bg-muted p-1">
+                <button
+                  onClick={() => setActiveTab("focus")}
+                  className={cn(
+                    "flex items-center gap-2 rounded-full px-6 py-2 text-sm font-medium transition-all",
+                    activeTab === "focus"
+                      ? "bg-[#E5A853] text-white shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Brain className="h-4 w-4" />
+                  Focus
+                </button>
+                <button
+                  onClick={() => setActiveTab("break")}
+                  className={cn(
+                    "flex items-center gap-2 rounded-full px-6 py-2 text-sm font-medium transition-all",
+                    activeTab === "break"
+                      ? "bg-[#2B4474] text-white shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Coffee className="h-4 w-4" />
+                  Break
+                </button>
               </div>
             </div>
 
-            {/* Start Button */}
-            <Button
-              onClick={handleStartSession}
-              disabled={!!activeTimeEntry}
-              className="w-full bg-[#E5A853] py-6 text-white hover:bg-[#d09641]"
-              size="lg"
-            >
-              START {activeTab === "focus" ? "FOCUS" : "BREAK"}
-            </Button>
-          </>
-        )}
+            {/* Timer Display - Hero Element */}
+            <div className="flex flex-1 flex-col items-center justify-center">
+              <div className="relative">
+                {/* Outer glow effect */}
+                <div
+                  className={cn(
+                    "absolute inset-0 rounded-full opacity-20 blur-2xl",
+                    activeTab === "focus" ? "bg-[#E5A853]" : "bg-[#2B4474]"
+                  )}
+                />
+
+                {/* Timer circle */}
+                <div
+                  className={cn(
+                    "relative flex h-56 w-56 items-center justify-center rounded-full border-[12px] md:h-64 md:w-64",
+                    activeTab === "focus"
+                      ? "border-[#E5A853] bg-[#E5A853]/5"
+                      : "border-[#2B4474] bg-[#2B4474]/5"
+                  )}
+                >
+                  <span className="font-mono text-5xl font-bold text-foreground md:text-6xl">
+                    {duration}
+                  </span>
+                </div>
+              </div>
+
+              {/* Session Type Toggle (Focus only) */}
+              {activeTab === "focus" && (
+                <div className="mt-8 flex gap-3">
+                  <button
+                    onClick={() => setIsUnlimitedFocus(false)}
+                    className={cn(
+                      "flex items-center gap-2 rounded-lg border-2 px-4 py-2 text-sm font-medium transition-all",
+                      !isUnlimitedFocus
+                        ? "border-[#E5A853] bg-[#E5A853]/10 text-[#E5A853]"
+                        : "border-muted bg-transparent text-muted-foreground hover:border-muted-foreground/50"
+                    )}
+                  >
+                    <Timer className="h-4 w-4" />
+                    Timed
+                  </button>
+                  <button
+                    onClick={() => setIsUnlimitedFocus(true)}
+                    className={cn(
+                      "flex items-center gap-2 rounded-lg border-2 px-4 py-2 text-sm font-medium transition-all",
+                      isUnlimitedFocus
+                        ? "border-[#E5A853] bg-[#E5A853]/10 text-[#E5A853]"
+                        : "border-muted bg-transparent text-muted-foreground hover:border-muted-foreground/50"
+                    )}
+                  >
+                    <Infinity className="h-4 w-4" />
+                    Unlimited
+                  </button>
+                </div>
+              )}
+
+              {/* Duration Slider */}
+              {(activeTab === "break" || (activeTab === "focus" && !isUnlimitedFocus)) && (
+                <div className="mt-6 w-full max-w-xs">
+                  <div className="mb-2 flex items-center justify-between text-sm">
+                    <Label className="text-muted-foreground">Duration</Label>
+                    <span className="font-mono font-medium">
+                      {activeTab === "focus" ? targetMinutes : breakMinutes} min
+                    </span>
+                  </div>
+                  <Slider
+                    value={[activeTab === "focus" ? targetMinutes : breakMinutes]}
+                    onValueChange={(values) =>
+                      activeTab === "focus"
+                        ? setTargetMinutes(values[0])
+                        : setBreakMinutes(values[0])
+                    }
+                    min={activeTab === "focus" ? 5 : 1}
+                    max={activeTab === "focus" ? 480 : 60}
+                    step={activeTab === "focus" ? 5 : 1}
+                    className="py-2"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>{activeTab === "focus" ? "5m" : "1m"}</span>
+                    <span>{activeTab === "focus" ? "8h" : "1h"}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Unlimited Mode Description */}
+              {activeTab === "focus" && isUnlimitedFocus && (
+                <p className="mt-6 max-w-xs text-center text-sm text-muted-foreground">
+                  Track your activities throughout the day. Stop manually when done.
+                </p>
+              )}
+
+              {/* Start Button */}
+              <Button
+                onClick={handleStartSession}
+                size="lg"
+                className={cn(
+                  "mt-8 gap-2 px-12 py-6 text-lg font-semibold",
+                  activeTab === "focus"
+                    ? "bg-[#E5A853] hover:bg-[#d09641]"
+                    : "bg-[#2B4474] hover:bg-[#1e3357]"
+                )}
+              >
+                <Play className="h-5 w-5" />
+                Start {activeTab === "focus" ? "Focus" : "Break"}
+              </Button>
+
+              {/* Session Review (if last session exists) */}
+              {lastTimeEntry?.isFocusMode && (
+                <SessionReviewDialog
+                  session={lastTimeEntry}
+                  trigger={
+                    <Button variant="ghost" size="sm" className="mt-4 gap-2 text-muted-foreground">
+                      <History className="h-4 w-4" />
+                      Review Last Session
+                    </Button>
+                  }
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Right Column - Stats & Heatmap */}
+          <div className="space-y-6">
+            <FocusTargetWidget />
+            <ActivityHeatmap compact />
+          </div>
+        </div>
       </div>
     </div>
   );

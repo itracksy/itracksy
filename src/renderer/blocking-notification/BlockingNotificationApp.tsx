@@ -6,6 +6,10 @@ interface BlockingNotificationData {
   userId: string;
   timeEntryId: string;
   appOrDomain: string;
+  appName?: string;
+  domain?: string;
+  ruleId?: string;
+  ruleName?: string;
 }
 
 const BlockingNotificationApp: React.FC = () => {
@@ -13,12 +17,7 @@ const BlockingNotificationApp: React.FC = () => {
 
   useEffect(() => {
     console.log("BlockingNotificationApp: Component mounted");
-    console.log(
-      "BlockingNotificationApp: window.electronBlockingNotification available:",
-      !!(window as any).electronBlockingNotification
-    );
 
-    // Listen for blocking notification data from main process
     if ((window as any).electronBlockingNotification) {
       const handleNotification = (data: BlockingNotificationData) => {
         console.log("Blocking notification received:", data);
@@ -27,7 +26,6 @@ const BlockingNotificationApp: React.FC = () => {
 
       (window as any).electronBlockingNotification.onNotification(handleNotification);
 
-      // Add keyboard event listener for Escape key
       const handleKeyDown = (event: KeyboardEvent) => {
         if (event.key === "Escape") {
           handleClose();
@@ -37,18 +35,18 @@ const BlockingNotificationApp: React.FC = () => {
       window.addEventListener("keydown", handleKeyDown);
 
       return () => {
-        console.log("Cleaning up blocking notification listener");
         window.removeEventListener("keydown", handleKeyDown);
       };
     } else {
-      console.error("electronBlockingNotification not available");
-      // Set test data for development
+      // Test data for development
       setNotificationData({
         title: "Test Activity Detection",
-        detail: "You seem to be using a non-work related application",
+        detail: "Blocked by rule: Social Media",
         userId: "test-user",
         timeEntryId: "test-entry",
-        appOrDomain: "social-media.com",
+        appOrDomain: "facebook.com",
+        ruleId: "test-rule-id",
+        ruleName: "Social Media",
       });
     }
   }, []);
@@ -59,49 +57,78 @@ const BlockingNotificationApp: React.FC = () => {
     if ((window as any).electronBlockingNotification) {
       try {
         await (window as any).electronBlockingNotification.respond(response);
-        console.log("Response sent successfully");
       } catch (error) {
         console.error("Failed to send response:", error);
       }
-    } else {
-      console.log("Would send response:", response);
     }
   };
 
   const handleContinueWorking = () => handleResponse(0);
   const handleReturnToFocus = () => handleResponse(1);
-  const handleTakeBreak = () => handleResponse(2);
 
   const handleClose = async () => {
-    console.log("Closing blocking notification");
-
     if ((window as any).electronBlockingNotification) {
       try {
         await (window as any).electronBlockingNotification.close();
-        console.log("Close request sent successfully");
       } catch (error) {
-        console.error("Failed to send close request:", error);
+        console.error("Failed to close:", error);
       }
-    } else {
-      console.log("Would close notification window");
+    }
+  };
+
+  const handleEditRule = async () => {
+    if ((window as any).electronBlockingNotification) {
+      try {
+        // Open main window with rule ID parameter to edit the specific rule
+        const ruleId = notificationData?.ruleId;
+        const route = ruleId ? `/rule-book?editRuleId=${ruleId}` : "/rule-book";
+        await (window as any).electronBlockingNotification.openMainWindow(route);
+        // Close this notification
+        await (window as any).electronBlockingNotification.close();
+      } catch (error) {
+        console.error("Failed to open main window:", error);
+      }
+    }
+  };
+
+  const handleAddException = async () => {
+    if ((window as any).electronBlockingNotification) {
+      try {
+        // Create a new productive rule that matches this specific activity by title
+        const params = new URLSearchParams();
+        params.set("createRule", "true");
+        params.set("rating", "1"); // Productive
+
+        // Set app name - always include it for proper matching
+        if (notificationData?.appName) {
+          params.set("appName", notificationData.appName);
+        }
+
+        // Set domain if it's a browser/website block
+        if (notificationData?.domain) {
+          params.set("domain", notificationData.domain);
+        }
+
+        // Set the title for matching - this creates an exception for this specific content
+        if (notificationData?.title) {
+          params.set("title", notificationData.title);
+          params.set("titleCondition", "contains");
+        }
+
+        const route = `/rule-book?${params.toString()}`;
+        await (window as any).electronBlockingNotification.openMainWindow(route);
+        // Close this notification
+        await (window as any).electronBlockingNotification.close();
+      } catch (error) {
+        console.error("Failed to open main window for exception:", error);
+      }
     }
   };
 
   if (!notificationData) {
     return (
-      <div
-        style={{
-          height: "100vh",
-          width: "100vw",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          background: "rgba(0, 0, 0, 0.8)",
-          color: "white",
-          fontSize: "18px",
-        }}
-      >
-        Loading...
+      <div className="loading">
+        <div className="loading-spinner"></div>
       </div>
     );
   }
@@ -109,61 +136,74 @@ const BlockingNotificationApp: React.FC = () => {
   return (
     <div className="container">
       <div className="notification-card">
+        {/* Close button */}
+        <button className="close-btn" onClick={handleClose}>
+          ×
+        </button>
+
+        {/* Header */}
         <div className="header">
-          <div className="icon">⚠️</div>
-          <h1 className="title">Work Activity Alert</h1>
-          <p className="subtitle">iTracksy has detected a potentially distracting activity</p>
-          <button
-            className="close-button"
-            onClick={handleClose}
-            style={{
-              position: "absolute",
-              top: "15px",
-              right: "15px",
-              background: "transparent",
-              border: "none",
-              color: "white",
-              fontSize: "24px",
-              cursor: "pointer",
-            }}
-          >
-            ×
-          </button>
+          <div className="icon">
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </div>
+          <h1 className="title">Distraction Detected</h1>
         </div>
 
-        <div className="content">
+        {/* Activity Info */}
+        <div className="activity-card">
+          <div className="activity-icon">
+            {notificationData.appOrDomain.includes(".") ? "🌐" : "💻"}
+          </div>
           <div className="activity-info">
-            <div className="activity-label">Detected Activity</div>
             <div className="activity-name">{notificationData.title}</div>
-          </div>
-
-          <div className="description">{notificationData.detail}</div>
-
-          <div className="description">
-            Please choose how you want to proceed with your current activity. Your choice helps us
-            better track your work patterns and productivity.
-          </div>
-
-          <div className="note">
-            <strong>Note:</strong> Your response affects how iTracksy monitors your future
-            activities.
+            <div className="activity-source">{notificationData.appOrDomain}</div>
           </div>
         </div>
 
-        <div className="buttons">
-          <button className="btn btn-primary" onClick={handleContinueWorking}>
+        {/* Rule info with edit link */}
+        {notificationData.ruleName && (
+          <div className="rule-info">
+            <span>
+              Blocked by: <strong>{notificationData.ruleName}</strong>
+            </span>
+            <div className="rule-actions">
+              <button className="edit-rule-btn" onClick={handleEditRule}>
+                Edit Rule
+              </button>
+              <button className="add-exception-btn" onClick={handleAddException}>
+                Add Exception
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="actions">
+          <button className="btn btn-primary" onClick={handleReturnToFocus}>
+            <span className="btn-icon">🎯</span>
+            <div className="btn-text">
+              <span className="btn-title">Return to Focus</span>
+              <span className="btn-desc">Get back to work</span>
+            </div>
+          </button>
+
+          <button className="btn btn-secondary" onClick={handleContinueWorking}>
             <span className="btn-icon">✓</span>
-            Continue Working - This activity is work-related
-          </button>
-
-          <button className="btn btn-secondary" onClick={handleReturnToFocus}>
-            <span className="btn-icon">🕒</span>
-            Return to Focus - Switch back to your primary task
-          </button>
-
-          <button className="btn btn-warning" onClick={handleTakeBreak}>
-            <span className="btn-icon">⚠️</span>
-            Take a Break - Pause tracking for 15 minutes
+            <div className="btn-text">
+              <span className="btn-title">Allow This Time</span>
+              <span className="btn-desc">It's work-related</span>
+            </div>
           </button>
         </div>
       </div>

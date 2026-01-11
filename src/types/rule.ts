@@ -5,15 +5,15 @@ export const ruleFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().default(""),
 
-  // Title rule fields
+  // Title rule fields - default to "contains" for simpler UX
   titleCondition: z
     .enum(["contains", "startsWith", "endsWith", "equals", "=", ""])
-    .default("")
+    .default("contains")
     .nullable()
     .optional(),
   title: z.string().default("").optional(),
 
-  // Duration rule fields
+  // Duration rule fields (kept for backwards compatibility but hidden in UI)
   duration: z.number().default(0).optional(),
   durationCondition: z.enum([">", "<", "=", ">=", "<=", ""]).default("").nullable().optional(),
 

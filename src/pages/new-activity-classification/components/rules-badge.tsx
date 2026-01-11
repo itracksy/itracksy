@@ -1,10 +1,10 @@
-import { Sparkles } from "lucide-react"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { cn } from "@/lib/utils"
+import { CheckCircle, XCircle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 interface RulesBadgeProps {
-  isProductive: boolean
-  className?: string
+  isProductive: boolean;
+  className?: string;
 }
 
 export function RulesBadge({ isProductive, className }: RulesBadgeProps) {
@@ -14,21 +14,24 @@ export function RulesBadge({ isProductive, className }: RulesBadgeProps) {
         <TooltipTrigger asChild>
           <div
             className={cn(
-              "inline-flex items-center justify-center rounded-full p-1 cursor-help",
-              isProductive ? "bg-green-100" : "bg-red-100",
-              className,
+              "inline-flex cursor-help items-center justify-center rounded-full p-0.5",
+              isProductive ? "bg-green-100 dark:bg-green-900/30" : "bg-red-100 dark:bg-red-900/30",
+              className
             )}
           >
-            <Sparkles className={cn("h-3 w-3", isProductive ? "text-green-600" : "text-red-600")} />
+            {isProductive ? (
+              <CheckCircle className="h-3 w-3 text-green-600 dark:text-green-400" />
+            ) : (
+              <XCircle className="h-3 w-3 text-red-600 dark:text-red-400" />
+            )}
           </div>
         </TooltipTrigger>
         <TooltipContent side="top">
-          <p className="text-sm">
-            {isProductive ? "Rule: Always mark as productive" : "Rule: Always mark as distracting"}
+          <p className="text-xs">
+            {isProductive ? "Classified as productive" : "Classified as distracting"}
           </p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
-  )
+  );
 }
-

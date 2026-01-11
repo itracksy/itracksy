@@ -1,4 +1,4 @@
-import { eq, and, or } from "drizzle-orm";
+import { eq, and, or, sql } from "drizzle-orm";
 import db from "../db";
 import { activityRules } from "../db/schema";
 import { nanoid } from "nanoid";
@@ -166,16 +166,35 @@ export async function getGroupActivities(activities: Activity[]) {
 
 // find rules that match the activity with prioritization
 export async function findMatchingRules(activity: Activity): Promise<ActivityRule | null> {
-  // Fetch all potentially matching rules
+  // Fetch all potentially matching rules - include both app-based and domain-based rules
+  const domain = activity.url ? extractDomain(activity.url) : null;
+  const appNameLower = activity.ownerName.toLowerCase();
+  const domainLower = domain?.toLowerCase();
+
   const rules = await db.query.activityRules.findMany({
     where: (rules) => {
-      return and(
-        eq(rules.userId, activity.userId),
-        eq(rules.active, true),
-        activity.url
-          ? eq(rules.domain, extractDomain(activity.url) || "")
-          : eq(rules.appName, activity.ownerName)
-      );
+      // Get rules that match either by app name OR by domain (if URL exists)
+      // Use case-insensitive comparison with sql lower()
+      const conditions = [
+        and(
+          eq(rules.userId, activity.userId),
+          eq(rules.active, true),
+          sql`lower(${rules.appName}) = ${appNameLower}`
+        ),
+      ];
+
+      // Also include domain-based rules if the activity has a URL
+      if (domainLower) {
+        conditions.push(
+          and(
+            eq(rules.userId, activity.userId),
+            eq(rules.active, true),
+            sql`lower(${rules.domain}) = ${domainLower}`
+          )
+        );
+      }
+
+      return or(...conditions);
     },
   });
 
@@ -218,7 +237,7 @@ export async function findMatchingRules(activity: Activity): Promise<ActivityRul
       b.duration && b.durationCondition !== null && b.durationCondition !== ""
     );
 
-    // First priority: Rules with title
+    // First priority: Rules with title (more specific)
     if (aHasTitle && !bHasTitle) return -1;
     if (!aHasTitle && bHasTitle) return 1;
 
@@ -226,9 +245,10 @@ export async function findMatchingRules(activity: Activity): Promise<ActivityRul
     if (aHasDuration && !bHasDuration) return -1;
     if (!aHasDuration && bHasDuration) return 1;
 
-    // If both have the same specificity, prioritize blocking rules (rating === 0)
-    if (a.rating === 0 && b.rating !== 0) return -1;
-    if (a.rating !== 0 && b.rating === 0) return 1;
+    // If both have the same specificity, prioritize PRODUCTIVE rules (rating === 1)
+    // This allows exception rules to override blocking rules
+    if (a.rating === 1 && b.rating !== 1) return -1;
+    if (a.rating !== 1 && b.rating === 1) return 1;
 
     // If still tied, use creation time (newer rules first)
     return b.createdAt - a.createdAt;

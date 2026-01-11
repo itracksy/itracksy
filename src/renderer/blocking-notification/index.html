@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>iTracksy - Work Activity Alert</title>
+    <title>iTracksy - Distraction Alert</title>
     <style>
       * {
         margin: 0;
@@ -19,7 +19,7 @@
           "Segoe UI",
           Roboto,
           sans-serif;
-        background: rgba(0, 0, 0, 0.8);
+        background: rgba(0, 0, 0, 0.85);
         color: #333;
         overflow: hidden;
         user-select: none;
@@ -35,21 +35,42 @@
         padding: 20px;
       }
 
+      .loading {
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.85);
+      }
+
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255, 255, 255, 0.2);
+        border-top-color: #E5A853;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
       .notification-card {
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-        border-radius: 20px;
-        padding: 40px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        max-width: 600px;
+        background: #1a1a2e;
+        border-radius: 24px;
+        padding: 32px;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+        max-width: 420px;
         width: 100%;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(20px);
-        animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        position: relative;
+        animation: slideIn 0.3s ease-out;
       }
 
       @keyframes slideIn {
         from {
-          transform: scale(0.8) translateY(50px);
+          transform: scale(0.95) translateY(20px);
           opacity: 0;
         }
         to {
@@ -58,163 +79,265 @@
         }
       }
 
+      .close-btn {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+      }
+
+      .close-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+      }
+
       .header {
         text-align: center;
-        margin-bottom: 30px;
+        margin-bottom: 24px;
       }
 
       .icon {
-        width: 60px;
-        height: 60px;
-        background: linear-gradient(135deg, #ff6b6b, #ffa726);
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, #E5A853, #d09641);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 auto 20px;
-        font-size: 28px;
+        margin: 0 auto 16px;
+        color: white;
       }
 
       .title {
-        font-size: 24px;
+        font-size: 22px;
         font-weight: 700;
-        color: #1a202c;
-        margin-bottom: 8px;
+        color: white;
+        margin: 0;
       }
 
-      .subtitle {
-        font-size: 16px;
-        color: #4a5568;
-        line-height: 1.5;
-      }
-
-      .content {
-        margin-bottom: 40px;
-      }
-
-      .activity-info {
-        background: #f7fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 20px;
-      }
-
-      .activity-label {
-        font-size: 14px;
-        color: #718096;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 8px;
-      }
-
-      .activity-name {
-        font-size: 18px;
-        font-weight: 600;
-        color: #2d3748;
-      }
-
-      .description {
-        font-size: 15px;
-        line-height: 1.6;
-        color: #4a5568;
-        margin-bottom: 20px;
-      }
-
-      .note {
-        background: #fff5f5;
-        border: 1px solid #fed7d7;
-        border-radius: 8px;
-        padding: 16px;
-        font-size: 14px;
-        color: #742a2a;
-      }
-
-      .buttons {
+      .activity-card {
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 16px 20px;
         display: flex;
-        flex-direction: column;
-        gap: 12px;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 16px;
       }
 
-      .btn {
-        padding: 16px 24px;
-        border: none;
+      .activity-icon {
+        font-size: 28px;
+        width: 48px;
+        height: 48px;
+        background: rgba(255, 255, 255, 0.1);
         border-radius: 12px;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s ease;
         display: flex;
         align-items: center;
         justify-content: center;
+      }
+
+      .activity-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .activity-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: white;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 4px;
+      }
+
+      .activity-source {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .rule-info {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        background: rgba(229, 168, 83, 0.1);
+        border-radius: 12px;
+        margin-bottom: 24px;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.7);
+        gap: 12px;
+      }
+
+      .rule-info strong {
+        color: #E5A853;
+      }
+
+      .rule-actions {
+        display: flex;
+        gap: 8px;
+        flex-shrink: 0;
+      }
+
+      .edit-rule-btn {
+        background: transparent;
+        border: 1px solid rgba(229, 168, 83, 0.5);
+        color: #E5A853;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .edit-rule-btn:hover {
+        background: rgba(229, 168, 83, 0.2);
+        border-color: #E5A853;
+      }
+
+      .add-exception-btn {
+        background: rgba(34, 197, 94, 0.15);
+        border: 1px solid rgba(34, 197, 94, 0.5);
+        color: #22c55e;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .add-exception-btn:hover {
+        background: rgba(34, 197, 94, 0.25);
+        border-color: #22c55e;
+      }
+
+      .actions {
+        display: flex;
+        flex-direction: column;
         gap: 10px;
-        text-align: center;
+      }
+
+      .btn {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 20px;
+        border: none;
+        border-radius: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: left;
       }
 
       .btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
       }
 
       .btn:active {
         transform: translateY(0);
       }
 
+      .btn-icon {
+        font-size: 24px;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .btn-text {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .btn-title {
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      .btn-desc {
+        font-size: 12px;
+        opacity: 0.7;
+      }
+
       .btn-primary {
-        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        background: linear-gradient(135deg, #2B4474, #3d5990);
         color: white;
-        border: 1px solid #4338ca;
+      }
+
+      .btn-primary .btn-icon {
+        background: rgba(255, 255, 255, 0.2);
       }
 
       .btn-primary:hover {
-        background: linear-gradient(135deg, #4338ca, #6d28d9);
-        box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+        box-shadow: 0 8px 24px rgba(43, 68, 116, 0.4);
       }
 
       .btn-secondary {
-        background: linear-gradient(135deg, #f59e0b, #f97316);
+        background: rgba(255, 255, 255, 0.08);
         color: white;
-        border: 1px solid #d97706;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .btn-secondary .btn-icon {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
       }
 
       .btn-secondary:hover {
-        background: linear-gradient(135deg, #d97706, #ea580c);
-        box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.2);
       }
 
-      .btn-warning {
-        background: linear-gradient(135deg, #ef4444, #dc2626);
-        color: white;
-        border: 1px solid #dc2626;
+      .btn-tertiary {
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.8);
       }
 
-      .btn-warning:hover {
-        background: linear-gradient(135deg, #dc2626, #b91c1c);
-        box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+      .btn-tertiary .btn-icon {
+        background: rgba(249, 115, 22, 0.2);
+        color: #f97316;
       }
 
-      .btn-icon {
-        font-size: 18px;
+      .btn-tertiary:hover {
+        background: rgba(255, 255, 255, 0.08);
       }
 
-      @media (max-width: 640px) {
+      @media (max-width: 480px) {
         .notification-card {
-          padding: 30px 20px;
-          margin: 20px;
+          padding: 24px;
+          margin: 16px;
         }
 
         .title {
           font-size: 20px;
         }
 
-        .buttons {
-          gap: 10px;
+        .btn {
+          padding: 14px 16px;
         }
 
-        .btn {
-          padding: 14px 20px;
-          font-size: 15px;
+        .btn-icon {
+          width: 40px;
+          height: 40px;
+          font-size: 20px;
         }
       }
     </style>

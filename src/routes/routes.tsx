@@ -77,6 +77,17 @@ export const RuleBookRoute = createRoute({
   getParentRoute: () => RootRoute,
   path: "/rule-book",
   component: RuleBookPage,
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      editRuleId: (search.editRuleId as string) || undefined,
+      createRule: search.createRule === "true" || search.createRule === true,
+      appName: (search.appName as string) || undefined,
+      domain: (search.domain as string) || undefined,
+      title: (search.title as string) || undefined,
+      titleCondition: (search.titleCondition as string) || undefined,
+      rating: search.rating !== undefined ? Number(search.rating) : undefined,
+    };
+  },
 });
 
 export const ReportsRoute = createRoute({

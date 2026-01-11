@@ -2,6 +2,7 @@ import { z } from "zod";
 import { t, protectedProcedure } from "../trpc";
 import { getFocusedTimeByHour, reportProjectByDay } from "../services/dashboard";
 import { getFocusPerformanceByPeriod, fillMissingDates } from "../services/focusPerformance";
+import { getActivityHeatmapData } from "../services/activityHeatmap";
 
 export const dashboardRouter = t.router({
   reportProjectByDay: protectedProcedure
@@ -48,5 +49,14 @@ export const dashboardRouter = t.router({
       const userId = ctx.userId;
       const data = await getFocusPerformanceByPeriod(startDate, endDate, userId, period, boardId);
       return fillMissingDates(data, startDate, endDate, period);
+    }),
+  getActivityHeatmap: protectedProcedure
+    .input(
+      z.object({
+        months: z.number().min(1).max(12).default(3),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      return getActivityHeatmapData(ctx.userId, input.months);
     }),
 });
