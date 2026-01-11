@@ -170,7 +170,7 @@ const makers: ForgeConfig["makers"] = (() => {
     return [
       new MakerSquirrel({
         setupIcon: path.resolve(__dirname, "resources", "icon.ico"),
-        iconUrl: "https://raw.githubusercontent.com/hunght/itracksy/main/resources/icon.ico",
+        iconUrl: "https://raw.githubusercontent.com/itracksy/itracksy/main/resources/icon.ico",
         loadingGif: path.resolve(__dirname, "resources", "icon_64x64.png"),
       }),
       new MakerZIP({}),
@@ -349,7 +349,7 @@ const config: ForgeConfig = {
   publishers: [
     new PublisherGithub({
       repository: {
-        owner: "hunght",
+        owner: "itracksy",
         name: "itracksy",
       },
       prerelease: false,

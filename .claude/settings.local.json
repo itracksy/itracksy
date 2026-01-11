@@ -54,7 +54,9 @@
       "Bash(ffprobe:*)",
       "Bash(ffmpeg:*)",
       "WebFetch(domain:www.chronoid.app)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "WebFetch(domain:www.electronjs.org)",
+      "Bash(npm version:*)"
     ]
   }
 }
