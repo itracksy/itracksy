@@ -1,20 +1,28 @@
 import { eq, and, isNull, like, gte, lte, sql } from "drizzle-orm";
 import { matchActivityToCategory, createCategoryMapping } from "./category-matching";
+import { suggestCategoryForActivity } from "./app-metadata";
 import db from "@/api/db";
 import { activities, categories, categoryMappings } from "@/api/db/schema";
+import { logger } from "@/helpers/logger";
 
 /**
- * Automatically categorizes a new activity when it's created
- * This should be called whenever a new activity is inserted
+ * Automatically categorizes a new activity when it's created.
+ * Uses a two-tier approach:
+ * 1. First checks existing category mappings (user-defined rules)
+ * 2. Falls back to macOS app metadata (LSApplicationCategoryType) if no match
+ *
+ * This implements the "Classification Waterfall" strategy for zero-config categorization.
  */
 export const categorizeNewActivity = async (
   activityTimestamp: number,
   userId: string
 ): Promise<boolean> => {
-  // Get the activity data
+  // Get the activity data including bundleId for metadata lookup
   const activity = await db
     .select({
       ownerName: activities.ownerName,
+      ownerBundleId: activities.ownerBundleId,
+      ownerPath: activities.ownerPath,
       url: activities.url,
       title: activities.title,
     })
@@ -26,7 +34,7 @@ export const categorizeNewActivity = async (
     return false;
   }
 
-  // Try to match it to a category
+  // Tier 1: Try to match using existing category mappings
   const match = await matchActivityToCategory(
     {
       ownerName: activity[0].ownerName,
@@ -46,6 +54,62 @@ export const categorizeNewActivity = async (
       .where(eq(activities.timestamp, activityTimestamp));
 
     return true;
+  }
+
+  // Tier 2: Fall back to macOS app metadata (only on macOS)
+  if (process.platform === "darwin" && activity[0].ownerBundleId) {
+    const metadataSuggestion = suggestCategoryForActivity(
+      activity[0].ownerBundleId,
+      activity[0].ownerName,
+      activity[0].ownerPath
+    );
+
+    if (metadataSuggestion && metadataSuggestion.confidence >= 0.8) {
+      // Find the category by name
+      const suggestedCategory = await db
+        .select()
+        .from(categories)
+        .where(
+          and(
+            eq(categories.userId, userId),
+            sql`LOWER(${categories.name}) = LOWER(${metadataSuggestion.category})`
+          )
+        )
+        .limit(1);
+
+      if (suggestedCategory[0]) {
+        // Auto-create a mapping for future activities
+        try {
+          await createCategoryMapping({
+            categoryId: suggestedCategory[0].id,
+            appName: activity[0].ownerName,
+            domain: null,
+            titlePattern: null,
+            matchType: "exact",
+            priority: 40, // Lower than user rules
+            isActive: true,
+            userId,
+          });
+
+          logger.info(
+            `[AutoCategorize] Created mapping from metadata: ${activity[0].ownerName} -> ${metadataSuggestion.category}`
+          );
+        } catch (error) {
+          // Mapping might already exist - that's fine
+          logger.debug(`[AutoCategorize] Mapping creation failed (may exist):`, error);
+        }
+
+        // Update the activity with the suggested category
+        await db
+          .update(activities)
+          .set({
+            categoryId: suggestedCategory[0].id,
+          })
+          .where(eq(activities.timestamp, activityTimestamp));
+
+        return true;
+      }
+    }
   }
 
   return false;

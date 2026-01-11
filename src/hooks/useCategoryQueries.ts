@@ -462,3 +462,71 @@ export function useCopySystemCategoriesMutation() {
     },
   });
 }
+
+// ============================================
+// macOS App Metadata Hooks (Smart Auto-Categorization)
+// ============================================
+
+/**
+ * Scan all installed macOS apps and get their metadata
+ * This includes LSApplicationCategoryType from Info.plist
+ */
+export function useScanInstalledApps() {
+  return useQuery({
+    queryKey: ["apps", "installed"],
+    queryFn: () => trpcClient.category.scanInstalledApps.query(),
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+}
+
+/**
+ * Get apps that can be auto-categorized with suggestions
+ * Filtered to only include apps with high-confidence suggestions
+ */
+export function useAppSuggestions() {
+  return useQuery({
+    queryKey: ["apps", "suggestions"],
+    queryFn: () => trpcClient.category.getAppSuggestions.query(),
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+}
+
+/**
+ * Get metadata for a specific app
+ */
+export function useAppMetadata(bundleId: string, appName?: string) {
+  return useQuery({
+    queryKey: ["apps", "metadata", bundleId],
+    queryFn: () => trpcClient.category.getAppMetadata.query({ bundleId, appName }),
+    enabled: !!bundleId,
+  });
+}
+
+/**
+ * Auto-create category mappings from macOS app metadata
+ */
+export function useAutoCreateMappingsMutation() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: trpcClient.category.autoCreateMappingsFromMetadata.mutate,
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      queryClient.invalidateQueries({ queryKey: ["categoryMappings"] });
+      queryClient.invalidateQueries({ queryKey: ["categories", "uncategorized"] });
+      queryClient.invalidateQueries({ queryKey: ["categories", "stats"] });
+      toast({
+        title: "Auto-Categorization Complete",
+        description: `Created ${result.created} new rules${result.skipped > 0 ? ` (${result.skipped} skipped)` : ""}`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create category mappings",
+        variant: "destructive",
+      });
+    },
+  });
+}

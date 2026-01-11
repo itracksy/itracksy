@@ -1,370 +1,509 @@
+/**
+ * Categorization Page - Redesigned for Simplicity
+ *
+ * Design Philosophy:
+ * 1. The main goal is to reduce uncategorized activities
+ * 2. Show progress prominently to motivate users
+ * 3. One clear CTA based on context
+ * 4. Inline quick-assign for common apps
+ */
+
 import React, { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtom } from "jotai";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import TimeRangeSelector from "@/components/TimeRangeSelector";
+import { Progress } from "@/components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { selectedClassificationTimeRangeAtom } from "@/context/timeRange";
 import {
-  Tags,
-  Plus,
-  BarChart3,
+  Sparkles,
+  Zap,
   Settings,
-  Target,
-  TrendingUp,
-  FolderOpen,
-  Activity,
-  Loader2,
+  ChevronRight,
   Clock,
-  AlertTriangle,
-  ArrowRight,
+  Target,
+  CheckCircle2,
+  AlertCircle,
+  FolderOpen,
+  Globe,
+  Plus,
 } from "lucide-react";
 import {
   useCategoryStats,
   useUncategorizedActivities,
-  useCreateCategoryMutation,
   useCategories,
+  useBulkAssignCategoryMutation,
+  useCategoryActivitiesDetail,
 } from "@/hooks/useCategoryQueries";
+import { QuickCategorize } from "./components/QuickCategorize";
+import { AutoSetupWizard } from "./components/AutoSetupWizard";
 import { CategoryFormModal } from "./components/CategoryFormModal";
-import { AssignCategoryModal } from "./components/AssignCategoryModal";
-import { CategoryActivitiesCard } from "./components/CategoryActivitiesCard";
+import { useCreateCategoryMutation } from "@/hooks/useCategoryQueries";
 
 const CategorizationPage: React.FC = () => {
   const navigate = useNavigate();
   const [selectedTimeRange, setSelectedTimeRange] = useAtom(selectedClassificationTimeRangeAtom);
+  const [isQuickCategorizeOpen, setIsQuickCategorizeOpen] = useState(false);
+  const [isAutoSetupOpen, setIsAutoSetupOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
-  const [selectedActivityGroup, setSelectedActivityGroup] = useState<{
-    ownerName: string;
-    domain: string | null;
-    sampleTitles: readonly string[];
-    activityCount: number;
-  } | null>(null);
+  const [expandedCategory, setExpandedCategory] = useState<string>("");
 
-  const {
-    data: stats,
-    isLoading,
-    error,
-  } = useCategoryStats(selectedTimeRange.start, selectedTimeRange.end);
-
-  const { data: uncategorizedActivities, isLoading: isLoadingUncategorized } =
-    useUncategorizedActivities(selectedTimeRange.start, selectedTimeRange.end, 5);
-
+  const { data: stats } = useCategoryStats(selectedTimeRange.start, selectedTimeRange.end);
+  const { data: uncategorizedActivities = [] } = useUncategorizedActivities(
+    selectedTimeRange.start,
+    selectedTimeRange.end,
+    20
+  );
+  const { data: categoryActivities = [] } = useCategoryActivitiesDetail(
+    selectedTimeRange.start,
+    selectedTimeRange.end,
+    50
+  );
   const { data: categories = [] } = useCategories();
+  const bulkAssignMutation = useBulkAssignCategoryMutation();
   const createMutation = useCreateCategoryMutation();
 
-  // Fallback data for when stats are loading or unavailable
-  const fallbackStats = {
-    totalCategories: 0,
-    totalMappings: 0,
-    categorizedActivities: 0,
-    uncategorizedActivities: 0,
-    topCategories: [],
+  // Calculate progress
+  const totalActivities =
+    (stats?.categorizedActivities || 0) + (stats?.uncategorizedActivities || 0);
+  const categorizedPercent =
+    totalActivities > 0
+      ? Math.round(((stats?.categorizedActivities || 0) / totalActivities) * 100)
+      : 100;
+  const uncategorizedCount = stats?.uncategorizedActivities || 0;
+
+  // Get progress color
+  const getProgressColor = (percent: number) => {
+    if (percent >= 90) return "bg-green-500";
+    if (percent >= 70) return "bg-blue-500";
+    if (percent >= 50) return "bg-yellow-500";
+    return "bg-orange-500";
   };
 
-  const currentStats = stats || fallbackStats;
+  // Quick assign handler
+  const handleQuickAssign = async (
+    ownerName: string,
+    domain: string | null,
+    categoryId: string
+  ) => {
+    await bulkAssignMutation.mutateAsync({
+      categoryId,
+      ownerName,
+      domain,
+      startDate: selectedTimeRange.start,
+      endDate: selectedTimeRange.end,
+    });
+  };
 
+  // Format duration
   const formatDuration = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
-    return `${hours}h ${minutes}m`;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    return `${minutes}m`;
   };
 
-  const handleManageCategories = () => {
-    navigate({ to: "/categorization/manage" });
-  };
-
-  const handleAssignCategory = (activityGroup: {
-    ownerName: string;
-    domain: string | null;
-    sampleTitles: readonly string[];
-    activityCount: number;
-  }) => {
-    setSelectedActivityGroup(activityGroup);
-    setIsAssignModalOpen(true);
-  };
-
-  const handleFormSubmit = async (data: any) => {
-    try {
-      await createMutation.mutateAsync({
-        ...data,
-        color: data.color || "#3b82f6",
-        isSystem: false,
-        order: 0,
-      });
-      setIsCreateModalOpen(false);
-    } catch (error) {
-      console.error("Failed to create category:", error);
-    }
-  };
-
-  const handleCloseModal = () => {
-    setIsCreateModalOpen(false);
-  };
-
-  // Show loading state
-  if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center p-6">
-        <div className="flex items-center space-x-2">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Loading categorization data...</span>
-        </div>
-      </div>
-    );
-  }
-
-  // Show error state
-  if (error) {
-    return (
-      <div className="flex h-full items-center justify-center p-6">
-        <div className="text-center">
-          <p className="mb-2 text-destructive">Error loading categorization data</p>
-          <p className="text-sm text-muted-foreground">{error.message}</p>
-        </div>
-      </div>
-    );
-  }
+  // Time range options
+  const timeRangeOptions = [
+    { value: "today", label: "Today" },
+    { value: "yesterday", label: "Yesterday" },
+    { value: "week", label: "This Week" },
+    { value: "month", label: "This Month" },
+  ];
 
   return (
-    <div className="flex h-full flex-col space-y-6 p-6">
-      <div className="flex flex-col space-y-4">
+    <div className="flex h-full flex-col p-6">
+      {/* Header - Minimal */}
+      <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Categorization</h1>
-          <p className="text-muted-foreground">
-            Organize and analyze your activities with intelligent categorization
-          </p>
+          <h1 className="text-2xl font-bold">Categorization</h1>
+          <p className="text-sm text-muted-foreground">Organize your tracked activities</p>
         </div>
-        <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-x-4 sm:space-y-0">
-          <TimeRangeSelector
-            start={selectedTimeRange.start}
-            end={selectedTimeRange.end}
+        <div className="flex items-center gap-2">
+          <Select
             value={selectedTimeRange.value}
-            onRangeChange={setSelectedTimeRange}
-          />
-          <div className="flex space-x-2">
-            <Button variant="outline" size="sm" onClick={handleManageCategories}>
-              <Settings className="mr-2 h-4 w-4" />
-              Manage Categories
+            onValueChange={(value) => {
+              const now = new Date();
+              let start: number;
+              let end = now.getTime();
+
+              switch (value) {
+                case "today":
+                  start = new Date(now.setHours(0, 0, 0, 0)).getTime();
+                  break;
+                case "yesterday":
+                  const yesterday = new Date(now);
+                  yesterday.setDate(yesterday.getDate() - 1);
+                  start = new Date(yesterday.setHours(0, 0, 0, 0)).getTime();
+                  end = new Date(yesterday.setHours(23, 59, 59, 999)).getTime();
+                  break;
+                case "week":
+                  const weekAgo = new Date(now);
+                  weekAgo.setDate(weekAgo.getDate() - 7);
+                  start = weekAgo.getTime();
+                  break;
+                case "month":
+                  const monthAgo = new Date(now);
+                  monthAgo.setMonth(monthAgo.getMonth() - 1);
+                  start = monthAgo.getTime();
+                  break;
+                default:
+                  start = new Date(now.setHours(0, 0, 0, 0)).getTime();
+              }
+
+              setSelectedTimeRange({ value, start, end });
+            }}
+          >
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {timeRangeOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate({ to: "/categorization/manage" })}
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 space-y-6 overflow-auto">
+        {/* Hero Card - Progress & Actions */}
+        <Card
+          className={`border-2 ${
+            uncategorizedCount > 0
+              ? "border-orange-500/30 bg-gradient-to-br from-orange-500/5 to-yellow-500/5"
+              : "border-green-500/30 bg-gradient-to-br from-green-500/5 to-emerald-500/5"
+          }`}
+        >
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between gap-6">
+              {/* Progress Section */}
+              <div className="flex-1 space-y-4">
+                <div className="flex items-center gap-3">
+                  {uncategorizedCount > 0 ? (
+                    <AlertCircle className="h-6 w-6 text-orange-500" />
+                  ) : (
+                    <CheckCircle2 className="h-6 w-6 text-green-500" />
+                  )}
+                  <div>
+                    <h2 className="text-lg font-semibold">
+                      {uncategorizedCount > 0
+                        ? `${uncategorizedCount} Activities Need Categorization`
+                        : "All Caught Up!"}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      {categorizedPercent}% of your activities are categorized
+                    </p>
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="space-y-2">
+                  <Progress
+                    value={categorizedPercent}
+                    className="h-3"
+                    // @ts-ignore - custom indicator color
+                    indicatorClassName={getProgressColor(categorizedPercent)}
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>{stats?.categorizedActivities || 0} categorized</span>
+                    <span>{uncategorizedCount} remaining</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col gap-2">
+                {uncategorizedCount > 0 ? (
+                  <>
+                    <Button
+                      onClick={() => setIsQuickCategorizeOpen(true)}
+                      className="bg-orange-500 hover:bg-orange-600"
+                    >
+                      <Zap className="mr-2 h-4 w-4" />
+                      Quick Categorize
+                    </Button>
+                    <Button variant="outline" onClick={() => setIsAutoSetupOpen(true)}>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Auto Setup
+                    </Button>
+                  </>
+                ) : (
+                  <Button variant="outline" onClick={() => setIsAutoSetupOpen(true)}>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Scan New Apps
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Uncategorized Apps - Inline Quick Assign */}
+        {uncategorizedActivities.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium text-muted-foreground">
+                Quick Assign (click app, then category)
+              </h3>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {uncategorizedActivities.slice(0, 8).map((activity) => (
+                <InlineAssignChip
+                  key={`${activity.ownerName}-${activity.domain || ""}`}
+                  ownerName={activity.ownerName}
+                  domain={activity.domain}
+                  count={activity.activityCount}
+                  categories={categories}
+                  onAssign={handleQuickAssign}
+                  isLoading={bulkAssignMutation.isPending}
+                />
+              ))}
+              {uncategorizedActivities.length > 8 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground"
+                  onClick={() => setIsQuickCategorizeOpen(true)}
+                >
+                  +{uncategorizedActivities.length - 8} more
+                  <ChevronRight className="ml-1 h-3 w-3" />
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Categories List */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium">Your Categories</h3>
+            <Button variant="ghost" size="sm" onClick={() => setIsCreateModalOpen(true)}>
+              <Plus className="mr-1 h-3 w-3" />
+              Add
             </Button>
-            <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Category
-            </Button>
+          </div>
+
+          <div className="space-y-2">
+            {categoryActivities.length > 0 ? (
+              <Accordion
+                type="single"
+                collapsible
+                value={expandedCategory}
+                onValueChange={setExpandedCategory}
+                className="space-y-2"
+              >
+                {categoryActivities.map((category) => (
+                  <AccordionItem
+                    key={category.categoryId}
+                    value={category.categoryId}
+                    className="rounded-lg border bg-card"
+                  >
+                    <AccordionTrigger className="px-4 py-3 hover:no-underline [&[data-state=open]>div>svg]:rotate-90">
+                      <div className="flex w-full items-center justify-between pr-2">
+                        <div className="flex items-center gap-3">
+                          <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform" />
+                          <div
+                            className="h-3 w-3 rounded-full"
+                            style={{ backgroundColor: category.categoryColor || "#666" }}
+                          />
+                          <div className="text-left">
+                            <span className="font-medium">{category.categoryName}</span>
+                            <span className="ml-2 text-sm text-muted-foreground">
+                              {category.activityCount} activities
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-medium">
+                            {formatDuration(category.totalDuration)}
+                          </span>
+                          <div className="flex gap-1">
+                            {category.activities.some((a) => a.isFocusMode) && (
+                              <Badge variant="secondary" className="bg-blue-500/10 text-blue-500">
+                                <Target className="mr-1 h-3 w-3" />
+                                Focus
+                              </Badge>
+                            )}
+                            {category.activities.some((a) => !a.isFocusMode) && (
+                              <Badge variant="secondary" className="bg-green-500/10 text-green-500">
+                                <Clock className="mr-1 h-3 w-3" />
+                                Break
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pb-3">
+                      <div className="ml-7 space-y-1 rounded-lg bg-muted/30 p-3">
+                        {category.activities.slice(0, 10).map((activity, idx) => (
+                          <div key={idx} className="flex items-center justify-between py-1 text-sm">
+                            <div className="flex items-center gap-2 truncate">
+                              {activity.domain ? (
+                                <Globe className="h-3 w-3 text-muted-foreground" />
+                              ) : (
+                                <FolderOpen className="h-3 w-3 text-muted-foreground" />
+                              )}
+                              <span className="truncate">
+                                {activity.domain || activity.ownerName}
+                              </span>
+                            </div>
+                            <span className="text-muted-foreground">
+                              {formatDuration(activity.duration)}
+                            </span>
+                          </div>
+                        ))}
+                        {category.activities.length > 10 && (
+                          <p className="text-xs text-muted-foreground">
+                            +{category.activities.length - 10} more activities
+                          </p>
+                        )}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            ) : (
+              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+                <FolderOpen className="mb-2 h-8 w-8 text-muted-foreground/50" />
+                <p className="text-sm text-muted-foreground">No categorized activities yet</p>
+                <Button variant="link" size="sm" onClick={() => setIsAutoSetupOpen(true)}>
+                  Run Auto Setup to get started
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      <Separator />
-
-      {/* Statistics Overview */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Categories</CardTitle>
-            <FolderOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{currentStats.totalCategories}</div>
-            <p className="text-xs text-muted-foreground">Including system categories</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Mappings</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{currentStats.totalMappings}</div>
-            <p className="text-xs text-muted-foreground">Auto-categorization rules</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Categorized Activities</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{currentStats.categorizedActivities}</div>
-            <p className="text-xs text-muted-foreground">
-              {currentStats.categorizedActivities + currentStats.uncategorizedActivities > 0
-                ? Math.round(
-                    (currentStats.categorizedActivities /
-                      (currentStats.categorizedActivities + currentStats.uncategorizedActivities)) *
-                      100
-                  )
-                : 0}
-              % of total activities
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Uncategorized</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-500 dark:text-orange-400">
-              {currentStats.uncategorizedActivities}
-            </div>
-            <p className="text-xs text-muted-foreground">Need manual review</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Categories with Activities - Full Width */}
-      <CategoryActivitiesCard startDate={selectedTimeRange.start} endDate={selectedTimeRange.end} />
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Top Categories Summary */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <BarChart3 className="mr-2 h-5 w-5" />
-              Category Summary
-            </CardTitle>
-            <CardDescription>Quick overview of time spent per category</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {currentStats.topCategories.map((category, index) => (
-                <div key={category.categoryName} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-medium">
-                      {index + 1}
-                    </div>
-                    <div>
-                      <p className="font-medium">{category.categoryName}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {category.activityCount} activities
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium">{formatDuration(category.totalDuration)}</p>
-                    <Badge variant="secondary" className="text-xs">
-                      {currentStats.categorizedActivities > 0
-                        ? Math.round(
-                            (category.activityCount / currentStats.categorizedActivities) * 100
-                          )
-                        : 0}
-                      %
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Uncategorized Activities */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <AlertTriangle className="mr-2 h-5 w-5" />
-              Uncategorized Activities
-            </CardTitle>
-            <CardDescription>Activities that need category assignment</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {isLoadingUncategorized ? (
-                <div className="flex items-center justify-center py-6">
-                  <Loader2 className="h-6 w-6 animate-spin" />
-                  <span className="ml-2">Loading activities...</span>
-                </div>
-              ) : uncategorizedActivities && uncategorizedActivities.length > 0 ? (
-                uncategorizedActivities.map((activityGroup) => (
-                  <div
-                    key={`${activityGroup.ownerName}-${activityGroup.domain || "no-domain"}`}
-                    className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50"
-                  >
-                    <div className="flex min-w-0 flex-1 items-center space-x-3">
-                      <div className="h-2 w-2 flex-shrink-0 rounded-full bg-orange-500 dark:bg-orange-400"></div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">{activityGroup.ownerName}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {activityGroup.activityCount} activities
-                        </p>
-                        {activityGroup.sampleTitles.length > 0 && (
-                          <p className="truncate text-xs text-muted-foreground">
-                            Examples: {activityGroup.sampleTitles.join(", ")}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleAssignCategory(activityGroup)}
-                      className="ml-3 flex-shrink-0"
-                    >
-                      <Plus className="mr-1 h-3 w-3" />
-                      Assign Category
-                    </Button>
-                  </div>
-                ))
-              ) : (
-                <div className="py-6 text-center text-muted-foreground">
-                  <AlertTriangle className="mx-auto mb-2 h-8 w-8 opacity-50" />
-                  <p className="text-sm">All activities are categorized!</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Great job organizing your activities
-                  </p>
-                </div>
-              )}
-
-              {uncategorizedActivities && uncategorizedActivities.length > 0 && (
-                <>
-                  <Separator />
-                  <Button
-                    variant="outline"
-                    className="w-full justify-center"
-                    onClick={() => navigate({ to: "/categorization/uncategorized" })}
-                  >
-                    <ArrowRight className="mr-2 h-4 w-4" />
-                    View All Uncategorized
-                  </Button>
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Assign Category Modal */}
-      {selectedActivityGroup && (
-        <AssignCategoryModal
-          open={isAssignModalOpen}
-          onOpenChange={setIsAssignModalOpen}
-          activityGroup={selectedActivityGroup}
-        />
-      )}
-
-      {/* Category Creation Modal */}
+      {/* Modals */}
+      <QuickCategorize
+        open={isQuickCategorizeOpen}
+        onOpenChange={setIsQuickCategorizeOpen}
+        startDate={selectedTimeRange.start}
+        endDate={selectedTimeRange.end}
+      />
+      <AutoSetupWizard open={isAutoSetupOpen} onOpenChange={setIsAutoSetupOpen} />
       <CategoryFormModal
         isOpen={isCreateModalOpen}
-        onClose={handleCloseModal}
-        onSubmit={handleFormSubmit}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={async (data) => {
+          // In create mode, the form validates that name is present
+          if (!data.name) return;
+          await createMutation.mutateAsync({
+            name: data.name,
+            description: data.description,
+            icon: data.icon,
+            parentId: data.parentId,
+            color: data.color || "#3b82f6",
+            isSystem: false,
+            order: 0,
+          });
+          setIsCreateModalOpen(false);
+        }}
         mode="create"
         parentCategories={categories}
         isLoading={createMutation.isPending}
-        initialData={
-          selectedActivityGroup
-            ? {
-                name: selectedActivityGroup.ownerName,
-                description: `Category for ${selectedActivityGroup.ownerName} activities`,
-              }
-            : undefined
-        }
       />
     </div>
   );
 };
+
+/**
+ * Inline Quick Assign Chip
+ * Click to expand category selector, then click category to assign
+ */
+interface InlineAssignChipProps {
+  ownerName: string;
+  domain: string | null;
+  count: number;
+  categories: Array<{ id: string; name: string; color: string | null }>;
+  onAssign: (ownerName: string, domain: string | null, categoryId: string) => void;
+  isLoading: boolean;
+}
+
+function InlineAssignChip({
+  ownerName,
+  domain,
+  count,
+  categories,
+  onAssign,
+  isLoading,
+}: InlineAssignChipProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Only show root categories for quick assign
+  const rootCategories = categories.filter((c) => !("parentId" in c) || !(c as any).parentId);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        disabled={isLoading}
+        className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors ${
+          isOpen ? "border-primary bg-primary/10" : "border-border bg-muted/50 hover:bg-muted"
+        }`}
+      >
+        <span className="h-2 w-2 rounded-full bg-orange-500" />
+        <span className="max-w-32 truncate font-medium">{ownerName}</span>
+        <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+          {count}
+        </Badge>
+      </button>
+
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+          {/* Dropdown */}
+          <div className="absolute left-0 top-full z-20 mt-1 w-48 rounded-lg border bg-popover p-1 shadow-lg">
+            <p className="px-2 py-1 text-xs text-muted-foreground">Assign to category:</p>
+            {rootCategories.slice(0, 8).map((category) => (
+              <button
+                key={category.id}
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted"
+                onClick={() => {
+                  onAssign(ownerName, domain, category.id);
+                  setIsOpen(false);
+                }}
+              >
+                <div
+                  className="h-2 w-2 rounded-full"
+                  style={{ backgroundColor: category.color || "#666" }}
+                />
+                {category.name}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 export default CategorizationPage;

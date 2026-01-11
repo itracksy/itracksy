@@ -32,6 +32,10 @@ import {
   copySystemCategoriesToUser,
   hasUserCategories,
   seedFromSystemCategories,
+  // App metadata functions
+  scanInstalledApps,
+  getAutoCategorizeablApps,
+  getAppMetadata,
 } from "../services/category";
 
 // Create Zod schemas from Drizzle tables
@@ -258,4 +262,98 @@ export const categoryRouter = t.router({
   copySystemCategories: protectedProcedure.mutation(async ({ ctx }) => {
     return copySystemCategoriesToUser(ctx.userId!);
   }),
+
+  // ============================================
+  // macOS App Metadata (Tier 1: Deterministic Layer)
+  // ============================================
+
+  /**
+   * Scan all installed applications and get their metadata
+   * Used to show users what apps can be auto-categorized
+   */
+  scanInstalledApps: protectedProcedure.query(async () => {
+    return scanInstalledApps();
+  }),
+
+  /**
+   * Get apps that can be auto-categorized with high confidence
+   * These are apps with LSApplicationCategoryType or known vendor prefixes
+   */
+  getAppSuggestions: protectedProcedure.query(async () => {
+    return getAutoCategorizeablApps();
+  }),
+
+  /**
+   * Get metadata for a specific app by bundle ID
+   */
+  getAppMetadata: protectedProcedure
+    .input(
+      z.object({
+        bundleId: z.string(),
+        appName: z.string().optional(),
+      })
+    )
+    .query(async ({ input }) => {
+      return getAppMetadata(input.bundleId, input.appName);
+    }),
+
+  /**
+   * Auto-create category mappings from macOS app metadata
+   * This creates rules for all apps that have a suggested category
+   */
+  autoCreateMappingsFromMetadata: protectedProcedure
+    .input(
+      z.object({
+        apps: z.array(
+          z.object({
+            bundleId: z.string(),
+            appName: z.string(),
+            suggestedCategory: z.string(),
+          })
+        ),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const userId = ctx.userId!;
+      const userCategories = await getCategories(userId);
+      const createdMappings: string[] = [];
+      const skippedApps: string[] = [];
+
+      for (const app of input.apps) {
+        // Find the category ID that matches the suggested category name
+        const category = userCategories.find(
+          (c) => c.name.toLowerCase() === app.suggestedCategory.toLowerCase()
+        );
+
+        if (!category) {
+          skippedApps.push(app.appName);
+          continue;
+        }
+
+        try {
+          // Create a mapping for this app
+          await createCategoryMapping({
+            categoryId: category.id,
+            appName: app.appName,
+            domain: null,
+            titlePattern: null,
+            matchType: "exact",
+            priority: 50, // Medium priority - can be overridden by user rules
+            isActive: true,
+            userId,
+          });
+          createdMappings.push(app.appName);
+        } catch (error) {
+          // Mapping might already exist
+          skippedApps.push(app.appName);
+        }
+      }
+
+      return {
+        created: createdMappings.length,
+        skipped: skippedApps.length,
+        createdApps: createdMappings,
+        skippedApps,
+      };
+    }),
 });
