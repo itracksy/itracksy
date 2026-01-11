@@ -440,69 +440,105 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
         </div>
       </div>
 
-      {/* Timer Display with Progress Ring */}
-      <div className="relative mx-auto h-64 w-64">
-        {/* SVG Progress Ring */}
-        <svg className="absolute inset-0 -rotate-90" viewBox="0 0 256 256">
-          {/* Background circle */}
-          <circle
-            cx="128"
-            cy="128"
-            r="120"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="12"
-            className="text-[#E5A853]/20"
-          />
-          {/* Progress circle */}
-          <circle
-            cx="128"
-            cy="128"
-            r="120"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="12"
-            strokeLinecap="round"
-            className={isTimeExceeded ? "text-red-500" : "text-[#E5A853]"}
-            style={{
-              strokeDasharray: circumference,
-              strokeDashoffset: isTimeExceeded ? 0 : strokeDashoffset,
-              transition: "stroke-dashoffset 0.5s ease-in-out",
-            }}
-          />
-        </svg>
+      {/* Timer Display with Progress Ring - only for timed sessions */}
+      {(activeTimeEntry.targetDuration ?? 0) > 0 ? (
+        <div className="relative mx-auto h-64 w-64">
+          {/* SVG Progress Ring */}
+          <svg className="absolute inset-0 -rotate-90" viewBox="0 0 256 256">
+            {/* Background circle */}
+            <circle
+              cx="128"
+              cy="128"
+              r="120"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="12"
+              className="text-[#E5A853]/20"
+            />
+            {/* Progress circle */}
+            <circle
+              cx="128"
+              cy="128"
+              r="120"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="12"
+              strokeLinecap="round"
+              className={isTimeExceeded ? "text-red-500" : "text-[#E5A853]"}
+              style={{
+                strokeDasharray: circumference,
+                strokeDashoffset: isTimeExceeded ? 0 : strokeDashoffset,
+                transition: "stroke-dashoffset 0.5s ease-in-out",
+              }}
+            />
+          </svg>
 
-        {/* Timer content */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-          <span className="font-mono text-5xl font-bold text-[#2B4474] dark:text-white">
-            {duration}
-          </span>
-          {isPaused && (
-            <div className="flex flex-col items-center space-y-1">
-              <Pause className="h-5 w-5 text-[#E5A853]" />
-              <span className="text-sm font-medium text-[#E5A853]">PAUSED</span>
-            </div>
-          )}
-          {isTimeExceeded && !isPaused && (
-            <div className="flex flex-col items-center space-y-1">
-              <AlertTriangle className="h-5 w-5 animate-bounce text-red-500" />
-              <span
-                className="max-w-[180px] text-center text-xs font-medium text-red-500 transition-all duration-300"
-                style={{
-                  animation: "warning 2s infinite",
-                }}
-              >
-                {warningMessage}
-              </span>
-            </div>
-          )}
-          {!isPaused && !isTimeExceeded && (activeTimeEntry.targetDuration ?? 0) > 0 && (
-            <span className="text-xs text-muted-foreground">
-              {Math.round(progressPercentage)}% complete
+          {/* Timer content */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+            <span className="font-mono text-5xl font-bold text-[#2B4474] dark:text-white">
+              {duration}
             </span>
-          )}
+            {isPaused && (
+              <div className="flex flex-col items-center space-y-1">
+                <Pause className="h-5 w-5 text-[#E5A853]" />
+                <span className="text-sm font-medium text-[#E5A853]">PAUSED</span>
+              </div>
+            )}
+            {isTimeExceeded && !isPaused && (
+              <div className="flex flex-col items-center space-y-1">
+                <AlertTriangle className="h-5 w-5 animate-bounce text-red-500" />
+                <span
+                  className="max-w-[180px] text-center text-xs font-medium text-red-500 transition-all duration-300"
+                  style={{
+                    animation: "warning 2s infinite",
+                  }}
+                >
+                  {warningMessage}
+                </span>
+              </div>
+            )}
+            {!isPaused && !isTimeExceeded && (
+              <span className="text-xs text-muted-foreground">
+                {Math.round(progressPercentage)}% complete
+              </span>
+            )}
+          </div>
         </div>
-      </div>
+      ) : (
+        /* Unlimited mode - simple tracking indicator */
+        <div className="relative mx-auto flex h-64 w-64 flex-col items-center justify-center">
+          {/* Pulsing ring animation */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="h-48 w-48 animate-pulse rounded-full border-[12px] border-[#E5A853]/30" />
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div
+              className="h-40 w-40 rounded-full border-[8px] border-[#E5A853]/50"
+              style={{ animation: "pulse 2s ease-in-out infinite" }}
+            />
+          </div>
+          <div className="relative flex flex-col items-center gap-3">
+            {isPaused ? (
+              <>
+                <Pause className="h-12 w-12 text-[#E5A853]" />
+                <span className="text-lg font-medium text-[#E5A853]">PAUSED</span>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-2">
+                  <span className="h-3 w-3 animate-pulse rounded-full bg-[#E5A853]" />
+                  <span className="text-lg font-medium text-[#2B4474] dark:text-white">
+                    Tracking
+                  </span>
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  Your activities are being recorded
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Action Buttons */}
       <div className="mt-4 flex flex-wrap justify-center gap-3 pt-6">
