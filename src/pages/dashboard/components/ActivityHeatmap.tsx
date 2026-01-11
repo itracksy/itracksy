@@ -2,33 +2,16 @@ import { useQuery } from "@tanstack/react-query";
 import { trpcClient } from "@/utils/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useState } from "react";
-import { Flame, Calendar, TrendingUp, Clock } from "lucide-react";
+import { useMemo } from "react";
+import { Flame, Calendar, TrendingUp } from "lucide-react";
 
-const LEVEL_COLORS = {
-  0: "bg-gray-100 dark:bg-gray-800",
-  1: "bg-[#E5A853]/20",
-  2: "bg-[#E5A853]/40",
-  3: "bg-[#E5A853]/70",
-  4: "bg-[#E5A853]",
-};
-
-const LEVEL_LABELS = {
-  0: "No activity",
-  1: "Light (0-2h)",
-  2: "Medium (2-4h)",
-  3: "Good (4-6h)",
-  4: "Excellent (6h+)",
-};
-
-const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const LEVEL_COLORS = [
+  "bg-muted",
+  "bg-[#E5A853]/25",
+  "bg-[#E5A853]/50",
+  "bg-[#E5A853]/75",
+  "bg-[#E5A853]",
+] as const;
 
 interface DailyActivityData {
   date: string;
@@ -37,12 +20,8 @@ interface DailyActivityData {
   level: 0 | 1 | 2 | 3 | 4;
 }
 
-interface ActivityHeatmapProps {
-  compact?: boolean;
-}
-
-export function ActivityHeatmap({ compact = false }: ActivityHeatmapProps) {
-  const [months, setMonths] = useState(compact ? 1 : 3);
+export function ActivityHeatmap() {
+  const months = 3; // Always show 3 months
 
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard.getActivityHeatmap", months],
@@ -50,55 +29,71 @@ export function ActivityHeatmap({ compact = false }: ActivityHeatmapProps) {
     refetchInterval: 60000,
   });
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader className={compact ? "p-4 pb-2" : ""}>
-          <CardTitle className="flex items-center gap-2 text-sm">
-            <Calendar className="h-4 w-4 text-[#E5A853]" />
-            Activity
-          </CardTitle>
-        </CardHeader>
-        <CardContent className={compact ? "p-4 pt-0" : ""}>
-          <div className="flex h-24 items-center justify-center">
-            <div className="animate-pulse text-sm text-muted-foreground">Loading...</div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Organize data into a grid: 7 rows (days) x N columns (weeks)
+  const { weeks, monthLabels } = useMemo(() => {
+    if (!data?.days.length) return { weeks: [], monthLabels: [] };
 
-  if (!data) return null;
-
-  // Group days into weeks for the grid
-  const weeks: DailyActivityData[][] = [];
-  let currentWeek: DailyActivityData[] = [];
-
-  if (data.days.length > 0) {
-    const firstDay = new Date(data.days[0].date);
-    const dayOfWeek = firstDay.getDay();
-    for (let i = 0; i < dayOfWeek; i++) {
-      currentWeek.push({ date: "", focusHours: 0, activityCount: 0, level: 0 });
+    // Create a map of date -> day data
+    const dayMap = new Map<string, DailyActivityData>();
+    for (const day of data.days) {
+      dayMap.set(day.date, day);
     }
-  }
 
-  for (const day of data.days) {
-    currentWeek.push(day);
-    if (currentWeek.length === 7) {
-      weeks.push(currentWeek);
-      currentWeek = [];
-    }
-  }
+    // Find the date range
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - months);
 
-  if (currentWeek.length > 0) {
-    while (currentWeek.length < 7) {
-      currentWeek.push({ date: "", focusHours: 0, activityCount: 0, level: 0 });
+    // Adjust start to the beginning of that week (Sunday)
+    const startDayOfWeek = startDate.getDay();
+    startDate.setDate(startDate.getDate() - startDayOfWeek);
+
+    // Adjust end to the end of current week (Saturday)
+    const endDayOfWeek = endDate.getDay();
+    endDate.setDate(endDate.getDate() + (6 - endDayOfWeek));
+
+    // Build weeks array
+    const weeksArr: (DailyActivityData | null)[][] = [];
+    const monthLabelsArr: { label: string; weekIndex: number }[] = [];
+    let currentDate = new Date(startDate);
+    let weekIndex = 0;
+    let lastMonth = -1;
+
+    while (currentDate <= endDate) {
+      const week: (DailyActivityData | null)[] = [];
+
+      for (let day = 0; day < 7; day++) {
+        const dateStr = currentDate.toISOString().split("T")[0];
+        const dayData = dayMap.get(dateStr);
+
+        // Only include dates up to today
+        if (currentDate <= new Date()) {
+          week.push(dayData || { date: dateStr, focusHours: 0, activityCount: 0, level: 0 });
+        } else {
+          week.push(null); // Future dates
+        }
+
+        // Track month changes for labels
+        const month = currentDate.getMonth();
+        if (month !== lastMonth && day === 0) {
+          monthLabelsArr.push({
+            label: currentDate.toLocaleDateString("en-US", { month: "short" }),
+            weekIndex,
+          });
+          lastMonth = month;
+        }
+
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      weeksArr.push(week);
+      weekIndex++;
     }
-    weeks.push(currentWeek);
-  }
+
+    return { weeks: weeksArr, monthLabels: monthLabelsArr };
+  }, [data, months]);
 
   const formatDate = (dateStr: string) => {
-    if (!dateStr) return "";
     const date = new Date(dateStr);
     return date.toLocaleDateString("en-US", {
       weekday: "short",
@@ -108,86 +103,103 @@ export function ActivityHeatmap({ compact = false }: ActivityHeatmapProps) {
   };
 
   const formatHours = (hours: number) => {
-    if (hours === 0) return "0h";
+    if (hours === 0) return "0m";
     if (hours < 1) return `${Math.round(hours * 60)}m`;
     const h = Math.floor(hours);
     const m = Math.round((hours - h) * 60);
     return m > 0 ? `${h}h ${m}m` : `${h}h`;
   };
 
-  // Compact version
-  if (compact) {
+  if (isLoading) {
     return (
       <Card>
-        <CardHeader className="p-5 pb-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium">
-              <Calendar className="h-4 w-4 text-[#E5A853]" />
-              Activity
-            </CardTitle>
-            <Select value={String(months)} onValueChange={(v) => setMonths(Number(v))}>
-              <SelectTrigger className="h-7 w-24 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">1 month</SelectItem>
-                <SelectItem value="3">3 months</SelectItem>
-                <SelectItem value="6">6 months</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-5 p-5 pt-0">
-          {/* Compact Stats Row */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex items-center gap-3 rounded-lg bg-muted/50 px-4 py-3">
-              <Flame className="h-5 w-5 text-orange-500" />
-              <div>
-                <div className="text-xs text-muted-foreground">Streak</div>
-                <div className="text-base font-semibold">{data.currentStreak} days</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 rounded-lg bg-muted/50 px-4 py-3">
-              <TrendingUp className="h-5 w-5 text-green-500" />
-              <div>
-                <div className="text-xs text-muted-foreground">Daily Avg</div>
-                <div className="text-base font-semibold">{formatHours(data.averageDailyHours)}</div>
-              </div>
-            </div>
-          </div>
+        <CardContent className="flex h-48 items-center justify-center">
+          <div className="animate-pulse text-sm text-muted-foreground">Loading...</div>
+        </CardContent>
+      </Card>
+    );
+  }
 
-          {/* Compact Heatmap Grid */}
-          <div className="overflow-x-auto py-2">
-            <div className="min-w-fit">
-              {/* Weekday labels - compact */}
-              <div className="mb-2 flex">
-                <div className="w-5" />
+  if (!data) return null;
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <Calendar className="h-4 w-4 text-[#E5A853]" />
+          Activity (Last 3 Months)
+        </CardTitle>
+      </CardHeader>
+
+      <CardContent className="space-y-3">
+        {/* Stats - responsive */}
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          <div className="flex items-center gap-1.5">
+            <Flame className="h-4 w-4 text-orange-500" />
+            <span className="font-semibold">{data.currentStreak}</span>
+            <span className="text-muted-foreground">day streak</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <TrendingUp className="h-4 w-4 text-green-500" />
+            <span className="font-semibold">{formatHours(data.averageDailyHours)}</span>
+            <span className="text-muted-foreground">avg/day</span>
+          </div>
+        </div>
+
+        {/* Heatmap - responsive with horizontal scroll on small screens */}
+        <div className="-mx-2 overflow-x-auto px-2">
+          <div className="inline-flex flex-col gap-1">
+            {/* Month labels row - optimized for 3 months */}
+            <div className="flex h-4 items-end">
+              <div className="w-6 shrink-0" />
+              <div className="relative flex-1">
+                {monthLabels.map((m, i) => (
+                  <span
+                    key={i}
+                    className="absolute text-[10px] font-medium text-muted-foreground"
+                    style={{ left: `${m.weekIndex * 14}px` }}
+                  >
+                    {m.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Grid: days as rows, weeks as columns */}
+            <div className="flex gap-0.5">
+              {/* Day labels */}
+              <div className="flex w-6 shrink-0 flex-col gap-0.5">
                 {["S", "M", "T", "W", "T", "F", "S"].map((day, i) => (
-                  <div key={i} className="w-[14px] text-center text-[10px] text-muted-foreground">
-                    {i % 2 === 0 ? day : ""}
+                  <div
+                    key={i}
+                    className="flex h-[12px] w-full items-center justify-end pr-1 text-[9px] text-muted-foreground"
+                  >
+                    {i % 2 === 1 ? day : ""}
                   </div>
                 ))}
               </div>
 
-              {/* Grid */}
-              <div className="flex gap-[3px]">
+              {/* Weeks */}
+              <div className="flex gap-0.5">
                 {weeks.map((week, weekIndex) => (
-                  <div key={weekIndex} className="flex flex-col gap-[3px]">
+                  <div key={weekIndex} className="flex flex-col gap-0.5">
                     {week.map((day, dayIndex) => (
                       <TooltipProvider key={`${weekIndex}-${dayIndex}`} delayDuration={0}>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div
-                              className={`h-[14px] w-[14px] rounded-sm ${
-                                day.date ? LEVEL_COLORS[day.level] : "bg-transparent"
-                              } ${day.date ? "cursor-pointer transition-transform hover:scale-110" : ""}`}
+                              className={`h-[12px] w-[12px] rounded-[2px] ${
+                                day ? LEVEL_COLORS[day.level] : "bg-transparent"
+                              } ${day ? "cursor-pointer transition-all hover:ring-1 hover:ring-foreground/30" : ""}`}
                             />
                           </TooltipTrigger>
-                          {day.date && (
+                          {day && (
                             <TooltipContent side="top" className="text-xs">
                               <div className="font-medium">{formatDate(day.date)}</div>
                               <div className="text-muted-foreground">
-                                {formatHours(day.focusHours)} focus
+                                {day.focusHours > 0
+                                  ? `${formatHours(day.focusHours)} focus time`
+                                  : "No activity"}
                               </div>
                             </TooltipContent>
                           )}
@@ -199,154 +211,21 @@ export function ActivityHeatmap({ compact = false }: ActivityHeatmapProps) {
               </div>
             </div>
           </div>
-
-          {/* Compact Legend */}
-          <div className="flex items-center justify-between pt-2 text-xs text-muted-foreground">
-            <span>
-              Total:{" "}
-              <span className="font-semibold text-[#E5A853]">
-                {formatHours(data.totalFocusHours)}
-              </span>
-            </span>
-            <div className="flex items-center gap-1.5">
-              <span>Less</span>
-              {([0, 1, 2, 3, 4] as const).map((level) => (
-                <div key={level} className={`h-3 w-3 rounded-sm ${LEVEL_COLORS[level]}`} />
-              ))}
-              <span>More</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Full version (for Dashboard if needed)
-  return (
-    <Card>
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-[#E5A853]" />
-            Activity Heatmap
-          </CardTitle>
-          <Select value={String(months)} onValueChange={(v) => setMonths(Number(v))}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1">1 month</SelectItem>
-              <SelectItem value="3">3 months</SelectItem>
-              <SelectItem value="6">6 months</SelectItem>
-              <SelectItem value="12">12 months</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div className="rounded-lg bg-[#2B4474]/5 p-3 dark:bg-[#2B4474]/10">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Clock className="h-3 w-3" />
-              Total Focus
-            </div>
-            <div className="mt-1 text-lg font-bold text-[#E5A853]">
-              {formatHours(data.totalFocusHours)}
-            </div>
-          </div>
-          <div className="rounded-lg bg-[#2B4474]/5 p-3 dark:bg-[#2B4474]/10">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <TrendingUp className="h-3 w-3" />
-              Daily Avg
-            </div>
-            <div className="mt-1 text-lg font-bold text-[#2B4474] dark:text-white">
-              {formatHours(data.averageDailyHours)}
-            </div>
-          </div>
-          <div className="rounded-lg bg-[#2B4474]/5 p-3 dark:bg-[#2B4474]/10">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Flame className="h-3 w-3" />
-              Current Streak
-            </div>
-            <div className="mt-1 text-lg font-bold text-[#2B4474] dark:text-white">
-              {data.currentStreak} days
-            </div>
-          </div>
-          <div className="rounded-lg bg-[#2B4474]/5 p-3 dark:bg-[#2B4474]/10">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Flame className="h-3 w-3 text-orange-500" />
-              Best Streak
-            </div>
-            <div className="mt-1 text-lg font-bold text-[#2B4474] dark:text-white">
-              {data.longestStreak} days
-            </div>
-          </div>
         </div>
 
-        {/* Heatmap Grid */}
-        <div className="overflow-x-auto">
-          <div className="min-w-fit">
-            {/* Weekday labels */}
-            <div className="mb-1 flex">
-              <div className="w-8" />
-              {WEEKDAYS.map((day) => (
-                <div key={day} className="w-4 text-center text-[10px] text-muted-foreground">
-                  {day[0]}
-                </div>
-              ))}
-            </div>
-
-            {/* Grid */}
-            <div className="flex gap-[2px]">
-              {weeks.map((week, weekIndex) => (
-                <div key={weekIndex} className="flex flex-col gap-[2px]">
-                  {week.map((day, dayIndex) => (
-                    <TooltipProvider key={`${weekIndex}-${dayIndex}`} delayDuration={0}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div
-                            className={`h-3 w-3 rounded-sm ${
-                              day.date ? LEVEL_COLORS[day.level] : "bg-transparent"
-                            } ${day.date ? "cursor-pointer transition-transform hover:scale-125" : ""}`}
-                          />
-                        </TooltipTrigger>
-                        {day.date && (
-                          <TooltipContent side="top" className="text-xs">
-                            <div className="font-medium">{formatDate(day.date)}</div>
-                            <div className="text-muted-foreground">
-                              {formatHours(day.focusHours)} focus time
-                            </div>
-                            <div className="text-muted-foreground">
-                              {day.activityCount} activities
-                            </div>
-                          </TooltipContent>
-                        )}
-                      </Tooltip>
-                    </TooltipProvider>
-                  ))}
-                </div>
-              ))}
-            </div>
+        {/* Footer: Total + Legend - responsive */}
+        <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
+          <span>
+            Total:{" "}
+            <span className="font-medium text-foreground">{formatHours(data.totalFocusHours)}</span>
+          </span>
+          <div className="flex items-center gap-1">
+            <span>Less</span>
+            {LEVEL_COLORS.map((color, i) => (
+              <div key={i} className={`h-[10px] w-[10px] rounded-[2px] ${color}`} />
+            ))}
+            <span>More</span>
           </div>
-        </div>
-
-        {/* Legend */}
-        <div className="flex items-center justify-end gap-2 text-xs text-muted-foreground">
-          <span>Less</span>
-          {([0, 1, 2, 3, 4] as const).map((level) => (
-            <TooltipProvider key={level} delayDuration={0}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className={`h-3 w-3 rounded-sm ${LEVEL_COLORS[level]}`} />
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">
-                  {LEVEL_LABELS[level]}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          ))}
-          <span>More</span>
         </div>
       </CardContent>
     </Card>

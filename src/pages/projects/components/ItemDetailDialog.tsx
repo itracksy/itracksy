@@ -1,28 +1,37 @@
-import { useState, useRef, useEffect } from "react";
+/**
+ * Task Detail Dialog - Simplified
+ *
+ * Clean, focused task editing dialog with:
+ * - Title editing
+ * - Simple description
+ * - Due date
+ * - Estimated time (single input in minutes)
+ * - Subtasks checklist
+ * - Session history (collapsible)
+ */
+
+import { useState, useMemo } from "react";
 import { format } from "date-fns";
-import { Cross2Icon, Pencil2Icon, TrashIcon, PlusIcon, CheckIcon } from "@radix-ui/react-icons";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { TrashIcon, PlusIcon } from "@radix-ui/react-icons";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-
-import { RichTextEditor } from "@/components/RichTextEditor";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { useConfirmationDialog } from "@/components/providers/ConfirmationDialog";
 import { useUpdateItemMutation } from "@/hooks/useBoardQueries";
 import { useDeleteTimeEntryMutation, useTimeEntriesForItem } from "@/hooks/useTimeEntryQueries";
 import { formatDuration } from "@/utils/timeUtils";
 import type { Item, TimeEntry, Subtask } from "@/types/projects";
-import { History } from "lucide-react";
-import { DialogDescription } from "@/components/ui/dialog";
+import { Clock, ChevronDown, Calendar, Timer } from "lucide-react";
 import { SessionReviewDialog } from "@/pages/focus/components/SessionReviewDialog";
 import { nanoid } from "nanoid";
 
@@ -38,11 +47,8 @@ export function ItemDetailDialog({ open, onOpenChange, item }: ItemDetailDialogP
   const [dueDate, setDueDate] = useState<string>(
     item.dueDate ? format(new Date(item.dueDate), "yyyy-MM-dd") : ""
   );
-  const [estimatedHours, setEstimatedHours] = useState<string>(
-    item.estimatedMinutes ? Math.floor(item.estimatedMinutes / 60).toString() : ""
-  );
   const [estimatedMinutes, setEstimatedMinutes] = useState<string>(
-    item.estimatedMinutes ? (item.estimatedMinutes % 60).toString() : ""
+    item.estimatedMinutes ? item.estimatedMinutes.toString() : ""
   );
   const [subtasks, setSubtasks] = useState<Subtask[]>(() => {
     if (!item.subtasks) return [];
@@ -55,15 +61,31 @@ export function ItemDetailDialog({ open, onOpenChange, item }: ItemDetailDialogP
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
   const [selectedTimeEntry, setSelectedTimeEntry] = useState<TimeEntry | null>(null);
   const [sessionReviewOpen, setSessionReviewOpen] = useState(false);
+  const [sessionsOpen, setSessionsOpen] = useState(false);
   const { confirm } = useConfirmationDialog();
 
   const { data: timeEntries = [] } = useTimeEntriesForItem(item.id);
   const updateCardMutation = useUpdateItemMutation();
-
   const deleteTimeEntryMutation = useDeleteTimeEntryMutation();
 
+  // Calculate total tracked time
+  const totalTrackedTime = useMemo(() => {
+    return timeEntries.reduce((acc, entry) => {
+      const start = new Date(entry.startTime).getTime();
+      const end = entry.endTime ? new Date(entry.endTime).getTime() : Date.now();
+      return acc + (end - start);
+    }, 0);
+  }, [timeEntries]);
+
+  // Subtask progress
+  const subtaskProgress = useMemo(() => {
+    if (subtasks.length === 0) return null;
+    const completed = subtasks.filter((st) => st.completed).length;
+    return { completed, total: subtasks.length };
+  }, [subtasks]);
+
   const handleSave = () => {
-    const totalMinutes = (parseInt(estimatedHours) || 0) * 60 + (parseInt(estimatedMinutes) || 0);
+    const minutes = parseInt(estimatedMinutes) || null;
 
     updateCardMutation.mutate({
       id: item.id,
@@ -71,24 +93,23 @@ export function ItemDetailDialog({ open, onOpenChange, item }: ItemDetailDialogP
       title,
       content: content || null,
       dueDate: dueDate ? new Date(dueDate).getTime() : null,
-      estimatedMinutes: totalMinutes > 0 ? totalMinutes : null,
+      estimatedMinutes: minutes,
       subtasks: subtasks.length > 0 ? JSON.stringify(subtasks) : null,
     });
-    // close the dialog
     onOpenChange(false);
   };
 
   const handleAddSubtask = () => {
     if (!newSubtaskTitle.trim()) return;
-
-    const newSubtask: Subtask = {
-      id: nanoid(),
-      title: newSubtaskTitle.trim(),
-      completed: false,
-      createdAt: Date.now(),
-    };
-
-    setSubtasks([...subtasks, newSubtask]);
+    setSubtasks([
+      ...subtasks,
+      {
+        id: nanoid(),
+        title: newSubtaskTitle.trim(),
+        completed: false,
+        createdAt: Date.now(),
+      },
+    ]);
     setNewSubtaskTitle("");
   };
 
@@ -102,199 +123,200 @@ export function ItemDetailDialog({ open, onOpenChange, item }: ItemDetailDialogP
 
   const handleDeleteTimeEntry = async (timeEntryId: string) => {
     const confirmed = await confirm({
-      title: "Delete Time Entry",
-      description: "Are you sure you want to delete this time entry? This action cannot be undone.",
+      title: "Delete Session",
+      description: "Are you sure you want to delete this session?",
       confirmText: "Delete",
       variant: "destructive",
     });
-
-    if (!confirmed) return;
-
-    deleteTimeEntryMutation.mutate(timeEntryId);
+    if (confirmed) {
+      deleteTimeEntryMutation.mutate(timeEntryId);
+    }
   };
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              <div className="flex w-full gap-2">
-                <Input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="flex-1"
-                />
-                <Button onClick={handleSave}>Save</Button>
-              </div>
-            </DialogTitle>
+            <DialogTitle className="sr-only">Edit Task</DialogTitle>
           </DialogHeader>
 
-          <div className="max-h-[600px] space-y-6 overflow-y-auto">
-            <div className="space-y-2">
-              <Label>Description</Label>
-              <div className="max-h-[200px] overflow-y-auto rounded border">
-                <RichTextEditor
-                  value={content}
-                  onChange={setContent}
-                  placeholder="Add a description..."
-                />
-              </div>
-            </div>
+          <div className="space-y-4">
+            {/* Title */}
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Task title"
+              className="text-lg font-semibold"
+            />
 
-            {/* Due Date */}
-            <div className="space-y-2">
-              <Label htmlFor="dueDate">Due Date</Label>
-              <Input
-                id="dueDate"
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
+            {/* Description */}
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Description</Label>
+              <Textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="Add details..."
+                rows={3}
+                className="resize-none"
               />
             </div>
 
-            {/* Estimated Time */}
-            <div className="space-y-2">
-              <Label>Estimated Time</Label>
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <Input
-                    type="number"
-                    min="0"
-                    placeholder="Hours"
-                    value={estimatedHours}
-                    onChange={(e) => setEstimatedHours(e.target.value)}
-                  />
-                </div>
-                <div className="flex-1">
-                  <Input
-                    type="number"
-                    min="0"
-                    max="59"
-                    placeholder="Minutes"
-                    value={estimatedMinutes}
-                    onChange={(e) => setEstimatedMinutes(e.target.value)}
-                  />
-                </div>
+            {/* Due Date & Estimated Time Row */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Calendar className="h-3 w-3" />
+                  Due Date
+                </Label>
+                <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Timer className="h-3 w-3" />
+                  Estimate (min)
+                </Label>
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="e.g., 30"
+                  value={estimatedMinutes}
+                  onChange={(e) => setEstimatedMinutes(e.target.value)}
+                />
               </div>
             </div>
 
             {/* Subtasks */}
             <div className="space-y-2">
-              <Label>Subtasks</Label>
-              <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs text-muted-foreground">Subtasks</Label>
+                {subtaskProgress && (
+                  <span className="text-xs text-muted-foreground">
+                    {subtaskProgress.completed}/{subtaskProgress.total}
+                  </span>
+                )}
+              </div>
+              <div className="space-y-1">
                 {subtasks.map((subtask) => (
-                  <div key={subtask.id} className="flex items-center gap-2">
+                  <div
+                    key={subtask.id}
+                    className="group flex items-center gap-2 rounded-md p-1 hover:bg-muted/50"
+                  >
                     <Checkbox
                       checked={subtask.completed}
                       onCheckedChange={() => handleToggleSubtask(subtask.id)}
                     />
                     <span
-                      className={
-                        subtask.completed ? "flex-1 text-muted-foreground line-through" : "flex-1"
-                      }
+                      className={`flex-1 text-sm ${subtask.completed ? "text-muted-foreground line-through" : ""}`}
                     >
                       {subtask.title}
                     </span>
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100"
                       onClick={() => handleDeleteSubtask(subtask.id)}
                     >
-                      <TrashIcon className="h-4 w-4" />
+                      <TrashIcon className="h-3 w-3" />
                     </Button>
                   </div>
                 ))}
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Add a subtask..."
+                    placeholder="Add subtask..."
                     value={newSubtaskTitle}
                     onChange={(e) => setNewSubtaskTitle(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        handleAddSubtask();
-                      }
-                    }}
+                    onKeyDown={(e) => e.key === "Enter" && handleAddSubtask()}
+                    className="h-8 text-sm"
                   />
-                  <Button onClick={handleAddSubtask} size="icon">
+                  <Button size="sm" variant="secondary" onClick={handleAddSubtask} className="h-8">
                     <PlusIcon className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Session List</Label>
-              <div className="rounded-md border">
-                <div className="max-h-[200px] overflow-y-auto">
-                  <Table>
-                    <TableHeader className="sticky top-0 bg-background">
-                      <TableRow>
-                        <TableHead>Start Time</TableHead>
-                        <TableHead>End Time</TableHead>
-                        <TableHead>Duration</TableHead>
-                        <TableHead className="w-[100px]"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {timeEntries.map((entry) => (
-                        <TableRow key={entry.id}>
-                          <TableCell>
-                            {format(new Date(entry.startTime), "MMM d, yyyy HH:mm")}
-                          </TableCell>
-                          <TableCell>
-                            {entry.endTime
-                              ? format(new Date(entry.endTime), "MMM d, yyyy HH:mm")
-                              : "Running"}
-                          </TableCell>
-                          <TableCell>
+            {/* Sessions */}
+            {timeEntries.length > 0 && (
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => setSessionsOpen(!sessionsOpen)}
+                  className="flex w-full items-center justify-between rounded-md border p-2 hover:bg-muted/50"
+                >
+                  <div className="flex items-center gap-2 text-sm">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span>{timeEntries.length} sessions</span>
+                    <Badge variant="secondary" className="text-xs">
+                      {formatDuration(totalTrackedTime)}
+                    </Badge>
+                  </div>
+                  <ChevronDown
+                    className={`h-4 w-4 text-muted-foreground transition-transform ${sessionsOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {sessionsOpen && (
+                  <div className="max-h-40 space-y-1 overflow-y-auto rounded-md border p-2">
+                    {timeEntries.map((entry) => (
+                      <div
+                        key={entry.id}
+                        className="group flex items-center justify-between rounded px-2 py-1 text-xs hover:bg-muted/50"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-muted-foreground">
+                            {format(new Date(entry.startTime), "MMM d, HH:mm")}
+                          </span>
+                          <span>
                             {entry.endTime
                               ? formatDuration(
                                   new Date(entry.endTime).getTime() -
                                     new Date(entry.startTime).getTime()
                                 )
-                              : formatDuration(Date.now() - new Date(entry.startTime).getTime())}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedTimeEntry(entry);
-                                  setSessionReviewOpen(true);
-                                }}
-                                className="border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/30"
-                              >
-                                Review Session
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDeleteTimeEntry(entry.id)}
-                              >
-                                <TrashIcon className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                              : "Running..."}
+                          </span>
+                        </div>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs"
+                            onClick={() => {
+                              setSelectedTimeEntry(entry);
+                              setSessionReviewOpen(true);
+                            }}
+                          >
+                            Review
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => handleDeleteTimeEntry(entry.id)}
+                          >
+                            <TrashIcon className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
+            )}
           </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave}>Save</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Session Review Dialog */}
       {selectedTimeEntry && (
         <SessionReviewDialog
-          session={{
-            ...selectedTimeEntry,
-            item: item,
-          }}
+          session={{ ...selectedTimeEntry, item }}
           open={sessionReviewOpen}
           onOpenChange={setSessionReviewOpen}
         />

@@ -125,7 +125,7 @@ export default function FocusPage() {
             {/* Right Column - Stats & Heatmap */}
             <div className="space-y-6">
               <FocusTargetWidget />
-              <ActivityHeatmap compact />
+              <ActivityHeatmap />
             </div>
           </div>
         </div>
@@ -293,7 +293,7 @@ export default function FocusPage() {
           {/* Right Column - Stats & Heatmap */}
           <div className="space-y-6">
             <FocusTargetWidget />
-            <ActivityHeatmap compact />
+            <ActivityHeatmap />
           </div>
         </div>
       </div>

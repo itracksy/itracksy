@@ -114,13 +114,23 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
     }, [timeEntries, activeTimeEntry?.itemId, id]);
 
     const handleStartTracking = async () => {
-      if (activeTimeEntry) {
-        toast({
-          variant: "destructive",
-          title: "Active Timer",
-          description: "Please stop the current active timer before starting a new one",
+      // If there's an active timer on a different task, ask to switch
+      if (activeTimeEntry && activeTimeEntry.itemId !== id) {
+        const confirmed = await confirm({
+          title: "Switch Task?",
+          description:
+            "Another task is currently being tracked. Stop it and start tracking this one?",
+          confirmText: "Switch",
+          variant: "default",
         });
-        return;
+
+        if (!confirmed) return;
+
+        // Stop the current timer
+        await updateTimeEntry.mutateAsync({
+          id: activeTimeEntry.id,
+          endTime: Date.now(),
+        });
       }
 
       // Use estimated time if available, otherwise use default target minutes

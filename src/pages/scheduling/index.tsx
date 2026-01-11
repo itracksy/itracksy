@@ -1,36 +1,38 @@
-import React, { useState, useEffect } from "react";
+/**
+ * Session Scheduling Page - Simplified
+ *
+ * Design Philosophy:
+ * 1. Focus on the main action: creating and managing schedules
+ * 2. Show quick preset options for easy setup
+ * 3. Clean list view for existing schedules
+ */
+
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Clock,
-  Calendar,
-  Pause,
-  Settings,
-  Plus,
-  Trash2,
-  AlertCircle,
-  Check,
-  Edit,
-} from "lucide-react";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Clock, Plus, Trash2, Edit, Calendar, Zap, Coffee, Brain } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { trpcClient } from "@/utils/trpc";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
@@ -40,11 +42,11 @@ interface ScheduledSession {
   id: string;
   name: string;
   description?: string | null;
-  focusDuration: number; // minutes
-  breakDuration: number; // minutes
+  focusDuration: number;
+  breakDuration: number;
   cycles: number;
-  startTime: string; // HH:MM format
-  daysOfWeek: number[]; // 0-6, 0 = Sunday
+  startTime: string;
+  daysOfWeek: number[];
   isActive: boolean;
   autoStart: boolean;
   userId: string;
@@ -55,43 +57,39 @@ interface ScheduledSession {
 }
 
 const DAYS_OF_WEEK = [
-  { value: 0, label: "Sun" },
-  { value: 1, label: "Mon" },
-  { value: 2, label: "Tue" },
-  { value: 3, label: "Wed" },
-  { value: 4, label: "Thu" },
-  { value: 5, label: "Fri" },
-  { value: 6, label: "Sat" },
+  { value: 0, label: "Sun", short: "S" },
+  { value: 1, label: "Mon", short: "M" },
+  { value: 2, label: "Tue", short: "T" },
+  { value: 3, label: "Wed", short: "W" },
+  { value: 4, label: "Thu", short: "T" },
+  { value: 5, label: "Fri", short: "F" },
+  { value: 6, label: "Sat", short: "S" },
 ];
 
 const PRESET_SCHEDULES = [
   {
-    name: "Pomodoro Classic",
+    name: "Pomodoro",
     focusDuration: 25,
     breakDuration: 5,
     cycles: 4,
-    description: "25min focus, 5min break, 4 cycles",
-  },
-  {
-    name: "Extended Focus",
-    focusDuration: 45,
-    breakDuration: 15,
-    cycles: 3,
-    description: "45min focus, 15min break, 3 cycles",
-  },
-  {
-    name: "Quick Sprint",
-    focusDuration: 15,
-    breakDuration: 5,
-    cycles: 6,
-    description: "15min focus, 5min break, 6 cycles",
+    icon: Clock,
+    description: "25min focus, 5min break",
   },
   {
     name: "Deep Work",
     focusDuration: 90,
     breakDuration: 20,
     cycles: 2,
-    description: "90min focus, 20min break, 2 cycles",
+    icon: Brain,
+    description: "90min focus, 20min break",
+  },
+  {
+    name: "Quick Sprint",
+    focusDuration: 15,
+    breakDuration: 5,
+    cycles: 6,
+    icon: Zap,
+    description: "15min focus, 5min break",
   },
 ];
 
@@ -99,44 +97,36 @@ export default function SchedulingPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Form state for creating/editing scheduled session
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [editingSession, setEditingSession] = useState<ScheduledSession | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     focusDuration: 25,
     breakDuration: 5,
     cycles: 4,
     startTime: "09:00",
-    daysOfWeek: [] as number[],
+    daysOfWeek: [1, 2, 3, 4, 5] as number[], // Weekdays by default
     isActive: true,
     autoStart: true,
     description: "",
   });
 
-  // Fetch scheduled sessions from backend
   const { data: scheduledSessions = [], isLoading } = useQuery({
     queryKey: ["scheduling.getUserSessions"],
     queryFn: () => trpcClient.scheduling.getUserSessions.query(),
   });
 
-  // Mutations for CRUD operations
   const createMutation = useMutation({
     mutationFn: (data: typeof formData) => trpcClient.scheduling.createSession.mutate(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["scheduling.getUserSessions"] });
       resetForm();
-      toast({
-        title: "Session scheduled",
-        description: "Your new session schedule has been created",
-      });
+      toast({ title: "Schedule created", description: "Your focus schedule is now active" });
     },
     onError: (error) => {
-      toast({
-        title: "Error creating session",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
 
@@ -146,17 +136,10 @@ export default function SchedulingPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["scheduling.getUserSessions"] });
       resetForm();
-      toast({
-        title: "Session updated",
-        description: "Your session schedule has been updated",
-      });
+      toast({ title: "Schedule updated" });
     },
     onError: (error) => {
-      toast({
-        title: "Error updating session",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
 
@@ -164,17 +147,10 @@ export default function SchedulingPage() {
     mutationFn: (id: string) => trpcClient.scheduling.deleteSession.mutate({ id }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["scheduling.getUserSessions"] });
-      toast({
-        title: "Session deleted",
-        description: "Scheduled session has been removed",
-      });
+      toast({ title: "Schedule deleted" });
     },
     onError: (error) => {
-      toast({
-        title: "Error deleting session",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
 
@@ -184,17 +160,10 @@ export default function SchedulingPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["scheduling.getUserSessions"] });
     },
-    onError: (error) => {
-      toast({
-        title: "Error updating session",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
   });
 
   const resetForm = () => {
-    setShowCreateForm(false);
+    setShowForm(false);
     setEditingSession(null);
     setFormData({
       name: "",
@@ -202,37 +171,20 @@ export default function SchedulingPage() {
       breakDuration: 5,
       cycles: 4,
       startTime: "09:00",
-      daysOfWeek: [],
+      daysOfWeek: [1, 2, 3, 4, 5],
       isActive: true,
       autoStart: true,
       description: "",
     });
   };
 
-  const handleDialogOpenChange = (open: boolean) => {
-    if (!open) {
-      resetForm();
-    } else {
-      setShowCreateForm(true);
-    }
-  };
-
-  const handleCreateSession = () => {
+  const handleSubmit = () => {
     if (!formData.name.trim()) {
-      toast({
-        title: "Name required",
-        description: "Please enter a name for your scheduled session",
-        variant: "destructive",
-      });
+      toast({ title: "Name required", variant: "destructive" });
       return;
     }
-
     if (formData.daysOfWeek.length === 0) {
-      toast({
-        title: "Days required",
-        description: "Please select at least one day of the week",
-        variant: "destructive",
-      });
+      toast({ title: "Select at least one day", variant: "destructive" });
       return;
     }
 
@@ -243,11 +195,7 @@ export default function SchedulingPage() {
     }
   };
 
-  const handleDeleteSession = (id: string) => {
-    deleteMutation.mutate(id);
-  };
-
-  const handleEditSession = (session: ScheduledSession) => {
+  const handleEdit = (session: ScheduledSession) => {
     setEditingSession(session);
     setFormData({
       name: session.name,
@@ -260,17 +208,30 @@ export default function SchedulingPage() {
       autoStart: session.autoStart,
       description: session.description || "",
     });
-    setShowCreateForm(true);
+    setShowForm(true);
   };
 
-  const handleToggleSession = (id: string) => {
+  const handleDelete = (id: string) => {
+    setSessionToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (sessionToDelete) {
+      deleteMutation.mutate(sessionToDelete);
+      setDeleteDialogOpen(false);
+      setSessionToDelete(null);
+    }
+  };
+
+  const handleToggle = (id: string) => {
     const session = scheduledSessions.find((s) => s.id === id);
     if (session) {
       toggleMutation.mutate({ id, isActive: !session.isActive });
     }
   };
 
-  const handleApplyPreset = (preset: (typeof PRESET_SCHEDULES)[0]) => {
+  const handlePreset = (preset: (typeof PRESET_SCHEDULES)[0]) => {
     setFormData({
       ...formData,
       name: preset.name,
@@ -279,25 +240,25 @@ export default function SchedulingPage() {
       cycles: preset.cycles,
       description: preset.description,
     });
+    setShowForm(true);
   };
 
   const handleDayToggle = (day: number) => {
     const newDays = formData.daysOfWeek.includes(day)
       ? formData.daysOfWeek.filter((d) => d !== day)
       : [...formData.daysOfWeek, day].sort();
-
     setFormData({ ...formData, daysOfWeek: newDays });
   };
 
-  const formatDaysOfWeek = (days: number[]) => {
+  const formatDays = (days: number[]) => {
     if (days.length === 7) return "Every day";
     if (days.length === 5 && days.every((d) => d >= 1 && d <= 5)) return "Weekdays";
     if (days.length === 2 && days.includes(0) && days.includes(6)) return "Weekends";
     return days.map((d) => DAYS_OF_WEEK[d].label).join(", ");
   };
 
-  const getNextRunTime = (session: ScheduledSession) => {
-    // Simple implementation - in real app this would calculate the next occurrence
+  const getNextRun = (session: ScheduledSession) => {
+    if (!session.isActive) return null;
     const today = new Date();
     const currentDay = today.getDay();
 
@@ -305,135 +266,193 @@ export default function SchedulingPage() {
       const [hours, minutes] = session.startTime.split(":").map(Number);
       const sessionTime = new Date(today);
       sessionTime.setHours(hours, minutes, 0, 0);
-
-      if (sessionTime > today) {
-        return `Today at ${session.startTime}`;
-      }
+      if (sessionTime > today) return `Today at ${session.startTime}`;
     }
 
-    // Find next day
     for (let i = 1; i <= 7; i++) {
       const nextDay = (currentDay + i) % 7;
       if (session.daysOfWeek.includes(nextDay)) {
-        const dayName = DAYS_OF_WEEK[nextDay].label;
-        return `${dayName} at ${session.startTime}`;
+        return `${DAYS_OF_WEEK[nextDay].label} at ${session.startTime}`;
       }
     }
-
-    return "Not scheduled";
+    return null;
   };
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
+    <div className="flex h-full flex-col p-6">
+      {/* Header */}
+      <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Session Scheduling</h1>
-          <p className="mt-2 text-muted-foreground">
-            Set up automatic focus sessions to maintain consistent productivity habits
-          </p>
+          <h1 className="text-2xl font-bold">Schedules</h1>
+          <p className="text-sm text-muted-foreground">Automate your focus sessions</p>
         </div>
-        <Button onClick={() => setShowCreateForm(true)} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
+        <Button onClick={() => setShowForm(true)}>
+          <Plus className="mr-2 h-4 w-4" />
           New Schedule
         </Button>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center space-x-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <div className="text-2xl font-bold">{scheduledSessions.length}</div>
-            </div>
-            <p className="text-xs text-muted-foreground">Total Schedules</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center space-x-2">
-              <Check className="h-4 w-4 text-green-600" />
-              <div className="text-2xl font-bold">
-                {scheduledSessions.filter((s) => s.isActive).length}
+      {/* Content */}
+      <div className="flex-1 space-y-6 overflow-auto">
+        {/* Empty State with Presets */}
+        {scheduledSessions.length === 0 && (
+          <Card className="border-dashed">
+            <CardContent className="py-12">
+              <div className="mb-6 text-center">
+                <Calendar className="mx-auto mb-3 h-12 w-12 text-muted-foreground/50" />
+                <h3 className="text-lg font-semibold">No schedules yet</h3>
+                <p className="text-sm text-muted-foreground">
+                  Choose a preset to get started quickly
+                </p>
               </div>
-            </div>
-            <p className="text-xs text-muted-foreground">Active Schedules</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center space-x-2">
-              <Clock className="h-4 w-4 text-blue-600" />
-              <div className="text-2xl font-bold">
-                {scheduledSessions.filter((s) => s.autoStart).length}
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground">Auto-start Enabled</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Create/Edit Schedule Dialog */}
-      <Dialog open={showCreateForm} onOpenChange={handleDialogOpenChange}>
-        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingSession ? "Edit Schedule" : "Create New Schedule"}</DialogTitle>
-            <DialogDescription>
-              {editingSession
-                ? "Update your existing focus session schedule"
-                : "Set up a recurring focus session schedule that fits your routine"}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6">
-            {/* Preset Templates */}
-            <div>
-              <Label className="text-sm font-medium">Quick Start Templates</Label>
-              <div className="mt-2 grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div className="mx-auto grid max-w-lg gap-3">
                 {PRESET_SCHEDULES.map((preset) => (
-                  <Card
+                  <button
                     key={preset.name}
-                    className="cursor-pointer hover:bg-accent"
-                    onClick={() => handleApplyPreset(preset)}
+                    onClick={() => handlePreset(preset)}
+                    className="flex items-center gap-4 rounded-lg border p-4 text-left transition-colors hover:bg-muted/50"
                   >
-                    <CardContent className="pt-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                      <preset.icon className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex-1">
                       <div className="font-medium">{preset.name}</div>
                       <div className="text-sm text-muted-foreground">{preset.description}</div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                    <Badge variant="secondary">{preset.cycles} cycles</Badge>
+                  </button>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Schedule List */}
+        {scheduledSessions.length > 0 && (
+          <div className="space-y-3">
+            {scheduledSessions.map((session) => {
+              const nextRun = getNextRun(session);
+              return (
+                <Card
+                  key={session.id}
+                  className={cn("transition-opacity", !session.isActive && "opacity-60")}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between gap-4">
+                      {/* Left: Info */}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="truncate font-semibold">{session.name}</h3>
+                          {session.autoStart && (
+                            <Badge variant="outline" className="shrink-0 text-xs">
+                              Auto
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                          <span>
+                            {session.focusDuration}m focus / {session.breakDuration}m break
+                          </span>
+                          <span className="text-muted-foreground/50">•</span>
+                          <span>{session.cycles} cycles</span>
+                          <span className="text-muted-foreground/50">•</span>
+                          <span>{formatDays(session.daysOfWeek)}</span>
+                          <span className="text-muted-foreground/50">•</span>
+                          <span>{session.startTime}</span>
+                        </div>
+                        {nextRun && (
+                          <div className="mt-1 flex items-center gap-1 text-xs text-blue-600">
+                            <Clock className="h-3 w-3" />
+                            Next: {nextRun}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Right: Actions */}
+                      <div className="flex shrink-0 items-center gap-2">
+                        <Switch
+                          checked={session.isActive}
+                          onCheckedChange={() => handleToggle(session.id)}
+                        />
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(session)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(session.id)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Create/Edit Dialog */}
+      <Dialog open={showForm} onOpenChange={(open) => !open && resetForm()}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingSession ? "Edit Schedule" : "New Schedule"}</DialogTitle>
+            <DialogDescription>
+              {editingSession
+                ? "Update your schedule settings"
+                : "Set up a recurring focus session"}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Presets (only for new) */}
+            {!editingSession && (
+              <div className="flex gap-2">
+                {PRESET_SCHEDULES.map((preset) => (
+                  <button
+                    key={preset.name}
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        name: preset.name,
+                        focusDuration: preset.focusDuration,
+                        breakDuration: preset.breakDuration,
+                        cycles: preset.cycles,
+                        description: preset.description,
+                      })
+                    }
+                    className={cn(
+                      "flex-1 rounded-lg border p-2 text-center text-xs transition-colors hover:bg-muted/50",
+                      formData.name === preset.name && "border-primary bg-primary/5"
+                    )}
+                  >
+                    <preset.icon className="mx-auto mb-1 h-4 w-4" />
+                    {preset.name}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Name */}
+            <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                placeholder="e.g., Morning Focus"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              />
             </div>
 
-            <Separator />
-
-            {/* Basic Settings */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {/* Duration Settings */}
+            <div className="grid grid-cols-3 gap-3">
               <div className="space-y-2">
-                <Label htmlFor="session-name">Session Name</Label>
+                <Label htmlFor="focus">Focus (min)</Label>
                 <Input
-                  id="session-name"
-                  placeholder="e.g., Morning Focus"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Description (Optional)</Label>
-                <Input
-                  id="description"
-                  placeholder="Brief description of this session"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-              </div>
-            </div>
-
-            {/* Session Configuration */}
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-              <div className="space-y-2">
-                <Label htmlFor="focus-duration">Focus (min)</Label>
-                <Input
-                  id="focus-duration"
+                  id="focus"
                   type="number"
                   min="5"
                   max="180"
@@ -444,9 +463,9 @@ export default function SchedulingPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="break-duration">Break (min)</Label>
+                <Label htmlFor="break">Break (min)</Label>
                 <Input
-                  id="break-duration"
+                  id="break"
                   type="number"
                   min="1"
                   max="60"
@@ -469,201 +488,93 @@ export default function SchedulingPage() {
                   }
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="start-time">Start Time</Label>
-                <Input
-                  id="start-time"
-                  type="time"
-                  value={formData.startTime}
-                  onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                />
-              </div>
             </div>
 
-            {/* Days of Week */}
+            {/* Time */}
             <div className="space-y-2">
-              <Label>Days of Week</Label>
-              <div className="flex flex-wrap gap-2">
+              <Label htmlFor="time">Start Time</Label>
+              <Input
+                id="time"
+                type="time"
+                value={formData.startTime}
+                onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+              />
+            </div>
+
+            {/* Days */}
+            <div className="space-y-2">
+              <Label>Days</Label>
+              <div className="flex gap-1">
                 {DAYS_OF_WEEK.map((day) => (
-                  <Badge
+                  <button
                     key={day.value}
-                    variant={formData.daysOfWeek.includes(day.value) ? "default" : "outline"}
-                    className="cursor-pointer"
+                    type="button"
                     onClick={() => handleDayToggle(day.value)}
+                    className={cn(
+                      "flex h-9 w-9 items-center justify-center rounded-full text-sm font-medium transition-colors",
+                      formData.daysOfWeek.includes(day.value)
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted hover:bg-muted/80"
+                    )}
                   >
-                    {day.label}
-                  </Badge>
+                    {day.short}
+                  </button>
                 ))}
               </div>
             </div>
 
-            {/* Options */}
-            <div className="flex items-center space-x-6">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="auto-start"
-                  checked={formData.autoStart}
-                  onCheckedChange={(checked) => setFormData({ ...formData, autoStart: checked })}
-                />
-                <Label htmlFor="auto-start">Auto-start sessions</Label>
+            {/* Auto-start */}
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div>
+                <Label htmlFor="autostart" className="cursor-pointer">
+                  Auto-start
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Automatically start sessions at scheduled time
+                </p>
               </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="is-active"
-                  checked={formData.isActive}
-                  onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
-                />
-                <Label htmlFor="is-active">Enable schedule</Label>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={resetForm}>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleCreateSession}
-                disabled={createMutation.isPending || updateMutation.isPending}
-              >
-                {editingSession ? "Update Schedule" : "Create Schedule"}
-              </Button>
+              <Switch
+                id="autostart"
+                checked={formData.autoStart}
+                onCheckedChange={(checked) => setFormData({ ...formData, autoStart: checked })}
+              />
             </div>
           </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={resetForm}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={createMutation.isPending || updateMutation.isPending}
+            >
+              {editingSession ? "Update" : "Create"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Scheduled Sessions List */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Your Schedules</h2>
-
-        {scheduledSessions.length === 0 ? (
-          <Card>
-            <CardContent className="pt-6 text-center">
-              <Calendar className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-              <h3 className="mb-2 text-lg font-medium">No schedules yet</h3>
-              <p className="mb-4 text-muted-foreground">
-                Create your first scheduled session to automate your focus routine
-              </p>
-              <Button
-                onClick={() => setShowCreateForm(true)}
-                className="mx-auto flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Create Schedule
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4">
-            {scheduledSessions.map((session) => (
-              <Card key={session.id} className={cn("", !session.isActive && "opacity-60")}>
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-3">
-                        <h3 className="font-semibold">{session.name}</h3>
-                        <Badge variant={session.isActive ? "default" : "secondary"}>
-                          {session.isActive ? "Active" : "Inactive"}
-                        </Badge>
-                        {session.autoStart && (
-                          <Badge variant="outline" className="border-green-600 text-green-600">
-                            Auto-start
-                          </Badge>
-                        )}
-                      </div>
-                      {session.description && (
-                        <p className="text-sm text-muted-foreground">{session.description}</p>
-                      )}
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <span>
-                          {session.focusDuration}min focus, {session.breakDuration}min break
-                        </span>
-                        <span>•</span>
-                        <span>{session.cycles} cycles</span>
-                        <span>•</span>
-                        <span>{formatDaysOfWeek(session.daysOfWeek)}</span>
-                        <span>•</span>
-                        <span>starts at {session.startTime}</span>
-                      </div>
-                      {session.isActive && (
-                        <div className="flex items-center gap-1 text-sm text-blue-600">
-                          <Clock className="h-3 w-3" />
-                          Next: {getNextRunTime(session)}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={session.isActive}
-                        onCheckedChange={() => handleToggleSession(session.id)}
-                      />
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditSession(session)}
-                        className="text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteSession(session.id)}
-                        className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Help Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5" />
-            How Session Scheduling Works
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
-              <h4 className="mb-2 font-medium">🕐 Scheduling</h4>
-              <p className="text-sm text-muted-foreground">
-                Set specific times and days for your focus sessions. The app will remind you when
-                it's time to start.
-              </p>
-            </div>
-            <div>
-              <h4 className="mb-2 font-medium">🚀 Auto-start</h4>
-              <p className="text-sm text-muted-foreground">
-                All sessions start automatically at the scheduled time. No manual intervention
-                needed!
-              </p>
-            </div>
-            <div>
-              <h4 className="mb-2 font-medium">🔄 Cycles</h4>
-              <p className="text-sm text-muted-foreground">
-                Set how many focus-break cycles you want. After each focus period, you'll get a
-                break before the next cycle.
-              </p>
-            </div>
-            <div>
-              <h4 className="mb-2 font-medium">📅 Recurring</h4>
-              <p className="text-sm text-muted-foreground">
-                Schedules repeat weekly on the selected days, helping you build consistent
-                productivity habits.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Delete Confirmation */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Schedule</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this schedule. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
