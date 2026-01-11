@@ -29,6 +29,7 @@ import {
 } from "@/hooks/useCategoryQueries";
 import { CategoryFormModal } from "./components/CategoryFormModal";
 import { AssignCategoryModal } from "./components/AssignCategoryModal";
+import { CategoryActivitiesCard } from "./components/CategoryActivitiesCard";
 
 const CategorizationPage: React.FC = () => {
   const navigate = useNavigate();
@@ -216,15 +217,18 @@ const CategorizationPage: React.FC = () => {
         </Card>
       </div>
 
+      {/* Categories with Activities - Full Width */}
+      <CategoryActivitiesCard startDate={selectedTimeRange.start} endDate={selectedTimeRange.end} />
+
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Top Categories */}
+        {/* Top Categories Summary */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
               <BarChart3 className="mr-2 h-5 w-5" />
-              Top Categories by Activity
+              Category Summary
             </CardTitle>
-            <CardDescription>Most active categories based on number of activities</CardDescription>
+            <CardDescription>Quick overview of time spent per category</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">

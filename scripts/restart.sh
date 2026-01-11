@@ -2,9 +2,7 @@
 
 # Restart itracksy project with fresh dependencies
 # This script kills all running Electron processes and clears Vite cache for a fresh restart
-    echo -e "${BLUE}🚀 Ready to start fresh! You can now run 'npm run dev' or 'npm start'${NC}"
-    echo -e "${YELLOW}💡 Tip: Use './scripts/restart.sh --start' to automatically start the app after clearing everything${NC}"
-fiUsage: ./restart.sh [--start]
+# Usage: ./restart.sh [--start]
 # Options:
 #   --start    Automatically start the app after killing processes
 

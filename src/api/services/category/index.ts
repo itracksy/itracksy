@@ -26,6 +26,7 @@ export {
   categorizeNewActivity,
   getCategoryStats,
   getUncategorizedActivities,
+  getCategoryActivitiesDetail,
   bulkAssignCategory,
 } from "./auto-categorize";
 

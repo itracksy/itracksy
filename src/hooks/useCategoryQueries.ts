@@ -69,6 +69,19 @@ export function useUncategorizedActivities(
   });
 }
 
+// Category Activities with Detail (includes session type)
+export function useCategoryActivitiesDetail(
+  startDate?: number,
+  endDate?: number,
+  limit: number = 10
+) {
+  return useQuery({
+    queryKey: ["categories", "activitiesDetail", startDate, endDate, limit],
+    queryFn: () =>
+      trpcClient.category.getCategoryActivitiesDetail.query({ startDate, endDate, limit }),
+  });
+}
+
 // Category Management Mutations
 export function useCreateCategoryMutation() {
   const queryClient = useQueryClient();

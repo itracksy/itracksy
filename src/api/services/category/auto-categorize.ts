@@ -259,6 +259,143 @@ export const getUncategorizedActivities = async (
 /**
  * Bulk assigns a category to activities matching specific criteria
  */
+/**
+ * Gets detailed activities for each category including session type (Focus/Break)
+ */
+export const getCategoryActivitiesDetail = async (
+  userId: string,
+  startDate?: number,
+  endDate?: number,
+  limit: number = 10
+): Promise<
+  readonly {
+    readonly categoryId: string;
+    readonly categoryName: string;
+    readonly categoryColor: string | null;
+    readonly totalDuration: number;
+    readonly activityCount: number;
+    readonly activities: readonly {
+      readonly ownerName: string;
+      readonly domain: string | null;
+      readonly title: string;
+      readonly duration: number;
+      readonly isFocusMode: boolean;
+      readonly timestamp: number;
+    }[];
+  }[]
+> => {
+  const { and, desc, gte, lte, eq, sql } = await import("drizzle-orm");
+  const { timeEntries } = await import("@/api/db/schema");
+
+  // Create time range filter conditions
+  const timeFilters = [];
+  if (startDate !== undefined) {
+    const startOfDay = new Date(startDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    timeFilters.push(gte(activities.timestamp, startOfDay.getTime()));
+  }
+  if (endDate !== undefined) {
+    const endOfDay = new Date(endDate);
+    endOfDay.setHours(23, 59, 59, 999);
+    timeFilters.push(lte(activities.timestamp, endOfDay.getTime()));
+  }
+
+  // Get activities with category and session info
+  const conditions = [
+    eq(activities.userId, userId),
+    sql`${activities.categoryId} IS NOT NULL`,
+    ...timeFilters,
+  ];
+
+  const activitiesWithCategory = await db
+    .select({
+      categoryId: activities.categoryId,
+      categoryName: categories.name,
+      categoryColor: categories.color,
+      ownerName: activities.ownerName,
+      url: activities.url,
+      title: activities.title,
+      duration: activities.duration,
+      timestamp: activities.timestamp,
+      timeEntryId: activities.timeEntryId,
+      isFocusMode: activities.isFocusMode,
+    })
+    .from(activities)
+    .innerJoin(categories, eq(activities.categoryId, categories.id))
+    .where(and(...conditions))
+    .orderBy(desc(activities.timestamp));
+
+  // Group by category
+  const categoryMap = new Map<
+    string,
+    {
+      categoryId: string;
+      categoryName: string;
+      categoryColor: string | null;
+      totalDuration: number;
+      activityCount: number;
+      activities: {
+        ownerName: string;
+        domain: string | null;
+        title: string;
+        duration: number;
+        isFocusMode: boolean;
+        timestamp: number;
+      }[];
+    }
+  >();
+
+  for (const activity of activitiesWithCategory) {
+    const categoryId = activity.categoryId!;
+
+    if (!categoryMap.has(categoryId)) {
+      categoryMap.set(categoryId, {
+        categoryId,
+        categoryName: activity.categoryName,
+        categoryColor: activity.categoryColor,
+        totalDuration: 0,
+        activityCount: 0,
+        activities: [],
+      });
+    }
+
+    const category = categoryMap.get(categoryId)!;
+    category.totalDuration += activity.duration;
+    category.activityCount++;
+
+    // Extract domain from URL
+    let domain: string | null = null;
+    if (activity.url) {
+      try {
+        const url = new URL(activity.url);
+        domain = url.hostname;
+      } catch {
+        domain = null;
+      }
+    }
+
+    // Add activity (limit to 20 per category for performance)
+    if (category.activities.length < 20) {
+      category.activities.push({
+        ownerName: activity.ownerName,
+        domain,
+        title: activity.title,
+        duration: activity.duration,
+        isFocusMode: activity.isFocusMode ?? true, // Default to focus mode if null
+        timestamp: activity.timestamp,
+      });
+    }
+  }
+
+  // Convert to array and sort by total duration
+  return Array.from(categoryMap.values())
+    .sort((a, b) => b.totalDuration - a.totalDuration)
+    .slice(0, limit);
+};
+
+/**
+ * Bulk assigns a category to activities matching specific criteria
+ */
 export const bulkAssignCategory = async (
   userId: string,
   categoryId: string,

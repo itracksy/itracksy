@@ -22,6 +22,7 @@ import {
   getCategoryStats,
   getUncategorizedActivities,
   bulkAssignCategory,
+  getCategoryActivitiesDetail,
   seedUserCategoriesFromSystem,
   getDefaultCategoriesTemplate,
   userHasCategories,
@@ -211,6 +212,18 @@ export const categoryRouter = t.router({
     )
     .query(async ({ input, ctx }) => {
       return getUncategorizedActivities(ctx.userId!, input.startDate, input.endDate, input.limit);
+    }),
+
+  getCategoryActivitiesDetail: protectedProcedure
+    .input(
+      z.object({
+        startDate: z.number().optional(),
+        endDate: z.number().optional(),
+        limit: z.number().default(10),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      return getCategoryActivitiesDetail(ctx.userId!, input.startDate, input.endDate, input.limit);
     }),
 
   // Category Seeding
