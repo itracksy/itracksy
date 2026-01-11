@@ -16,6 +16,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "./hooks/useAuth";
 import { getConfig } from "./config/env";
 import { useAppearancePreferences } from "./hooks/useAppearancePreferences";
+import { VersionChecker } from "./components/version-checker/version-checker";
 
 import { getAppVersion } from "./helpers/version";
 
@@ -108,7 +109,12 @@ function AuthenticatedApp() {
     }
   }, []);
 
-  return <RouterProvider router={router} />;
+  return (
+    <>
+      <VersionChecker autoCheck={true} cacheDuration={60 * 60 * 1000} />
+      <RouterProvider router={router} />
+    </>
+  );
 }
 
 function App() {

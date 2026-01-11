@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { trpcClient } from "@/utils/trpc";
 import { formatTime } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 interface UnclassifiedItem {
   type: "app" | "domain";
@@ -16,6 +17,7 @@ interface UnclassifiedItem {
 
 export function QuickClassify() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   // Fetch unclassified activities (ratingFilter -1 = unrated)
   const { data: unclassifiedActivities = [], isLoading } = useQuery({
@@ -80,24 +82,42 @@ export function QuickClassify() {
 
   // Create rule mutation
   const createRuleMutation = useMutation({
-    mutationFn: (params: { item: UnclassifiedItem; isProductive: boolean }) =>
-      trpcClient.activity.createRule.mutate({
+    mutationFn: async (params: { item: UnclassifiedItem; isProductive: boolean }) => {
+      console.log(
+        "[QuickClassify] Creating rule for:",
+        params.item.name,
+        "isProductive:",
+        params.isProductive
+      );
+      return trpcClient.activity.createRule.mutate({
         name: `Rule for ${params.item.name}`,
         description: `Created from quick classification`,
         appName: params.item.type === "app" ? params.item.name : params.item.appName || "",
         domain: params.item.type === "domain" ? params.item.name : "",
         rating: params.isProductive ? 1 : 0,
         active: true,
-        duration: 0,
-        title: "",
-        titleCondition: "",
-        durationCondition: "",
-      }),
-    onSuccess: () => {
+      });
+    },
+    onSuccess: (_, variables) => {
+      console.log("[QuickClassify] Rule created successfully for:", variables.item.name);
+      toast({
+        title: "Classified",
+        description: `${variables.item.name} marked as ${variables.isProductive ? "productive" : "distracting"}`,
+        duration: 2000,
+      });
       queryClient.invalidateQueries({ queryKey: ["unclassifiedActivities"] });
       queryClient.invalidateQueries({ queryKey: ["activities"] });
       queryClient.invalidateQueries({ queryKey: ["productivityStats"] });
       queryClient.invalidateQueries({ queryKey: ["timeEntry.getTimeEntriesByTimeRange"] });
+    },
+    onError: (error, variables) => {
+      console.error("[QuickClassify] Failed to create rule:", error);
+      toast({
+        title: "Error",
+        description: `Failed to classify ${variables.item.name}: ${error.message}`,
+        variant: "destructive",
+        duration: 5000,
+      });
     },
   });
 

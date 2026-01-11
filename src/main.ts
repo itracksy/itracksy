@@ -32,9 +32,6 @@ import { initializeAutoStart } from "./api/services/autoStart";
 import { initializeScheduledSessionMonitoring } from "./api/services/scheduledSessions";
 import { initializeSystemMonitor } from "./api/services/systemMonitor";
 
-// Auto-update for open source apps
-import { updateElectronApp, UpdateSourceType } from "update-electron-app";
-
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 // IMPORTANT: This MUST be at the very top before any other code runs,
 // otherwise Squirrel update events won't be handled correctly.
@@ -45,37 +42,6 @@ if (require("electron-squirrel-startup")) {
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let isQuiting: boolean = false;
-
-/**
- * Initialize auto-update functionality with error handling
- * This wrapper ensures that auto-update failures don't crash the app
- */
-function initializeAutoUpdate(): void {
-  try {
-    updateElectronApp({
-      // Use update.electronjs.org service (default for public GitHub repos)
-      updateSource: {
-        type: UpdateSourceType.ElectronPublicUpdateService,
-        repo: "itracksy/itracksy",
-      },
-      // Check for updates every 10 minutes
-      updateInterval: "10 minutes",
-      // Log update events for debugging
-      logger: {
-        log: (message: string) => logger.info("[AutoUpdate]", message),
-        info: (message: string) => logger.info("[AutoUpdate]", message),
-        warn: (message: string) => logger.warn("[AutoUpdate]", message),
-        error: (message: string) => logger.error("[AutoUpdate]", message),
-      },
-    });
-    logger.info(
-      "Auto-update initialized - checking update.electronjs.org for itracksy/itracksy updates"
-    );
-  } catch (error) {
-    logger.error("Failed to initialize auto-update functionality:", error);
-    // Don't throw the error - auto-update is not critical for app functionality
-  }
-}
 
 /**
  * Get the tray instance
@@ -457,8 +423,6 @@ if (!gotTheLock) {
 app.whenReady().then(async () => {
   try {
     logger.clearLogFile();
-    // Initialize auto-update functionality with error handling
-    initializeAutoUpdate();
     await initializeDatabase();
 
     // Initialize auto-start functionality
