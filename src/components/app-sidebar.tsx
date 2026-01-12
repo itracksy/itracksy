@@ -12,8 +12,8 @@ import {
   Music,
   CalendarClock,
   ScrollText,
-  Sparkles,
 } from "lucide-react";
+import logoImage from "../../logo.png";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
@@ -246,9 +246,7 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
     >
       <SidebarHeader className="px-4 py-4">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-orange-500">
-            <Sparkles className="h-4 w-4 text-white" />
-          </div>
+          <img src={logoImage} alt="iTracksy" className="h-8 w-8" />
           <span className="text-lg font-semibold text-slate-900 dark:text-white">iTracksy</span>
         </div>
       </SidebarHeader>
