@@ -112,7 +112,11 @@ export const utilsRouter = t.router({
     try {
       const dbPath = getDatabasePath();
       // Remove the "file:" prefix to get the actual path
-      const actualPath = dbPath.replace(/^file:/, "");
+      let actualPath = dbPath.replace(/^file:/, "");
+      // Ensure it's an absolute path
+      if (!path.isAbsolute(actualPath)) {
+        actualPath = path.resolve(app.getAppPath(), actualPath);
+      }
       const exists = fs.existsSync(actualPath);
       return { path: actualPath, exists };
     } catch (error) {
