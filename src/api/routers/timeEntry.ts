@@ -150,40 +150,4 @@ export const timeEntryRouter = t.router({
       timeEntryId: paused?.timeEntryId ?? null,
     };
   }),
-
-  // Get daily focus stats for heatmap calendar
-  getDailyFocusStats: protectedProcedure
-    .input(
-      z.object({
-        startTimestamp: z.number(),
-        endTimestamp: z.number(),
-      })
-    )
-    .query(async ({ input, ctx }) => {
-      const entries = await getTimeEntriesByTimeRange({
-        userId: ctx.userId!,
-        startTimestamp: input.startTimestamp,
-        endTimestamp: input.endTimestamp,
-        isFocusMode: true,
-      });
-
-      // Group by day and calculate total focus time
-      const dailyStats = new Map<string, number>();
-
-      for (const entry of entries) {
-        if (!entry.endTime) continue;
-
-        const date = new Date(entry.startTime);
-        const dateKey = date.toISOString().split("T")[0]; // YYYY-MM-DD
-
-        const duration = Math.floor((entry.endTime - entry.startTime) / 1000 / 60); // minutes
-        dailyStats.set(dateKey, (dailyStats.get(dateKey) || 0) + duration);
-      }
-
-      // Convert to array
-      return Array.from(dailyStats.entries()).map(([date, minutes]) => ({
-        date,
-        minutes,
-      }));
-    }),
 });

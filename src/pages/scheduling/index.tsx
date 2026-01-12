@@ -137,11 +137,12 @@ export default function SchedulingPage() {
   }, []);
 
   const { data: dailyFocusStats = [] } = useQuery({
-    queryKey: ["timeEntry.getDailyFocusStats", threeMonthsAgo],
+    queryKey: ["dashboard.getFocusPerformanceByPeriod", threeMonthsAgo, Date.now(), "daily"],
     queryFn: () =>
-      trpcClient.timeEntry.getDailyFocusStats.query({
-        startTimestamp: threeMonthsAgo,
-        endTimestamp: Date.now(),
+      trpcClient.dashboard.getFocusPerformanceByPeriod.query({
+        startDate: threeMonthsAgo,
+        endDate: Date.now(),
+        period: "daily",
       }),
   });
 
@@ -149,7 +150,10 @@ export default function SchedulingPage() {
   const focusStatsMap = useMemo(() => {
     const map = new Map<string, number>();
     dailyFocusStats.forEach((stat) => {
-      map.set(stat.date, stat.minutes);
+      // stat.date is the date string, stat.totalFocusTime is in seconds
+      const dateKey = new Date(stat.date).toISOString().split("T")[0];
+      const minutes = Math.round(stat.totalFocusTime / 60);
+      map.set(dateKey, minutes);
     });
     return map;
   }, [dailyFocusStats]);
