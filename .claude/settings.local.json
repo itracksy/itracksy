@@ -56,7 +56,11 @@
       "WebFetch(domain:www.chronoid.app)",
       "Bash(curl:*)",
       "WebFetch(domain:www.electronjs.org)",
-      "Bash(npm version:*)"
+      "Bash(npm version:*)",
+      "Bash(npm test:*)",
+      "Bash(wc:*)",
+      "Bash(./scripts/release.sh:*)",
+      "WebFetch(domain:www.itracksy.com)"
     ]
   }
 }

@@ -14,6 +14,7 @@ import path from "path";
 import fs from "fs";
 import os from "os";
 import { EventEmitter } from "events";
+import { getDatabasePath } from "../../utils/paths";
 
 //   a function to get platform-specific download URL without triggering download
 const getPlatformDownloadUrl = (version: string): string => {
@@ -102,6 +103,20 @@ export const utilsRouter = t.router({
       return { content, path, exists };
     } catch (error) {
       logger.error("Failed to get log file content", error);
+      throw error;
+    }
+  }),
+
+  // Get database path
+  getDatabasePath: protectedProcedure.query(() => {
+    try {
+      const dbPath = getDatabasePath();
+      // Remove the "file:" prefix to get the actual path
+      const actualPath = dbPath.replace(/^file:/, "");
+      const exists = fs.existsSync(actualPath);
+      return { path: actualPath, exists };
+    } catch (error) {
+      logger.error("Failed to get database path", error);
       throw error;
     }
   }),
