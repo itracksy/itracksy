@@ -5,9 +5,8 @@ import {
   useCreateTimeEntryMutation,
   useLastTimeEntry,
 } from "@/hooks/useTimeEntryQueries";
-import { PlayCircle, StopCircle, History, Coffee, MessageSquare } from "lucide-react";
-
-import { SidebarMenuButton } from "@/components/ui/sidebar";
+import { Play, Square, Coffee, MessageSquare, RotateCcw } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
 import { trpcClient } from "@/utils/trpc";
@@ -15,34 +14,12 @@ import { useAtom } from "jotai";
 import { breakDurationAtom } from "@/context/board";
 
 import { useNavigate } from "@tanstack/react-router";
-import { get } from "http";
 import { getTitleTimeEntry } from "@/api/db/timeEntryExt";
-
-// Motivational phrases to encourage users to start working
-const motivationalPhrases = [
-  "Let's get rolling!",
-  "Time to crush it!",
-  "Ready to be productive?",
-  "Start something amazing!",
-  "Make today count!",
-  "Time to shine!",
-  "Focus mode: activate!",
-  "Let's make progress!",
-  "Achievement unlocked: Start!",
-  "Your future self thanks you!",
-];
-
-// Function to get a random motivational phrase
-const getRandomMotivationalPhrase = () => {
-  const randomIndex = Math.floor(Math.random() * motivationalPhrases.length);
-  return motivationalPhrases[randomIndex];
-};
 
 export function BottomSideBar() {
   const [breakDuration, setBreakDuration] = useAtom(breakDurationAtom);
-  const [motivationalPhrase] = useState(getRandomMotivationalPhrase());
 
-  const { data: activeTimeEntry, isLoading } = useActiveTimeEntry();
+  const { data: activeTimeEntry } = useActiveTimeEntry();
   const { data: lastTimeEntry } = useLastTimeEntry();
   const updateTimeEntry = useUpdateTimeEntryMutation();
   const createTimeEntry = useCreateTimeEntryMutation();
@@ -50,9 +27,7 @@ export function BottomSideBar() {
   const navigate = useNavigate();
 
   const handleStopTimeEntry = async () => {
-    if (!activeTimeEntry) {
-      return;
-    }
+    if (!activeTimeEntry) return;
 
     try {
       await updateTimeEntry.mutateAsync({
@@ -61,12 +36,12 @@ export function BottomSideBar() {
       });
 
       toast({
-        title: "Time entry stopped",
-        description: "Great work! Your time has been recorded. ",
+        title: "Session ended",
+        description: "Great work! Your time has been recorded.",
       });
     } catch (error) {
       toast({
-        title: "Failed to stop time entry",
+        title: "Failed to stop session",
         description: error instanceof Error ? error.message : "An error occurred",
         variant: "destructive",
       });
@@ -77,7 +52,7 @@ export function BottomSideBar() {
     if (!activeTimeEntry || !breakDuration) {
       toast({
         title: "Error",
-        description: "Please stop the current time entry before taking a break",
+        description: "Please stop the current session before taking a break",
         variant: "destructive",
       });
       return;
@@ -88,21 +63,21 @@ export function BottomSideBar() {
         id: activeTimeEntry.id,
         endTime: Date.now(),
       });
-      // create a break
+
       createTimeEntry.mutate({
         startTime: Date.now(),
         isFocusMode: false,
         targetDuration: breakDuration,
         description: `Break for ${breakDuration} minutes`,
       });
-      // Show toast notification
+
       toast({
-        title: `${breakDuration} minute break started! 🎉`,
-        description: "You've earned it! Time entry has been stopped.",
+        title: `Break started`,
+        description: `Enjoy your ${breakDuration} minute break!`,
       });
     } catch (error) {
       toast({
-        title: "Failed to stop time entry",
+        title: "Failed to start break",
         description: error instanceof Error ? error.message : "An error occurred",
         variant: "destructive",
       });
@@ -113,7 +88,7 @@ export function BottomSideBar() {
     if (!lastTimeEntry) {
       toast({
         title: "No previous task found",
-        description: "Start a new time entry to track your work!",
+        description: "Start a new session to track your work!",
       });
       return;
     }
@@ -148,94 +123,108 @@ export function BottomSideBar() {
   };
 
   const openFeedbackLink = () => {
-    // Open the feedback URL in a new browser window
     trpcClient.utils.openExternalUrl.mutate({
       url: "https://itracksy.com/feedback",
     });
   };
 
   return (
-    <>
-      <>
-        {activeTimeEntry ? (
-          <>
-            <SidebarMenuButton
-              onClick={handleStopTimeEntry}
-              className="hover:text-red-600"
-              tooltip="Stop tracking"
-            >
-              <StopCircle className="h-6 w-6 text-red-600" />
-              <span className="flex items-center gap-2 text-base font-medium">
-                <span>{getTitleTimeEntry(activeTimeEntry)}</span>
+    <div className="space-y-2">
+      {activeTimeEntry ? (
+        <>
+          {/* Active Session Card */}
+          <div className="rounded-lg bg-gradient-to-r from-amber-500/10 to-orange-500/10 p-3 dark:from-amber-500/20 dark:to-orange-500/20">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-xs font-medium uppercase tracking-wide text-amber-600 dark:text-amber-400">
+                {activeTimeEntry.isFocusMode ? "Focus Session" : "Break Time"}
               </span>
-            </SidebarMenuButton>
-
-            {activeTimeEntry.isFocusMode && (
-              <SidebarMenuButton
-                className="flex flex-row items-center gap-2 hover:text-orange-600"
-                tooltip="Take a well-deserved break!"
+              <div className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />
+            </div>
+            <p className="mb-3 truncate text-sm font-medium text-slate-700 dark:text-slate-200">
+              {getTitleTimeEntry(activeTimeEntry)}
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={handleStopTimeEntry}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-500/20 dark:text-red-400"
               >
-                <Coffee className="h-6 w-6 text-orange-600" />
-                <div onClick={handleTakeBreak} className="hover:text-orange-600 hover:underline">
-                  <span className="text-base text-muted-foreground">Take a break</span>
-                </div>
-                <input
-                  type="number"
-                  min="1"
-                  max="120"
-                  value={breakDuration ?? ""}
-                  onChange={(e) => {
-                    const value = Math.min(120, Math.max(1, parseInt(e.target.value) || 0));
-                    if (value > 0) {
-                      setBreakDuration(value);
-                    } else {
-                      setBreakDuration(5);
-                    }
-                    e.preventDefault();
-                  }}
-                  className="h-8 w-[50px] rounded-md border border-input/20 bg-transparent text-sm hover:bg-accent/50 hover:text-accent-foreground focus:border-orange-600 focus:outline-none focus:ring-1 focus:ring-orange-600"
-                />
-              </SidebarMenuButton>
-            )}
-          </>
-        ) : (
-          <>
-            <SidebarMenuButton
-              onClick={() => navigate({ to: "/" })}
-              className="hover:text-green-600"
-              tooltip="Start tracking your work"
-            >
-              <PlayCircle className="h-6 w-6 text-green-600" />
-              <span className="text-base text-muted-foreground">{motivationalPhrase}</span>
-            </SidebarMenuButton>
+                <Square className="h-3 w-3" />
+                Stop
+              </button>
+              {activeTimeEntry.isFocusMode && (
+                <button
+                  onClick={handleTakeBreak}
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-orange-500/10 px-3 py-1.5 text-xs font-medium text-orange-600 transition-colors hover:bg-orange-500/20 dark:text-orange-400"
+                >
+                  <Coffee className="h-3 w-3" />
+                  Break
+                </button>
+              )}
+            </div>
+          </div>
 
-            {lastTimeEntry && (
-              <SidebarMenuButton
-                onClick={handleResumeLastTask}
-                className="hover:text-blue-600"
-                tooltip={`Resume: ${getTitleTimeEntry(lastTimeEntry)}`}
-              >
-                <History className="h-5 w-5 text-blue-600" />
-                <span className="text-base text-muted-foreground">
-                  Resume: {getTitleTimeEntry(lastTimeEntry)}
-                </span>
-              </SidebarMenuButton>
-            )}
-          </>
-        )}
-
-        {/* Feedback Button */}
-        <div className="mt-4 border-t border-tracksy-gold/20 pt-4">
-          <SidebarMenuButton
-            onClick={openFeedbackLink}
-            className="hover:text-purple-600"
-            tooltip="Share your feedback"
+          {/* Break Duration Input - only show during focus mode */}
+          {activeTimeEntry.isFocusMode && (
+            <div className="flex items-center gap-2 px-1">
+              <span className="text-xs text-slate-500 dark:text-slate-400">Break:</span>
+              <input
+                type="number"
+                min="1"
+                max="120"
+                value={breakDuration ?? ""}
+                onChange={(e) => {
+                  const value = Math.min(120, Math.max(1, parseInt(e.target.value) || 0));
+                  setBreakDuration(value > 0 ? value : 5);
+                }}
+                className="h-6 w-12 rounded border border-slate-200 bg-transparent px-1 text-center text-xs text-slate-600 focus:border-orange-500 focus:outline-none dark:border-slate-700 dark:text-slate-300"
+              />
+              <span className="text-xs text-slate-500 dark:text-slate-400">min</span>
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          {/* Start Session Button */}
+          <button
+            onClick={() => navigate({ to: "/" })}
+            className="flex w-full items-center gap-3 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 p-3 text-left transition-all hover:from-green-500/20 hover:to-emerald-500/20 dark:from-green-500/20 dark:to-emerald-500/20"
           >
-            <MessageSquare className="h-5 w-5 text-purple-600" />
-            <span className="text-base text-muted-foreground">Send Feedback</span>
-          </SidebarMenuButton>
-        </div>
-      </>
-    </>
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500/20">
+              <Play className="h-4 w-4 text-green-600 dark:text-green-400" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                Start Session
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Ready to focus?</p>
+            </div>
+          </button>
+
+          {/* Resume Last Task */}
+          {lastTimeEntry && (
+            <button
+              onClick={handleResumeLastTask}
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              <RotateCcw className="h-4 w-4 text-blue-500" />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs text-slate-600 dark:text-slate-400">
+                  Resume: {getTitleTimeEntry(lastTimeEntry)}
+                </p>
+              </div>
+            </button>
+          )}
+        </>
+      )}
+
+      {/* Feedback Button */}
+      <button
+        onClick={openFeedbackLink}
+        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+      >
+        <MessageSquare className="h-3.5 w-3.5" />
+        Send Feedback
+      </button>
+    </div>
   );
 }
