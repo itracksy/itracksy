@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { ScrollTextIcon, Copy, Check, Database } from "lucide-react";
+import { ScrollTextIcon, Copy, Check, Database, FolderOpen } from "lucide-react";
 import { trpcClient } from "@/utils/trpc";
 import { VersionChecker, VersionInfo } from "@/components/version-checker";
 
@@ -39,6 +39,16 @@ export function AboutSection() {
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       console.error("Failed to copy path:", error);
+    }
+  };
+
+  const handleOpenDbFolder = async () => {
+    try {
+      // Get the folder path by removing the filename
+      const folderPath = dbPath.substring(0, dbPath.lastIndexOf("/"));
+      await trpcClient.utils.openFolder.mutate({ folderPath });
+    } catch (error) {
+      console.error("Failed to open folder:", error);
     }
   };
 
@@ -95,6 +105,14 @@ export function AboutSection() {
                   ) : (
                     <Copy className="h-4 w-4" />
                   )}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleOpenDbFolder}
+                  title="Open folder"
+                >
+                  <FolderOpen className="h-4 w-4" />
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
