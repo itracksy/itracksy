@@ -277,5 +277,8 @@ function groupActivitiesBySource(
     group.count++;
   }
 
-  return Array.from(groups.values()).sort((a, b) => b.duration - a.duration);
+  // Filter out activities with less than 60 seconds (would show as "0m")
+  return Array.from(groups.values())
+    .filter((group) => group.duration >= 60)
+    .sort((a, b) => b.duration - a.duration);
 }
