@@ -128,22 +128,10 @@ export default function SchedulingPage() {
     queryFn: () => trpcClient.scheduling.getUserSessions.query(),
   });
 
-  // Get focus stats for heatmap (last 3 months)
-  const threeMonthsAgo = useMemo(() => {
-    const date = new Date();
-    date.setMonth(date.getMonth() - 3);
-    date.setHours(0, 0, 0, 0);
-    return date.getTime();
-  }, []);
-
-  const { data: dailyFocusStats = [] } = useQuery({
-    queryKey: ["dashboard.getFocusPerformanceByPeriod", threeMonthsAgo, Date.now(), "daily"],
-    queryFn: () =>
-      trpcClient.dashboard.getFocusPerformanceByPeriod.query({
-        startDate: threeMonthsAgo,
-        endDate: Date.now(),
-        period: "daily",
-      }),
+  // Get heatmap data (last 3 months)
+  const { data: heatmapData } = useQuery({
+    queryKey: ["dashboard.getActivityHeatmap", 3],
+    queryFn: () => trpcClient.dashboard.getActivityHeatmap.query({ months: 3 }),
   });
 
   // Helper to get local date key (YYYY-MM-DD) without timezone shift
@@ -154,27 +142,27 @@ export default function SchedulingPage() {
     return `${year}-${month}-${day}`;
   };
 
-  // Create a map of date -> focus minutes for quick lookup
-  const focusStatsMap = useMemo(() => {
-    const map = new Map<string, number>();
-    dailyFocusStats.forEach((stat) => {
-      // stat.date is the date string, stat.totalFocusTime is in seconds
-      const dateKey = getLocalDateKey(new Date(stat.date));
-      const minutes = Math.round(stat.totalFocusTime / 60);
-      map.set(dateKey, minutes);
-    });
+  // Create a map of date -> heatmap data for quick lookup
+  const heatmapMap = useMemo(() => {
+    const map = new Map<string, { focusHours: number; level: number }>();
+    if (heatmapData?.days) {
+      heatmapData.days.forEach((day) => {
+        map.set(day.date, { focusHours: day.focusHours, level: day.level });
+      });
+    }
     return map;
-  }, [dailyFocusStats]);
+  }, [heatmapData]);
 
-  // Get heatmap intensity level (0-4) based on focus minutes
+  // Get heatmap intensity level (0-4) for a date
   const getHeatmapLevel = (date: Date): number => {
     const dateKey = getLocalDateKey(date);
-    const minutes = focusStatsMap.get(dateKey) || 0;
-    if (minutes === 0) return 0;
-    if (minutes < 30) return 1; // < 30 min
-    if (minutes < 60) return 2; // 30-60 min
-    if (minutes < 120) return 3; // 1-2 hours
-    return 4; // 2+ hours
+    return heatmapMap.get(dateKey)?.level || 0;
+  };
+
+  // Get focus hours for a date
+  const getFocusHours = (date: Date): number => {
+    const dateKey = getLocalDateKey(date);
+    return heatmapMap.get(dateKey)?.focusHours || 0;
   };
 
   // Heatmap colors (GitHub-style green)
@@ -442,11 +430,10 @@ export default function SchedulingPage() {
 
                   {/* Focus Time Stats */}
                   {(() => {
-                    const dateKey = getLocalDateKey(selectedDate);
-                    const focusMinutes = focusStatsMap.get(dateKey) || 0;
-                    const hours = Math.floor(focusMinutes / 60);
-                    const mins = focusMinutes % 60;
-                    return focusMinutes > 0 ? (
+                    const focusHours = getFocusHours(selectedDate);
+                    const hours = Math.floor(focusHours);
+                    const mins = Math.round((focusHours - hours) * 60);
+                    return focusHours > 0 ? (
                       <div className="mb-2 flex items-center gap-2 rounded-md bg-green-500/10 px-2 py-1.5">
                         <div
                           className="h-3 w-3 rounded-sm"
