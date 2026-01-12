@@ -128,6 +128,52 @@ export default function SchedulingPage() {
     queryFn: () => trpcClient.scheduling.getUserSessions.query(),
   });
 
+  // Get focus stats for heatmap (last 3 months)
+  const threeMonthsAgo = useMemo(() => {
+    const date = new Date();
+    date.setMonth(date.getMonth() - 3);
+    date.setHours(0, 0, 0, 0);
+    return date.getTime();
+  }, []);
+
+  const { data: dailyFocusStats = [] } = useQuery({
+    queryKey: ["timeEntry.getDailyFocusStats", threeMonthsAgo],
+    queryFn: () =>
+      trpcClient.timeEntry.getDailyFocusStats.query({
+        startTimestamp: threeMonthsAgo,
+        endTimestamp: Date.now(),
+      }),
+  });
+
+  // Create a map of date -> focus minutes for quick lookup
+  const focusStatsMap = useMemo(() => {
+    const map = new Map<string, number>();
+    dailyFocusStats.forEach((stat) => {
+      map.set(stat.date, stat.minutes);
+    });
+    return map;
+  }, [dailyFocusStats]);
+
+  // Get heatmap intensity level (0-4) based on focus minutes
+  const getHeatmapLevel = (date: Date): number => {
+    const dateKey = date.toISOString().split("T")[0];
+    const minutes = focusStatsMap.get(dateKey) || 0;
+    if (minutes === 0) return 0;
+    if (minutes < 30) return 1; // < 30 min
+    if (minutes < 60) return 2; // 30-60 min
+    if (minutes < 120) return 3; // 1-2 hours
+    return 4; // 2+ hours
+  };
+
+  // Heatmap colors (GitHub-style green)
+  const heatmapColors: Record<number, string> = {
+    0: "transparent",
+    1: "hsl(142 76% 73%)", // Light green
+    2: "hsl(142 76% 56%)", // Medium green
+    3: "hsl(142 76% 42%)", // Dark green
+    4: "hsl(142 76% 30%)", // Darkest green
+  };
+
   const createMutation = useMutation({
     mutationFn: (data: typeof formData) => trpcClient.scheduling.createSession.mutate(data),
     onSuccess: () => {
@@ -339,12 +385,34 @@ export default function SchedulingPage() {
                 onSelect={setSelectedDate}
                 modifiers={{
                   scheduled: (date) => isDayScheduled(date),
+                  level1: (date) => getHeatmapLevel(date) === 1,
+                  level2: (date) => getHeatmapLevel(date) === 2,
+                  level3: (date) => getHeatmapLevel(date) === 3,
+                  level4: (date) => getHeatmapLevel(date) === 4,
                 }}
                 modifiersStyles={{
                   scheduled: {
                     fontWeight: "bold",
-                    backgroundColor: "hsl(var(--primary) / 0.1)",
-                    color: "hsl(var(--primary))",
+                    textDecoration: "underline",
+                    textDecorationColor: "hsl(var(--primary))",
+                    textUnderlineOffset: "3px",
+                  },
+                  level1: {
+                    backgroundColor: heatmapColors[1],
+                    color: "hsl(142 76% 20%)",
+                  },
+                  level2: {
+                    backgroundColor: heatmapColors[2],
+                    color: "white",
+                  },
+                  level3: {
+                    backgroundColor: heatmapColors[3],
+                    color: "white",
+                  },
+                  level4: {
+                    backgroundColor: heatmapColors[4],
+                    color: "white",
+                    fontWeight: "bold",
                   },
                 }}
                 className="rounded-md"
@@ -359,8 +427,32 @@ export default function SchedulingPage() {
                       day: "numeric",
                     })}
                   </div>
+
+                  {/* Focus Time Stats */}
+                  {(() => {
+                    const dateKey = selectedDate.toISOString().split("T")[0];
+                    const focusMinutes = focusStatsMap.get(dateKey) || 0;
+                    const hours = Math.floor(focusMinutes / 60);
+                    const mins = focusMinutes % 60;
+                    return focusMinutes > 0 ? (
+                      <div className="mb-2 flex items-center gap-2 rounded-md bg-green-500/10 px-2 py-1.5">
+                        <div
+                          className="h-3 w-3 rounded-sm"
+                          style={{ backgroundColor: heatmapColors[getHeatmapLevel(selectedDate)] }}
+                        />
+                        <span className="text-xs font-medium text-green-700 dark:text-green-400">
+                          {hours > 0 ? `${hours}h ${mins}m` : `${mins}m`} focused
+                        </span>
+                      </div>
+                    ) : (
+                      <p className="mb-2 text-xs text-muted-foreground">No focus time recorded</p>
+                    );
+                  })()}
+
+                  {/* Scheduled Sessions */}
                   {sessionsForSelectedDate.length > 0 ? (
                     <div className="space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground">Scheduled:</p>
                       {sessionsForSelectedDate.map((session) => (
                         <div
                           key={session.id}
@@ -379,6 +471,25 @@ export default function SchedulingPage() {
                   )}
                 </div>
               )}
+
+              {/* Heatmap Legend */}
+              <div className="mt-3 border-t pt-3">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Less</span>
+                  <div className="flex gap-1">
+                    {[0, 1, 2, 3, 4].map((level) => (
+                      <div
+                        key={level}
+                        className="h-3 w-3 rounded-sm border border-border/50"
+                        style={{
+                          backgroundColor: level === 0 ? "hsl(var(--muted))" : heatmapColors[level],
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <span>More</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
