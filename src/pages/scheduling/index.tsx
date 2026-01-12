@@ -165,13 +165,13 @@ export default function SchedulingPage() {
     return heatmapMap.get(dateKey)?.focusHours || 0;
   };
 
-  // Heatmap colors (GitHub-style green)
+  // Heatmap colors (matching ActivityHeatmap component - amber/orange)
   const heatmapColors: Record<number, string> = {
-    0: "transparent",
-    1: "hsl(142 76% 73%)", // Light green
-    2: "hsl(142 76% 56%)", // Medium green
-    3: "hsl(142 76% 42%)", // Dark green
-    4: "hsl(142 76% 30%)", // Darkest green
+    0: "hsl(var(--muted))",
+    1: "rgba(229, 168, 83, 0.25)", // #E5A853/25
+    2: "rgba(229, 168, 83, 0.50)", // #E5A853/50
+    3: "rgba(229, 168, 83, 0.75)", // #E5A853/75
+    4: "rgb(229, 168, 83)", // #E5A853
   };
 
   const createMutation = useMutation({
@@ -399,19 +399,17 @@ export default function SchedulingPage() {
                   },
                   level1: {
                     backgroundColor: heatmapColors[1],
-                    color: "hsl(142 76% 20%)",
                   },
                   level2: {
                     backgroundColor: heatmapColors[2],
-                    color: "white",
                   },
                   level3: {
                     backgroundColor: heatmapColors[3],
-                    color: "white",
+                    color: "hsl(var(--background))",
                   },
                   level4: {
                     backgroundColor: heatmapColors[4],
-                    color: "white",
+                    color: "hsl(var(--background))",
                     fontWeight: "bold",
                   },
                 }}
@@ -434,12 +432,12 @@ export default function SchedulingPage() {
                     const hours = Math.floor(focusHours);
                     const mins = Math.round((focusHours - hours) * 60);
                     return focusHours > 0 ? (
-                      <div className="mb-2 flex items-center gap-2 rounded-md bg-green-500/10 px-2 py-1.5">
+                      <div className="mb-2 flex items-center gap-2 rounded-md bg-[#E5A853]/10 px-2 py-1.5">
                         <div
                           className="h-3 w-3 rounded-sm"
                           style={{ backgroundColor: heatmapColors[getHeatmapLevel(selectedDate)] }}
                         />
-                        <span className="text-xs font-medium text-green-700 dark:text-green-400">
+                        <span className="text-xs font-medium text-[#E5A853]">
                           {hours > 0 ? `${hours}h ${mins}m` : `${mins}m`} focused
                         </span>
                       </div>
