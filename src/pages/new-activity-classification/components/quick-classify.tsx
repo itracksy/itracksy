@@ -89,7 +89,8 @@ export function QuickClassify() {
         "isProductive:",
         params.isProductive
       );
-      return trpcClient.activity.createRule.mutate({
+      // Create the rule
+      const rule = await trpcClient.activity.createRule.mutate({
         name: `Rule for ${params.item.name}`,
         description: `Created from quick classification`,
         appName: params.item.type === "app" ? params.item.name : params.item.appName || "",
@@ -97,9 +98,18 @@ export function QuickClassify() {
         rating: params.isProductive ? 1 : 0,
         active: true,
       });
+
+      // Apply the new rule to existing unrated activities
+      console.log("[QuickClassify] Applying rule to existing activities...");
+      await trpcClient.activity.rateUnratedActivities.mutate();
+
+      return rule;
     },
     onSuccess: (_, variables) => {
-      console.log("[QuickClassify] Rule created successfully for:", variables.item.name);
+      console.log(
+        "[QuickClassify] Rule created and applied successfully for:",
+        variables.item.name
+      );
       toast({
         title: "Classified",
         description: `${variables.item.name} marked as ${variables.isProductive ? "productive" : "distracting"}`,
