@@ -94,6 +94,11 @@ export const utilsRouter = t.router({
     return app.getVersion();
   }),
 
+  // Check if app is in development mode
+  isDevelopment: protectedProcedure.query(() => {
+    return !app.isPackaged;
+  }),
+
   // Get log file content
   getLogFileContent: protectedProcedure.query(async () => {
     try {
