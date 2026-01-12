@@ -15,9 +15,12 @@ import { breakDurationAtom } from "@/context/board";
 
 import { useNavigate } from "@tanstack/react-router";
 import { getTitleTimeEntry } from "@/api/db/timeEntryExt";
+import { useSidebar } from "@/components/ui/sidebar";
 
 export function BottomSideBar() {
   const [breakDuration, setBreakDuration] = useAtom(breakDurationAtom);
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
 
   const { data: activeTimeEntry } = useActiveTimeEntry();
   const { data: lastTimeEntry } = useLastTimeEntry();
@@ -128,6 +131,50 @@ export function BottomSideBar() {
     });
   };
 
+  // Collapsed state - show only icons
+  if (isCollapsed) {
+    return (
+      <div className="flex flex-col items-center gap-2">
+        {activeTimeEntry ? (
+          <>
+            <button
+              onClick={handleStopTimeEntry}
+              className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-500/10 text-red-600 transition-colors hover:bg-red-500/20 dark:text-red-400"
+              title="Stop Session"
+            >
+              <Square className="h-5 w-5" />
+            </button>
+            {activeTimeEntry.isFocusMode && (
+              <button
+                onClick={handleTakeBreak}
+                className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/10 text-orange-600 transition-colors hover:bg-orange-500/20 dark:text-orange-400"
+                title="Take Break"
+              >
+                <Coffee className="h-5 w-5" />
+              </button>
+            )}
+          </>
+        ) : (
+          <button
+            onClick={() => navigate({ to: "/" })}
+            className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/20 text-green-600 transition-colors hover:bg-green-500/30 dark:text-green-400"
+            title="Start Session"
+          >
+            <Play className="h-5 w-5" />
+          </button>
+        )}
+        <button
+          onClick={openFeedbackLink}
+          className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+          title="Send Feedback"
+        >
+          <MessageSquare className="h-4 w-4" />
+        </button>
+      </div>
+    );
+  }
+
+  // Expanded state - show full content
   return (
     <div className="space-y-2">
       {activeTimeEntry ? (
@@ -189,10 +236,10 @@ export function BottomSideBar() {
             onClick={() => navigate({ to: "/" })}
             className="flex w-full items-center gap-3 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 p-3 text-left transition-all hover:from-green-500/20 hover:to-emerald-500/20 dark:from-green-500/20 dark:to-emerald-500/20"
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500/20">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-500/20">
               <Play className="h-4 w-4 text-green-600 dark:text-green-400" />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
                 Start Session
               </p>
@@ -206,7 +253,7 @@ export function BottomSideBar() {
               onClick={handleResumeLastTask}
               className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
             >
-              <RotateCcw className="h-4 w-4 text-blue-500" />
+              <RotateCcw className="h-4 w-4 shrink-0 text-blue-500" />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-xs text-slate-600 dark:text-slate-400">
                   Resume: {getTitleTimeEntry(lastTimeEntry)}
@@ -222,8 +269,8 @@ export function BottomSideBar() {
         onClick={openFeedbackLink}
         className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300"
       >
-        <MessageSquare className="h-3.5 w-3.5" />
-        Send Feedback
+        <MessageSquare className="h-3.5 w-3.5 shrink-0" />
+        <span>Send Feedback</span>
       </button>
     </div>
   );

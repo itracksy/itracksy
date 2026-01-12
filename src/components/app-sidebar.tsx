@@ -244,9 +244,9 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
       )}
       {...props}
     >
-      <SidebarHeader className="px-4 py-4">
+      <SidebarHeader className="px-4 py-4 group-data-[collapsible=icon]:hidden">
         <div className="flex items-center gap-2">
-          <img src={logoImage} alt="iTracksy" className="h-8 w-8" />
+          <img src={logoImage} alt="iTracksy" className="h-8 w-8 shrink-0" />
           <span className="text-lg font-semibold text-slate-900 dark:text-white">iTracksy</span>
         </div>
       </SidebarHeader>
@@ -259,7 +259,7 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
           return (
             <div key={section.id} className="mb-4">
               {/* Section Header */}
-              <div className="mb-2 px-3">
+              <div className="mb-2 px-3 group-data-[collapsible=icon]:hidden">
                 <span
                   className={cn(
                     "text-[10px] font-semibold uppercase tracking-wider",

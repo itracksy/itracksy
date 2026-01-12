@@ -116,6 +116,52 @@ const CategorizationPage: React.FC = () => {
     return `${minutes}m`;
   };
 
+  // Aggregate activities by app name (ownerName + domain)
+  const aggregateActivitiesByApp = (
+    activities: Array<{
+      ownerName: string;
+      domain: string | null;
+      title: string;
+      duration: number;
+      isFocusMode: boolean;
+      timestamp: number;
+    }>
+  ) => {
+    const appMap = new Map<
+      string,
+      {
+        ownerName: string;
+        domain: string | null;
+        totalDuration: number;
+        isFocusMode: boolean;
+      }
+    >();
+
+    for (const activity of activities) {
+      // Use domain if available, otherwise use ownerName as key
+      const key = activity.domain || activity.ownerName;
+
+      if (!appMap.has(key)) {
+        appMap.set(key, {
+          ownerName: activity.ownerName,
+          domain: activity.domain,
+          totalDuration: 0,
+          isFocusMode: activity.isFocusMode,
+        });
+      }
+
+      const app = appMap.get(key)!;
+      app.totalDuration += activity.duration;
+      // If any activity is focus mode, mark as focus mode
+      if (activity.isFocusMode) {
+        app.isFocusMode = true;
+      }
+    }
+
+    // Convert to array and sort by duration
+    return Array.from(appMap.values()).sort((a, b) => b.totalDuration - a.totalDuration);
+  };
+
   // Time range options
   const timeRangeOptions = [
     { value: "today", label: "Today" },
@@ -332,37 +378,11 @@ const CategorizationPage: React.FC = () => {
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="px-4 pb-3">
-                      <div className="ml-7 space-y-1 rounded-lg bg-muted/30 p-3">
-                        {category.activities
-                          .filter((a) => a.duration >= 60)
-                          .slice(0, 10)
-                          .map((activity, idx) => (
-                            <div
-                              key={idx}
-                              className="flex items-center justify-between py-1 text-sm"
-                            >
-                              <div className="flex items-center gap-2 truncate">
-                                {activity.domain ? (
-                                  <Globe className="h-3 w-3 text-muted-foreground" />
-                                ) : (
-                                  <FolderOpen className="h-3 w-3 text-muted-foreground" />
-                                )}
-                                <span className="truncate">
-                                  {activity.domain || activity.ownerName}
-                                </span>
-                              </div>
-                              <span className="text-muted-foreground">
-                                {formatDuration(activity.duration)}
-                              </span>
-                            </div>
-                          ))}
-                        {category.activities.filter((a) => a.duration >= 60).length > 10 && (
-                          <p className="text-xs text-muted-foreground">
-                            +{category.activities.filter((a) => a.duration >= 60).length - 10} more
-                            activities
-                          </p>
-                        )}
-                      </div>
+                      <CategoryAppsContent
+                        activities={category.activities}
+                        aggregateActivitiesByApp={aggregateActivitiesByApp}
+                        formatDuration={formatDuration}
+                      />
                     </AccordionContent>
                   </AccordionItem>
                 ))}
@@ -412,6 +432,67 @@ const CategorizationPage: React.FC = () => {
     </div>
   );
 };
+
+/**
+ * Category Apps Content - displays aggregated apps for a category
+ */
+interface CategoryAppsContentProps {
+  activities: readonly {
+    readonly ownerName: string;
+    readonly domain: string | null;
+    readonly title: string;
+    readonly duration: number;
+    readonly isFocusMode: boolean;
+    readonly timestamp: number;
+  }[];
+  aggregateActivitiesByApp: (
+    activities: Array<{
+      ownerName: string;
+      domain: string | null;
+      title: string;
+      duration: number;
+      isFocusMode: boolean;
+      timestamp: number;
+    }>
+  ) => Array<{
+    ownerName: string;
+    domain: string | null;
+    totalDuration: number;
+    isFocusMode: boolean;
+  }>;
+  formatDuration: (seconds: number) => string;
+}
+
+function CategoryAppsContent({
+  activities,
+  aggregateActivitiesByApp,
+  formatDuration,
+}: CategoryAppsContentProps) {
+  const aggregatedApps = React.useMemo(() => {
+    return aggregateActivitiesByApp([...activities]).filter((a) => a.totalDuration >= 60);
+  }, [activities, aggregateActivitiesByApp]);
+
+  return (
+    <div className="ml-7 space-y-1 rounded-lg bg-muted/30 p-3">
+      {aggregatedApps.slice(0, 10).map((app, idx) => (
+        <div key={idx} className="flex items-center justify-between py-1 text-sm">
+          <div className="flex items-center gap-2 truncate">
+            {app.domain ? (
+              <Globe className="h-3 w-3 text-muted-foreground" />
+            ) : (
+              <FolderOpen className="h-3 w-3 text-muted-foreground" />
+            )}
+            <span className="truncate">{app.domain || app.ownerName}</span>
+          </div>
+          <span className="text-muted-foreground">{formatDuration(app.totalDuration)}</span>
+        </div>
+      ))}
+      {aggregatedApps.length > 10 && (
+        <p className="text-xs text-muted-foreground">+{aggregatedApps.length - 10} more apps</p>
+      )}
+    </div>
+  );
+}
 
 /**
  * Inline Quick Assign Chip
