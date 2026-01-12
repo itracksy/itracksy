@@ -349,11 +349,11 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
           } else {
             if (hours > 0) {
               setDuration(
-                `-${hours}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+                `+${hours}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
               );
             } else {
               setDuration(
-                `-${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+                `+${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
               );
             }
             setIsTimeExceeded(true);
