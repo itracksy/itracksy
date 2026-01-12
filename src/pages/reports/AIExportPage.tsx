@@ -94,13 +94,31 @@ export default function AIExportPage() {
   const handleCopy = async () => {
     if (!exportData) return;
 
+    const prompt = `Analyze my productivity and deep work patterns from this data export. Please provide insights on:
+
+1. **Context Switching Analysis**: Identify my biggest context switching triggers and their cognitive cost. Which app transitions are most frequent?
+
+2. **Deep Work Assessment**: Evaluate my deep work blocks (sessions over 25 minutes with fewer than 3 macro switches). When do I achieve flow state?
+
+3. **Productivity Patterns**: What are my most and least productive days/times? Are there patterns I should be aware of?
+
+4. **Focus Streaks**: Analyze my longest focus streaks. What apps help me stay focused?
+
+5. **Actionable Recommendations**: Based on my data, suggest 3-5 specific changes I can make to improve my deep work time.
+
+Here is my productivity data from ${exportData.dateRange.startDate} to ${exportData.dateRange.endDate}:
+
+\`\`\`json
+${JSON.stringify(exportData, null, 2)}
+\`\`\``;
+
     try {
-      await navigator.clipboard.writeText(JSON.stringify(exportData, null, 2));
+      await navigator.clipboard.writeText(prompt);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       toast({
         title: "Copied to Clipboard",
-        description: "You can now paste this into your AI assistant.",
+        description: "Prompt and data ready - paste into your AI assistant!",
       });
     } catch (err) {
       toast({
