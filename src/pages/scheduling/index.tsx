@@ -7,13 +7,14 @@
  * 3. Clean list view for existing schedules
  */
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -32,7 +33,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Clock, Plus, Trash2, Edit, Calendar, Zap, Coffee, Brain } from "lucide-react";
+import {
+  Clock,
+  Plus,
+  Trash2,
+  Edit,
+  Calendar as CalendarIcon,
+  Zap,
+  Coffee,
+  Brain,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { trpcClient } from "@/utils/trpc";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
@@ -257,6 +267,8 @@ export default function SchedulingPage() {
     return days.map((d) => DAYS_OF_WEEK[d].label).join(", ");
   };
 
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+
   const getNextRun = (session: ScheduledSession) => {
     if (!session.isActive) return null;
     const today = new Date();
@@ -278,6 +290,29 @@ export default function SchedulingPage() {
     return null;
   };
 
+  // Get sessions for selected date
+  const sessionsForSelectedDate = useMemo(() => {
+    if (!selectedDate) return [];
+    const dayOfWeek = selectedDate.getDay();
+    return scheduledSessions.filter((session) => session.daysOfWeek.includes(dayOfWeek));
+  }, [selectedDate, scheduledSessions]);
+
+  // Get days that have schedules (for highlighting in calendar)
+  const scheduledDays = useMemo(() => {
+    const days = new Set<number>();
+    scheduledSessions.forEach((session) => {
+      if (session.isActive) {
+        session.daysOfWeek.forEach((day) => days.add(day));
+      }
+    });
+    return days;
+  }, [scheduledSessions]);
+
+  // Custom day render to highlight scheduled days
+  const isDayScheduled = (date: Date) => {
+    return scheduledDays.has(date.getDay());
+  };
+
   return (
     <div className="flex h-full flex-col p-6">
       {/* Header */}
@@ -292,107 +327,164 @@ export default function SchedulingPage() {
         </Button>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 space-y-6 overflow-auto">
-        {/* Empty State with Presets */}
-        {scheduledSessions.length === 0 && (
-          <Card className="border-dashed">
-            <CardContent className="py-12">
-              <div className="mb-6 text-center">
-                <Calendar className="mx-auto mb-3 h-12 w-12 text-muted-foreground/50" />
-                <h3 className="text-lg font-semibold">No schedules yet</h3>
-                <p className="text-sm text-muted-foreground">
-                  Choose a preset to get started quickly
-                </p>
-              </div>
-              <div className="mx-auto grid max-w-lg gap-3">
-                {PRESET_SCHEDULES.map((preset) => (
-                  <button
-                    key={preset.name}
-                    onClick={() => handlePreset(preset)}
-                    className="flex items-center gap-4 rounded-lg border p-4 text-left transition-colors hover:bg-muted/50"
-                  >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                      <preset.icon className="h-5 w-5 text-primary" />
+      {/* Content - Two Column Layout */}
+      <div className="flex flex-1 gap-6 overflow-hidden">
+        {/* Left: Calendar */}
+        <div className="shrink-0">
+          <Card>
+            <CardContent className="p-3">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                modifiers={{
+                  scheduled: (date) => isDayScheduled(date),
+                }}
+                modifiersStyles={{
+                  scheduled: {
+                    fontWeight: "bold",
+                    backgroundColor: "hsl(var(--primary) / 0.1)",
+                    color: "hsl(var(--primary))",
+                  },
+                }}
+                className="rounded-md"
+              />
+              {/* Selected Day Info */}
+              {selectedDate && (
+                <div className="mt-3 border-t pt-3">
+                  <div className="mb-2 text-sm font-medium">
+                    {selectedDate.toLocaleDateString("en-US", {
+                      weekday: "long",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </div>
+                  {sessionsForSelectedDate.length > 0 ? (
+                    <div className="space-y-2">
+                      {sessionsForSelectedDate.map((session) => (
+                        <div
+                          key={session.id}
+                          className={cn(
+                            "flex items-center justify-between rounded-md bg-muted/50 px-2 py-1.5 text-xs",
+                            !session.isActive && "opacity-50"
+                          )}
+                        >
+                          <span className="font-medium">{session.name}</span>
+                          <span className="text-muted-foreground">{session.startTime}</span>
+                        </div>
+                      ))}
                     </div>
-                    <div className="flex-1">
-                      <div className="font-medium">{preset.name}</div>
-                      <div className="text-sm text-muted-foreground">{preset.description}</div>
-                    </div>
-                    <Badge variant="secondary">{preset.cycles} cycles</Badge>
-                  </button>
-                ))}
-              </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">No sessions scheduled</p>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
-        )}
+        </div>
 
-        {/* Schedule List */}
-        {scheduledSessions.length > 0 && (
-          <div className="space-y-3">
-            {scheduledSessions.map((session) => {
-              const nextRun = getNextRun(session);
-              return (
-                <Card
-                  key={session.id}
-                  className={cn("transition-opacity", !session.isActive && "opacity-60")}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between gap-4">
-                      {/* Left: Info */}
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="truncate font-semibold">{session.name}</h3>
-                          {session.autoStart && (
-                            <Badge variant="outline" className="shrink-0 text-xs">
-                              Auto
-                            </Badge>
+        {/* Right: Schedule List */}
+        <div className="flex-1 space-y-6 overflow-auto">
+          {/* Empty State with Presets */}
+          {scheduledSessions.length === 0 && (
+            <Card className="border-dashed">
+              <CardContent className="py-12">
+                <div className="mb-6 text-center">
+                  <CalendarIcon className="mx-auto mb-3 h-12 w-12 text-muted-foreground/50" />
+                  <h3 className="text-lg font-semibold">No schedules yet</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Choose a preset to get started quickly
+                  </p>
+                </div>
+                <div className="mx-auto grid max-w-lg gap-3">
+                  {PRESET_SCHEDULES.map((preset) => (
+                    <button
+                      key={preset.name}
+                      onClick={() => handlePreset(preset)}
+                      className="flex items-center gap-4 rounded-lg border p-4 text-left transition-colors hover:bg-muted/50"
+                    >
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                        <preset.icon className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium">{preset.name}</div>
+                        <div className="text-sm text-muted-foreground">{preset.description}</div>
+                      </div>
+                      <Badge variant="secondary">{preset.cycles} cycles</Badge>
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Schedule List */}
+          {scheduledSessions.length > 0 && (
+            <div className="space-y-3">
+              {scheduledSessions.map((session) => {
+                const nextRun = getNextRun(session);
+                return (
+                  <Card
+                    key={session.id}
+                    className={cn("transition-opacity", !session.isActive && "opacity-60")}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between gap-4">
+                        {/* Left: Info */}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <h3 className="truncate font-semibold">{session.name}</h3>
+                            {session.autoStart && (
+                              <Badge variant="outline" className="shrink-0 text-xs">
+                                Auto
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                            <span>
+                              {session.focusDuration}m focus / {session.breakDuration}m break
+                            </span>
+                            <span className="text-muted-foreground/50">•</span>
+                            <span>{session.cycles} cycles</span>
+                            <span className="text-muted-foreground/50">•</span>
+                            <span>{formatDays(session.daysOfWeek)}</span>
+                            <span className="text-muted-foreground/50">•</span>
+                            <span>{session.startTime}</span>
+                          </div>
+                          {nextRun && (
+                            <div className="mt-1 flex items-center gap-1 text-xs text-blue-600">
+                              <Clock className="h-3 w-3" />
+                              Next: {nextRun}
+                            </div>
                           )}
                         </div>
-                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-                          <span>
-                            {session.focusDuration}m focus / {session.breakDuration}m break
-                          </span>
-                          <span className="text-muted-foreground/50">•</span>
-                          <span>{session.cycles} cycles</span>
-                          <span className="text-muted-foreground/50">•</span>
-                          <span>{formatDays(session.daysOfWeek)}</span>
-                          <span className="text-muted-foreground/50">•</span>
-                          <span>{session.startTime}</span>
-                        </div>
-                        {nextRun && (
-                          <div className="mt-1 flex items-center gap-1 text-xs text-blue-600">
-                            <Clock className="h-3 w-3" />
-                            Next: {nextRun}
-                          </div>
-                        )}
-                      </div>
 
-                      {/* Right: Actions */}
-                      <div className="flex shrink-0 items-center gap-2">
-                        <Switch
-                          checked={session.isActive}
-                          onCheckedChange={() => handleToggle(session.id)}
-                        />
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(session)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(session.id)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {/* Right: Actions */}
+                        <div className="flex shrink-0 items-center gap-2">
+                          <Switch
+                            checked={session.isActive}
+                            onCheckedChange={() => handleToggle(session.id)}
+                          />
+                          <Button variant="ghost" size="icon" onClick={() => handleEdit(session)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(session.id)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Create/Edit Dialog */}
