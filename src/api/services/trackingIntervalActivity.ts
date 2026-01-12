@@ -191,7 +191,7 @@ export const startTracking = async (): Promise<void> => {
       });
 
       if (!result) {
-        logger.warn("[startTracking] No active window result returned");
+        // No active window - this is normal when no window is focused
         return;
       }
 
@@ -228,7 +228,6 @@ export const startTracking = async (): Promise<void> => {
       const rule = await findMatchingRules(transformedActivities);
 
       const isBlocked = rule && rule.rating === 0;
-      console.log("isBlocked", isBlocked);
       await upsertActivity({ ...transformedActivities, rating: rule ? rule.rating : null });
 
       // Check if this is a domain-based rule (rule has a non-empty domain property)
@@ -257,8 +256,8 @@ export const startTracking = async (): Promise<void> => {
         });
       }
     } catch (error) {
-      // Check if the error is related to accessibility permissions
-      isAccessibilityError = Boolean(
+      // Check if the error is related to accessibility/screen recording permissions
+      const isPermissionError = Boolean(
         error &&
           typeof error === "object" &&
           "stdout" in error &&
@@ -266,8 +265,20 @@ export const startTracking = async (): Promise<void> => {
           error.stdout.includes("permission")
       );
 
+      if (isPermissionError) {
+        // Only log permission error once to avoid log spam
+        if (!isAccessibilityError) {
+          logger.warn(
+            "[startTracking] Screen recording permission required - tracking paused until granted"
+          );
+          isAccessibilityError = true;
+        }
+        // Don't throw - just skip tracking until permission is granted
+        return;
+      }
+
+      // Log other errors normally
       logger.error("[startTracking] Error occurred while tracking", { error });
-      throw error;
     }
   }, TRACKING_INTERVAL);
 };
