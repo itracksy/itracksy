@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
-import { Download, Plus, Clock, Target, Hash } from "lucide-react";
+import { Download, Plus, Clock, Target, Hash, Brain } from "lucide-react";
 import { format } from "date-fns";
+import { Link } from "@tanstack/react-router";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -202,6 +203,13 @@ export default function ReportsPage() {
               <Plus className="mr-1.5 h-4 w-4" />
               Add Time
             </Button>
+
+            <Link to="/reports/ai-export">
+              <Button variant="outline" size="sm">
+                <Brain className="mr-1.5 h-4 w-4 text-purple-500" />
+                AI Export
+              </Button>
+            </Link>
 
             <Button
               size="sm"

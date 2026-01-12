@@ -14,6 +14,7 @@ import {
   calculateSessionProductivityMetrics,
   getTimeEntriesForExport,
 } from "../../api/services/timeEntry";
+import { getAIExportData, getAIExportDataCompact } from "../../api/services/aiExport";
 import { timeEntries } from "../db/schema";
 import { createInsertSchema } from "drizzle-zod";
 import { getUserActivities } from "../services/activities";
@@ -101,6 +102,43 @@ export const timeEntryRouter = t.router({
       const endDate = input.endDate ? new Date(input.endDate) : undefined;
 
       return getTimeEntriesForExport({
+        userId: ctx.userId!,
+        startDate,
+        endDate,
+      });
+    }),
+
+  // AI Export endpoints for deep work analysis
+  exportForAI: protectedProcedure
+    .input(
+      z.object({
+        startDate: z.string(),
+        endDate: z.string(),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const startDate = new Date(input.startDate);
+      const endDate = new Date(input.endDate);
+
+      return getAIExportData({
+        userId: ctx.userId!,
+        startDate,
+        endDate,
+      });
+    }),
+
+  exportForAICompact: protectedProcedure
+    .input(
+      z.object({
+        startDate: z.string(),
+        endDate: z.string(),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const startDate = new Date(input.startDate);
+      const endDate = new Date(input.endDate);
+
+      return getAIExportDataCompact({
         userId: ctx.userId!,
         startDate,
         endDate,

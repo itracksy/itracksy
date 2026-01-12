@@ -12,6 +12,7 @@ import CategorizationPage from "@/pages/categorization/index";
 import { CategoryManagement } from "@/pages/categorization/components/CategoryManagement";
 import { UncategorizedActivities } from "@/pages/categorization/components/UncategorizedActivities";
 import ReportsPage from "@/pages/reports/ReportsPage";
+import AIExportPage from "@/pages/reports/AIExportPage";
 import MusicPage from "@/pages/music/index";
 import SchedulingPage from "@/pages/scheduling/index";
 import LogPage from "@/pages/app-logs/index";
@@ -96,6 +97,12 @@ export const ReportsRoute = createRoute({
   component: ReportsPage,
 });
 
+export const AIExportRoute = createRoute({
+  getParentRoute: () => RootRoute,
+  path: "/reports/ai-export",
+  component: AIExportPage,
+});
+
 export const MusicRoute = createRoute({
   getParentRoute: () => RootRoute,
   path: "/music",
@@ -126,6 +133,7 @@ export const rootTree = RootRoute.addChildren([
   ClassificationRoute,
   RuleBookRoute,
   ReportsRoute,
+  AIExportRoute,
   MusicRoute,
   SchedulingRoute,
   LogsRoute,
