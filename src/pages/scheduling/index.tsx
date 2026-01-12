@@ -146,12 +146,20 @@ export default function SchedulingPage() {
       }),
   });
 
+  // Helper to get local date key (YYYY-MM-DD) without timezone shift
+  const getLocalDateKey = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   // Create a map of date -> focus minutes for quick lookup
   const focusStatsMap = useMemo(() => {
     const map = new Map<string, number>();
     dailyFocusStats.forEach((stat) => {
       // stat.date is the date string, stat.totalFocusTime is in seconds
-      const dateKey = new Date(stat.date).toISOString().split("T")[0];
+      const dateKey = getLocalDateKey(new Date(stat.date));
       const minutes = Math.round(stat.totalFocusTime / 60);
       map.set(dateKey, minutes);
     });
@@ -160,7 +168,7 @@ export default function SchedulingPage() {
 
   // Get heatmap intensity level (0-4) based on focus minutes
   const getHeatmapLevel = (date: Date): number => {
-    const dateKey = date.toISOString().split("T")[0];
+    const dateKey = getLocalDateKey(date);
     const minutes = focusStatsMap.get(dateKey) || 0;
     if (minutes === 0) return 0;
     if (minutes < 30) return 1; // < 30 min
@@ -434,7 +442,7 @@ export default function SchedulingPage() {
 
                   {/* Focus Time Stats */}
                   {(() => {
-                    const dateKey = selectedDate.toISOString().split("T")[0];
+                    const dateKey = getLocalDateKey(selectedDate);
                     const focusMinutes = focusStatsMap.get(dateKey) || 0;
                     const hours = Math.floor(focusMinutes / 60);
                     const mins = focusMinutes % 60;
