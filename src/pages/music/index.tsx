@@ -1,12 +1,9 @@
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { trpcClient } from "@/utils/trpc";
+import { cn } from "@/lib/utils";
 import {
   Music,
   Play,
@@ -14,13 +11,13 @@ import {
   Search,
   Brain,
   Coffee,
+  Zap,
   Waves,
   TreePine,
-  Volume2,
   Clock,
-  Download,
-  Sparkles,
-  ArrowRight,
+  Headphones,
+  Radio,
+  Piano,
 } from "lucide-react";
 
 interface MusicItem {
@@ -32,6 +29,7 @@ interface MusicItem {
   genre: string;
   description: string;
   tags: string[];
+  color: string;
 }
 
 const focusMusicData: MusicItem[] = [
@@ -42,28 +40,31 @@ const focusMusicData: MusicItem[] = [
     url: "https://www.youtube.com/watch?v=jfKfPfyJRdk",
     duration: "3:00:00",
     genre: "Lo-Fi",
-    description: "Perfect for deep work sessions with minimal distractions",
+    description: "Perfect for deep work sessions",
     tags: ["study", "concentration", "ambient"],
+    color: "from-purple-500 to-indigo-600",
   },
   {
     id: "2",
-    title: "Ambient Study Music - Focus Sounds",
+    title: "Ambient Study Music",
     artist: "Ambient Focus",
     url: "https://www.youtube.com/watch?v=2OEL4P1Rz04",
     duration: "3:00:00",
     genre: "Ambient",
-    description: "Atmospheric sounds designed to enhance concentration",
-    tags: ["ambient", "instrumental", "productivity"],
+    description: "Atmospheric sounds for focus",
+    tags: ["ambient", "instrumental"],
+    color: "from-cyan-500 to-blue-600",
   },
   {
     id: "3",
-    title: "Classical Music for Studying",
-    artist: "Classical Study Collection",
+    title: "Classical for Studying",
+    artist: "Classical Collection",
     url: "https://www.youtube.com/watch?v=BMuknRb7woc",
     duration: "1:35:55",
     genre: "Classical",
-    description: "Bach, Mozart, and Beethoven for enhanced cognitive performance",
-    tags: ["classical", "baroque", "focus"],
+    description: "Bach, Mozart & Beethoven",
+    tags: ["classical", "baroque"],
+    color: "from-amber-500 to-orange-600",
   },
   {
     id: "4",
@@ -72,74 +73,81 @@ const focusMusicData: MusicItem[] = [
     url: "https://www.youtube.com/watch?v=q76bMs-NwRk",
     duration: "10:00:00",
     genre: "Nature",
-    description: "Gentle rain sounds to mask distracting noise",
-    tags: ["nature", "rain", "white-noise"],
+    description: "Gentle rain to mask noise",
+    tags: ["nature", "rain"],
+    color: "from-slate-500 to-slate-700",
   },
   {
     id: "5",
-    title: "Binaural Beats for Focus",
+    title: "Binaural Beats 40Hz",
     artist: "Focus Enhancement",
     url: "https://www.youtube.com/watch?v=WPni755-Krg",
     duration: "1:00:00",
     genre: "Binaural",
-    description: "40Hz gamma waves to boost concentration and alertness",
-    tags: ["binaural", "gamma-waves", "brain-training"],
+    description: "Gamma waves for alertness",
+    tags: ["binaural", "brain-training"],
+    color: "from-violet-500 to-purple-700",
   },
 ];
 
 const breakMusicData: MusicItem[] = [
   {
     id: "6",
-    title: "Relaxing Piano Music",
+    title: "Relaxing Piano",
     artist: "Peaceful Piano",
     url: "https://www.youtube.com/watch?v=lFcSrYw-ARY",
     duration: "1:30:00",
     genre: "Piano",
-    description: "Soothing piano melodies for mental reset",
-    tags: ["piano", "relaxing", "peaceful"],
+    description: "Soothing melodies for rest",
+    tags: ["piano", "relaxing"],
+    color: "from-rose-400 to-pink-600",
   },
   {
     id: "7",
-    title: "Meditation Music - Stress Relief",
+    title: "Meditation & Stress Relief",
     artist: "Meditation Sounds",
     url: "https://www.youtube.com/watch?v=1ZYbU82GVz4",
     duration: "2:00:00",
     genre: "Meditation",
-    description: "Calming sounds to reduce stress and anxiety",
-    tags: ["meditation", "stress-relief", "calm"],
+    description: "Calming sounds to unwind",
+    tags: ["meditation", "calm"],
+    color: "from-teal-400 to-emerald-600",
   },
   {
     id: "8",
-    title: "Ocean Waves Relaxation",
+    title: "Ocean Waves",
     artist: "Nature Sounds",
     url: "https://www.youtube.com/watch?v=V1bFr2SWP1I",
     duration: "8:00:00",
     genre: "Nature",
-    description: "Peaceful ocean waves for complete relaxation",
-    tags: ["ocean", "waves", "nature"],
+    description: "Peaceful ocean relaxation",
+    tags: ["ocean", "waves"],
+    color: "from-blue-400 to-cyan-600",
   },
   {
     id: "9",
-    title: "Forest Sounds - Birds Chirping",
-    artist: "Forest Ambience",
+    title: "Forest Ambience",
+    artist: "Forest Sounds",
     url: "https://www.youtube.com/watch?v=xNN7iTA57jM",
     duration: "3:00:00",
     genre: "Nature",
-    description: "Natural forest sounds with gentle bird songs",
-    tags: ["forest", "birds", "nature"],
+    description: "Birds chirping in forest",
+    tags: ["forest", "birds"],
+    color: "from-green-500 to-emerald-700",
   },
 ];
 
 const energizingMusicData: MusicItem[] = [
   {
     id: "10",
-    title: "Upbeat Instrumental Mix",
+    title: "Upbeat Instrumental",
     artist: "Energy Boost",
     url: "https://www.youtube.com/watch?v=Tx1sqYc3qas",
     duration: "1:45:00",
     genre: "Electronic",
-    description: "Energizing instrumental beats for motivation",
-    tags: ["upbeat", "motivation", "electronic"],
+    description: "Energizing beats for motivation",
+    tags: ["upbeat", "motivation"],
+    color: "from-orange-500 to-red-600",
   },
   {
     id: "11",
@@ -148,15 +156,24 @@ const energizingMusicData: MusicItem[] = [
     url: "https://www.youtube.com/watch?v=Dx5qFachd3A",
     duration: "2:15:00",
     genre: "Jazz",
-    description: "Smooth jazz to energize your work environment",
-    tags: ["jazz", "coffee-shop", "smooth"],
+    description: "Smooth jazz vibes",
+    tags: ["jazz", "smooth"],
+    color: "from-yellow-500 to-amber-600",
   },
 ];
 
+type TabType = "focus" | "break" | "energize";
+
+const tabs: { id: TabType; label: string; icon: typeof Brain; description: string }[] = [
+  { id: "focus", label: "Focus", icon: Brain, description: "Deep work & concentration" },
+  { id: "break", label: "Break", icon: Coffee, description: "Relaxation & recovery" },
+  { id: "energize", label: "Energize", icon: Zap, description: "Motivation & energy" },
+];
+
 export default function MusicPage() {
-  const [activeTab, setActiveTab] = useState<"focus" | "break" | "energize">("focus");
+  const [activeTab, setActiveTab] = useState<TabType>("focus");
   const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [playingId, setPlayingId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const getCurrentMusicData = () => {
@@ -180,283 +197,190 @@ export default function MusicPage() {
       item.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const handlePlayMusic = async (url: string, title: string) => {
-    setIsLoading(true);
+  const handlePlayMusic = async (item: MusicItem) => {
+    setPlayingId(item.id);
     try {
-      await trpcClient.utils.openExternalUrl.mutate({ url });
+      await trpcClient.utils.openExternalUrl.mutate({ url: item.url });
       toast({
-        title: "Opening music",
-        description: `Playing "${title}" in your browser`,
+        title: "Now Playing",
+        description: item.title,
       });
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to open music. Please try again.",
+        description: "Failed to open music",
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleOpenLearnifyTube = async () => {
-    try {
-      await trpcClient.utils.openExternalUrl.mutate({ url: "https://www.learnifytube.com/" });
-      toast({
-        title: "Opening LearnifyTube",
-        description: "Download and play YouTube videos offline!",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to open LearnifyTube. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const getTabIcon = (tab: string) => {
-    switch (tab) {
-      case "focus":
-        return <Brain className="h-4 w-4" />;
-      case "break":
-        return <Coffee className="h-4 w-4" />;
-      case "energize":
-        return <Volume2 className="h-4 w-4" />;
-      default:
-        return <Music className="h-4 w-4" />;
+      setTimeout(() => setPlayingId(null), 1000);
     }
   };
 
   const getGenreIcon = (genre: string) => {
     switch (genre.toLowerCase()) {
       case "nature":
-        return <TreePine className="h-4 w-4" />;
+        return TreePine;
       case "ambient":
       case "binaural":
-        return <Waves className="h-4 w-4" />;
+        return Waves;
+      case "piano":
+        return Piano;
+      case "jazz":
+      case "electronic":
+        return Radio;
       default:
-        return <Music className="h-4 w-4" />;
+        return Headphones;
     }
   };
 
   return (
-    <div className="container mx-auto space-y-6 p-6">
-      <div className="mb-6 flex items-center gap-3">
-        <Music className="h-8 w-8 text-tracksy-gold" />
-        <div>
-          <h1 className="text-3xl font-bold text-tracksy-blue dark:text-white">Focus Music</h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            Curated music and sounds to enhance your productivity and focus
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
+      <div className="mx-auto max-w-6xl px-6 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="mb-2 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600">
+              <Headphones className="h-5 w-5 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Focus Music</h1>
+          </div>
+          <p className="text-slate-500 dark:text-slate-400">
+            Curated sounds to boost your productivity
           </p>
         </div>
-      </div>
 
-      {/* LearnifyTube Promotional Banner */}
-      <Card className="overflow-hidden border-2 border-tracksy-gold/20 bg-gradient-to-br from-tracksy-gold/5 via-transparent to-tracksy-blue/5">
-        <CardContent className="p-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="flex-1 space-y-2">
-              <div className="flex items-center gap-2">
-                <Download className="h-5 w-5 text-tracksy-gold" />
-                <Badge className="bg-tracksy-gold text-white hover:bg-tracksy-gold/90">
-                  New App
-                </Badge>
-                <Sparkles className="h-4 w-4 text-tracksy-gold" />
-              </div>
-              <h3 className="text-xl font-bold text-tracksy-blue dark:text-white">
-                Try LearnifyTube - Download & Play YouTube Videos Offline
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                Never worry about internet connectivity again! Download your favorite focus music, educational content, and more.
-                Play anytime, anywhere - perfect for deep work sessions.
-              </p>
-              <div className="flex flex-wrap gap-2 pt-2">
-                <Badge variant="outline" className="gap-1">
-                  <Download className="h-3 w-3" />
-                  Offline Playback
-                </Badge>
-                <Badge variant="outline" className="gap-1">
-                  <Music className="h-3 w-3" />
-                  High Quality Audio
-                </Badge>
-                <Badge variant="outline" className="gap-1">
-                  <Sparkles className="h-3 w-3" />
-                  Easy to Use
-                </Badge>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2 md:flex-shrink-0">
-              <Button
-                onClick={handleOpenLearnifyTube}
-                className="gap-2 bg-tracksy-gold text-white hover:bg-tracksy-gold/90"
-                size="lg"
-              >
-                <Download className="h-4 w-4" />
-                Get LearnifyTube
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-              <p className="text-center text-xs text-gray-500">Free to download</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="mb-6 flex items-center gap-4">
-        <div className="flex-1">
-          <Label htmlFor="search" className="sr-only">
-            Search music
-          </Label>
+        {/* Search */}
+        <div className="mb-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
-              id="search"
-              placeholder="Search by title, artist, genre, or tags..."
+              placeholder="Search music..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="h-11 rounded-xl border-slate-200 bg-white pl-11 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-800"
             />
           </div>
         </div>
-      </div>
 
-      <Tabs
-        value={activeTab}
-        onValueChange={(v) => setActiveTab(v as "focus" | "break" | "energize")}
-      >
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="focus" className="flex items-center gap-2">
-            {getTabIcon("focus")}
-            Focus
-          </TabsTrigger>
-          <TabsTrigger value="break" className="flex items-center gap-2">
-            {getTabIcon("break")}
-            Break
-          </TabsTrigger>
-          <TabsTrigger value="energize" className="flex items-center gap-2">
-            {getTabIcon("energize")}
-            Energize
-          </TabsTrigger>
-        </TabsList>
+        {/* Tabs */}
+        <div className="mb-8 flex gap-2">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "flex flex-1 flex-col items-center gap-1 rounded-xl px-4 py-3 transition-all",
+                  isActive
+                    ? "bg-slate-900 text-white shadow-lg dark:bg-white dark:text-slate-900"
+                    : "bg-white text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
+                )}
+              >
+                <Icon className="h-5 w-5" />
+                <span className="text-sm font-medium">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
 
-        <TabsContent value="focus" className="mt-6 space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredMusic.map((item) => (
-              <MusicCard
+        {/* Music Grid */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredMusic.map((item) => {
+            const GenreIcon = getGenreIcon(item.genre);
+            const isPlaying = playingId === item.id;
+
+            return (
+              <div
                 key={item.id}
-                item={item}
-                onPlay={() => handlePlayMusic(item.url, item.title)}
-                isLoading={isLoading}
-              />
-            ))}
-          </div>
-        </TabsContent>
+                className="group relative overflow-hidden rounded-2xl bg-white shadow-sm transition-all hover:shadow-md dark:bg-slate-800"
+              >
+                {/* Gradient Header */}
+                <div className={cn("h-24 bg-gradient-to-br p-4", item.color)}>
+                  <div className="flex items-start justify-between">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm">
+                      <GenreIcon className="h-4 w-4 text-white" />
+                    </div>
+                    <div className="flex items-center gap-1 rounded-full bg-black/20 px-2 py-0.5 text-xs text-white backdrop-blur-sm">
+                      <Clock className="h-3 w-3" />
+                      {item.duration}
+                    </div>
+                  </div>
+                </div>
 
-        <TabsContent value="break" className="mt-6 space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredMusic.map((item) => (
-              <MusicCard
-                key={item.id}
-                item={item}
-                onPlay={() => handlePlayMusic(item.url, item.title)}
-                isLoading={isLoading}
-              />
-            ))}
-          </div>
-        </TabsContent>
+                {/* Content */}
+                <div className="p-4">
+                  <h3 className="mb-1 font-semibold text-slate-900 dark:text-white">
+                    {item.title}
+                  </h3>
+                  <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">{item.artist}</p>
 
-        <TabsContent value="energize" className="mt-6 space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredMusic.map((item) => (
-              <MusicCard
-                key={item.id}
-                item={item}
-                onPlay={() => handlePlayMusic(item.url, item.title)}
-                isLoading={isLoading}
-              />
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
+                  <div className="mb-4 flex flex-wrap gap-1.5">
+                    {item.tags.slice(0, 3).map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
 
-      {filteredMusic.length === 0 && (
-        <div className="py-12 text-center">
-          <Music className="mx-auto mb-4 h-12 w-12 text-gray-400" />
-          <h3 className="mb-2 text-lg font-medium text-gray-600 dark:text-gray-300">
-            No music found
-          </h3>
-          <p className="text-gray-500">
-            Try adjusting your search terms or browse different categories
+                  {/* Actions */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handlePlayMusic(item)}
+                      disabled={isPlaying}
+                      className={cn(
+                        "flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium transition-all",
+                        "bg-slate-900 text-white hover:bg-slate-800",
+                        "dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100",
+                        isPlaying && "opacity-50"
+                      )}
+                    >
+                      <Play className={cn("h-4 w-4", isPlaying && "animate-pulse")} />
+                      {isPlaying ? "Opening..." : "Play"}
+                    </button>
+                    <button
+                      onClick={() => handlePlayMusic(item)}
+                      className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Empty State */}
+        {filteredMusic.length === 0 && (
+          <div className="py-16 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800">
+              <Music className="h-8 w-8 text-slate-400" />
+            </div>
+            <h3 className="mb-2 font-semibold text-slate-900 dark:text-white">No music found</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Try different search terms</p>
+          </div>
+        )}
+
+        {/* Footer hint */}
+        <div className="mt-8 text-center">
+          <p className="text-xs text-slate-400 dark:text-slate-500">
+            Music opens in YouTube. For offline playback, try{" "}
+            <button
+              onClick={() =>
+                trpcClient.utils.openExternalUrl.mutate({ url: "https://www.learnifytube.com/" })
+              }
+              className="text-purple-500 hover:underline"
+            >
+              LearnifyTube
+            </button>
           </p>
         </div>
-      )}
+      </div>
     </div>
-  );
-}
-
-interface MusicCardProps {
-  item: MusicItem;
-  onPlay: () => void;
-  isLoading: boolean;
-}
-
-function MusicCard({ item, onPlay, isLoading }: MusicCardProps) {
-  const getGenreIcon = (genre: string) => {
-    switch (genre.toLowerCase()) {
-      case "nature":
-        return <TreePine className="h-4 w-4" />;
-      case "ambient":
-      case "binaural":
-        return <Waves className="h-4 w-4" />;
-      default:
-        return <Music className="h-4 w-4" />;
-    }
-  };
-
-  return (
-    <Card className="transition-all duration-200 hover:border-tracksy-gold/30 hover:shadow-lg">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2">
-            {getGenreIcon(item.genre)}
-            <Badge variant="secondary" className="text-xs">
-              {item.genre}
-            </Badge>
-          </div>
-          <div className="flex items-center gap-1 text-xs text-gray-500">
-            <Clock className="h-3 w-3" />
-            {item.duration}
-          </div>
-        </div>
-        <CardTitle className="text-lg leading-tight">{item.title}</CardTitle>
-        <CardDescription className="text-sm">{item.artist}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="line-clamp-2 text-sm text-gray-600 dark:text-gray-300">{item.description}</p>
-
-        <div className="flex flex-wrap gap-1">
-          {item.tags.map((tag) => (
-            <Badge key={tag} variant="outline" className="text-xs">
-              {tag}
-            </Badge>
-          ))}
-        </div>
-
-        <div className="flex gap-2">
-          <Button
-            onClick={onPlay}
-            disabled={isLoading}
-            className="flex-1 bg-tracksy-gold text-white hover:bg-tracksy-gold/90"
-            size="sm"
-          >
-            <Play className="mr-2 h-4 w-4" />
-            Play
-          </Button>
-          <Button variant="outline" size="sm" onClick={onPlay} disabled={isLoading}>
-            <ExternalLink className="h-4 w-4" />
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
