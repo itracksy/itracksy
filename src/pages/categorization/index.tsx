@@ -41,6 +41,8 @@ import {
   FolderOpen,
   Globe,
   Plus,
+  Monitor,
+  TrendingUp,
 } from "lucide-react";
 import {
   useCategoryStats,
@@ -49,6 +51,8 @@ import {
   useBulkAssignCategoryMutation,
   useCategoryActivitiesDetail,
 } from "@/hooks/useCategoryQueries";
+import { useQuery } from "@tanstack/react-query";
+import { trpcClient } from "@/utils/trpc";
 import { QuickCategorize } from "./components/QuickCategorize";
 import { AutoSetupWizard } from "./components/AutoSetupWizard";
 import { CategoryFormModal } from "./components/CategoryFormModal";
@@ -76,6 +80,49 @@ const CategorizationPage: React.FC = () => {
   const { data: categories = [] } = useCategories();
   const bulkAssignMutation = useBulkAssignCategoryMutation();
   const createMutation = useCreateCategoryMutation();
+
+  // Get today's time range for top apps
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date();
+
+  // Fetch top apps for today
+  const { data: hourlyData } = useQuery({
+    queryKey: ["dashboard.getFocusedTimeByHour", todayStart.getTime(), todayEnd.getTime()],
+    queryFn: () =>
+      trpcClient.dashboard.getFocusedTimeByHour.query({
+        startDate: todayStart.getTime(),
+        endDate: todayEnd.getTime(),
+      }),
+    refetchInterval: 30000,
+  });
+
+  // Aggregate top apps from hourly data
+  const topAppsToday = React.useMemo(() => {
+    if (!hourlyData) return [];
+
+    const appMap = new Map<string, { duration: number; isFocus: boolean }>();
+
+    for (const hour of hourlyData) {
+      for (const activity of hour.activities || []) {
+        const existing = appMap.get(activity.ownerName) || { duration: 0, isFocus: true };
+        appMap.set(activity.ownerName, {
+          duration: existing.duration + activity.duration,
+          isFocus: activity.isFocusMode,
+        });
+      }
+    }
+
+    return Array.from(appMap.entries())
+      .map(([name, data]) => ({
+        name,
+        duration: data.duration,
+        isFocus: data.isFocus,
+      }))
+      .filter((app) => app.duration >= 60) // Only show apps with 1+ minute
+      .sort((a, b) => b.duration - a.duration)
+      .slice(0, 8);
+  }, [hourlyData]);
 
   // Calculate progress
   const totalActivities =
@@ -127,142 +174,115 @@ const CategorizationPage: React.FC = () => {
 
   return (
     <div className="flex h-full flex-col p-6">
-      {/* Header - Minimal */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Categorization</h1>
-          <p className="text-sm text-muted-foreground">Organize your tracked activities</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Select
-            value={selectedTimeRange.value}
-            onValueChange={(value) => {
-              const now = new Date();
-              let start: number;
-              let end = now.getTime();
+      {/* Header with integrated progress */}
+      <div className="mb-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-bold">Categorization</h1>
+            {/* Compact progress indicator */}
+            <div className="flex items-center gap-2">
+              {uncategorizedCount > 0 ? (
+                <AlertCircle className="h-4 w-4 text-orange-500" />
+              ) : (
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+              )}
+              <span className="text-sm text-muted-foreground">
+                {categorizedPercent}% categorized
+                {uncategorizedCount > 0 && ` · ${uncategorizedCount} remaining`}
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {uncategorizedCount > 0 ? (
+              <>
+                <Button
+                  size="sm"
+                  onClick={() => setIsQuickCategorizeOpen(true)}
+                  className="bg-orange-500 hover:bg-orange-600"
+                >
+                  <Zap className="mr-1 h-3 w-3" />
+                  Quick Categorize
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setIsAutoSetupOpen(true)}>
+                  <Sparkles className="mr-1 h-3 w-3" />
+                  Auto Setup
+                </Button>
+              </>
+            ) : (
+              <Button size="sm" variant="outline" onClick={() => setIsAutoSetupOpen(true)}>
+                <Sparkles className="mr-1 h-3 w-3" />
+                Scan New Apps
+              </Button>
+            )}
+            <Select
+              value={selectedTimeRange.value}
+              onValueChange={(value) => {
+                const now = new Date();
+                let start: number;
+                let end = now.getTime();
 
-              switch (value) {
-                case "today":
-                  start = new Date(now.setHours(0, 0, 0, 0)).getTime();
-                  break;
-                case "yesterday":
-                  const yesterday = new Date(now);
-                  yesterday.setDate(yesterday.getDate() - 1);
-                  start = new Date(yesterday.setHours(0, 0, 0, 0)).getTime();
-                  end = new Date(yesterday.setHours(23, 59, 59, 999)).getTime();
-                  break;
-                case "week":
-                  const weekAgo = new Date(now);
-                  weekAgo.setDate(weekAgo.getDate() - 7);
-                  start = weekAgo.getTime();
-                  break;
-                case "month":
-                  const monthAgo = new Date(now);
-                  monthAgo.setMonth(monthAgo.getMonth() - 1);
-                  start = monthAgo.getTime();
-                  break;
-                default:
-                  start = new Date(now.setHours(0, 0, 0, 0)).getTime();
-              }
+                switch (value) {
+                  case "today":
+                    start = new Date(now.setHours(0, 0, 0, 0)).getTime();
+                    break;
+                  case "yesterday":
+                    const yesterday = new Date(now);
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    start = new Date(yesterday.setHours(0, 0, 0, 0)).getTime();
+                    end = new Date(yesterday.setHours(23, 59, 59, 999)).getTime();
+                    break;
+                  case "week":
+                    const weekAgo = new Date(now);
+                    weekAgo.setDate(weekAgo.getDate() - 7);
+                    start = weekAgo.getTime();
+                    break;
+                  case "month":
+                    const monthAgo = new Date(now);
+                    monthAgo.setMonth(monthAgo.getMonth() - 1);
+                    start = monthAgo.getTime();
+                    break;
+                  default:
+                    start = new Date(now.setHours(0, 0, 0, 0)).getTime();
+                }
 
-              setSelectedTimeRange({ value, start, end });
-            }}
-          >
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {timeRangeOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate({ to: "/categorization/manage" })}
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
+                setSelectedTimeRange({ value, start, end });
+              }}
+            >
+              <SelectTrigger className="h-8 w-28">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {timeRangeOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => navigate({ to: "/categorization/manage" })}
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
+
+        {/* Compact progress bar - only show if there are uncategorized items */}
+        {uncategorizedCount > 0 && (
+          <Progress
+            value={categorizedPercent}
+            className="h-1.5"
+            // @ts-ignore - custom indicator color
+            indicatorClassName={getProgressColor(categorizedPercent)}
+          />
+        )}
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 space-y-6 overflow-auto">
-        {/* Hero Card - Progress & Actions */}
-        <Card
-          className={`border-2 ${
-            uncategorizedCount > 0
-              ? "border-orange-500/30 bg-gradient-to-br from-orange-500/5 to-yellow-500/5"
-              : "border-green-500/30 bg-gradient-to-br from-green-500/5 to-emerald-500/5"
-          }`}
-        >
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between gap-6">
-              {/* Progress Section */}
-              <div className="flex-1 space-y-4">
-                <div className="flex items-center gap-3">
-                  {uncategorizedCount > 0 ? (
-                    <AlertCircle className="h-6 w-6 text-orange-500" />
-                  ) : (
-                    <CheckCircle2 className="h-6 w-6 text-green-500" />
-                  )}
-                  <div>
-                    <h2 className="text-lg font-semibold">
-                      {uncategorizedCount > 0
-                        ? `${uncategorizedCount} Activities Need Categorization`
-                        : "All Caught Up!"}
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
-                      {categorizedPercent}% of your activities are categorized
-                    </p>
-                  </div>
-                </div>
-
-                {/* Progress Bar */}
-                <div className="space-y-2">
-                  <Progress
-                    value={categorizedPercent}
-                    className="h-3"
-                    // @ts-ignore - custom indicator color
-                    indicatorClassName={getProgressColor(categorizedPercent)}
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>{stats?.categorizedActivities || 0} categorized</span>
-                    <span>{uncategorizedCount} remaining</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col gap-2">
-                {uncategorizedCount > 0 ? (
-                  <>
-                    <Button
-                      onClick={() => setIsQuickCategorizeOpen(true)}
-                      className="bg-orange-500 hover:bg-orange-600"
-                    >
-                      <Zap className="mr-2 h-4 w-4" />
-                      Quick Categorize
-                    </Button>
-                    <Button variant="outline" onClick={() => setIsAutoSetupOpen(true)}>
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      Auto Setup
-                    </Button>
-                  </>
-                ) : (
-                  <Button variant="outline" onClick={() => setIsAutoSetupOpen(true)}>
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Scan New Apps
-                  </Button>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
+      <div className="flex-1 space-y-4 overflow-auto">
         {/* Uncategorized Apps - Inline Quick Assign */}
         {uncategorizedActivities.length > 0 && (
           <div className="space-y-3">
@@ -298,105 +318,153 @@ const CategorizationPage: React.FC = () => {
           </div>
         )}
 
-        {/* Categories List */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium">Your Categories</h3>
-            <Button variant="ghost" size="sm" onClick={() => setIsCreateModalOpen(true)}>
-              <Plus className="mr-1 h-3 w-3" />
-              Add
-            </Button>
-          </div>
-
-          <div className="space-y-2">
-            {categoryActivities.length > 0 ? (
-              <Accordion
-                type="single"
-                collapsible
-                value={expandedCategory}
-                onValueChange={setExpandedCategory}
-                className="space-y-2"
-              >
-                {categoryActivities.map((category) => (
-                  <AccordionItem
-                    key={category.categoryId}
-                    value={category.categoryId}
-                    className="rounded-lg border bg-card"
-                  >
-                    <AccordionTrigger className="px-4 py-3 hover:no-underline [&[data-state=open]>div>svg]:rotate-90">
-                      <div className="flex w-full items-center justify-between pr-2">
-                        <div className="flex items-center gap-3">
-                          <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform" />
-                          <div
-                            className="h-3 w-3 rounded-full"
-                            style={{ backgroundColor: category.categoryColor || "#666" }}
-                          />
-                          <div className="text-left">
-                            <span className="font-medium">{category.categoryName}</span>
-                            <span className="ml-2 text-sm text-muted-foreground">
-                              {category.activityCount} activities
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm font-medium">
-                            {formatDuration(category.totalDuration)}
-                          </span>
-                          <div className="flex gap-1">
-                            {category.activities.some((a) => a.isFocusMode) && (
-                              <Badge variant="secondary" className="bg-blue-500/10 text-blue-500">
-                                <Target className="mr-1 h-3 w-3" />
-                                Focus
-                              </Badge>
-                            )}
-                            {category.activities.some((a) => !a.isFocusMode) && (
-                              <Badge variant="secondary" className="bg-green-500/10 text-green-500">
-                                <Clock className="mr-1 h-3 w-3" />
-                                Break
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
+        {/* Two-column layout: Top Apps + Categories */}
+        <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+          {/* Top Apps Today - Left Column */}
+          <Card className="h-fit">
+            <CardContent className="p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <Monitor className="h-4 w-4 text-muted-foreground" />
+                <h3 className="font-medium">Top Apps Today</h3>
+              </div>
+              {topAppsToday.length > 0 ? (
+                <div className="space-y-1">
+                  {topAppsToday.map((app, i) => (
+                    <div
+                      key={app.name}
+                      className="flex items-center justify-between rounded-md px-2 py-1.5 hover:bg-muted/50"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="w-4 text-xs text-muted-foreground">{i + 1}</span>
+                        <span className="max-w-[140px] truncate text-sm">{app.name}</span>
                       </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-4 pb-3">
-                      <div className="ml-7 space-y-1 rounded-lg bg-muted/30 p-3">
-                        {category.activities.slice(0, 10).map((activity, idx) => (
-                          <div key={idx} className="flex items-center justify-between py-1 text-sm">
-                            <div className="flex items-center gap-2 truncate">
-                              {activity.domain ? (
-                                <Globe className="h-3 w-3 text-muted-foreground" />
-                              ) : (
-                                <FolderOpen className="h-3 w-3 text-muted-foreground" />
-                              )}
-                              <span className="truncate">
-                                {activity.domain || activity.ownerName}
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm tabular-nums text-muted-foreground">
+                          {formatDuration(app.duration)}
+                        </span>
+                        {app.isFocus && <TrendingUp className="h-3 w-3 text-green-500" />}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-6 text-center text-sm text-muted-foreground">
+                  No app data yet today
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Categories List - Right Column */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium">Your Categories</h3>
+              <Button variant="ghost" size="sm" onClick={() => setIsCreateModalOpen(true)}>
+                <Plus className="mr-1 h-3 w-3" />
+                Add
+              </Button>
+            </div>
+
+            <div className="space-y-2">
+              {categoryActivities.length > 0 ? (
+                <Accordion
+                  type="single"
+                  collapsible
+                  value={expandedCategory}
+                  onValueChange={setExpandedCategory}
+                  className="space-y-2"
+                >
+                  {categoryActivities.map((category) => (
+                    <AccordionItem
+                      key={category.categoryId}
+                      value={category.categoryId}
+                      className="rounded-lg border bg-card"
+                    >
+                      <AccordionTrigger className="px-4 py-3 hover:no-underline [&[data-state=open]>div>svg]:rotate-90">
+                        <div className="flex w-full items-center justify-between pr-2">
+                          <div className="flex items-center gap-3">
+                            <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform" />
+                            <div
+                              className="h-3 w-3 rounded-full"
+                              style={{ backgroundColor: category.categoryColor || "#666" }}
+                            />
+                            <div className="text-left">
+                              <span className="font-medium">{category.categoryName}</span>
+                              <span className="ml-2 text-sm text-muted-foreground">
+                                {category.activityCount} activities
                               </span>
                             </div>
-                            <span className="text-muted-foreground">
-                              {formatDuration(activity.duration)}
-                            </span>
                           </div>
-                        ))}
-                        {category.activities.length > 10 && (
-                          <p className="text-xs text-muted-foreground">
-                            +{category.activities.length - 10} more activities
-                          </p>
-                        )}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            ) : (
-              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-                <FolderOpen className="mb-2 h-8 w-8 text-muted-foreground/50" />
-                <p className="text-sm text-muted-foreground">No categorized activities yet</p>
-                <Button variant="link" size="sm" onClick={() => setIsAutoSetupOpen(true)}>
-                  Run Auto Setup to get started
-                </Button>
-              </div>
-            )}
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm font-medium">
+                              {formatDuration(category.totalDuration)}
+                            </span>
+                            <div className="flex gap-1">
+                              {category.activities.some((a) => a.isFocusMode) && (
+                                <Badge variant="secondary" className="bg-blue-500/10 text-blue-500">
+                                  <Target className="mr-1 h-3 w-3" />
+                                  Focus
+                                </Badge>
+                              )}
+                              {category.activities.some((a) => !a.isFocusMode) && (
+                                <Badge
+                                  variant="secondary"
+                                  className="bg-green-500/10 text-green-500"
+                                >
+                                  <Clock className="mr-1 h-3 w-3" />
+                                  Break
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-4 pb-3">
+                        <div className="ml-7 space-y-1 rounded-lg bg-muted/30 p-3">
+                          {category.activities
+                            .filter((a) => a.duration >= 60)
+                            .slice(0, 10)
+                            .map((activity, idx) => (
+                              <div
+                                key={idx}
+                                className="flex items-center justify-between py-1 text-sm"
+                              >
+                                <div className="flex items-center gap-2 truncate">
+                                  {activity.domain ? (
+                                    <Globe className="h-3 w-3 text-muted-foreground" />
+                                  ) : (
+                                    <FolderOpen className="h-3 w-3 text-muted-foreground" />
+                                  )}
+                                  <span className="truncate">
+                                    {activity.domain || activity.ownerName}
+                                  </span>
+                                </div>
+                                <span className="text-muted-foreground">
+                                  {formatDuration(activity.duration)}
+                                </span>
+                              </div>
+                            ))}
+                          {category.activities.filter((a) => a.duration >= 60).length > 10 && (
+                            <p className="text-xs text-muted-foreground">
+                              +{category.activities.filter((a) => a.duration >= 60).length - 10}{" "}
+                              more activities
+                            </p>
+                          )}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              ) : (
+                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+                  <FolderOpen className="mb-2 h-8 w-8 text-muted-foreground/50" />
+                  <p className="text-sm text-muted-foreground">No categorized activities yet</p>
+                  <Button variant="link" size="sm" onClick={() => setIsAutoSetupOpen(true)}>
+                    Run Auto Setup to get started
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
