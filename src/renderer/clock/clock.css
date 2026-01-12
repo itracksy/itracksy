@@ -1,150 +1,235 @@
 :root {
-  /* Primary Colors */
-  --color-primary-purple: #8b5cf6;
-  --color-secondary-pink: #ec4899;
-  --color-cyan: #06b6d4;
-  --color-blue: #3b82f6;
-  --color-success-green: #10b981;
-  --color-warning-orange: #f59e0b;
-  --color-error-red: #ef4444;
+  /* Focus Mode Colors - Amber/Orange */
+  --color-focus-primary: #f59e0b;
+  --color-focus-secondary: #ea580c;
+  --gradient-focus: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+  --glow-focus: rgba(245, 158, 11, 0.3);
+
+  /* Break Mode Colors - Teal/Cyan */
+  --color-break-primary: #14b8a6;
+  --color-break-secondary: #06b6d4;
+  --gradient-break: linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%);
+  --glow-break: rgba(20, 184, 166, 0.3);
+
+  /* Idle Colors - Slate/Blue */
+  --color-idle-primary: #64748b;
+  --color-idle-accent: #3b82f6;
+  --gradient-idle: linear-gradient(135deg, #64748b 0%, #475569 100%);
+
+  /* Status Colors */
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
 
   /* Grayscale */
-  --color-gray-50: #f9fafb;
-  --color-gray-100: #f3f4f6;
-  --color-gray-200: #e5e7eb;
-  --color-gray-300: #d1d5db;
-  --color-gray-400: #9ca3af;
-  --color-gray-500: #6b7280;
-  --color-gray-600: #4b5563;
-  --color-gray-700: #374151;
-  --color-gray-800: #1f2937;
-  --color-gray-900: #111827;
-
-  /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
-  --gradient-secondary: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
-  --gradient-success: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
-  --gradient-glass: linear-gradient(140deg, rgba(17, 24, 39, 0.95), rgba(31, 41, 55, 0.9));
+  --color-white: #ffffff;
+  --color-gray-50: #f8fafc;
+  --color-gray-100: #f1f5f9;
+  --color-gray-200: #e2e8f0;
+  --color-gray-300: #cbd5e1;
+  --color-gray-400: #94a3b8;
+  --color-gray-500: #64748b;
+  --color-gray-600: #475569;
+  --color-gray-700: #334155;
+  --color-gray-800: #1e293b;
+  --color-gray-900: #0f172a;
+  --color-gray-950: #020617;
 
   /* Typography */
   --font-primary:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
-  --font-mono:
-    "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+    -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "SF Mono", "JetBrains Mono", Monaco, "Cascadia Code", Consolas, monospace;
 
   /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
-  --shadow-glass: 0 18px 45px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --shadow-glass: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
 
   /* Border Radius */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-2xl: 24px;
   --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  margin: 0;
-  padding: 0;
   font-family: var(--font-primary);
   color: var(--color-gray-50);
   background: transparent;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* ===== Main Shell ===== */
 .clock-shell {
   display: flex;
   flex-direction: column;
   width: 100%;
   height: 100%;
-  border-radius: 18px;
-  /* Keeping original slightly larger radius for window */
-  padding: 16px 18px 14px;
-  background: var(--gradient-glass);
+  border-radius: var(--radius-2xl);
+  padding: 20px;
+  background: linear-gradient(165deg, rgba(15, 23, 42, 0.97) 0%, rgba(30, 41, 59, 0.95) 100%);
   box-shadow: var(--shadow-glass);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   gap: 16px;
-  transition:
-    transform 0.25s ease,
-    box-shadow 0.25s ease,
-    border-color 0.25s ease;
+  transition: all var(--transition-slow);
   -webkit-app-region: drag;
+  overflow: hidden;
+  position: relative;
 }
 
+/* Subtle background pattern */
+.clock-shell::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.03) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* ===== Idle State ===== */
 .clock-shell.idle {
-  /* Using a subtle version of the secondary gradient for idle state */
-  background: linear-gradient(160deg, rgba(6, 182, 212, 0.15), rgba(17, 24, 39, 0.95));
-  border-color: rgba(6, 182, 212, 0.2);
+  background: linear-gradient(165deg, rgba(15, 23, 42, 0.97) 0%, rgba(30, 41, 59, 0.95) 100%);
+  border-color: rgba(100, 116, 139, 0.2);
 }
 
+/* ===== Active Focus State ===== */
 .clock-shell.active.focus {
-  border-color: rgba(139, 92, 246, 0.3);
-  /* Primary Purple */
-  box-shadow: 0 18px 45px rgba(139, 92, 246, 0.15);
+  border-color: rgba(245, 158, 11, 0.3);
+  box-shadow:
+    var(--shadow-glass),
+    0 0 60px -15px var(--glow-focus);
 }
 
+.clock-shell.active.focus::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--gradient-focus);
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+}
+
+/* ===== Active Break State ===== */
 .clock-shell.active.break {
-  border-color: rgba(236, 72, 153, 0.3);
-  /* Secondary Pink */
-  box-shadow: 0 18px 45px rgba(236, 72, 153, 0.15);
+  border-color: rgba(20, 184, 166, 0.3);
+  box-shadow:
+    var(--shadow-glass),
+    0 0 60px -15px var(--glow-break);
 }
 
+.clock-shell.active.break::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--gradient-break);
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+}
+
+/* ===== Minimal View ===== */
 .clock-shell.minimal {
-  padding: 18px;
-  gap: 8px;
+  padding: 16px;
+  gap: 0;
+  justify-content: center;
+  align-items: center;
 }
 
 .clock-shell.minimal .clock-footer,
 .clock-shell.minimal .clock-meta-row,
-.clock-shell.minimal .clock-progress-track {
-  display: none;
-}
-
+.clock-shell.minimal .clock-progress-track,
 .clock-shell.minimal .clock-header {
   display: none;
 }
 
 .clock-shell.minimal .clock-body {
-  flex: 1;
+  flex: none;
   justify-content: center;
-  align-items: stretch;
+  align-items: center;
 }
 
+/* ===== Unpinned State ===== */
 .clock-shell.unpinned {
   border-style: dashed;
-  border-color: rgba(229, 231, 235, 0.2);
+  opacity: 0.95;
 }
 
-.clock-shell:hover {
-  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.45);
-}
-
+/* ===== No Drag Areas ===== */
 .no-drag {
   -webkit-app-region: no-drag;
 }
 
+/* ===== Header ===== */
 .clock-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  position: relative;
+  z-index: 1;
 }
 
 .clock-status {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .clock-mode-icon {
-  font-size: 22px;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-gray-400);
+  transition: all var(--transition-base);
+}
+
+.clock-shell.idle .clock-mode-icon {
+  background: rgba(100, 116, 139, 0.1);
+  color: var(--color-gray-400);
+}
+
+.clock-shell.active.focus .clock-mode-icon {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--color-focus-primary);
+}
+
+.clock-shell.active.break .clock-mode-icon {
+  background: rgba(20, 184, 166, 0.15);
+  color: var(--color-break-primary);
+}
+
+.clock-mode-icon.minimal {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
 }
 
 .clock-mode-text {
@@ -156,117 +241,272 @@ body {
 .clock-mode-label {
   font-size: 15px;
   font-weight: 600;
-  letter-spacing: 0.2px;
+  letter-spacing: -0.01em;
   color: var(--color-gray-50);
 }
 
 .clock-subtitle {
   font-size: 12px;
   color: var(--color-gray-400);
+  font-weight: 400;
 }
 
+/* ===== Toolbar Buttons ===== */
 .clock-toolbar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .icon-button {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--color-gray-200);
-  display: grid;
-  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--color-gray-400);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 14px;
+  transition: all var(--transition-fast);
 }
 
 .icon-button:hover {
   background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: var(--color-gray-50);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: var(--color-gray-200);
   transform: translateY(-1px);
 }
 
+.icon-button:active {
+  transform: translateY(0);
+}
+
+/* ===== Body ===== */
 .clock-body {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  position: relative;
+  z-index: 1;
+  flex: 1;
 }
 
 .clock-body.minimal {
+  gap: 0;
+}
+
+/* ===== Timer Toggle Button ===== */
+.timer-toggle {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
+  align-items: center;
+  padding: 20px 24px;
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.2);
+  color: inherit;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  width: 100%;
+}
+
+.timer-toggle:hover {
+  background: rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.timer-toggle:active {
+  transform: translateY(0);
+}
+
+.timer-toggle.minimal {
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .clock-timer-content {
   display: flex;
   align-items: center;
-  gap: 10px;
-  width: 100%;
   justify-content: center;
+  gap: 12px;
+  width: 100%;
 }
 
 .clock-timer-content.minimal {
-  justify-content: center;
+  gap: 10px;
 }
 
-.clock-mode-icon.minimal {
-  font-size: 24px;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+/* ===== Timer Display ===== */
+.clock-timer-display {
+  font-family: var(--font-mono);
+  font-size: clamp(38px, 8vw, 48px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -2px;
+  line-height: 1;
+  color: var(--color-gray-50);
 }
 
-.daily-progress-card,
-.clock-ready-card,
-.clock-timer-wrapper {
-  background: rgba(17, 24, 39, 0.6);
-  border-radius: var(--radius-lg);
-  padding: 12px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+.clock-shell.active.focus .clock-timer-display {
+  background: var(--gradient-focus);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
+.clock-shell.active.break .clock-timer-display {
+  background: var(--gradient-break);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.clock-shell.minimal .clock-timer-display {
+  font-size: clamp(32px, 7vw, 40px);
+}
+
+/* Unlimited indicator */
+.unlimited-indicator {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  color: var(--color-gray-400);
+}
+
+.clock-shell.active.focus .unlimited-indicator {
+  color: var(--color-focus-primary);
+}
+
+.clock-shell.active.break .unlimited-indicator {
+  color: var(--color-break-primary);
+}
+
+/* Timer hint */
+.timer-hint {
+  font-size: 11px;
+  color: var(--color-gray-500);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.timer-toggle:hover .timer-hint {
+  opacity: 1;
+}
+
+/* ===== Progress Bar ===== */
+.clock-progress-track {
+  height: 5px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  position: relative;
+}
+
+.clock-progress-meter {
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.5s ease-out;
+}
+
+.clock-shell.active.focus .clock-progress-meter {
+  background: var(--gradient-focus);
+}
+
+.clock-shell.active.break .clock-progress-meter {
+  background: var(--gradient-break);
+}
+
+/* ===== Meta Row ===== */
+.clock-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--color-gray-500);
+  padding: 0 2px;
+}
+
+.clock-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Status indicator dot */
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-gray-500);
+}
+
+.status-dot.running {
+  background: var(--color-success);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.status-dot.paused {
+  background: var(--color-warning);
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+}
+
+/* ===== Daily Progress Card ===== */
 .daily-progress-card {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .daily-progress-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: var(--color-gray-50);
 }
 
 .daily-progress-title {
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.2px;
+  color: var(--color-gray-200);
 }
 
 .daily-progress-percentage {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-cyan);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-success);
 }
 
 .daily-progress-bar {
-  position: relative;
   height: 8px;
   border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
   overflow: hidden;
 }
 
 .daily-progress-fill {
   height: 100%;
   border-radius: inherit;
-  background: var(--gradient-success);
-  transition: width 0.35s ease;
+  background: linear-gradient(90deg, var(--color-success) 0%, #4ade80 100%);
+  transition: width 0.5s ease-out;
 }
 
 .daily-progress-meta {
@@ -274,146 +514,49 @@ body {
   align-items: center;
   justify-content: space-between;
   font-size: 11px;
-  color: var(--color-gray-400);
+  color: var(--color-gray-500);
 }
 
+/* ===== Ready Card ===== */
 .clock-ready-card {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  color: var(--color-gray-50);
+  gap: 8px;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  text-align: center;
 }
 
 .ready-title {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
+  color: var(--color-gray-100);
 }
 
 .ready-text {
   font-size: 12px;
   color: var(--color-gray-400);
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
-.clock-timer-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.timer-toggle {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: flex-start;
-  padding: 18px 20px 15px;
-  border-radius: var(--radius-xl);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(17, 24, 39, 0.5);
-  color: inherit;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: left;
-}
-
-.timer-toggle:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-lg);
-  border-color: rgba(255, 255, 255, 0.15);
-  background: rgba(17, 24, 39, 0.7);
-}
-
-.timer-toggle.minimal {
-  padding: 16px 18px;
-  align-items: center;
-  text-align: center;
-  background: rgba(17, 24, 39, 0.8);
-}
-
-.timer-hint {
-  font-size: 11px;
-  color: var(--color-gray-500);
-}
-
-.clock-shell.minimal .timer-hint {
-  font-size: 10px;
-  color: var(--color-gray-600);
-}
-
-.clock-timer-label {
-  font-size: 12px;
-  color: var(--color-gray-400);
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-}
-
-.clock-timer-display {
-  font-family: var(--font-mono);
-  font-size: clamp(32px, 6vw, 40px);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -1px;
-  color: var(--color-gray-50);
-  background: var(--gradient-secondary);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 10px rgba(6, 182, 212, 0.2));
-}
-
-.unlimited-indicator {
-  font-size: 14px;
-  margin-left: 6px;
-  color: var(--color-primary-purple);
-  -webkit-text-fill-color: var(--color-primary-purple);
-}
-
-.clock-progress-track {
-  height: 6px;
-  border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.1);
-  overflow: hidden;
-  position: relative;
-  margin-top: -6px;
-}
-
-.clock-progress-meter {
-  height: 100%;
-  border-radius: inherit;
-  background: var(--gradient-secondary);
-  transition: width 0.35s ease;
-}
-
-.clock-shell.active.focus .clock-progress-meter {
-  background: var(--gradient-primary);
-}
-
-.clock-shell.active.break .clock-progress-meter {
-  background: var(--gradient-success);
-}
-
-.clock-meta-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  color: var(--color-gray-400);
-  margin-top: 4px;
-}
-
+/* ===== Footer ===== */
 .clock-footer {
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-
-.clock-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
 }
 
 .clock-footer.compact .clock-actions.secondary {
   display: none;
+}
+
+.clock-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .clock-actions.primary {
@@ -422,58 +565,48 @@ body {
 
 .clock-actions.secondary {
   justify-content: flex-end;
-  gap: 8px;
 }
 
+/* ===== Action Buttons ===== */
 .action-button {
-  flex: 1;
-  padding: 9px 12px;
+  padding: 10px 16px;
   border-radius: var(--radius-md);
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.2px;
-  border: 1px solid transparent;
+  letter-spacing: -0.01em;
+  border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
   -webkit-app-region: no-drag;
 }
 
-.clock-footer.compact .action-button {
-  flex: 1 1 100%;
-  text-align: center;
-}
-
-.clock-footer.compact .action-button.primary,
-.clock-footer.compact .action-button.secondary {
-  width: 100%;
-}
-
 .action-button.primary {
-  background: var(--gradient-primary);
+  flex: 1;
+  background: var(--gradient-focus);
   color: white;
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
 }
 
 .action-button.primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.35);
 }
 
 .action-button.secondary {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--color-primary-purple);
-  border: 1px solid var(--color-primary-purple);
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-gray-300);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .action-button.secondary:hover {
-  background: rgba(139, 92, 246, 0.1);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-gray-100);
 }
 
 .action-button.ghost {
-  flex: 0;
   background: transparent;
   color: var(--color-gray-400);
-  border: 1px solid transparent;
   padding: 8px 12px;
 }
 
@@ -483,14 +616,30 @@ body {
 }
 
 .action-button:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
-  box-shadow: none;
+  transform: none !important;
 }
 
-@media (max-width: 320px) {
+/* ===== Paused State ===== */
+.clock-shell.paused .clock-timer-display {
+  animation: pulse-paused 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-paused {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 340px) {
   .clock-shell {
-    padding: 14px;
+    padding: 16px;
   }
 
   .clock-actions {
@@ -499,15 +648,37 @@ body {
 
   .action-button {
     width: 100%;
+    text-align: center;
+  }
+
+  .clock-footer.compact {
+    gap: 8px;
   }
 }
 
-@media (max-width: 320px) {
-  .clock-footer {
-    gap: 8px;
+/* ===== Animations ===== */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
   }
+  100% {
+    background-position: 200% 0;
+  }
+}
 
-  .clock-footer .clock-actions.secondary {
-    display: none;
+/* Overtime state */
+.clock-shell.overtime .clock-timer-display {
+  color: var(--color-error);
+  -webkit-text-fill-color: var(--color-error);
+  animation: pulse-overtime 1s ease-in-out infinite;
+}
+
+@keyframes pulse-overtime {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
   }
 }

@@ -8,6 +8,7 @@ import {
   Coffee,
   Maximize2,
   Infinity as InfinityIcon,
+  Sparkles,
 } from "lucide-react";
 
 interface TimeEntry {
@@ -41,7 +42,7 @@ interface DailyProgress {
 interface ClockState {
   activeEntry: TimeEntry | null;
   currentTime: number;
-  elapsedSeconds: number; // Add elapsed seconds from main process
+  elapsedSeconds: number;
   isRunning: boolean;
   isPaused: boolean;
   isManuallyPaused: boolean;
@@ -298,12 +299,33 @@ const ClockApp: React.FC = () => {
     const mins = minutes % 60;
     if (hours === 0) return `${mins}m`;
     if (mins === 0) return `${hours}h`;
-    return `${hours}h${mins}m`;
+    return `${hours}h ${mins}m`;
   };
 
   const { activeEntry, isRunning, focusTarget, dailyProgress } = clockState;
   const remainingTime = getRemainingTime();
   const progressPercent = getProgress();
+  const overtime = isOvertime();
+
+  // Build shell classes
+  const getShellClasses = (): string => {
+    const classes = ["clock-shell"];
+
+    if (!activeEntry || activeEntry.endTime) {
+      classes.push("idle");
+    } else {
+      classes.push("active");
+      classes.push(activeEntry.isFocusMode ? "focus" : "break");
+      if (overtime) classes.push("overtime");
+    }
+
+    classes.push(isPinned ? "pinned" : "unpinned");
+    if (isMinimalView) classes.push("minimal");
+    if (isCompactLayout) classes.push("compact");
+    if (clockState.isPaused) classes.push("paused");
+
+    return classes.join(" ");
+  };
 
   if (!activeEntry || activeEntry.endTime) {
     // Idle state - show daily target and progress
@@ -311,20 +333,20 @@ const ClockApp: React.FC = () => {
     const dailyProgressPercent = dailyProgress?.progressPercentage ?? 0;
 
     return (
-      <div className={`clock-shell idle ${isPinned ? "pinned" : "unpinned"}`}>
+      <div className={getShellClasses()}>
         <header className="clock-header no-drag">
           <div className="clock-status">
             <span className="clock-mode-icon">
-              <Timer size={22} strokeWidth={2} />
+              <Sparkles size={20} strokeWidth={2} />
             </span>
             <div className="clock-mode-text">
-              <span className="clock-mode-label">Pomodoro Ready</span>
+              <span className="clock-mode-label">Ready to Focus</span>
               <span className="clock-subtitle">
                 {hasTarget
-                  ? `Today: ${formatMinutes(dailyProgress?.completedMinutes || 0)} / ${formatMinutes(
+                  ? `${formatMinutes(dailyProgress?.completedMinutes || 0)} of ${formatMinutes(
                       focusTarget?.targetMinutes || FOCUS_DEFAULT_MINUTES
-                    )}`
-                  : "Plan your next focus sprint"}
+                    )} today`
+                  : "Start your next session"}
               </span>
             </div>
           </div>
@@ -335,10 +357,10 @@ const ClockApp: React.FC = () => {
               onClick={handleTogglePin}
               title={isPinned ? "Unpin window" : "Pin window"}
             >
-              {isPinned ? <Pin size={16} /> : <PinOff size={16} />}
+              {isPinned ? <Pin size={15} /> : <PinOff size={15} />}
             </button>
             <button type="button" className="icon-button no-drag" onClick={handleHide} title="Hide">
-              <X size={16} />
+              <X size={15} />
             </button>
           </div>
         </header>
@@ -347,7 +369,7 @@ const ClockApp: React.FC = () => {
           {hasTarget ? (
             <div className="daily-progress-card">
               <div className="daily-progress-header">
-                <span className="daily-progress-title">Today's Focus</span>
+                <span className="daily-progress-title">Daily Progress</span>
                 <span className="daily-progress-percentage">
                   {Math.round(dailyProgressPercent)}%
                 </span>
@@ -359,14 +381,14 @@ const ClockApp: React.FC = () => {
                 />
               </div>
               <div className="daily-progress-meta">
-                <span>{formatMinutes(dailyProgress?.completedMinutes || 0)} completed</span>
-                <span>{formatMinutes(dailyProgress?.remainingMinutes || 0)} to go</span>
+                <span>{dailyProgress?.sessionsToday || 0} sessions</span>
+                <span>{formatMinutes(dailyProgress?.remainingMinutes || 0)} remaining</span>
               </div>
             </div>
           ) : (
             <div className="clock-ready-card">
-              <span className="ready-title">Stay on track</span>
-              <span className="ready-text">Launch a focus or break session from here.</span>
+              <span className="ready-title">No active session</span>
+              <span className="ready-text">Open iTracksy to start tracking your focus time.</span>
             </div>
           )}
         </section>
@@ -386,35 +408,28 @@ const ClockApp: React.FC = () => {
   const mode = activeEntry.isFocusMode ? "focus" : "break";
   const ModeIcon = activeEntry.isFocusMode ? Target : Coffee;
   const unlimited = isUnlimitedSession();
-  const timerLabel = unlimited ? "Elapsed time" : activeEntry.isFocusMode ? "Focus" : "Break";
-  const statusText = activeEntry.isFocusMode
-    ? clockState.isPaused
-      ? "Focus paused"
-      : clockState.isRunning
-        ? "Focused and flowing"
-        : "Focus ready"
-    : clockState.isPaused
-      ? "Break paused"
-      : clockState.isRunning
-        ? "Enjoy your break"
-        : "Break ready";
   const targetMinutes =
     activeEntry.targetDuration ||
     (activeEntry.isFocusMode ? FOCUS_DEFAULT_MINUTES : BREAK_DEFAULT_MINUTES);
 
+  // Status text
+  const getStatusText = (): string => {
+    if (clockState.isPaused) return "Paused";
+    if (clockState.isRunning) return "Running";
+    return "Ready";
+  };
+
   return (
-    <div
-      className={`clock-shell active ${mode} ${isPinned ? "pinned" : "unpinned"} ${isMinimalView ? "minimal" : ""} ${isCompactLayout ? "compact" : ""}`}
-    >
+    <div className={getShellClasses()}>
       {!isMinimalView && (
         <header className="clock-header no-drag">
           <div className="clock-status">
             <span className="clock-mode-icon">
-              <ModeIcon size={22} strokeWidth={2} />
+              <ModeIcon size={20} strokeWidth={2} />
             </span>
             <div className="clock-mode-text">
               <span className="clock-mode-label">
-                {activeEntry.isFocusMode ? "Focus" : "Break"}
+                {activeEntry.isFocusMode ? "Focus Mode" : "Break Time"}
               </span>
             </div>
           </div>
@@ -425,7 +440,7 @@ const ClockApp: React.FC = () => {
               onClick={handleTogglePin}
               title={isPinned ? "Unpin window" : "Pin window"}
             >
-              {isPinned ? <Pin size={16} /> : <PinOff size={16} />}
+              {isPinned ? <Pin size={15} /> : <PinOff size={15} />}
             </button>
             <button
               type="button"
@@ -433,10 +448,10 @@ const ClockApp: React.FC = () => {
               onClick={handleShowMain}
               title="Open iTracksy"
             >
-              <Maximize2 size={16} />
+              <Maximize2 size={15} />
             </button>
             <button type="button" className="icon-button no-drag" onClick={handleHide} title="Hide">
-              <X size={16} />
+              <X size={15} />
             </button>
           </div>
         </header>
@@ -451,19 +466,19 @@ const ClockApp: React.FC = () => {
           <div className={`clock-timer-content ${isMinimalView ? "minimal" : ""}`}>
             {isMinimalView && (
               <span className="clock-mode-icon minimal">
-                <ModeIcon size={24} strokeWidth={2} />
+                <ModeIcon size={22} strokeWidth={2} />
               </span>
             )}
             <span className="clock-timer-display">
               {formatTime(remainingTime)}
               {unlimited && (
                 <span className="unlimited-indicator">
-                  <InfinityIcon size={24} />
+                  <InfinityIcon size={20} />
                 </span>
               )}
             </span>
           </div>
-          {!isMinimalView && <span className="timer-hint">Click for minimal view</span>}
+          {!isMinimalView && <span className="timer-hint">Click for compact view</span>}
         </button>
         {!unlimited && !isMinimalView && (
           <div className="clock-progress-track">
@@ -473,10 +488,13 @@ const ClockApp: React.FC = () => {
         {!isMinimalView && (
           <div className="clock-meta-row">
             <span className="clock-meta-item">
-              Target: {targetMinutes > 0 ? formatMinutes(targetMinutes) : "Unlimited"}
+              {targetMinutes > 0 ? `${formatMinutes(targetMinutes)} target` : "Unlimited"}
             </span>
             <span className="clock-meta-item">
-              {clockState.isPaused ? "Paused" : clockState.isRunning ? "Running" : "Ready"}
+              <span
+                className={`status-dot ${clockState.isPaused ? "paused" : clockState.isRunning ? "running" : ""}`}
+              />
+              {getStatusText()}
             </span>
           </div>
         )}
