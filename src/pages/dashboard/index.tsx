@@ -22,12 +22,13 @@ import { ActivityHeatmap } from "./components/ActivityHeatmap";
 import { FocusTrends } from "./components/FocusTrends";
 import { PeakHoursAnalysis } from "./components/PeakHoursAnalysis";
 import { ProductivityInsights } from "./components/ProductivityInsights";
-import { BarChart3, Calendar, Clock, Layers } from "lucide-react";
+import { AIAnalysis } from "./components/AIAnalysis";
+import { BarChart3, Brain, Calendar, Clock, Layers } from "lucide-react";
 
 export default function DashboardPage() {
   const [selectedTimeRange, setSelectedTimeRange] = useAtom(selectedAnalyticsTimeRangeAtom);
   const [selectedBoardId] = useAtom(selectedAnalyticsBoardIdAtom);
-  const [activeTab, setActiveTab] = useState<"overview" | "deep-dive">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "deep-dive" | "ai-analysis">("overview");
 
   return (
     <div className="flex h-full flex-col">
@@ -69,6 +70,13 @@ export default function DashboardPage() {
               >
                 <BarChart3 className="h-4 w-4" />
                 Deep Dive
+              </TabsTrigger>
+              <TabsTrigger
+                value="ai-analysis"
+                className="gap-1.5 rounded-none border-b-2 border-transparent px-4 data-[state=active]:border-primary data-[state=active]:bg-transparent"
+              >
+                <Brain className="h-4 w-4" />
+                AI Analysis
               </TabsTrigger>
             </TabsList>
           </div>
@@ -143,6 +151,11 @@ export default function DashboardPage() {
                 <ProductivityInsights timeRange={selectedTimeRange} boardId={selectedBoardId} />
               </div>
             </div>
+          </TabsContent>
+
+          {/* AI Analysis Tab */}
+          <TabsContent value="ai-analysis" className="mt-0 p-4">
+            <AIAnalysis timeRange={selectedTimeRange} />
           </TabsContent>
         </Tabs>
       </div>
