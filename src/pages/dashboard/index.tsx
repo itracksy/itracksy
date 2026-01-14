@@ -155,7 +155,7 @@ export default function DashboardPage() {
 
           {/* AI Analysis Tab */}
           <TabsContent value="ai-analysis" className="mt-0 p-4">
-            <AIAnalysis timeRange={selectedTimeRange} />
+            <AIAnalysis timeRange={selectedTimeRange} boardId={selectedBoardId} />
           </TabsContent>
         </Tabs>
       </div>
