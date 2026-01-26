@@ -1,0 +1,40 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "entry": [
+    "src/main.ts",
+    "src/preload.ts",
+    "src/renderer.ts",
+    "src/App.tsx",
+    "src/main/windows/**/*.ts",
+    "src/preload/**/*.ts",
+    "src/renderer/**/*.tsx"
+  ],
+  "project": ["src/**/*.{ts,tsx}"],
+  "ignore": [
+    "src/env.d.ts",
+    "forge.env.d.ts",
+    "src/stories/**",
+    "src/tests/**",
+    "src/scripts/**",
+    "drizzle.config.ts"
+  ],
+  "drizzle": false,
+  "ignoreDependencies": [
+    "@electron-forge/*",
+    "@electron/fuses",
+    "@storybook/*"
+  ],
+  "ignoreBinaries": ["powershell"],
+  "rules": {
+    "types": "off"
+  },
+  "jest": {
+    "config": "jest.config.ts",
+    "entry": ["src/tests/**/*.test.{ts,tsx}", "src/**/*.test.{ts,tsx}"]
+  },
+  "playwright": {
+    "config": "playwright.config.ts",
+    "entry": ["src/tests/e2e/**/*.spec.ts"]
+  },
+  "storybook": false
+}

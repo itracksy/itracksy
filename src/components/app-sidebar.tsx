@@ -244,10 +244,24 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
       )}
       {...props}
     >
-      <SidebarHeader className="px-4 py-4 group-data-[collapsible=icon]:hidden">
-        <div className="flex items-center gap-2">
-          <img src={logoImage} alt="iTracksy" className="h-8 w-8 shrink-0" />
-          <span className="text-lg font-semibold text-slate-900 dark:text-white">iTracksy</span>
+      <SidebarHeader className="px-4 pb-5 pt-8 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:py-4">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="absolute -inset-1 rounded-xl bg-gradient-to-r from-amber-500/20 via-blue-500/20 to-purple-500/20 blur-sm" />
+            <img
+              src={logoImage}
+              alt="iTracksy"
+              className="relative h-9 w-9 shrink-0 drop-shadow-md"
+            />
+          </div>
+          <div className="flex flex-col group-data-[collapsible=icon]:hidden">
+            <span className="bg-gradient-to-r from-amber-500 via-blue-500 to-purple-500 bg-clip-text text-lg font-bold tracking-tight text-transparent">
+              iTracksy
+            </span>
+            <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500">
+              Focus & Productivity
+            </span>
+          </div>
         </div>
       </SidebarHeader>
 

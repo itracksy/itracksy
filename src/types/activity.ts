@@ -4,7 +4,7 @@ export type Activity = typeof activities.$inferInsert;
 
 export type ActivityRule = typeof activityRules.$inferSelect;
 
-export interface ApplicationDurationReport {
+interface ApplicationDurationReport {
   applicationName: string;
   totalDuration: number; // in milliseconds
   percentage: number;

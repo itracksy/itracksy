@@ -60,7 +60,14 @@
       "Bash(npm test:*)",
       "Bash(wc:*)",
       "Bash(./scripts/release.sh:*)",
-      "WebFetch(domain:www.itracksy.com)"
+      "WebFetch(domain:www.itracksy.com)",
+      "Bash(gh release create v1.0.285 --title \"v1.0.285 - AI Export for Deep Work Analysis\" --notes \"$\\(cat <<''EOF''\n## New Features\n\n### AI Export for Deep Work Analysis\n\nA new export feature that generates comprehensive data for AI-powered productivity analysis:\n\n- **Context Switch Detection**: Automatically identifies and classifies app switches \\(macro, micro, tab, interruption\\)\n- **Focus Streak Calculation**: Tracks continuous time in same app \\(>5 min threshold\\)\n- **Session Metrics**: Productivity score, unique apps used, average activity duration\n- **Daily Stats**: Deep work blocks count, top apps, top categories, peak productivity hours\n\n### How to Use\n\n1. Go to **Reports** page\n2. Click the **AI Export** button \\(purple brain icon\\)\n3. Select date range and export type \\(Compact/Full\\)\n4. Click **Generate Export**\n5. Download JSON or copy to clipboard\n6. Paste into your favorite AI assistant with analysis prompts\n\n### Sample AI Prompts\n\n- \"Analyze my deep work patterns and identify when I 'm most productive\"\n- \"What are my biggest context switching triggers and how can I reduce them?\"\n- \"Compare my productivity across different days and suggest improvements\"\n\n### Technical Details\n\n- Two export modes: **Compact** \\(smaller, for LLM context windows\\) and **Full** \\(with all activity details\\)\n- New tRPC endpoints: `exportForAI` and `exportForAICompact`\n- New service: `aiExport.ts` with context switch algorithms\nEOF\n\\)\")",
+      "Bash(git rm:*)",
+      "Bash(npm install:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm rebuild:*)",
+      "Bash(open:*)"
     ]
   }
 }

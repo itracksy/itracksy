@@ -1,28 +1,29 @@
 import { powerMonitor } from "electron";
 import { logger } from "../../helpers/logger";
-import { IDLE_THRESHOLD_MINUTES, SYSTEM_MONITOR_CHECK_INTERVAL } from "../../config/tracking";
 
-let isSystemIdle = false;
 let isSystemLocked = false;
-let systemStateListeners: Array<(isActive: boolean) => void> = [];
+let isSystemSleeping = false;
+const systemStateListeners: Array<(isActive: boolean) => void> = [];
 
 /**
- * Initialize system state monitoring for macOS
- * Detects when the system goes idle, sleeps, or user logs out
+ * Initialize system state monitoring
+ * Only pauses session on system lock, sleep, or standby (NOT on idle)
  */
 export const initializeSystemMonitor = (): void => {
   // Monitor system sleep/resume
   powerMonitor.on("suspend", () => {
     logger.info("[SystemMonitor] System is going to sleep");
+    isSystemSleeping = true;
     handleSystemInactive();
   });
 
   powerMonitor.on("resume", () => {
     logger.info("[SystemMonitor] System resumed from sleep");
+    isSystemSleeping = false;
     handleSystemActive();
   });
 
-  // Monitor system lock/unlock (macOS specific)
+  // Monitor system lock/unlock
   powerMonitor.on("lock-screen", () => {
     logger.info("[SystemMonitor] Screen locked");
     isSystemLocked = true;
@@ -35,29 +36,14 @@ export const initializeSystemMonitor = (): void => {
     handleSystemActive();
   });
 
-  // Monitor system idle state
-  // Check periodically if system has been idle for more than the threshold
-  setInterval(() => {
-    const idleTime = powerMonitor.getSystemIdleTime();
-    const IDLE_THRESHOLD = IDLE_THRESHOLD_MINUTES * 60; // Convert to seconds
+  // Note: We intentionally do NOT monitor idle state
+  // Session should only pause on lock/sleep, not when user is reading/thinking
 
-    const wasIdle = isSystemIdle;
-    isSystemIdle = idleTime >= IDLE_THRESHOLD;
-
-    if (!wasIdle && isSystemIdle) {
-      logger.info(`[SystemMonitor] System became idle (${Math.floor(idleTime / 60)} minutes)`);
-      handleSystemInactive();
-    } else if (wasIdle && !isSystemIdle) {
-      logger.info("[SystemMonitor] System became active from idle state");
-      handleSystemActive();
-    }
-  }, SYSTEM_MONITOR_CHECK_INTERVAL);
-
-  logger.info("[SystemMonitor] System monitoring initialized");
+  logger.info("[SystemMonitor] System monitoring initialized (lock/sleep only)");
 };
 
 /**
- * Handle when system becomes inactive (sleep, lock, or idle)
+ * Handle when system becomes inactive (sleep or lock)
  */
 const handleSystemInactive = (): void => {
   logger.info("[SystemMonitor] System became inactive - notifying listeners");
@@ -65,11 +51,11 @@ const handleSystemInactive = (): void => {
 };
 
 /**
- * Handle when system becomes active (resume, unlock, or user activity)
+ * Handle when system becomes active (resume or unlock)
  */
 const handleSystemActive = (): void => {
-  // Only notify if system is truly active (not locked and not idle)
-  if (!isSystemLocked && !isSystemIdle) {
+  // Only notify if system is truly active (not locked and not sleeping)
+  if (!isSystemLocked && !isSystemSleeping) {
     logger.info("[SystemMonitor] System became active - notifying listeners");
     notifyListeners(true);
   }
@@ -108,17 +94,17 @@ export const onSystemStateChange = (listener: (isActive: boolean) => void): (() 
 /**
  * Get current system state
  */
-export const getSystemState = (): { isIdle: boolean; isLocked: boolean; isActive: boolean } => {
+export const getSystemState = (): { isLocked: boolean; isSleeping: boolean; isActive: boolean } => {
   return {
-    isIdle: isSystemIdle,
     isLocked: isSystemLocked,
-    isActive: !isSystemIdle && !isSystemLocked,
+    isSleeping: isSystemSleeping,
+    isActive: !isSystemLocked && !isSystemSleeping,
   };
 };
 
 /**
- * Check if system is currently active (not idle, not locked, not sleeping)
+ * Check if system is currently active (not locked, not sleeping)
  */
 export const isSystemActive = (): boolean => {
-  return !isSystemIdle && !isSystemLocked;
+  return !isSystemLocked && !isSystemSleeping;
 };

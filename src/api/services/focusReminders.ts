@@ -11,7 +11,6 @@ export async function checkAndSendFocusReminder(userId: string): Promise<boolean
     // Check if focus reminders are enabled in user preferences
     const preferences = await getUserPreferences();
     if (!preferences.notifications.focusReminders) {
-      logger.debug("[checkAndSendFocusReminder] Focus reminders disabled by user preference");
       return false;
     }
 
@@ -52,7 +51,7 @@ export async function checkAndSendFocusReminder(userId: string): Promise<boolean
 /**
  * Send a motivational notification when user completes their daily target
  */
-export async function sendTargetCompletedNotification(
+async function sendTargetCompletedNotification(
   userId: string,
   targetMinutes: number
 ): Promise<void> {
@@ -60,9 +59,6 @@ export async function sendTargetCompletedNotification(
     // Check if goal achievements notifications are enabled in user preferences
     const preferences = await getUserPreferences();
     if (!preferences.notifications.goalAchievements) {
-      logger.debug(
-        "[sendTargetCompletedNotification] Goal achievements notifications disabled by user preference"
-      );
       return;
     }
 
@@ -103,15 +99,11 @@ export async function sendTargetCompletedNotification(
 /**
  * Send encouragement when user starts their first focus session of the day
  */
-export async function sendDailyStartNotification(
-  userId: string,
-  targetMinutes: number
-): Promise<void> {
+async function sendDailyStartNotification(userId: string, targetMinutes: number): Promise<void> {
   try {
     // Check if focus reminders are enabled in user preferences
     const preferences = await getUserPreferences();
     if (!preferences.notifications.focusReminders) {
-      logger.debug("[sendDailyStartNotification] Focus reminders disabled by user preference");
       return;
     }
 

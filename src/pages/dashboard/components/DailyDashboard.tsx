@@ -242,7 +242,7 @@ export function DailyDashboard({ timeRange, boardId }: DailyDashboardProps) {
 
         // Extract domain from title if it's a browser
         if (category === "Browsers" && activity.title) {
-          const domainMatch = activity.title.match(/(?:https?:\/\/)?([^\/\s]+)/i);
+          const domainMatch = activity.title.match(/(?:https?:\/\/)?([^/\s]+)/i);
           if (domainMatch) {
             let domain = domainMatch[1].toLowerCase();
             // Clean up common prefixes

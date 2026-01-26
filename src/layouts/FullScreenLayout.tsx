@@ -5,7 +5,7 @@ import DragWindowRegion from "@/components/DragWindowRegion";
 export default function FullScreenLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="h-screen w-screen">
-      <DragWindowRegion title="iTracksy" />
+      <DragWindowRegion />
       {children}
       <Toaster />
     </div>

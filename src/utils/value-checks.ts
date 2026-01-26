@@ -24,29 +24,27 @@ export const isNonEmptyString = (value: unknown): value is string => {
 };
 
 /**
- * Type guard to check if a value is a non-empty array
- */
-export const isNonEmptyArray = <T>(value: unknown): value is T[] => {
-  return Array.isArray(value) && value.length > 0;
-};
-
-/**
  * Type guard to check if a value is a non-empty object
  */
 export const isNonEmptyObject = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === "object" && value !== null && !Array.isArray(value) && Object.keys(value).length > 0;
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    Object.keys(value).length > 0
+  );
 };
 
 /**
  * Returns true if all values in the array are non-null and non-undefined
  */
-export const allDefined = <T>(values: (T | null | undefined)[]): values is T[] => {
+const allDefined = <T>(values: (T | null | undefined)[]): values is T[] => {
   return values.every((value) => !isNullOrUndefined(value));
 };
 
 /**
  * Returns the value if it's defined, otherwise returns the default value
  */
-export const getValueOrDefault = <T>(value: T | null | undefined, defaultValue: T): T => {
+const getValueOrDefault = <T>(value: T | null | undefined, defaultValue: T): T => {
   return isNullOrUndefined(value) ? defaultValue : value;
 };

@@ -22,11 +22,14 @@ import { findMatchingRules } from "./activityRules";
 import { showBlockingNotification } from "./blocking-notification-service";
 import { sendClockUpdate } from "../../helpers/ipc/clock/clock-listeners";
 import { onSystemStateChange, isSystemActive } from "./systemMonitor";
-import { pauseActiveSession, resumeActiveSession, clearPausedSession } from "./sessionPause";
+import {
+  pauseActiveSession,
+  resumeActiveSession,
+  clearPausedSession,
+  getPausedSession,
+} from "./sessionPause";
 
 // Export debug utilities for development
-export { debugSystemState, testSystemMonitoring } from "./systemMonitorDebug";
-
 let trackingIntervalId: NodeJS.Timeout | null = null;
 let lastNotificationTime: number = 0;
 let isTrackingPaused: boolean = false;
@@ -78,9 +81,29 @@ export const startTracking = async (): Promise<void> => {
       logger.info("[Tracking] System became active - checking for paused session");
       isTrackingPaused = false;
 
-      // Don't auto-resume - let the UI handle the confirmation
-      // The UI will check via tRPC if a resume is required
-      // Only update tray for now
+      // Check if there's a paused session that needs resume confirmation
+      const pausedSession = getPausedSession();
+      if (pausedSession && !pausedSession.isManualPause) {
+        // Get the active entry to include in the resume notification
+        const userId = await getCurrentUserIdLocalStorage();
+        if (userId) {
+          const activeEntry = await getActiveTimeEntry(userId);
+          if (activeEntry && activeEntry.id === pausedSession.timeEntryId && !activeEntry.endTime) {
+            // Send IPC to show resume dialog
+            const { sendPauseStateUpdate } = await import(
+              "../../helpers/ipc/session-pause/session-pause-sender"
+            );
+            sendPauseStateUpdate({
+              isPaused: true,
+              pausedAt: pausedSession.pausedAt,
+              timeEntryId: pausedSession.timeEntryId,
+              requiresResume: true,
+              activeEntry,
+            });
+          }
+        }
+      }
+
       await updateTrayForActiveSystem();
     } else {
       logger.info("[Tracking] System became inactive - pausing tracking");
@@ -98,7 +121,7 @@ export const startTracking = async (): Promise<void> => {
   // Start the interval
   trackingIntervalId = setInterval(async () => {
     try {
-      // Skip tracking if system is inactive (sleeping, locked, or idle)
+      // Skip tracking if system is inactive (sleeping or locked)
       if (isTrackingPaused || !isSystemActive()) {
         return;
       }
@@ -283,7 +306,7 @@ export const startTracking = async (): Promise<void> => {
   }, TRACKING_INTERVAL);
 };
 
-export const stopTracking = (): void => {
+const stopTracking = (): void => {
   if (trackingIntervalId) {
     clearInterval(trackingIntervalId);
     trackingIntervalId = null;

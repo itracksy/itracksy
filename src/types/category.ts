@@ -5,7 +5,7 @@ export type NewCategory = typeof categories.$inferInsert;
 export type CategoryMapping = typeof categoryMappings.$inferSelect;
 export type NewCategoryMapping = typeof categoryMappings.$inferInsert;
 
-export interface CategoryWithChildren extends Category {
+interface CategoryWithChildren extends Category {
   readonly children: readonly CategoryWithChildren[];
 }
 
@@ -32,7 +32,7 @@ export interface CategoryMatchResult {
 
 export type MatchType = "exact" | "contains" | "starts_with" | "regex";
 
-export interface CategoryStats {
+interface CategoryStats {
   readonly totalCategories: number;
   readonly totalMappings: number;
   readonly categorizedActivities: number;

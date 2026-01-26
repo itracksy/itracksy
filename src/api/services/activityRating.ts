@@ -5,7 +5,7 @@ import db from "../db";
 import { Activity, ActivityRule } from "@/types/activity";
 import { extractDomain } from "../../utils/url";
 
-export type RuleCondition = ">" | "<" | "=" | ">=" | "<=" | "contains" | "startsWith" | "endsWith";
+type RuleCondition = ">" | "<" | "=" | ">=" | "<=" | "contains" | "startsWith" | "endsWith";
 
 export interface RatingResult {
   activityId: number;

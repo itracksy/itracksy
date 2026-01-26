@@ -283,7 +283,11 @@ export const Card = forwardRef<HTMLLIElement, CardProps>(
             <Button
               onClick={(e) => {
                 e.stopPropagation();
-                activeTimeEntry?.itemId === id ? handleStopTracking() : handleStartTracking();
+                if (activeTimeEntry?.itemId === id) {
+                  handleStopTracking();
+                } else {
+                  handleStartTracking();
+                }
               }}
               variant="ghost"
               size="sm"

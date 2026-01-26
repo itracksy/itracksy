@@ -12,7 +12,7 @@ export type ThemeVariant =
   | "rose" // Soft pinks for a gentle feel
   | "monochrome"; // Pure grayscale for minimal distraction
 
-export type ThemeMode = "light" | "dark";
+type ThemeMode = "light" | "dark";
 
 export type SidebarItem =
   | "focus-session"
@@ -26,9 +26,9 @@ export type SidebarItem =
   | "logs"
   | "settings";
 
-export type UISize = "compact" | "comfortable" | "spacious";
-export type FontScale = "small" | "normal" | "large" | "x-large";
-export type AnimationSpeed = "none" | "reduced" | "normal" | "enhanced";
+type UISize = "compact" | "comfortable" | "spacious";
+type FontScale = "small" | "normal" | "large" | "x-large";
+type AnimationSpeed = "none" | "reduced" | "normal" | "enhanced";
 
 export interface SidebarPreferences {
   // Visible sidebar items
@@ -101,7 +101,7 @@ export interface UserPreferences {
 }
 
 // Default preferences
-export const DEFAULT_SIDEBAR_PREFERENCES: SidebarPreferences = {
+const DEFAULT_SIDEBAR_PREFERENCES: SidebarPreferences = {
   visibleItems: [
     "focus-session",
     "scheduling",
@@ -118,7 +118,7 @@ export const DEFAULT_SIDEBAR_PREFERENCES: SidebarPreferences = {
   pinnedItems: ["focus-session"],
 };
 
-export const DEFAULT_APPEARANCE_PREFERENCES: AppearancePreferences = {
+const DEFAULT_APPEARANCE_PREFERENCES: AppearancePreferences = {
   themeMode: "light",
   themeVariant: "default",
   fontScale: "normal",
@@ -131,7 +131,7 @@ export const DEFAULT_APPEARANCE_PREFERENCES: AppearancePreferences = {
   roundedCorners: true,
 };
 
-export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
+const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
   soundEnabled: true,
   soundVolume: 70,
   showDesktopNotifications: true,
@@ -141,7 +141,7 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
   goalAchievements: true,
 };
 
-export const DEFAULT_FOCUS_PREFERENCES: FocusPreferences = {
+const DEFAULT_FOCUS_PREFERENCES: FocusPreferences = {
   defaultFocusDuration: 25,
   defaultBreakDuration: 5,
   autoStartBreaks: false,
@@ -160,7 +160,7 @@ export const DEFAULT_USER_PREFERENCES: UserPreferences = {
 };
 
 // Theme variant definitions
-export interface ThemeVariantDefinition {
+interface ThemeVariantDefinition {
   name: string;
   description: string;
   colors: {

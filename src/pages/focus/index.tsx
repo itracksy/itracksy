@@ -18,7 +18,7 @@ import { Slider } from "@/components/ui/slider";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Brain, Coffee, History, Play, Timer, Infinity } from "lucide-react";
+import { Brain, Coffee, History, Play, Timer, Infinity as InfinityIcon } from "lucide-react";
 import { ActiveSession } from "./components/ActiveSession";
 import { FocusTargetWidget } from "./components/FocusTargetWidget";
 import { SessionReviewDialog } from "./components/SessionReviewDialog";
@@ -219,7 +219,7 @@ export default function FocusPage() {
                         : "border-muted bg-transparent text-muted-foreground hover:border-muted-foreground/50"
                     )}
                   >
-                    <Infinity className="h-4 w-4" />
+                    <InfinityIcon className="h-4 w-4" />
                     Unlimited
                   </button>
                 </div>

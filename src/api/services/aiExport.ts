@@ -6,7 +6,7 @@ import { gte, lte, desc, and, eq, sql, isNotNull } from "drizzle-orm";
 // Types for AI Deep Work Analysis Export
 // ============================================================================
 
-export interface ContextSwitch {
+interface ContextSwitch {
   timestamp: number;
   fromApp: string;
   fromTitle: string;
@@ -16,7 +16,7 @@ export interface ContextSwitch {
   switchType: "macro" | "micro" | "tab" | "interruption";
 }
 
-export interface FocusStreak {
+interface FocusStreak {
   startTimestamp: number;
   endTimestamp: number;
   durationSeconds: number;

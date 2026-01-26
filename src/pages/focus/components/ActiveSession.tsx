@@ -1,14 +1,22 @@
-import { getTitleTimeEntry } from "@/api/db/timeEntryExt";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useUpdateTimeEntryMutation } from "@/hooks/useTimeEntryQueries";
 import { TimeEntryWithRelations } from "@/types/projects";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { AlertTriangle, Tag, Pause, Play } from "lucide-react";
+import {
+  AlertTriangle,
+  Tag,
+  Pause,
+  Play,
+  Calendar,
+  Infinity as InfinityIcon,
+  Clock,
+  CheckCircle2,
+  ChevronRight,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { BoardSelector } from "@/components/tracking/BoardSelector";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -71,26 +79,53 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
 
   const updateTimeEntryMutation = useUpdateTimeEntryMutation();
 
-  // Check for resume requirements when component mounts
+  // Check for resume requirements once on mount (in case app opens with paused session)
   useEffect(() => {
-    const checkResumeRequired = async () => {
+    const checkInitialState = async () => {
       try {
         const result = await trpcClient.systemState.checkResumeRequired.query();
         if (result.requiresResume && result.activeEntry) {
+          setIsPaused(true);
+          setPausedAt(result.pausedAt);
           setPendingResumeEntry(result.activeEntry);
           setShowResumeDialog(true);
         }
       } catch (error) {
-        console.error("Failed to check resume requirements:", error);
+        console.error("Failed to check initial resume state:", error);
       }
     };
 
-    checkResumeRequired();
-
-    // Set up polling to check for resume requirements every 2 seconds
-    const interval = setInterval(checkResumeRequired, 2000);
-    return () => clearInterval(interval);
+    checkInitialState();
   }, []);
+
+  // Listen for pause state updates and resume requirements via IPC
+  useEffect(() => {
+    const electronSessionPause = (window as any).electronSessionPause;
+    if (electronSessionPause) {
+      electronSessionPause.onPauseStateChange(
+        (state: {
+          isPaused: boolean;
+          pausedAt: number | null;
+          timeEntryId: string | null;
+          requiresResume?: boolean;
+          activeEntry?: any;
+        }) => {
+          // Only update if the pause state is for this session
+          if (state.timeEntryId === activeTimeEntry?.id || !state.isPaused) {
+            setIsPaused(state.isPaused);
+            setPausedAt(state.pausedAt);
+
+            // Show resume dialog if required
+            if (state.requiresResume && state.activeEntry) {
+              setPendingResumeEntry(state.activeEntry);
+              setShowResumeDialog(true);
+            }
+          }
+        }
+      );
+      return () => electronSessionPause.removePauseStateListener();
+    }
+  }, [activeTimeEntry?.id]);
 
   const handleExtendTime = async () => {
     if (!activeTimeEntry) return;
@@ -172,14 +207,17 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
   const handleResumeConfirm = async () => {
     try {
       await trpcClient.timeEntry.handleSessionResume.mutate({ action: "continue" });
+      // Refresh the query data and wait for it to complete before updating UI
+      // This ensures the timer gets the adjusted startTime before resuming
+      await queryClient.refetchQueries({ queryKey: ["timeEntries", "active"] });
       setShowResumeDialog(false);
       setPendingResumeEntry(null);
+      setIsPaused(false);
+      setPausedAt(null);
       toast({
         title: "Session resumed",
         description: "Your session is now active again.",
       });
-      // Refresh the query data
-      queryClient.invalidateQueries({ queryKey: ["timeEntries"] });
     } catch (error) {
       toast({
         title: "Failed to resume session",
@@ -192,14 +230,16 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
   const handleResumeDismiss = async () => {
     try {
       await trpcClient.timeEntry.handleSessionResume.mutate({ action: "dismiss" });
+      // Refresh the query data and wait for it to complete
+      await queryClient.refetchQueries({ queryKey: ["timeEntries", "active"] });
       setShowResumeDialog(false);
       setPendingResumeEntry(null);
+      setIsPaused(false);
+      setPausedAt(null);
       toast({
         title: "Session dismissed",
         description: "Your session has been ended.",
       });
-      // Refresh the query data
-      queryClient.invalidateQueries({ queryKey: ["timeEntries"] });
     } catch (error) {
       toast({
         title: "Failed to dismiss session",
@@ -262,28 +302,6 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
       });
     }
   };
-
-  // Poll for pause state
-  useEffect(() => {
-    const checkPauseState = async () => {
-      try {
-        const result = await trpcClient.timeEntry.getPauseState.query();
-        if (result.isPaused && result.timeEntryId === activeTimeEntry?.id) {
-          setIsPaused(true);
-          setPausedAt(result.pausedAt);
-        } else if (!result.isPaused && isPaused) {
-          setIsPaused(false);
-          setPausedAt(null);
-        }
-      } catch (error) {
-        console.error("Failed to check pause state:", error);
-      }
-    };
-
-    checkPauseState();
-    const interval = setInterval(checkPauseState, 2000);
-    return () => clearInterval(interval);
-  }, [activeTimeEntry?.id, isPaused]);
 
   usePomodoroSounds({
     isFocusMode: Boolean(activeTimeEntry?.isFocusMode),
@@ -422,20 +440,63 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
   const circumference = 2 * Math.PI * 120; // radius = 120
   const strokeDashoffset = circumference - (progressPercentage / 100) * circumference;
 
+  // Determine session source type
+  const isScheduledSession = activeTimeEntry.description?.startsWith("Scheduled:");
+  const isUnlimitedSession = (activeTimeEntry.targetDuration ?? 0) === 0;
+  const targetMinutes = activeTimeEntry.targetDuration ?? 0;
+
+  const getSessionTypeInfo = () => {
+    if (isScheduledSession) {
+      return {
+        icon: Calendar,
+        label: "Scheduled",
+        color: "text-purple-600 dark:text-purple-400",
+        bgColor: "bg-purple-500/20",
+        borderColor: "border-purple-500/30",
+      };
+    }
+    if (isUnlimitedSession) {
+      return {
+        icon: InfinityIcon,
+        label: "Unlimited",
+        color: "text-blue-600 dark:text-blue-400",
+        bgColor: "bg-blue-500/20",
+        borderColor: "border-blue-500/30",
+      };
+    }
+    return {
+      icon: Clock,
+      label: `${targetMinutes} min`,
+      color: "text-amber-600 dark:text-amber-400",
+      bgColor: "bg-amber-500/20",
+      borderColor: "border-amber-500/30",
+    };
+  };
+
+  const sessionTypeInfo = getSessionTypeInfo();
+  const SessionTypeIcon = sessionTypeInfo.icon;
+
   return (
     <>
       {/* Active Session Display */}
       <div className="text-center">
-        <h2 className="mb-6 text-xl font-medium text-[#2B4474] dark:text-white">Current Session</h2>
-        <div className="mb-10 inline-block rounded-full border border-[#E5A853]/30 bg-[#E5A853]/10 px-5 py-2.5">
-          <div className="flex items-center justify-center gap-2 text-[#2B4474] dark:text-white">
+        <h2 className="mb-4 text-xl font-medium text-[#2B4474] dark:text-white">Current Session</h2>
+
+        {/* Session Type Badge */}
+        <div className="mb-6 flex flex-wrap items-center justify-center gap-2">
+          <div className="inline-flex items-center rounded-full border border-[#E5A853]/30 bg-[#E5A853]/10 px-4 py-2">
             <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#E5A853]"></span>
-            <span className="font-medium">{getTitleTimeEntry(activeTimeEntry)}</span>
-            {(activeTimeEntry.targetDuration ?? 0) === 0 && (
-              <span className="ml-1 rounded-full bg-blue-500/20 px-2 py-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">
-                ∞
-              </span>
-            )}
+            <span className="ml-2 font-medium text-[#2B4474] dark:text-white">
+              {activeTimeEntry.isFocusMode ? "Focus Session" : "Break Session"}
+            </span>
+          </div>
+          <div
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 ${sessionTypeInfo.bgColor} ${sessionTypeInfo.borderColor}`}
+          >
+            <SessionTypeIcon className={`h-3.5 w-3.5 ${sessionTypeInfo.color}`} />
+            <span className={`text-xs font-medium ${sessionTypeInfo.color}`}>
+              {sessionTypeInfo.label}
+            </span>
           </div>
         </div>
       </div>
@@ -578,30 +639,52 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
 
       {/* Task Assignment Section */}
       {activeTimeEntry.isFocusMode && (
-        <Card className="mt-6 shadow-sm">
-          <CardHeader className="pb-2">
+        <div className="mt-8">
+          <button
+            onClick={() => setIsAssignModalOpen(true)}
+            className="group w-full rounded-xl border border-slate-200 bg-white/50 p-4 text-left transition-all hover:border-[#E5A853]/50 hover:bg-[#E5A853]/5 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/50 dark:hover:border-[#E5A853]/50 dark:hover:bg-slate-800"
+          >
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                <Tag className="h-4 w-4" />
-                {activeTimeEntry.itemId ? "Current Task" : "Task Assignment"}
-              </CardTitle>
-              {activeTimeEntry.itemId ? (
-                <div className="space-y-2">
-                  <div className="text-xs text-gray-500">
-                    Assigned to: {activeTimeEntry.item?.title || "Unknown Task"}
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={() => setIsAssignModalOpen(true)}>
-                    Change Task
-                  </Button>
+              <div className="flex items-center gap-3">
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+                    activeTimeEntry.itemId
+                      ? "bg-green-100 dark:bg-green-900/30"
+                      : "bg-slate-100 dark:bg-slate-700"
+                  }`}
+                >
+                  {activeTimeEntry.itemId ? (
+                    <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  ) : (
+                    <Tag className="h-5 w-5 text-slate-500 dark:text-slate-400" />
+                  )}
                 </div>
-              ) : (
-                <Button variant="ghost" size="sm" onClick={() => setIsAssignModalOpen(true)}>
-                  Assign Task
-                </Button>
-              )}
+                <div>
+                  <div className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    {activeTimeEntry.itemId ? "Current Task" : "Task Assignment"}
+                  </div>
+                  <div
+                    className={`mt-0.5 font-medium ${
+                      activeTimeEntry.itemId
+                        ? "text-slate-800 dark:text-slate-100"
+                        : "text-slate-500 dark:text-slate-400"
+                    }`}
+                  >
+                    {activeTimeEntry.itemId
+                      ? activeTimeEntry.item?.title || "Unknown Task"
+                      : "Click to assign a task"}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500 group-hover:text-[#E5A853] dark:text-slate-400">
+                  {activeTimeEntry.itemId ? "Change" : "Assign"}
+                </span>
+                <ChevronRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-[#E5A853]" />
+              </div>
             </div>
-          </CardHeader>
-        </Card>
+          </button>
+        </div>
       )}
 
       {/* Task Assignment Modal */}
@@ -627,54 +710,81 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
 
       {/* Resume Session Dialog */}
       <Dialog open={showResumeDialog} onOpenChange={setShowResumeDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>🌙 Welcome back! Resume your session?</DialogTitle>
-            <DialogDescription>
-              You have a paused {pendingResumeEntry?.isFocusMode ? "focus" : "break"} session that
-              was temporarily paused while you were away.
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader className="text-center sm:text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
+              <Play className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+            </div>
+            <DialogTitle className="text-xl">Welcome back!</DialogTitle>
+            <DialogDescription className="text-center">
+              Your {pendingResumeEntry?.isFocusMode ? "focus" : "break"} session was paused while
+              you were away. Would you like to continue?
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3 py-4">
-            {pendingResumeEntry && (
-              <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
-                <div className="mb-2 flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                    Session Details:
-                  </span>
-                </div>
-                <div className="text-sm text-gray-700 dark:text-gray-300">
-                  <div>
-                    Mode:{" "}
-                    <span className="font-medium">
-                      {pendingResumeEntry.isFocusMode ? "🎯 Focus" : "🚀 Break"}
-                    </span>
-                  </div>
-                  <div>
-                    Description:{" "}
-                    <span className="font-medium">{pendingResumeEntry.description}</span>
+
+          {pendingResumeEntry && (
+            <div className="my-4 space-y-3">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+                        pendingResumeEntry.isFocusMode
+                          ? "bg-amber-100 dark:bg-amber-900/30"
+                          : "bg-green-100 dark:bg-green-900/30"
+                      }`}
+                    >
+                      <span className="text-lg">
+                        {pendingResumeEntry.isFocusMode ? "🎯" : "☕"}
+                      </span>
+                    </div>
+                    <div>
+                      <div className="font-medium text-slate-900 dark:text-slate-100">
+                        {pendingResumeEntry.isFocusMode ? "Focus Session" : "Break Session"}
+                      </div>
+                      <div className="text-sm text-slate-500 dark:text-slate-400">
+                        {pendingResumeEntry.description || "No description"}
+                      </div>
+                    </div>
                   </div>
                   {pendingResumeEntry.targetDuration && pendingResumeEntry.targetDuration > 0 && (
-                    <div>
-                      Target:{" "}
-                      <span className="font-medium">
-                        {pendingResumeEntry.targetDuration} minutes
-                      </span>
+                    <div className="rounded-full bg-slate-200 px-3 py-1 text-sm font-medium text-slate-700 dark:bg-slate-700 dark:text-slate-300">
+                      {pendingResumeEntry.targetDuration} min
                     </div>
                   )}
                 </div>
               </div>
-            )}
-            <div className="text-center text-sm text-gray-600 dark:text-gray-400">
-              Choose "Continue" to resume your session, or "Dismiss" to end it.
+
+              {pausedAt && (
+                <div className="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                  <Pause className="h-4 w-4" />
+                  <span>
+                    Paused at{" "}
+                    {new Date(pausedAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+              )}
             </div>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={handleResumeDismiss}>
-              Dismiss Session
-            </Button>
-            <Button variant="default" onClick={handleResumeConfirm}>
+          )}
+
+          <DialogFooter className="flex-col gap-2 sm:flex-col">
+            <Button
+              variant="default"
+              onClick={handleResumeConfirm}
+              className="w-full bg-amber-500 hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-700"
+            >
+              <Play className="mr-2 h-4 w-4" />
               Continue Session
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={handleResumeDismiss}
+              className="w-full text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+            >
+              End Session
             </Button>
           </DialogFooter>
         </DialogContent>

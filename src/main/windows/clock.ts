@@ -318,7 +318,6 @@ export function createClockWindow(): BrowserWindow {
 }
 
 export function getClockWindow(): BrowserWindow | null {
-  console.log("Getting clock window reference");
   return clockWindow;
 }
 

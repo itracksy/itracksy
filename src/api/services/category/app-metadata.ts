@@ -86,7 +86,7 @@ export const APPLE_CATEGORY_TYPES = {
  * Well-known vendor bundle ID prefixes mapped to categories
  * Fallback when LSApplicationCategoryType is not available
  */
-export const VENDOR_CATEGORY_MAP: Record<string, string> = {
+const VENDOR_CATEGORY_MAP: Record<string, string> = {
   // Development vendors
   "com.apple.dt": "Development", // Xcode tools
   "com.jetbrains": "Development",
@@ -253,13 +253,14 @@ export function getAppMetadata(bundleIdOrPath: string, appName?: string): AppMet
 function readPlist(plistPath: string): Record<string, unknown> | null {
   try {
     // Use plutil to convert plist to JSON (works with both binary and XML plists)
-    const jsonOutput = execSync(`plutil -convert json -o - "${plistPath}"`, {
+    // Redirect stderr to suppress error messages from plutil for invalid plists
+    const jsonOutput = execSync(`plutil -convert json -o - "${plistPath}" 2>/dev/null`, {
       encoding: "utf-8",
       timeout: 5000,
     });
     return JSON.parse(jsonOutput);
-  } catch (error) {
-    logger.debug(`Failed to read plist at ${plistPath}:`, error);
+  } catch {
+    // Silently ignore plist read failures - some system apps have invalid/special plists
     return null;
   }
 }

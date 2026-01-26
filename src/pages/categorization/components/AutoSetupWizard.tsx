@@ -380,5 +380,3 @@ export function AutoSetupWizard({ open, onOpenChange, onComplete }: AutoSetupWiz
     </Dialog>
   );
 }
-
-export default AutoSetupWizard;

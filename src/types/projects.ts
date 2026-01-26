@@ -5,14 +5,14 @@ export type Board = typeof boards.$inferSelect;
 export type Column = typeof columns.$inferSelect;
 export type Item = typeof items.$inferSelect;
 export type TimeEntry = typeof timeEntries.$inferSelect;
-export type Activity = typeof activities.$inferSelect;
+type Activity = typeof activities.$inferSelect;
 
 // Insert types
-export type BoardInsert = typeof boards.$inferInsert;
+type BoardInsert = typeof boards.$inferInsert;
 export type ColumnInsert = typeof columns.$inferInsert;
 export type ItemInsert = typeof items.$inferInsert;
-export type TimeEntryInsert = typeof timeEntries.$inferInsert;
-export type ActivityInsert = typeof activities.$inferInsert;
+type TimeEntryInsert = typeof timeEntries.$inferInsert;
+type ActivityInsert = typeof activities.$inferInsert;
 
 // Subtask type
 export type Subtask = {
@@ -33,13 +33,13 @@ export type TimeEntryWithRelations = TimeEntry & {
 };
 
 // Item with parsed subtasks
-export type ItemWithSubtasks = Item & {
+type ItemWithSubtasks = Item & {
   parsedSubtasks: Subtask[];
 };
 
 // Table update types
-export type BoardUpdate = Partial<BoardInsert>;
-export type ColumnUpdate = Partial<ColumnInsert>;
-export type ItemUpdate = Partial<ItemInsert>;
-export type TimeEntryUpdate = Partial<TimeEntryInsert>;
-export type ActivityUpdate = Partial<ActivityInsert>;
+type BoardUpdate = Partial<BoardInsert>;
+type ColumnUpdate = Partial<ColumnInsert>;
+type ItemUpdate = Partial<ItemInsert>;
+type TimeEntryUpdate = Partial<TimeEntryInsert>;
+type ActivityUpdate = Partial<ActivityInsert>;

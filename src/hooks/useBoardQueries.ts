@@ -3,7 +3,7 @@ import { Board, BoardWithRelations } from "@/types/projects";
 import { ColumnInsert, ItemInsert } from "@/types/projects";
 import { trpcClient } from "@/utils/trpc.js";
 
-export const boardQueries = {
+const boardQueries = {
   list: () => ["boards"],
   listArchived: () => ["archivedBoards"],
   detail: (id: string) => ["board", id],

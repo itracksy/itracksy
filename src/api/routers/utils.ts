@@ -258,7 +258,7 @@ export const utilsRouter = t.router({
           message: string;
           filePath?: string;
           filename?: string;
-        }>(async (resolve, reject) => {
+        }>((resolve, reject) => {
           // Helper to perform download and follow redirects up to maxRedirects
           const maxRedirects = 5;
 

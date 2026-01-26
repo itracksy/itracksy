@@ -1,6 +1,7 @@
 import { getCurrentUserIdLocalStorage } from "./userSettings";
 import { getActiveTimeEntry, updateTimeEntry } from "./timeEntry";
 import { logger } from "../../helpers/logger";
+import { sendPauseStateUpdate } from "../../helpers/ipc/session-pause/session-pause-sender";
 
 interface PausedSession {
   timeEntryId: string;
@@ -33,6 +34,13 @@ export const pauseActiveSession = async (): Promise<void> => {
       originalStartTime: activeEntry.startTime,
       isManualPause: false,
     };
+
+    // Notify renderer immediately
+    sendPauseStateUpdate({
+      isPaused: true,
+      pausedAt: pausedSession.pausedAt,
+      timeEntryId: pausedSession.timeEntryId,
+    });
 
     logger.info(
       `[SessionPause] Paused session ${activeEntry.id} at ${new Date(Date.now()).toISOString()}`
@@ -78,10 +86,24 @@ export const resumeActiveSession = async (): Promise<void> => {
 
     // Clear paused state
     pausedSession = null;
+
+    // Notify renderer immediately
+    sendPauseStateUpdate({
+      isPaused: false,
+      pausedAt: null,
+      timeEntryId: null,
+    });
   } catch (error) {
     logger.error("[SessionPause] Error resuming session", { error });
     // Clear paused state even on error to prevent stuck states
     pausedSession = null;
+
+    // Notify renderer even on error
+    sendPauseStateUpdate({
+      isPaused: false,
+      pausedAt: null,
+      timeEntryId: null,
+    });
   }
 };
 
@@ -138,6 +160,13 @@ export const manualPauseSession = async (): Promise<{
       isManualPause: true,
     };
 
+    // Notify renderer immediately
+    sendPauseStateUpdate({
+      isPaused: true,
+      pausedAt: now,
+      timeEntryId: activeEntry.id,
+    });
+
     logger.info(
       `[SessionPause] Manually paused session ${activeEntry.id} at ${new Date(now).toISOString()}`
     );
@@ -189,10 +218,26 @@ export const manualResumeSession = async (): Promise<{
     );
 
     pausedSession = null;
+
+    // Notify renderer immediately
+    sendPauseStateUpdate({
+      isPaused: false,
+      pausedAt: null,
+      timeEntryId: null,
+    });
+
     return { success: true, adjustedBy: pausedDuration };
   } catch (error) {
     logger.error("[SessionPause] Error manually resuming session", { error });
     pausedSession = null;
+
+    // Notify renderer even on error
+    sendPauseStateUpdate({
+      isPaused: false,
+      pausedAt: null,
+      timeEntryId: null,
+    });
+
     return {
       success: false,
       adjustedBy: 0,

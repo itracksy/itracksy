@@ -12,8 +12,8 @@ export default function BaseLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="flex h-screen flex-col">
-      {/* Drag region for frameless window */}
-      <DragWindowRegion title="iTracksy" />
+      {/* Drag region for macOS hidden title bar */}
+      <DragWindowRegion />
 
       <div className="flex flex-1 overflow-hidden">
         <SidebarProvider>

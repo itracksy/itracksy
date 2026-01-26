@@ -273,12 +273,10 @@ function createWindow(): void {
       preload: preload,
     },
     // Apply different title bar styles based on the OS
+    // macOS: hidden title bar with traffic lights, Windows/Linux: native frame
     ...(process.platform === "darwin"
-      ? { titleBarStyle: "hidden" }
-      : {
-          frame: false, // Use frameless window on Windows
-          titleBarStyle: "default", // Default title bar style for Windows
-        }),
+      ? { titleBarStyle: "hiddenInset", trafficLightPosition: { x: 10, y: 10 } }
+      : { frame: true }),
   });
 
   createIPCHandler({

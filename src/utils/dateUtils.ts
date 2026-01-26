@@ -1,7 +1,7 @@
 /**
  * Format a date for display
  */
-export function formatDate(timestamp: number): string {
+function formatDate(timestamp: number): string {
   const date = new Date(timestamp);
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
@@ -11,7 +11,7 @@ export function formatDate(timestamp: number): string {
  * @param dueDate - Unix timestamp of the due date
  * @returns Number of days remaining (can be negative if overdue)
  */
-export function calculateDaysRemaining(dueDate: number): number {
+function calculateDaysRemaining(dueDate: number): number {
   const now = new Date();
   const due = new Date(dueDate);
 

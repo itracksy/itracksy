@@ -64,7 +64,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
     // Calculate column metrics
     const columnMetrics = useMemo(() => {
       let totalEstimatedMinutes = 0;
-      let totalCompletedMinutes = 0;
+      const totalCompletedMinutes = 0;
 
       items.forEach((item) => {
         if (item.estimatedMinutes) {

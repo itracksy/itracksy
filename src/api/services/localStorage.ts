@@ -24,11 +24,11 @@ export const setValue = async (key: string, value: string): Promise<void> => {
     });
 };
 
-export const deleteValue = async (key: string): Promise<void> => {
+const deleteValue = async (key: string): Promise<void> => {
   await db.delete(localStorage).where(eq(localStorage.key, key));
 };
 
-export const getAllValues = async (): Promise<Record<string, string>> => {
+const getAllValues = async (): Promise<Record<string, string>> => {
   const results = await db.select().from(localStorage);
   const init: Record<string, string> = {};
   return results.reduce((acc, { key, value }) => {
@@ -37,7 +37,7 @@ export const getAllValues = async (): Promise<Record<string, string>> => {
   }, init);
 };
 
-export const setMultipleValues = async (values: Record<string, string>): Promise<void> => {
+const setMultipleValues = async (values: Record<string, string>): Promise<void> => {
   await db.transaction(async (tx) => {
     for (const [key, value] of Object.entries(values)) {
       await tx

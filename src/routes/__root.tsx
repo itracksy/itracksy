@@ -1,21 +1,16 @@
 import { useToast } from "@/hooks/use-toast";
 import BaseLayout from "@/layouts/BaseLayout";
-import { Outlet, createRootRoute, useMatches } from "@tanstack/react-router";
+import { Outlet, createRootRoute, useMatches, ErrorComponentProps } from "@tanstack/react-router";
 import { ConfirmationDialogProvider } from "@/components/providers/ConfirmationDialog";
 import { analytics } from "@/helpers/analytics";
+import { useEffect } from "react";
 
-export const RootRoute = createRootRoute({
-  component: Root,
-  beforeLoad: ({ location }) => {
-    // Track page view using the safer analytics helper
-    analytics.pageView(location.pathname, {
-      params: location.search ? Object.fromEntries(new URLSearchParams(location.search)) : {},
-    });
-  },
-  errorComponent: ({ error }) => {
-    const { toast } = useToast();
-    const err = error as Error;
-    console.error("[errorComponent]", err);
+function ErrorComponent({ error }: ErrorComponentProps) {
+  const { toast } = useToast();
+  const err = error as Error;
+
+  useEffect(() => {
+    console.error("[ErrorComponent]", err);
 
     // Track error events using the safer analytics helper
     analytics.track("navigation_error", {
@@ -28,8 +23,20 @@ export const RootRoute = createRootRoute({
       title: "Error",
       description: err.message,
     });
-    return <Root />;
+  }, [err, toast]);
+
+  return <Root />;
+}
+
+export const RootRoute = createRootRoute({
+  component: Root,
+  beforeLoad: ({ location }) => {
+    // Track page view using the safer analytics helper
+    analytics.pageView(location.pathname, {
+      params: location.search ? Object.fromEntries(new URLSearchParams(location.search)) : {},
+    });
   },
+  errorComponent: ErrorComponent,
 });
 
 function Root() {

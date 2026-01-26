@@ -105,7 +105,7 @@ export const getFocusPerformanceByPeriod = async (
 };
 
 // Helper function to generate date labels for empty periods
-export const generateDateRange = (
+const generateDateRange = (
   startDate: number,
   endDate: number,
   period: FocusPerformancePeriod

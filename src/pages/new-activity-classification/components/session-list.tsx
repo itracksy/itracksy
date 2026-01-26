@@ -11,9 +11,7 @@ import { History, Calendar } from "lucide-react";
 
 import { selectedClassificationTimeRangeAtom } from "@/context/timeRange";
 
-interface SessionListProps {}
-
-export function SessionList({}: SessionListProps) {
+export function SessionList() {
   const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
   const [selectedTimeRange, setSelectedTimeRange] = useAtom(selectedClassificationTimeRangeAtom);
 

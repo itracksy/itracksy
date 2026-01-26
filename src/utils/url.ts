@@ -1,18 +1,81 @@
 /**
  * Extracts the domain from a URL
  * @param url The URL to extract the domain from
- * @returns The domain portion of the URL
+ * @returns The domain portion of the URL, or null if invalid/empty
  */
-export function extractDomain(url: string | null | undefined): string {
+export function extractDomain(url: string | null | undefined): string | null {
+  if (!url) return null;
+
+  url = url.trim();
+  if (url.length === 0) return null;
+
+  // Check if it's an IP address
+  const ipRegex = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
+  if (ipRegex.test(url)) {
+    return url;
+  }
+
   try {
-    if (!url) return "";
     // Handle URLs with or without protocol
     const urlObj = new URL(url.startsWith("http") ? url : `http://${url}`);
-    return urlObj.hostname;
+    let hostname = urlObj.hostname.toLowerCase();
+
+    // Remove www. prefix if present
+    if (hostname.startsWith("www.")) {
+      hostname = hostname.substring(4);
+    }
+
+    // If it's just a hostname like 'localhost', return it
+    if (!hostname.includes(".")) {
+      return hostname;
+    }
+
+    // Extract the base domain (e.g., example.com from subdomain.example.com)
+    const parts = hostname.split(".");
+
+    // Handle special cases like co.uk, com.au, etc.
+    if (parts.length > 2) {
+      const tld = parts[parts.length - 1];
+      const sld = parts[parts.length - 2];
+
+      // Check for country-specific second-level domains
+      if (
+        (tld.length === 2 && sld.length <= 3) ||
+        ["com", "org", "net", "gov", "edu"].includes(sld)
+      ) {
+        return `${parts[parts.length - 3]}.${sld}.${tld}`;
+      }
+    }
+
+    // Return domain.tld (e.g., example.com)
+    if (parts.length >= 2) {
+      return parts.slice(-2).join(".");
+    }
+
+    return hostname;
   } catch (error) {
     // If URL parsing fails, try a basic regex approach
-    const match = url?.match(/^(?:https?:\/\/)?(?:[^@\n]+@)?(?:www\.)?([^:/\n?]+)/i);
-    return match ? match[1] : "";
+    const match = url.match(/^(?:https?:\/\/)?(?:www\.)?([^:/\n?]+)/i);
+    if (match && match[1]) {
+      const domain = match[1].toLowerCase();
+      // Try to extract base domain from regex match
+      const parts = domain.split(".");
+      if (parts.length > 2) {
+        const tld = parts[parts.length - 1];
+        const sld = parts[parts.length - 2];
+        if (
+          (tld.length === 2 && sld.length <= 3) ||
+          ["com", "org", "net", "gov", "edu"].includes(sld)
+        ) {
+          return `${parts[parts.length - 3]}.${sld}.${tld}`;
+        }
+      }
+      if (parts.length >= 2) {
+        return parts.slice(-2).join(".");
+      }
+      return domain;
+    }
+    return null;
   }
 }
 
@@ -83,7 +146,7 @@ export function extractDomainWindows(url: string | null | undefined): string | n
     return domain;
   } catch (error) {
     // If URL parsing fails, try a simple regex approach
-    const match = url.match(/(?:https?:\/\/)?(?:www\.)?([^\/]+)(?:\/|$)/i);
+    const match = url.match(/(?:https?:\/\/)?(?:www\.)?([^/]+)(?:\/|$)/i);
     if (match && match[1]) {
       const simpleDomain = match[1].toLowerCase();
       return simpleDomain;

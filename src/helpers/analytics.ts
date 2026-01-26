@@ -77,7 +77,7 @@ export const analytics = {
  * Initialize analytics with app version
  * @param appVersion The application version
  */
-export function initializeAnalytics(appVersion: string): void {
+function initializeAnalytics(appVersion: string): void {
   analytics.registerGlobalProperties({
     app_platform: "electron",
     app_version: appVersion,

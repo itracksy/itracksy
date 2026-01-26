@@ -12,7 +12,7 @@ export function safelyRegisterListener(channel: string, handler: (...args: any[]
   registeredListeners.add(channel);
 }
 
-export function cleanupListeners() {
+function cleanupListeners() {
   registeredListeners.forEach((channel) => {
     ipcMain.removeHandler(channel);
   });

@@ -28,6 +28,8 @@ export {
   getUncategorizedActivities,
   getCategoryActivitiesDetail,
   bulkAssignCategory,
+  getActivitiesGroupedByApp,
+  getTopUsageSummary,
 } from "./auto-categorize";
 
 // Category seeding functions
@@ -48,12 +50,4 @@ export {
 } from "./seed-from-system";
 
 // macOS app metadata functions (Tier 1: Deterministic Layer)
-export {
-  getAppMetadata,
-  scanInstalledApps,
-  suggestCategoryForActivity,
-  getAutoCategorizeablApps,
-  APPLE_CATEGORY_TYPES,
-  VENDOR_CATEGORY_MAP,
-  type AppMetadata,
-} from "./app-metadata";
+export { getAppMetadata, scanInstalledApps, getAutoCategorizeablApps } from "./app-metadata";

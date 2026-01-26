@@ -7,9 +7,18 @@ export const breakDurationAtom = atomWithStorage<number>(localKey.BREAK_DURATION
 export const targetMinutesAtom = atomWithStorage<number>(localKey.TARGET_MINUTES_KEY, 25);
 export const autoStopEnabledsAtom = atomWithStorage<boolean>(localKey.AUTO_STOP_ENABLED, true);
 export const isUnlimitedFocusAtom = atomWithStorage<boolean>(localKey.IS_UNLIMITED_FOCUS, false);
-export const isUnlimitedBreakAtom = atomWithStorage<boolean>(localKey.IS_UNLIMITED_BREAK, false);
+const isUnlimitedBreakAtom = atomWithStorage<boolean>(localKey.IS_UNLIMITED_BREAK, false);
 export const playStartSoundAtom = atomWithStorage<boolean>(localKey.PLAY_START_SOUND, true);
 export const playIntervalSoundAtom = atomWithStorage<boolean>(localKey.PLAY_INTERVAL_SOUND, true);
-export const playCompletionSoundAtom = atomWithStorage<boolean>(localKey.PLAY_COMPLETION_SOUND, true);
-export const playBreakStartSoundAtom = atomWithStorage<boolean>(localKey.PLAY_BREAK_START_SOUND, true);
-export const playBreakCompletionSoundAtom = atomWithStorage<boolean>(localKey.PLAY_BREAK_COMPLETION_SOUND, true);
+export const playCompletionSoundAtom = atomWithStorage<boolean>(
+  localKey.PLAY_COMPLETION_SOUND,
+  true
+);
+export const playBreakStartSoundAtom = atomWithStorage<boolean>(
+  localKey.PLAY_BREAK_START_SOUND,
+  true
+);
+export const playBreakCompletionSoundAtom = atomWithStorage<boolean>(
+  localKey.PLAY_BREAK_COMPLETION_SOUND,
+  true
+);

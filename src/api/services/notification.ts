@@ -30,7 +30,6 @@ export const sendNotification = async (
     if (!options.skipPreferenceCheck) {
       const preferences = await getUserPreferences();
       if (!preferences.notifications.showDesktopNotifications) {
-        logger.debug("[sendNotification] Desktop notifications disabled by user preference");
         return false;
       }
     }
@@ -75,7 +74,6 @@ export const sendNotificationWhenNoActiveEntry = async (userId: string) => {
   // Check if focus reminders are enabled in user preferences
   const preferences = await getUserPreferences();
   if (!preferences.notifications.focusReminders) {
-    logger.debug("[sendNotificationWhenNoActiveEntry] Focus reminders disabled by user preference");
     return;
   }
 
@@ -138,7 +136,6 @@ export const sendNotificationService = async (
   const preferences = await getUserPreferences();
   const preferenceKey = timeEntry.isFocusMode ? "focusReminders" : "breakReminders";
   if (!preferences.notifications[preferenceKey]) {
-    logger.debug(`[sendNotificationService] ${preferenceKey} disabled by user preference`);
     return;
   }
 

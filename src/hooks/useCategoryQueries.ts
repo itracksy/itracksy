@@ -17,14 +17,14 @@ export function useCategories() {
   });
 }
 
-export function useRootCategories() {
+function useRootCategories() {
   return useQuery({
     queryKey: ["categories", "roots"],
     queryFn: () => trpcClient.category.getRoots.query(),
   });
 }
 
-export function useCategoryChildren(categoryId: string) {
+function useCategoryChildren(categoryId: string) {
   return useQuery({
     queryKey: ["categories", "children", categoryId],
     queryFn: () => trpcClient.category.getChildren.query(categoryId),
@@ -33,7 +33,7 @@ export function useCategoryChildren(categoryId: string) {
 }
 
 // Category Mapping Queries
-export function useCategoryMappings() {
+function useCategoryMappings() {
   return useQuery({
     queryKey: ["categoryMappings"],
     queryFn: () => trpcClient.category.getMappings.query(),
@@ -79,6 +79,22 @@ export function useCategoryActivitiesDetail(
     queryKey: ["categories", "activitiesDetail", startDate, endDate, limit],
     queryFn: () =>
       trpcClient.category.getCategoryActivitiesDetail.query({ startDate, endDate, limit }),
+  });
+}
+
+// Activities grouped by app (for App/Domain view)
+export function useActivitiesGroupedByApp(startDate?: number, endDate?: number) {
+  return useQuery({
+    queryKey: ["categories", "groupedByApp", startDate, endDate],
+    queryFn: () => trpcClient.category.getActivitiesGroupedByApp.query({ startDate, endDate }),
+  });
+}
+
+// Top usage summary (apps and domains)
+export function useTopUsageSummary(startDate?: number, endDate?: number, limit: number = 5) {
+  return useQuery({
+    queryKey: ["categories", "topUsage", startDate, endDate, limit],
+    queryFn: () => trpcClient.category.getTopUsageSummary.query({ startDate, endDate, limit }),
   });
 }
 
@@ -223,7 +239,7 @@ export function useDeleteCategoryMappingMutation() {
 }
 
 // Auto-categorization Mutations
-export function useMatchActivityMutation() {
+function useMatchActivityMutation() {
   const { toast } = useToast();
 
   return useMutation({
@@ -238,7 +254,7 @@ export function useMatchActivityMutation() {
   });
 }
 
-export function useCategorizePendingMutation() {
+function useCategorizePendingMutation() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -262,7 +278,7 @@ export function useCategorizePendingMutation() {
   });
 }
 
-export function useCategorizeActivityMutation() {
+function useCategorizeActivityMutation() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -306,7 +322,7 @@ export function useBulkAssignCategoryMutation() {
 }
 
 // Category Seeding Queries and Mutations
-export function useDefaultCategoriesTemplate() {
+function useDefaultCategoriesTemplate() {
   return useQuery({
     queryKey: ["categories", "template"],
     queryFn: () => trpcClient.category.getDefaultTemplate.query(),
@@ -320,7 +336,7 @@ export function useHasCategories() {
   });
 }
 
-export function useSeedDefaultCategoriesMutation() {
+function useSeedDefaultCategoriesMutation() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -343,7 +359,7 @@ export function useSeedDefaultCategoriesMutation() {
   });
 }
 
-export function useResetCategoriesToDefaultMutation() {
+function useResetCategoriesToDefaultMutation() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -366,7 +382,7 @@ export function useResetCategoriesToDefaultMutation() {
   });
 }
 
-export function useSeedCategoryMappingsMutation() {
+function useSeedCategoryMappingsMutation() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -415,7 +431,7 @@ export function useSeedCompleteSetupMutation() {
   });
 }
 
-export function useImportFromSystemMutation() {
+function useImportFromSystemMutation() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -439,7 +455,7 @@ export function useImportFromSystemMutation() {
   });
 }
 
-export function useCopySystemCategoriesMutation() {
+function useCopySystemCategoriesMutation() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -471,7 +487,7 @@ export function useCopySystemCategoriesMutation() {
  * Scan all installed macOS apps and get their metadata
  * This includes LSApplicationCategoryType from Info.plist
  */
-export function useScanInstalledApps() {
+function useScanInstalledApps() {
   return useQuery({
     queryKey: ["apps", "installed"],
     queryFn: () => trpcClient.category.scanInstalledApps.query(),

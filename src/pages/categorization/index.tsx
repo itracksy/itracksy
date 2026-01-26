@@ -33,13 +33,14 @@ import {
   Zap,
   Settings,
   ChevronRight,
-  Clock,
   Target,
   CheckCircle2,
   AlertCircle,
   FolderOpen,
   Globe,
   Plus,
+  LayoutGrid,
+  AppWindow,
 } from "lucide-react";
 import {
   useCategoryStats,
@@ -47,10 +48,14 @@ import {
   useCategories,
   useBulkAssignCategoryMutation,
   useCategoryActivitiesDetail,
+  useActivitiesGroupedByApp,
+  useTopUsageSummary,
 } from "@/hooks/useCategoryQueries";
 import { QuickCategorize } from "./components/QuickCategorize";
 import { AutoSetupWizard } from "./components/AutoSetupWizard";
 import { CategoryFormModal } from "./components/CategoryFormModal";
+import { TopUsageSummary } from "./components/TopUsageSummary";
+import { AppDomainView } from "./components/AppDomainView";
 import { useCreateCategoryMutation } from "@/hooks/useCategoryQueries";
 
 const CategorizationPage: React.FC = () => {
@@ -71,6 +76,15 @@ const CategorizationPage: React.FC = () => {
     selectedTimeRange.start,
     selectedTimeRange.end,
     50
+  );
+  const { data: activitiesByApp = [], isLoading: isLoadingByApp } = useActivitiesGroupedByApp(
+    selectedTimeRange.start,
+    selectedTimeRange.end
+  );
+  const { data: topUsage, isLoading: isLoadingTopUsage } = useTopUsageSummary(
+    selectedTimeRange.start,
+    selectedTimeRange.end,
+    5
   );
   const { data: categories = [] } = useCategories();
   const bulkAssignMutation = useBulkAssignCategoryMutation();
@@ -114,52 +128,6 @@ const CategorizationPage: React.FC = () => {
     const minutes = Math.floor((seconds % 3600) / 60);
     if (hours > 0) return `${hours}h ${minutes}m`;
     return `${minutes}m`;
-  };
-
-  // Aggregate activities by app name (ownerName + domain)
-  const aggregateActivitiesByApp = (
-    activities: Array<{
-      ownerName: string;
-      domain: string | null;
-      title: string;
-      duration: number;
-      isFocusMode: boolean;
-      timestamp: number;
-    }>
-  ) => {
-    const appMap = new Map<
-      string,
-      {
-        ownerName: string;
-        domain: string | null;
-        totalDuration: number;
-        isFocusMode: boolean;
-      }
-    >();
-
-    for (const activity of activities) {
-      // Use domain if available, otherwise use ownerName as key
-      const key = activity.domain || activity.ownerName;
-
-      if (!appMap.has(key)) {
-        appMap.set(key, {
-          ownerName: activity.ownerName,
-          domain: activity.domain,
-          totalDuration: 0,
-          isFocusMode: activity.isFocusMode,
-        });
-      }
-
-      const app = appMap.get(key)!;
-      app.totalDuration += activity.duration;
-      // If any activity is focus mode, mark as focus mode
-      if (activity.isFocusMode) {
-        app.isFocusMode = true;
-      }
-    }
-
-    // Convert to array and sort by duration
-    return Array.from(appMap.values()).sort((a, b) => b.totalDuration - a.totalDuration);
   };
 
   // Time range options
@@ -246,7 +214,7 @@ const CategorizationPage: React.FC = () => {
                 setSelectedTimeRange({ value, start, end });
               }}
             >
-              <SelectTrigger className="h-8 w-28">
+              <SelectTrigger className="h-8 w-36">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -281,6 +249,14 @@ const CategorizationPage: React.FC = () => {
 
       {/* Main Content */}
       <div className="flex-1 space-y-4 overflow-auto">
+        {/* Top Usage Summary */}
+        <TopUsageSummary
+          topApps={topUsage?.topApps ?? []}
+          topDomains={topUsage?.topDomains ?? []}
+          formatDuration={formatDuration}
+          isLoading={isLoadingTopUsage}
+        />
+
         {/* Uncategorized Apps - Inline Quick Assign */}
         {uncategorizedActivities.length > 0 && (
           <div className="space-y-3">
@@ -316,86 +292,105 @@ const CategorizationPage: React.FC = () => {
           </div>
         )}
 
-        {/* Categories List */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium">Your Categories</h3>
-            <Button variant="ghost" size="sm" onClick={() => setIsCreateModalOpen(true)}>
-              <Plus className="mr-1 h-3 w-3" />
-              Add
-            </Button>
-          </div>
-
-          <div className="space-y-2">
-            {categoryActivities.length > 0 ? (
-              <Accordion
-                type="single"
-                collapsible
-                value={expandedCategory}
-                onValueChange={setExpandedCategory}
-                className="space-y-2"
-              >
-                {categoryActivities.map((category) => (
-                  <AccordionItem
-                    key={category.categoryId}
-                    value={category.categoryId}
-                    className="rounded-lg border bg-card"
-                  >
-                    <AccordionTrigger className="px-4 py-3 hover:no-underline [&[data-state=open]>div>svg]:rotate-90">
-                      <div className="flex w-full items-center justify-between pr-2">
-                        <div className="flex items-center gap-3">
-                          <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform" />
-                          <div
-                            className="h-3 w-3 rounded-full"
-                            style={{ backgroundColor: category.categoryColor || "#666" }}
-                          />
-                          <div className="text-left">
-                            <span className="font-medium">{category.categoryName}</span>
-                            <span className="ml-2 text-sm text-muted-foreground">
-                              {category.activityCount} activities
-                            </span>
+        {/* Two Column Grid Layout */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* Left Column: By Category */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="flex items-center gap-2 font-medium">
+                <LayoutGrid className="h-4 w-4 text-muted-foreground" />
+                By Category
+              </h3>
+              <Button variant="ghost" size="sm" onClick={() => setIsCreateModalOpen(true)}>
+                <Plus className="mr-1 h-3 w-3" />
+                Add
+              </Button>
+            </div>
+            <div className="max-h-[calc(100vh-400px)] space-y-2 overflow-auto">
+              {categoryActivities.length > 0 ? (
+                <Accordion
+                  type="single"
+                  collapsible
+                  value={expandedCategory}
+                  onValueChange={setExpandedCategory}
+                  className="space-y-2"
+                >
+                  {categoryActivities.map((category) => (
+                    <AccordionItem
+                      key={category.categoryId}
+                      value={category.categoryId}
+                      className="rounded-lg border bg-card"
+                    >
+                      <AccordionTrigger className="px-3 py-2 hover:no-underline [&[data-state=open]>div>svg]:rotate-90">
+                        <div className="flex w-full items-center justify-between pr-2">
+                          <div className="flex items-center gap-2">
+                            <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform" />
+                            <div
+                              className="h-3 w-3 rounded-full"
+                              style={{ backgroundColor: category.categoryColor || "#666" }}
+                            />
+                            <div className="text-left">
+                              <span className="font-medium">{category.categoryName}</span>
+                              <span className="ml-2 text-xs text-muted-foreground">
+                                {category.activityCount}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm font-medium">
-                            {formatDuration(category.totalDuration)}
-                          </span>
-                          <div className="flex gap-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">
+                              {formatDuration(category.totalDuration)}
+                            </span>
                             {category.activities.some((a) => a.isFocusMode) && (
-                              <Badge variant="secondary" className="bg-blue-500/10 text-blue-500">
+                              <Badge
+                                variant="secondary"
+                                className="h-5 bg-blue-500/10 px-1.5 text-xs text-blue-500"
+                              >
                                 <Target className="mr-1 h-3 w-3" />
                                 Focus
                               </Badge>
                             )}
-                            {category.activities.some((a) => !a.isFocusMode) && (
-                              <Badge variant="secondary" className="bg-green-500/10 text-green-500">
-                                <Clock className="mr-1 h-3 w-3" />
-                                Break
-                              </Badge>
-                            )}
                           </div>
                         </div>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-4 pb-3">
-                      <CategoryAppsContent
-                        activities={category.activities}
-                        aggregateActivitiesByApp={aggregateActivitiesByApp}
-                        formatDuration={formatDuration}
-                      />
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            ) : (
-              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-                <FolderOpen className="mb-2 h-8 w-8 text-muted-foreground/50" />
-                <p className="text-sm text-muted-foreground">No categorized activities yet</p>
-                <Button variant="link" size="sm" onClick={() => setIsAutoSetupOpen(true)}>
-                  Run Auto Setup to get started
-                </Button>
-              </div>
-            )}
+                      </AccordionTrigger>
+                      <AccordionContent className="px-3 pb-2">
+                        <CategoryAppsContent
+                          activities={category.activities}
+                          formatDuration={formatDuration}
+                        />
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              ) : (
+                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-6 text-center">
+                  <FolderOpen className="mb-2 h-6 w-6 text-muted-foreground/50" />
+                  <p className="text-sm text-muted-foreground">No categorized activities</p>
+                  <Button variant="link" size="sm" onClick={() => setIsAutoSetupOpen(true)}>
+                    Run Auto Setup
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Column: By App/Domain */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="flex items-center gap-2 font-medium">
+                <AppWindow className="h-4 w-4 text-muted-foreground" />
+                By App/Domain
+              </h3>
+            </div>
+            <div className="max-h-[calc(100vh-400px)] overflow-auto">
+              <AppDomainView
+                apps={activitiesByApp}
+                categories={categories}
+                formatDuration={formatDuration}
+                onAssign={handleQuickAssign}
+                isLoading={isLoadingByApp}
+                isAssigning={bulkAssignMutation.isPending}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -435,6 +430,7 @@ const CategorizationPage: React.FC = () => {
 
 /**
  * Category Apps Content - displays aggregated apps for a category
+ * Note: Backend now returns pre-aggregated app data with proper durations
  */
 interface CategoryAppsContentProps {
   activities: readonly {
@@ -445,36 +441,16 @@ interface CategoryAppsContentProps {
     readonly isFocusMode: boolean;
     readonly timestamp: number;
   }[];
-  aggregateActivitiesByApp: (
-    activities: Array<{
-      ownerName: string;
-      domain: string | null;
-      title: string;
-      duration: number;
-      isFocusMode: boolean;
-      timestamp: number;
-    }>
-  ) => Array<{
-    ownerName: string;
-    domain: string | null;
-    totalDuration: number;
-    isFocusMode: boolean;
-  }>;
   formatDuration: (seconds: number) => string;
 }
 
-function CategoryAppsContent({
-  activities,
-  aggregateActivitiesByApp,
-  formatDuration,
-}: CategoryAppsContentProps) {
-  const aggregatedApps = React.useMemo(() => {
-    return aggregateActivitiesByApp([...activities]).filter((a) => a.totalDuration >= 60);
-  }, [activities, aggregateActivitiesByApp]);
+function CategoryAppsContent({ activities, formatDuration }: CategoryAppsContentProps) {
+  // Backend returns pre-aggregated apps sorted by duration, filter to show >= 1 minute
+  const apps = activities.filter((a) => a.duration >= 60);
 
   return (
     <div className="ml-7 space-y-1 rounded-lg bg-muted/30 p-3">
-      {aggregatedApps.slice(0, 10).map((app, idx) => (
+      {apps.slice(0, 10).map((app, idx) => (
         <div key={idx} className="flex items-center justify-between py-1 text-sm">
           <div className="flex items-center gap-2 truncate">
             {app.domain ? (
@@ -484,11 +460,11 @@ function CategoryAppsContent({
             )}
             <span className="truncate">{app.domain || app.ownerName}</span>
           </div>
-          <span className="text-muted-foreground">{formatDuration(app.totalDuration)}</span>
+          <span className="text-muted-foreground">{formatDuration(app.duration)}</span>
         </div>
       ))}
-      {aggregatedApps.length > 10 && (
-        <p className="text-xs text-muted-foreground">+{aggregatedApps.length - 10} more apps</p>
+      {apps.length > 10 && (
+        <p className="text-xs text-muted-foreground">+{apps.length - 10} more apps</p>
       )}
     </div>
   );

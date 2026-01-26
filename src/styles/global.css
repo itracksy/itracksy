@@ -198,15 +198,17 @@
     @apply overflow-hidden bg-background text-foreground;
   }
   .draglayer {
-    @apply bg-background;
     -webkit-app-region: drag;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
 
   /* Ensure buttons and interactive elements in drag region are clickable */
   .draglayer button,
   .draglayer input,
   .draglayer select,
-  .draglayer a {
+  .draglayer a,
+  .draglayer [role="button"] {
     -webkit-app-region: no-drag;
   }
 }

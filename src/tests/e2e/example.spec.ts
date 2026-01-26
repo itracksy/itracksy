@@ -6,7 +6,7 @@ import { findLatestBuild, parseElectronApp } from "electron-playwright-helpers";
  * https://www.electronjs.org/pt/docs/latest/tutorial/automated-testing#using-playwright
  */
 
-var electronApp: ElectronApplication;
+let electronApp: ElectronApplication;
 
 test.beforeAll(async () => {
   const latestBuild = findLatestBuild();

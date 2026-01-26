@@ -96,7 +96,7 @@ export const upsertActivity = async (activity: Activity): Promise<void> => {
 /**
  * Track a new activity with automatic rating and categorization
  */
-export async function trackActivity(activityData: Omit<Activity, "rating">) {
+async function trackActivity(activityData: Omit<Activity, "rating">) {
   // Insert the activity first
   const inserted = await db
     .insert(activities)

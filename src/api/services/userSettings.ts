@@ -307,17 +307,17 @@ export async function isClockVisibilityEnabled(): Promise<boolean> {
   return setting !== "false"; // Default to true if not set
 }
 
-export async function isTimeExceededNotificationEnabled(): Promise<boolean> {
+async function isTimeExceededNotificationEnabled(): Promise<boolean> {
   const setting = await getValue(USER_SETTINGS_KEYS.isTimeExceededNotificationEnabled);
   return setting !== "false"; // Default to true if not set
 }
 
-export const getUserBlockedApps = async (userId: string) => {
+const getUserBlockedApps = async (userId: string) => {
   const result = await db.select().from(blockedApps).where(eq(blockedApps.userId, userId));
   return result;
 };
 
-export const getUserBlockedDomains = async (userId: string) => {
+const getUserBlockedDomains = async (userId: string) => {
   const result = await db.select().from(blockedDomains).where(eq(blockedDomains.userId, userId));
   return result;
 };

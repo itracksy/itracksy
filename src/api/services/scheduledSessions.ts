@@ -196,7 +196,7 @@ export async function toggleScheduledSessionActive(
 /**
  * Get sessions that should run now
  */
-export async function getSessionsToRun(): Promise<ScheduledSession[]> {
+async function getSessionsToRun(): Promise<ScheduledSession[]> {
   const now = Date.now();
   const currentTime = new Date(now);
   const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
@@ -497,7 +497,7 @@ export function initializeScheduledSessionMonitoring(): void {
 /**
  * Stop scheduled session monitoring
  */
-export function stopScheduledSessionMonitoring(): void {
+function stopScheduledSessionMonitoring(): void {
   const interval = (global as any).scheduledSessionInterval;
   if (interval) {
     clearInterval(interval);

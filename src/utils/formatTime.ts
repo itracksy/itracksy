@@ -71,7 +71,7 @@ export function formatMinutesToDisplay(minutes: number): string {
   return `${remainingMinutes}m`;
 }
 
-export function formatDate(timestamp: number) {
+function formatDate(timestamp: number) {
   return format(new Date(timestamp), "MMM d, yyyy HH:mm");
 }
 
@@ -81,7 +81,7 @@ export function formatDate(timestamp: number) {
  * @param timestamp - Timestamp in milliseconds
  * @returns Formatted date string
  */
-export function formatTimestamp(timestamp: number): string {
+function formatTimestamp(timestamp: number): string {
   const date = new Date(timestamp);
   return date.toLocaleString();
 }

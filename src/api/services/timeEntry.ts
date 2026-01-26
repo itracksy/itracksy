@@ -10,7 +10,7 @@ import { isClockVisibilityEnabled } from "./userSettings";
 
 export type TimeEntry = typeof timeEntries.$inferSelect;
 export type TimeEntryInsert = typeof timeEntries.$inferInsert;
-export type Item = typeof items.$inferSelect;
+type Item = typeof items.$inferSelect;
 
 export async function getActiveTimeEntry(userId: string) {
   const entry = await db.query.timeEntries.findFirst({
@@ -365,7 +365,7 @@ export async function getTimeEntriesForExport({
   startDate?: Date;
   endDate?: Date;
 }): Promise<any[]> {
-  let whereConditions = [eq(timeEntries.userId, userId)];
+  const whereConditions = [eq(timeEntries.userId, userId)];
 
   // Add date filters if provided
   if (startDate) {

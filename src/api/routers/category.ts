@@ -23,6 +23,8 @@ import {
   getUncategorizedActivities,
   bulkAssignCategory,
   getCategoryActivitiesDetail,
+  getActivitiesGroupedByApp,
+  getTopUsageSummary,
   seedUserCategoriesFromSystem,
   getDefaultCategoriesTemplate,
   userHasCategories,
@@ -228,6 +230,29 @@ export const categoryRouter = t.router({
     )
     .query(async ({ input, ctx }) => {
       return getCategoryActivitiesDetail(ctx.userId!, input.startDate, input.endDate, input.limit);
+    }),
+
+  getActivitiesGroupedByApp: protectedProcedure
+    .input(
+      z.object({
+        startDate: z.number().optional(),
+        endDate: z.number().optional(),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      return getActivitiesGroupedByApp(ctx.userId!, input.startDate, input.endDate);
+    }),
+
+  getTopUsageSummary: protectedProcedure
+    .input(
+      z.object({
+        startDate: z.number().optional(),
+        endDate: z.number().optional(),
+        limit: z.number().default(5),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      return getTopUsageSummary(ctx.userId!, input.startDate, input.endDate, input.limit);
     }),
 
   // Category Seeding

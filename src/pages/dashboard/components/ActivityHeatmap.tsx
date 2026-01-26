@@ -55,7 +55,7 @@ export function ActivityHeatmap() {
     // Build weeks array
     const weeksArr: (DailyActivityData | null)[][] = [];
     const monthLabelsArr: { label: string; weekIndex: number }[] = [];
-    let currentDate = new Date(startDate);
+    const currentDate = new Date(startDate);
     let weekIndex = 0;
     let lastMonth = -1;
 

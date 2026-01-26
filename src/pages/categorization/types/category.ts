@@ -9,13 +9,13 @@ export type Category = DBCategory;
 export type CategoryMapping = typeof categoryMappings.$inferSelect;
 export type CategoryTreeNode = DBCategoryTreeNode;
 
-export interface CategoryWithChildren extends Category {
+interface CategoryWithChildren extends Category {
   readonly children: readonly CategoryWithChildren[];
   readonly activityCount?: number;
   readonly totalDuration?: number;
 }
 
-export interface CategoryStats {
+interface CategoryStats {
   readonly totalCategories: number;
   readonly totalMappings: number;
   readonly categorizedActivities: number;

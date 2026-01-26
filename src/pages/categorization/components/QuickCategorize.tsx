@@ -376,5 +376,3 @@ export function QuickCategorize({ open, onOpenChange, startDate, endDate }: Quic
     </Dialog>
   );
 }
-
-export default QuickCategorize;

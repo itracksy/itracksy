@@ -16,48 +16,48 @@ import MusicPage from "@/pages/music/index";
 import SchedulingPage from "@/pages/scheduling/index";
 import LogPage from "@/pages/app-logs/index";
 
-export const DashboardRoute = createRoute({
+const DashboardRoute = createRoute({
   getParentRoute: () => RootRoute,
   path: "/dashboard",
   component: DashboardPage,
 });
 
-export const FocusRoute = createRoute({
+const FocusRoute = createRoute({
   getParentRoute: () => RootRoute,
   path: "/",
   component: FocusPage,
 });
-export const ProjectsRoute = createRoute({
+const ProjectsRoute = createRoute({
   getParentRoute: () => RootRoute,
   path: "/projects",
   component: ProjectsPage,
 });
 
-export const CategorizationRoute = createRoute({
+const CategorizationRoute = createRoute({
   getParentRoute: () => RootRoute,
   path: "/categorization",
   component: CategorizationPage,
 });
 
-export const CategoryManagementRoute = createRoute({
+const CategoryManagementRoute = createRoute({
   getParentRoute: () => RootRoute,
   path: "/categorization/manage",
   component: CategoryManagement,
 });
 
-export const UncategorizedActivitiesRoute = createRoute({
+const UncategorizedActivitiesRoute = createRoute({
   getParentRoute: () => RootRoute,
   path: "/categorization/uncategorized",
   component: UncategorizedActivities,
 });
 
-export const SettingsRoute = createRoute({
+const SettingsRoute = createRoute({
   getParentRoute: () => RootRoute,
   path: "/settings",
   component: SettingsPage,
 });
 
-export const RainingLettersRoute = createRoute({
+const RainingLettersRoute = createRoute({
   getParentRoute: () => RootRoute,
   path: "/raining-letters",
   component: () => (
@@ -67,7 +67,7 @@ export const RainingLettersRoute = createRoute({
   ),
 });
 
-export const ClassificationRoute = createRoute({
+const ClassificationRoute = createRoute({
   getParentRoute: () => RootRoute,
   path: "/classify",
   component: ActivityClassificationPage,
@@ -90,25 +90,25 @@ export const RuleBookRoute = createRoute({
   },
 });
 
-export const ReportsRoute = createRoute({
+const ReportsRoute = createRoute({
   getParentRoute: () => RootRoute,
   path: "/reports",
   component: ReportsPage,
 });
 
-export const MusicRoute = createRoute({
+const MusicRoute = createRoute({
   getParentRoute: () => RootRoute,
   path: "/music",
   component: MusicPage,
 });
 
-export const SchedulingRoute = createRoute({
+const SchedulingRoute = createRoute({
   getParentRoute: () => RootRoute,
   path: "/scheduling",
   component: SchedulingPage,
 });
 
-export const LogsRoute = createRoute({
+const LogsRoute = createRoute({
   getParentRoute: () => RootRoute,
   path: "/logs",
   component: LogPage,

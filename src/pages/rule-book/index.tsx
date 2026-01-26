@@ -278,12 +278,11 @@ export default function RuleBookPage() {
       });
     });
 
-    // Sort groups: apps first, then domains, alphabetically within each
-    return Object.entries(groups).sort(([keyA, groupA], [keyB, groupB]) => {
-      if (groupA.type !== groupB.type) {
-        return groupA.type === "app" ? -1 : 1;
-      }
-      return keyA.localeCompare(keyB);
+    // Sort groups by most recent rule's createdAt (newest first)
+    return Object.entries(groups).sort(([_keyA, groupA], [_keyB, groupB]) => {
+      const latestA = Math.max(...groupA.rules.map((r) => r.createdAt));
+      const latestB = Math.max(...groupB.rules.map((r) => r.createdAt));
+      return latestB - latestA;
     });
   };
 
@@ -487,6 +486,84 @@ function RuleGroup({
   const productiveCount = rules.filter((r) => r.rating === 1).length;
   const distractingCount = rules.filter((r) => r.rating === 0).length;
 
+  // Single rule - show inline compact view
+  if (rules.length === 1) {
+    const rule = rules[0];
+    const isProductive = rule.rating === 1;
+    const hasCondition = Boolean(
+      (rule.title && rule.titleCondition) || (rule.duration && rule.durationCondition)
+    );
+
+    return (
+      <Card
+        className={cn(
+          "group transition-all hover:shadow-sm",
+          isProductive ? "hover:border-emerald-500/30" : "hover:border-red-500/30"
+        )}
+      >
+        <CardContent className="flex items-center gap-3 p-3">
+          {/* Type icon */}
+          <div
+            className={cn(
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+              groupType === "domain" ? "bg-blue-500/10" : "bg-purple-500/10"
+            )}
+          >
+            {groupType === "domain" ? (
+              <Globe className="h-4 w-4 text-blue-500" />
+            ) : (
+              <Monitor className="h-4 w-4 text-purple-500" />
+            )}
+          </div>
+
+          {/* Name */}
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-medium">{displayName}</p>
+            {hasCondition && rule.title && (
+              <p className="truncate text-xs text-muted-foreground">
+                Title {rule.titleCondition} "{rule.title}"
+              </p>
+            )}
+          </div>
+
+          {/* Classification Badge */}
+          <div
+            className={cn(
+              "flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
+              isProductive
+                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                : "bg-red-500/10 text-red-600 dark:text-red-400"
+            )}
+          >
+            {isProductive ? <Target className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
+            {isProductive ? "Productive" : "Distracting"}
+          </div>
+
+          {/* Actions */}
+          <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              onClick={() => onEdit(rule)}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+              onClick={() => onDelete(rule)}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Multiple rules - show grouped view
   return (
     <div className="space-y-2">
       {/* Group Header */}
@@ -506,9 +583,7 @@ function RuleGroup({
         <div className="flex-1">
           <h3 className="font-medium">{displayName}</h3>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>
-              {rules.length} rule{rules.length !== 1 ? "s" : ""}
-            </span>
+            <span>{rules.length} rules</span>
             {productiveCount > 0 && (
               <span className="text-emerald-600 dark:text-emerald-400">
                 {productiveCount} productive

@@ -2,7 +2,7 @@ import { z } from "zod";
 export type RuleFormValues = z.infer<typeof ruleFormSchema>;
 
 export const ruleFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().default(""),
   description: z.string().default(""),
 
   // Title rule fields - default to "contains" for simpler UX
