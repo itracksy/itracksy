@@ -60,6 +60,10 @@ export const EXTERNAL_DEPENDENCIES = [
   "@trpc/server",
   // Electron auto-updater for handling application updates
   "update-electron-app",
+  // UUID generation for unique identifiers
+  "uuid",
+  // Unique ID generation for database records
+  "nanoid",
 ];
 
 // Base packager configuration
