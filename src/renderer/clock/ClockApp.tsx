@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
-  Timer,
   Pin,
   PinOff,
   X,
@@ -10,34 +9,7 @@ import {
   Infinity as InfinityIcon,
   Sparkles,
 } from "lucide-react";
-
-interface TimeEntry {
-  id: string;
-  isFocusMode: boolean;
-  startTime: number;
-  endTime?: number;
-  targetDuration: number;
-  description: string;
-}
-
-interface FocusTarget {
-  id: string;
-  userId: string;
-  targetMinutes: number;
-  enableReminders: boolean;
-  reminderIntervalMinutes: number;
-  createdAt: number;
-  updatedAt: number;
-}
-
-interface DailyProgress {
-  targetMinutes: number;
-  completedMinutes: number;
-  progressPercentage: number;
-  remainingMinutes: number;
-  isCompleted: boolean;
-  sessionsToday: number;
-}
+import type { TimeEntry, FocusTarget, DailyProgress, ClockUpdateData } from "@/types/ipc";
 
 interface ClockState {
   activeEntry: TimeEntry | null;
@@ -134,7 +106,7 @@ const ClockApp: React.FC = () => {
       return;
     }
 
-    const handleUpdate = (data: any) => {
+    const handleUpdate = (data: ClockUpdateData) => {
       setClockState((prev) => ({
         ...prev,
         activeEntry: data.activeEntry,
@@ -210,7 +182,7 @@ const ClockApp: React.FC = () => {
       void electronClock?.setSizeMode?.(next ? "minimal" : "detailed");
       return next;
     });
-  }, [clockState.activeEntry]);
+  }, [clockState.activeEntry, electronClock]);
 
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -255,12 +227,13 @@ const ClockApp: React.FC = () => {
 
     const elapsed = getElapsedSeconds();
 
-    // Handle unlimited sessions (targetDuration = 0)
-    if (clockState.activeEntry.targetDuration === 0) {
+    // Handle unlimited sessions (targetDuration = 0 or null)
+    const targetDuration = clockState.activeEntry.targetDuration ?? 0;
+    if (targetDuration === 0) {
       return elapsed; // Show elapsed time instead of remaining time
     }
 
-    const target = clockState.activeEntry.targetDuration * 60; // Convert to seconds
+    const target = targetDuration * 60; // Convert to seconds
     return Math.max(target - elapsed, 0);
   };
 
@@ -268,12 +241,13 @@ const ClockApp: React.FC = () => {
     if (!clockState.activeEntry) return 0;
 
     // For unlimited sessions, don't show progress bar
-    if (clockState.activeEntry.targetDuration === 0) {
+    const targetDuration = clockState.activeEntry.targetDuration ?? 0;
+    if (targetDuration === 0) {
       return 0;
     }
 
     const elapsed = getElapsedSeconds();
-    const target = clockState.activeEntry.targetDuration * 60; // Convert to seconds
+    const target = targetDuration * 60; // Convert to seconds
     return Math.min((elapsed / target) * 100, 100);
   };
 
@@ -281,12 +255,13 @@ const ClockApp: React.FC = () => {
     if (!clockState.activeEntry) return false;
 
     // Unlimited sessions are never overtime
-    if (clockState.activeEntry.targetDuration === 0) {
+    const targetDuration = clockState.activeEntry.targetDuration ?? 0;
+    if (targetDuration === 0) {
       return false;
     }
 
     const elapsed = getElapsedSeconds();
-    const target = clockState.activeEntry.targetDuration * 60;
+    const target = targetDuration * 60;
     return elapsed > target;
   };
 

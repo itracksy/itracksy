@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { DownloadIcon, ExternalLinkIcon, RefreshCwIcon } from "lucide-react";
@@ -238,19 +238,20 @@ export function VersionChecker({
   });
 
   // Transform the tRPC result to match VersionInfo interface
-  const versionInfo: VersionInfo | undefined = updateCheckResult
-    ? {
-        currentVersion:
-          updateCheckResult.status === "success"
-            ? updateCheckResult.currentVersion
-            : currentVersion || "",
-        latestVersion:
-          updateCheckResult.status === "success" ? updateCheckResult.latestVersion : undefined,
-        hasUpdate: updateCheckResult.hasUpdate,
-        downloadUrl:
-          updateCheckResult.status === "success" ? updateCheckResult.downloadUrl : undefined,
-      }
-    : undefined;
+  const versionInfo: VersionInfo | undefined = useMemo(() => {
+    if (!updateCheckResult) return undefined;
+    return {
+      currentVersion:
+        updateCheckResult.status === "success"
+          ? updateCheckResult.currentVersion
+          : currentVersion || "",
+      latestVersion:
+        updateCheckResult.status === "success" ? updateCheckResult.latestVersion : undefined,
+      hasUpdate: updateCheckResult.hasUpdate,
+      downloadUrl:
+        updateCheckResult.status === "success" ? updateCheckResult.downloadUrl : undefined,
+    };
+  }, [updateCheckResult, currentVersion]);
 
   // Notify parent component when version info is available
   useEffect(() => {

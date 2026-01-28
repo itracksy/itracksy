@@ -6,6 +6,15 @@ import * as fs from "fs";
 import * as path from "path";
 import { logger } from "../../helpers/logger";
 
+interface PragmaTableInfoRow {
+  cid: number;
+  name: string;
+  type: string;
+  notnull: number;
+  dflt_value: unknown;
+  pk: number;
+}
+
 async function main() {
   // Log the database path
   const dbPath = getDatabasePath();
@@ -64,7 +73,7 @@ async function main() {
   // Verify after migration
   try {
     const migrationsAfter = await client.execute(`SELECT * FROM __drizzle_migrations`);
-    console.log("\nApplied migrations after running migrate:", migrationsAfter.rows);
+    logger.info("Applied migrations after running migrate:", migrationsAfter.rows);
 
     // Check tables to verify they exist
     logger.info("\nVerifying tables after migration:");
@@ -84,7 +93,9 @@ async function main() {
       const activityRatingColumn = await client.execute(`
         PRAGMA table_info(activities)
       `);
-      const hasRatingColumn = activityRatingColumn.rows.some((row: any) => row.name === "rating");
+      const hasRatingColumn = activityRatingColumn.rows.some(
+        (row) => (row as unknown as PragmaTableInfoRow).name === "rating"
+      );
       logger.info("activities.rating column:", hasRatingColumn ? "✓ exists" : "⚠ does not exist");
     }
   } catch (err) {

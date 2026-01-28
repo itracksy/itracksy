@@ -31,7 +31,7 @@ export function BoardView({ board }: { board: BoardWithRelations }) {
     }
 
     return [...columnsMap.values()].sort((a, b) => a.order - b.order);
-  }, [board.columns, itemsById]);
+  }, [board, itemsById]);
 
   // Calculate container width based on number of columns
   const containerWidth = useMemo(() => {

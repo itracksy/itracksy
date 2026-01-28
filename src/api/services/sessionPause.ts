@@ -55,8 +55,20 @@ export const pauseActiveSession = async (): Promise<void> => {
  * Adjusts the start time to account for the paused duration
  */
 export const resumeActiveSession = async (): Promise<void> => {
+  logger.info("[SessionPause] resumeActiveSession called", {
+    hasPausedSession: !!pausedSession,
+    pausedSession: pausedSession
+      ? {
+          timeEntryId: pausedSession.timeEntryId,
+          pausedAt: new Date(pausedSession.pausedAt).toISOString(),
+          isManualPause: pausedSession.isManualPause,
+        }
+      : null,
+  });
+
   try {
     if (!pausedSession) {
+      logger.warn("[SessionPause] resumeActiveSession called but no pausedSession exists");
       return; // No session was paused
     }
 
@@ -66,8 +78,19 @@ export const resumeActiveSession = async (): Promise<void> => {
     }
 
     const activeEntry = await getActiveTimeEntry(userId);
+    logger.info("[SessionPause] Active entry check for resume", {
+      hasActiveEntry: !!activeEntry,
+      activeEntryId: activeEntry?.id,
+      pausedSessionTimeEntryId: pausedSession.timeEntryId,
+      match: activeEntry?.id === pausedSession.timeEntryId,
+      activeEntryEnded: !!activeEntry?.endTime,
+    });
+
     if (!activeEntry || activeEntry.id !== pausedSession.timeEntryId) {
       // Session has changed or ended, clear paused state
+      logger.warn("[SessionPause] Session mismatch during resume - clearing paused state", {
+        reason: !activeEntry ? "no active entry" : "id mismatch",
+      });
       pausedSession = null;
       return;
     }
@@ -190,8 +213,20 @@ export const manualResumeSession = async (): Promise<{
   adjustedBy: number;
   error?: string;
 }> => {
+  logger.info("[SessionPause] manualResumeSession called", {
+    hasPausedSession: !!pausedSession,
+    pausedSession: pausedSession
+      ? {
+          timeEntryId: pausedSession.timeEntryId,
+          pausedAt: new Date(pausedSession.pausedAt).toISOString(),
+          isManualPause: pausedSession.isManualPause,
+        }
+      : null,
+  });
+
   try {
     if (!pausedSession) {
+      logger.warn("[SessionPause] manualResumeSession called but no pausedSession exists");
       return { success: false, adjustedBy: 0, error: "No paused session found" };
     }
 

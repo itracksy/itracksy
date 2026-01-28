@@ -48,7 +48,7 @@ export function RuleDialog({
 
   useEffect(() => {
     form.reset(defaultValues);
-  }, [defaultValues]);
+  }, [defaultValues, form]);
 
   function handleSubmit(values: RuleFormValues) {
     // Auto-generate name from pattern if not provided

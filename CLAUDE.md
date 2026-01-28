@@ -81,6 +81,21 @@ Located in `src/api/services/`:
 ### IPC Communication
 - **Helpers**: `src/helpers/ipc/` - IPC channel definitions and context exposers
 - **Listeners**: `src/helpers/ipc/listeners-register.ts` - registers IPC handlers
+- **Preload scripts**: `src/preload/*.ts` - expose typed APIs to renderer via contextBridge
+
+### Type Definitions
+Located in `src/types/`:
+- `ipc.ts` - Central IPC type definitions (ClockUpdateData, NotificationData, BlockingNotificationData, TimeEntry, FocusTarget, etc.)
+- `window.d.ts` - Global Window interface augmentation for typed Electron APIs (electronClock, electronNotification, etc.)
+- `activity.ts` - Activity and rule types
+- `category.ts` - Category and mapping types
+- `rule.ts` - Rule form values and condition types (TitleCondition, DurationCondition)
+- `export.ts` - Export data types for reports
+- `projects.ts` - Board, column, and item types
+
+### Logger
+- **Server logger**: `src/helpers/logger/server-logger.ts` - Logs to file and Axiom (production)
+- Use `logger.debug/info/warn/error` instead of `console.log`
 
 ## Code Style Requirements
 
@@ -101,6 +116,8 @@ Located in `src/api/services/`:
 - Use interfaces for data structures
 - Use `readonly` for immutable data
 - Use optional chaining (`?.`) and nullish coalescing (`??`)
+- Import IPC types from `@/types/ipc` for clock, notification, and session data
+- Use typed window APIs (e.g., `window.electronClock`, `window.electronNotification`) instead of `window as any`
 
 ### Path Aliases
 Use `@/` prefix for imports from src directory (configured in `tsconfig.json`):

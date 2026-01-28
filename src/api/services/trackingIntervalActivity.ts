@@ -39,6 +39,35 @@ let isAccessibilityError: boolean = false;
 const NOTIFICATION_COOLDOWN = 10 * 1000; // 10 seconds in milliseconds
 
 /**
+ * Force resume tracking - used when user explicitly clicks Resume in the dialog
+ * This is a safety net in case the system state listener didn't fire correctly
+ */
+export const forceResumeTracking = (): void => {
+  const wasTrackingPaused = isTrackingPaused;
+  isTrackingPaused = false;
+  logger.info("[Tracking] forceResumeTracking called", {
+    wasTrackingPaused,
+    isTrackingPausedNow: isTrackingPaused,
+    isSystemActive: isSystemActive(),
+  });
+};
+
+/**
+ * Get current tracking state for debugging
+ */
+export const getTrackingState = (): {
+  isTrackingPaused: boolean;
+  isSystemActive: boolean;
+  hasTrackingInterval: boolean;
+} => {
+  return {
+    isTrackingPaused,
+    isSystemActive: isSystemActive(),
+    hasTrackingInterval: trackingIntervalId !== null,
+  };
+};
+
+/**
  * Update tray status when system becomes active
  */
 const updateTrayForActiveSystem = async (): Promise<void> => {
@@ -77,12 +106,24 @@ export const startTracking = async (): Promise<void> => {
 
   // Set up system state monitoring
   systemMonitorUnsubscribe = onSystemStateChange(async (isActive: boolean) => {
+    logger.info("[Tracking] System state change received", {
+      isActive,
+      wasTrackingPaused: isTrackingPaused,
+    });
+
     if (isActive) {
       logger.info("[Tracking] System became active - checking for paused session");
+      const wasTrackingPaused = isTrackingPaused;
       isTrackingPaused = false;
+      logger.info("[Tracking] isTrackingPaused set to false", { wasTrackingPaused });
 
       // Check if there's a paused session that needs resume confirmation
       const pausedSession = getPausedSession();
+      logger.info("[Tracking] Paused session check", {
+        hasPausedSession: !!pausedSession,
+        isManualPause: pausedSession?.isManualPause,
+        timeEntryId: pausedSession?.timeEntryId,
+      });
       if (pausedSession && !pausedSession.isManualPause) {
         // Get the active entry to include in the resume notification
         const userId = await getCurrentUserIdLocalStorage();
@@ -122,7 +163,15 @@ export const startTracking = async (): Promise<void> => {
   trackingIntervalId = setInterval(async () => {
     try {
       // Skip tracking if system is inactive (sleeping or locked)
-      if (isTrackingPaused || !isSystemActive()) {
+      const systemActive = isSystemActive();
+      if (isTrackingPaused || !systemActive) {
+        // Log occasionally to avoid spam (roughly every 30 seconds)
+        if (Math.random() < 0.1) {
+          logger.debug("[Tracking] Skipping tracking interval", {
+            isTrackingPaused,
+            isSystemActive: systemActive,
+          });
+        }
         return;
       }
 

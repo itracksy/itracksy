@@ -1,12 +1,13 @@
 import { contextBridge, ipcRenderer } from "electron";
 import { SESSION_PAUSE_STATE_CHANNEL } from "./session-pause-channels";
+import type { TimeEntry } from "@/types/ipc";
 
 export interface SessionPauseState {
   isPaused: boolean;
   pausedAt: number | null;
   timeEntryId: string | null;
   requiresResume?: boolean;
-  activeEntry?: any;
+  activeEntry?: TimeEntry | null;
 }
 
 export function exposeSessionPauseContext() {

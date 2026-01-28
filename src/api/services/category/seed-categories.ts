@@ -1,7 +1,20 @@
 import { eq } from "drizzle-orm";
 import db from "@/api/db";
 import { categories } from "@/api/db/schema";
-import type { NewCategory, Category } from "@/types/category";
+import type { NewCategory, Category, MatchType } from "@/types/category";
+import { logger } from "@/helpers/logger";
+
+/**
+ * Category seed data structure
+ */
+interface CategorySeedData {
+  readonly name: string;
+  readonly description: string;
+  readonly color: string;
+  readonly icon: string;
+  readonly order: number;
+  readonly children?: readonly CategorySeedData[];
+}
 
 /**
  * Default system categories that should be available to all users
@@ -96,7 +109,7 @@ const DEFAULT_CATEGORIES = [
  * @returns Promise resolving to the created categories
  */
 export const seedUserCategoriesFromSystem = async (userId: string) => {
-  console.log(`Seeding default categories for user ${userId}`);
+  logger.info(`Seeding default categories for user ${userId}`);
 
   // Check if user already has categories
   const existingCategories = await db
@@ -106,7 +119,7 @@ export const seedUserCategoriesFromSystem = async (userId: string) => {
     .limit(1);
 
   if (existingCategories.length > 0) {
-    console.log(`User ${userId} already has categories, skipping seed`);
+    logger.info(`User ${userId} already has categories, skipping seed`);
     return existingCategories;
   }
 
@@ -114,7 +127,7 @@ export const seedUserCategoriesFromSystem = async (userId: string) => {
   const createdCategories: Category[] = [];
 
   const createCategory = async (
-    categoryData: any,
+    categoryData: CategorySeedData,
     parentId: string | null = null,
     level = 0
   ): Promise<Category> => {
@@ -159,7 +172,7 @@ export const seedUserCategoriesFromSystem = async (userId: string) => {
     }
   }
 
-  console.log(`Created ${createdCategories.length} default categories for user ${userId}`);
+  logger.info(`Created ${createdCategories.length} default categories for user ${userId}`);
   return createdCategories;
 };
 
@@ -192,7 +205,7 @@ export const userHasCategories = async (userId: string): Promise<boolean> => {
  * @returns Promise resolving to the new default categories
  */
 export const resetUserCategoriesToDefault = async (userId: string) => {
-  console.log(`Resetting categories for user ${userId} to defaults`);
+  logger.info(`Resetting categories for user ${userId} to defaults`);
 
   // Delete existing categories
   await db.delete(categories).where(eq(categories.userId, userId));
@@ -599,7 +612,7 @@ const DEFAULT_CATEGORY_MAPPINGS = [
  * @returns Promise resolving to the created mappings
  */
 export const seedDefaultCategoryMappings = async (userId: string) => {
-  console.log(`Seeding default category mappings for user ${userId}`);
+  logger.info(`Seeding default category mappings for user ${userId}`);
 
   // Import here to avoid circular dependency
   const { createCategoryMapping } = await import("./category-matching");
@@ -609,7 +622,7 @@ export const seedDefaultCategoryMappings = async (userId: string) => {
   const userCategories = await getCategories(userId);
 
   if (userCategories.length === 0) {
-    console.log(`User ${userId} has no categories, skipping mapping seed`);
+    logger.info(`User ${userId} has no categories, skipping mapping seed`);
     return [];
   }
 
@@ -623,7 +636,7 @@ export const seedDefaultCategoryMappings = async (userId: string) => {
     );
 
     if (!category) {
-      console.warn(`Category ${mappingData.categoryName} not found for user ${userId}`);
+      logger.warn(`Category ${mappingData.categoryName} not found for user ${userId}`);
       continue;
     }
 
@@ -633,7 +646,7 @@ export const seedDefaultCategoryMappings = async (userId: string) => {
         appName: mappingData.appName,
         domain: mappingData.domain,
         titlePattern: mappingData.titlePattern,
-        matchType: mappingData.matchType as any,
+        matchType: mappingData.matchType as MatchType,
         priority: mappingData.priority,
         userId,
         isActive: true,
@@ -641,11 +654,11 @@ export const seedDefaultCategoryMappings = async (userId: string) => {
 
       createdMappings.push(mapping);
     } catch (error) {
-      console.error(`Failed to create mapping for ${mappingData.categoryName}:`, error);
+      logger.error(`Failed to create mapping for ${mappingData.categoryName}:`, error);
     }
   }
 
-  console.log(`Created ${createdMappings.length} default category mappings for user ${userId}`);
+  logger.info(`Created ${createdMappings.length} default category mappings for user ${userId}`);
   return createdMappings;
 };
 
@@ -655,7 +668,7 @@ export const seedDefaultCategoryMappings = async (userId: string) => {
  * @returns Promise resolving to an object with created categories and mappings
  */
 export const seedCompleteUserCategorization = async (userId: string) => {
-  console.log(`Setting up complete categorization system for user ${userId}`);
+  logger.info(`Setting up complete categorization system for user ${userId}`);
 
   // First seed categories
   const categories = await seedUserCategoriesFromSystem(userId);
@@ -663,7 +676,7 @@ export const seedCompleteUserCategorization = async (userId: string) => {
   // Then seed mappings
   const mappings = await seedDefaultCategoryMappings(userId);
 
-  console.log(
+  logger.info(
     `Complete setup for user ${userId}: ${categories.length} categories, ${mappings.length} mappings`
   );
 

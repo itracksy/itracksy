@@ -5,7 +5,7 @@ import { Activity, ActivityRule } from "@/types/activity";
 import { findActivitiesMatchingRule } from "@/utils/activityUtils";
 
 import { isNonEmptyString } from "@/utils/value-checks";
-import { RuleFormValues } from "@/types/rule";
+import { RuleFormValues, TitleCondition, DurationCondition } from "@/types/rule";
 
 interface UseUpdateRuleOptions {
   onSuccess?: (data: ActivityRule) => void;
@@ -37,14 +37,13 @@ export function useUpdateRule(
     onSuccess: (data) => {
       // Handle updating activities that match the rule
       if (activities?.length && data) {
-        console.log("Updated rule:", data);
         // Find activities that match the updated rule and update their ratings
         const activitiesToRate = findActivitiesMatchingRule(activities, {
           appName: data.appName,
           domain: data.domain,
-          titleCondition: data.titleCondition as any,
+          titleCondition: data.titleCondition as TitleCondition,
           title: data.title || "",
-          durationCondition: data.durationCondition as any,
+          durationCondition: data.durationCondition as DurationCondition,
           duration: data.duration || 0,
           rating: data.rating,
           name: data.name,

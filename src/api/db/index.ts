@@ -36,10 +36,11 @@ function getDb() {
 
 // Export a Proxy that checks initialization on every access
 // Type it properly so TypeScript knows about the schema
-const db = new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
-  get(target, prop) {
+type DbInstance = ReturnType<typeof drizzle<typeof schema>>;
+const db = new Proxy({} as DbInstance, {
+  get(_target, prop: keyof DbInstance) {
     const instance = getDb();
-    return (instance as any)[prop];
+    return instance[prop];
   },
 });
 

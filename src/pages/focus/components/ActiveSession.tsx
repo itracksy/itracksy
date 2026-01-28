@@ -404,7 +404,7 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
         clearInterval(intervalId);
       }
     };
-  }, [activeTimeEntry, isPaused, pausedAt]);
+  }, [activeTimeEntry, isPaused, pausedAt, queryClient]);
 
   useEffect(() => {
     if (!activeTimeEntry) {

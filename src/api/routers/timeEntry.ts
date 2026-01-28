@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { t, protectedProcedure } from "../trpc";
+import { logger } from "../../helpers/logger";
 import {
   createTimeEntry,
   deleteTimeEntry,
@@ -152,10 +153,44 @@ export const timeEntryRouter = t.router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const { resumeActiveSession, clearPausedSession } = await import("../services/sessionPause");
+      logger.info("[TimeEntryRouter] handleSessionResume called", {
+        action: input.action,
+        userId: ctx.userId,
+      });
+
+      const { resumeActiveSession, clearPausedSession, getPausedSession } = await import(
+        "../services/sessionPause"
+      );
+
+      // Log current pause state before action
+      const pauseStateBefore = getPausedSession();
+      logger.info("[TimeEntryRouter] Pause state before action", {
+        hasPausedSession: !!pauseStateBefore,
+        timeEntryId: pauseStateBefore?.timeEntryId,
+        isManualPause: pauseStateBefore?.isManualPause,
+      });
 
       if (input.action === "continue") {
+        logger.info("[TimeEntryRouter] Calling resumeActiveSession");
         await resumeActiveSession();
+
+        // Force resume tracking as a safety net
+        // This ensures tracking resumes even if system state listener didn't fire correctly
+        const { forceResumeTracking, getTrackingState } = await import(
+          "../services/trackingIntervalActivity"
+        );
+        const trackingStateBefore = getTrackingState();
+        logger.info("[TimeEntryRouter] Tracking state before forceResume", trackingStateBefore);
+
+        forceResumeTracking();
+
+        const trackingStateAfter = getTrackingState();
+        logger.info("[TimeEntryRouter] Tracking state after forceResume", trackingStateAfter);
+
+        const pauseStateAfter = getPausedSession();
+        logger.info("[TimeEntryRouter] Resume completed", {
+          pauseStateAfterIsNull: pauseStateAfter === null,
+        });
         return { success: true, message: "Session resumed" };
       } else {
         // Dismiss session - end it
@@ -175,7 +210,23 @@ export const timeEntryRouter = t.router({
 
   manualResume: protectedProcedure.mutation(async () => {
     const { manualResumeSession } = await import("../services/sessionPause");
-    return manualResumeSession();
+    const result = await manualResumeSession();
+
+    // Force resume tracking as a safety net for manual resume as well
+    if (result.success) {
+      const { forceResumeTracking, getTrackingState } = await import(
+        "../services/trackingIntervalActivity"
+      );
+      logger.info("[TimeEntryRouter] manualResume - forcing tracking resume", {
+        trackingStateBefore: getTrackingState(),
+      });
+      forceResumeTracking();
+      logger.info("[TimeEntryRouter] manualResume - tracking state after", {
+        trackingStateAfter: getTrackingState(),
+      });
+    }
+
+    return result;
   }),
 
   getPauseState: protectedProcedure.query(async () => {

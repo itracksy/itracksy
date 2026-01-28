@@ -7,7 +7,8 @@ import { Activity, ActivityRule, GroupActivity } from "@/types/activity";
 
 import { extractDomain } from "../../utils/url";
 import { doesActivityMatchRule } from "../../utils/activityUtils";
-import { RuleFormValues } from "@/types/rule";
+import { RuleFormValues, TitleCondition, DurationCondition } from "@/types/rule";
+import { logger } from "../../helpers/logger";
 
 /**
  * Create a new activity rule
@@ -135,7 +136,7 @@ export async function getGroupActivities(activities: Activity[]) {
     if (activity.url) {
       const domain = extractDomain(activity.url);
       if (!domain) {
-        console.log("No domain found for URL", activity.url);
+        logger.debug("No domain found for URL", activity.url);
         continue;
       }
       // Initialize domain group if it doesn't exist
@@ -204,8 +205,8 @@ export async function findMatchingRules(activity: Activity): Promise<ActivityRul
       appName: r.appName || "",
       title: r.title || "",
       duration: r.duration || 0,
-      titleCondition: r.titleCondition as any,
-      durationCondition: r.durationCondition as any,
+      titleCondition: r.titleCondition as TitleCondition,
+      durationCondition: r.durationCondition as DurationCondition,
       name: r.name,
       rating: r.rating,
       description: r.description || "",

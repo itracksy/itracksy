@@ -10,17 +10,9 @@ const NotificationApp: React.FC = () => {
   const [sessionTimeLeft, setSessionTimeLeft] = useState<number | null>(null); // Session countdown
 
   useEffect(() => {
-    console.log("NotificationApp: Component mounted");
-    console.log(
-      "NotificationApp: window.electronNotification available:",
-      !!window.electronNotification
-    );
-    console.log("NotificationApp: window object keys:", Object.keys(window));
-
     // Listen for notification data from main process via the preload API
     if (window.electronNotification) {
       const handleNotification = (data: NotificationData) => {
-        console.log("Notification received in component:", data);
         setNotificationData(data);
         // Reset timer when new notification arrives (only if autoDismiss is enabled)
         if (data.autoDismiss) {
@@ -36,22 +28,12 @@ const NotificationApp: React.FC = () => {
       };
 
       window.electronNotification.onNotification(handleNotification);
-
-      // Only return cleanup function when component is truly unmounting
-      return () => {
-        console.log("NotificationApp: Component unmounting, cleaning up listeners");
-      };
-    } else {
-      console.error("electronNotification not available in notification window");
     }
   }, []);
 
   // Notify main process when notification content is rendered and ready to show
   useEffect(() => {
     if (notificationData && window.electronNotification?.notifyReady) {
-      console.log(
-        "NotificationApp: Notification data rendered, notifying main process to show window"
-      );
       // Use requestAnimationFrame to ensure DOM has been painted
       requestAnimationFrame(() => {
         window.electronNotification?.notifyReady();
@@ -99,57 +81,36 @@ const NotificationApp: React.FC = () => {
   }, []);
 
   const closeNotification = async () => {
-    console.log("Closing notification via electronNotification");
     if (window.electronNotification) {
-      try {
-        await window.electronNotification.close();
-        console.log("Notification window close request completed");
-      } catch (error) {
-        console.error("Failed to close notification window:", error);
-      }
-    } else {
-      console.error("electronNotification API not available");
+      await window.electronNotification.close();
     }
   };
 
   const handleAction = async (action: () => Promise<void>) => {
-    try {
-      await action();
-      closeNotification();
-    } catch (error) {
-      console.error("Failed to execute notification action:", error);
-    }
+    await action();
+    closeNotification();
   };
 
   const handleExtendSession = async (minutesToAdd: number) => {
-    try {
-      console.log("Extending session by", minutesToAdd, "minutes");
-      if (window.electronNotification?.extendSession) {
-        const result = await window.electronNotification.extendSession(minutesToAdd);
-        console.log("Session extended successfully", result);
+    if (window.electronNotification?.extendSession) {
+      await window.electronNotification.extendSession(minutesToAdd);
 
-        // Update the session end time in the countdown
-        if (notificationData?.sessionEndTime) {
-          const newEndTime = notificationData.sessionEndTime + minutesToAdd * 60 * 1000;
-          const newTimeLeft = Math.max(0, Math.floor((newEndTime - Date.now()) / 1000));
-          setSessionTimeLeft(newTimeLeft);
+      // Update the session end time in the countdown
+      if (notificationData?.sessionEndTime) {
+        const newEndTime = notificationData.sessionEndTime + minutesToAdd * 60 * 1000;
+        const newTimeLeft = Math.max(0, Math.floor((newEndTime - Date.now()) / 1000));
+        setSessionTimeLeft(newTimeLeft);
 
-          // Update the notification data to reflect the new end time
-          setNotificationData({
-            ...notificationData,
-            sessionEndTime: newEndTime,
-          });
-        }
-      } else {
-        console.error("extendSession function not available");
+        // Update the notification data to reflect the new end time
+        setNotificationData({
+          ...notificationData,
+          sessionEndTime: newEndTime,
+        });
       }
-    } catch (error) {
-      console.error("Failed to extend session:", error);
     }
   };
 
   if (!notificationData) {
-    console.log("NotificationApp: No notification data, returning null");
     return null;
   }
 

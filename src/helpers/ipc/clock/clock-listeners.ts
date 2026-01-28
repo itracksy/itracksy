@@ -17,6 +17,7 @@ import {
   updateTimeEntry,
 } from "../../../api/services/timeEntry";
 import { getFocusTarget, getTodaysFocusProgress } from "../../../api/services/focusTargets";
+import type { ClockUpdateData } from "@/types/ipc";
 
 export const addClockEventListeners = () => {
   // Show clock handler
@@ -151,7 +152,7 @@ export const addClockEventListeners = () => {
 };
 
 // Function to send updates to clock window
-export const sendClockUpdate = async (data: any) => {
+export const sendClockUpdate = async (data: ClockUpdateData) => {
   const clockWindow = getClockWindow();
   if (clockWindow && !clockWindow.isDestroyed()) {
     try {

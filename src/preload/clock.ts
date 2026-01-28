@@ -10,11 +10,12 @@ import {
   CLOCK_SET_CONTENT_SIZE_CHANNEL,
 } from "@/helpers/ipc/clock/clock-channels";
 import { contextBridge, ipcRenderer } from "electron";
+import type { ClockUpdateData, ClockControlData } from "@/types/ipc";
 
 // Expose protected APIs to the renderer process
 contextBridge.exposeInMainWorld("electronClock", {
   // Function to control timer (start/pause/stop)
-  control: (action: string, data?: any) => {
+  control: (action: string, data?: ClockControlData) => {
     return ipcRenderer.invoke(CLOCK_CONTROL_CHANNEL, { action, data });
   },
 
@@ -34,8 +35,8 @@ contextBridge.exposeInMainWorld("electronClock", {
   },
 
   // Function to listen for timer updates
-  onUpdate: (callback: (data: any) => void) => {
-    ipcRenderer.on(CLOCK_UPDATE_CHANNEL, (_event, data) => {
+  onUpdate: (callback: (data: ClockUpdateData) => void) => {
+    ipcRenderer.on(CLOCK_UPDATE_CHANNEL, (_event, data: ClockUpdateData) => {
       callback(data);
     });
   },
@@ -57,7 +58,8 @@ contextBridge.exposeInMainWorld("electronClock", {
 
   getState: () => ipcRenderer.invoke(CLOCK_GET_STATE_CHANNEL),
 
-  setSizeMode: (mode: "detailed" | "minimal") => ipcRenderer.invoke(CLOCK_SET_SIZE_MODE_CHANNEL, mode),
+  setSizeMode: (mode: "detailed" | "minimal") =>
+    ipcRenderer.invoke(CLOCK_SET_SIZE_MODE_CHANNEL, mode),
 
   setContentSize: (payload: { width: number; height: number; mode: "detailed" | "minimal" }) =>
     ipcRenderer.invoke(CLOCK_SET_CONTENT_SIZE_CHANNEL, payload),

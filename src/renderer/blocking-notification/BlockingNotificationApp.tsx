@@ -1,30 +1,16 @@
 import React, { useState, useEffect } from "react";
-
-interface BlockingNotificationData {
-  title: string;
-  detail: string;
-  userId: string;
-  timeEntryId: string;
-  appOrDomain: string;
-  appName?: string;
-  domain?: string;
-  ruleId?: string;
-  ruleName?: string;
-}
+import type { BlockingNotificationData } from "@/types/ipc";
 
 const BlockingNotificationApp: React.FC = () => {
   const [notificationData, setNotificationData] = useState<BlockingNotificationData | null>(null);
 
   useEffect(() => {
-    console.log("BlockingNotificationApp: Component mounted");
-
-    if ((window as any).electronBlockingNotification) {
+    if (window.electronBlockingNotification) {
       const handleNotification = (data: BlockingNotificationData) => {
-        console.log("Blocking notification received:", data);
         setNotificationData(data);
       };
 
-      (window as any).electronBlockingNotification.onNotification(handleNotification);
+      window.electronBlockingNotification.onNotification(handleNotification);
 
       const handleKeyDown = (event: KeyboardEvent) => {
         if (event.key === "Escape") {
@@ -52,14 +38,8 @@ const BlockingNotificationApp: React.FC = () => {
   }, []);
 
   const handleResponse = async (response: number) => {
-    console.log("Blocking notification response:", response);
-
-    if ((window as any).electronBlockingNotification) {
-      try {
-        await (window as any).electronBlockingNotification.respond(response);
-      } catch (error) {
-        console.error("Failed to send response:", error);
-      }
+    if (window.electronBlockingNotification) {
+      await window.electronBlockingNotification.respond(response);
     }
   };
 
@@ -67,61 +47,49 @@ const BlockingNotificationApp: React.FC = () => {
   const handleReturnToFocus = () => handleResponse(1);
 
   const handleClose = async () => {
-    if ((window as any).electronBlockingNotification) {
-      try {
-        await (window as any).electronBlockingNotification.close();
-      } catch (error) {
-        console.error("Failed to close:", error);
-      }
+    if (window.electronBlockingNotification) {
+      await window.electronBlockingNotification.close();
     }
   };
 
   const handleEditRule = async () => {
-    if ((window as any).electronBlockingNotification) {
-      try {
-        // Open main window with rule ID parameter to edit the specific rule
-        const ruleId = notificationData?.ruleId;
-        const route = ruleId ? `/rule-book?editRuleId=${ruleId}` : "/rule-book";
-        await (window as any).electronBlockingNotification.openMainWindow(route);
-        // Close this notification
-        await (window as any).electronBlockingNotification.close();
-      } catch (error) {
-        console.error("Failed to open main window:", error);
-      }
+    if (window.electronBlockingNotification) {
+      // Open main window with rule ID parameter to edit the specific rule
+      const ruleId = notificationData?.ruleId;
+      const route = ruleId ? `/rule-book?editRuleId=${ruleId}` : "/rule-book";
+      await window.electronBlockingNotification.openMainWindow(route);
+      // Close this notification
+      await window.electronBlockingNotification.close();
     }
   };
 
   const handleAddException = async () => {
-    if ((window as any).electronBlockingNotification) {
-      try {
-        // Create a new productive rule that matches this specific activity by title
-        const params = new URLSearchParams();
-        params.set("createRule", "true");
-        params.set("rating", "1"); // Productive
+    if (window.electronBlockingNotification) {
+      // Create a new productive rule that matches this specific activity by title
+      const params = new URLSearchParams();
+      params.set("createRule", "true");
+      params.set("rating", "1"); // Productive
 
-        // Set app name - always include it for proper matching
-        if (notificationData?.appName) {
-          params.set("appName", notificationData.appName);
-        }
-
-        // Set domain if it's a browser/website block
-        if (notificationData?.domain) {
-          params.set("domain", notificationData.domain);
-        }
-
-        // Set the title for matching - this creates an exception for this specific content
-        if (notificationData?.title) {
-          params.set("title", notificationData.title);
-          params.set("titleCondition", "contains");
-        }
-
-        const route = `/rule-book?${params.toString()}`;
-        await (window as any).electronBlockingNotification.openMainWindow(route);
-        // Close this notification
-        await (window as any).electronBlockingNotification.close();
-      } catch (error) {
-        console.error("Failed to open main window for exception:", error);
+      // Set app name - always include it for proper matching
+      if (notificationData?.appName) {
+        params.set("appName", notificationData.appName);
       }
+
+      // Set domain if it's a browser/website block
+      if (notificationData?.domain) {
+        params.set("domain", notificationData.domain);
+      }
+
+      // Set the title for matching - this creates an exception for this specific content
+      if (notificationData?.title) {
+        params.set("title", notificationData.title);
+        params.set("titleCondition", "contains");
+      }
+
+      const route = `/rule-book?${params.toString()}`;
+      await window.electronBlockingNotification.openMainWindow(route);
+      // Close this notification
+      await window.electronBlockingNotification.close();
     }
   };
 

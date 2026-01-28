@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   ScrollTextIcon,
   RefreshCw,
@@ -110,12 +110,12 @@ export default function LogPage(): React.JSX.Element {
     },
   });
 
-  const loadLogFile = async (): Promise<void> => {
+  const loadLogFile = useCallback(async (): Promise<void> => {
     try {
       setIsLoading(true);
       const result = await trpcClient.utils.getLogFileContent.query();
       setLogInfo(result);
-    } catch (error) {
+    } catch {
       toast({
         variant: "destructive",
         title: "Error",
@@ -124,11 +124,11 @@ export default function LogPage(): React.JSX.Element {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     loadLogFile();
-  }, []);
+  }, [loadLogFile]);
 
   // Helper function to detect if a line starts a new log entry (has timestamp pattern)
   const isLogEntryStart = (line: string): boolean => {

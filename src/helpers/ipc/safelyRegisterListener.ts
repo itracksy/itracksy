@@ -1,9 +1,12 @@
-import { ipcMain } from "electron";
+import { ipcMain, IpcMainInvokeEvent } from "electron";
 import { logger } from "../logger";
 
 const registeredListeners = new Set<string>();
 
-export function safelyRegisterListener(channel: string, handler: (...args: any[]) => any) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type IpcHandler = (event: IpcMainInvokeEvent, ...args: any[]) => unknown | Promise<unknown>;
+
+export function safelyRegisterListener(channel: string, handler: IpcHandler) {
   if (registeredListeners.has(channel)) {
     ipcMain.removeHandler(channel);
   }

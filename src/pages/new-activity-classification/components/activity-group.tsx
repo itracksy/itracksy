@@ -24,7 +24,7 @@ import { useCreateRule } from "@/hooks/use-create-rule";
 import { DomainGroup } from "./domain-group";
 import { ActivityItem } from "./activity-item";
 import { trpcClient } from "@/utils/trpc";
-import { RuleFormValues } from "@/types/rule";
+import { RuleFormValues, TitleCondition, DurationCondition } from "@/types/rule";
 
 interface RuleDialogState {
   isOpen: boolean;
@@ -245,8 +245,8 @@ export function ActivityGroup({
                           rating: rule.rating,
                           name: rule.name,
                           description: rule.description || "",
-                          titleCondition: (rule.titleCondition as any) || "contains",
-                          durationCondition: (rule.durationCondition as any) || "",
+                          titleCondition: (rule.titleCondition as TitleCondition) || "contains",
+                          durationCondition: (rule.durationCondition as DurationCondition) || "",
                           domain: rule.domain || "",
                           active: rule.active,
                         },

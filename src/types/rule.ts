@@ -1,4 +1,15 @@
 import { z } from "zod";
+
+/**
+ * Title matching condition types
+ */
+export type TitleCondition = "contains" | "startsWith" | "endsWith" | "equals" | "=" | "" | null;
+
+/**
+ * Duration comparison condition types
+ */
+export type DurationCondition = ">" | "<" | "=" | ">=" | "<=" | "" | null;
+
 export type RuleFormValues = z.infer<typeof ruleFormSchema>;
 
 export const ruleFormSchema = z.object({

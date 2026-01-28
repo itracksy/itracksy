@@ -23,7 +23,7 @@ import { useCreateRule } from "@/hooks/use-create-rule";
 import { useUpdateRule } from "@/hooks/use-update-rule";
 import { useConfirmationDialog } from "@/components/providers/ConfirmationDialog";
 import { Input } from "@/components/ui/input";
-import { RuleFormValues } from "@/types/rule";
+import { RuleFormValues, TitleCondition, DurationCondition } from "@/types/rule";
 import { cn } from "@/lib/utils";
 import { useSearch, useNavigate } from "@tanstack/react-router";
 import { RuleBookRoute } from "@/routes/routes";
@@ -122,7 +122,7 @@ export default function RuleBookPage() {
       if (appName) prefill.appName = appName;
       if (domain) prefill.domain = domain;
       if (title) prefill.title = title;
-      if (titleCondition) prefill.titleCondition = titleCondition as any;
+      if (titleCondition) prefill.titleCondition = titleCondition as TitleCondition;
 
       setPrefillValues(prefill);
       setIsDialogOpen(true);
@@ -180,10 +180,10 @@ export default function RuleBookPage() {
         active: editingRule.active,
         appName: editingRule.appName,
         domain: editingRule.domain,
-        titleCondition: editingRule.titleCondition as any,
+        titleCondition: editingRule.titleCondition as TitleCondition,
         title: editingRule.title || "",
         duration: editingRule.duration || 0,
-        durationCondition: editingRule.durationCondition as any,
+        durationCondition: editingRule.durationCondition as DurationCondition,
       };
     }
 

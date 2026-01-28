@@ -54,10 +54,17 @@ const handleSystemInactive = (): void => {
  * Handle when system becomes active (resume or unlock)
  */
 const handleSystemActive = (): void => {
+  logger.info("[SystemMonitor] handleSystemActive called", {
+    isSystemLocked,
+    isSystemSleeping,
+    willNotify: !isSystemLocked && !isSystemSleeping,
+  });
   // Only notify if system is truly active (not locked and not sleeping)
   if (!isSystemLocked && !isSystemSleeping) {
     logger.info("[SystemMonitor] System became active - notifying listeners");
     notifyListeners(true);
+  } else {
+    logger.info("[SystemMonitor] System not fully active yet, skipping notification");
   }
 };
 
@@ -106,5 +113,13 @@ export const getSystemState = (): { isLocked: boolean; isSleeping: boolean; isAc
  * Check if system is currently active (not locked, not sleeping)
  */
 export const isSystemActive = (): boolean => {
-  return !isSystemLocked && !isSystemSleeping;
+  const active = !isSystemLocked && !isSystemSleeping;
+  // Log only when system is NOT active to help debug tracking issues
+  if (!active) {
+    logger.debug("[SystemMonitor] isSystemActive check returned false", {
+      isSystemLocked,
+      isSystemSleeping,
+    });
+  }
+  return active;
 };

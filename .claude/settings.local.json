@@ -67,7 +67,10 @@
       "Bash(npm uninstall:*)",
       "Bash(npm ls:*)",
       "Bash(npm rebuild:*)",
-      "Bash(open:*)"
+      "Bash(open:*)",
+      "Bash(xargs cat:*)",
+      "Bash(cat:*)",
+      "Bash(npx eslint:*)"
     ]
   }
 }

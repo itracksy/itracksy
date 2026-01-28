@@ -1,45 +1,38 @@
 import { contextBridge, ipcRenderer } from "electron";
+import type { BlockingNotificationData } from "@/types/ipc";
 
 // Blocking notification specific channels
 const BLOCKING_NOTIFICATION_SHOW_CHANNEL = "show-blocking-notification";
 const BLOCKING_NOTIFICATION_RESPOND_CHANNEL = "blocking-notification-respond";
 const BLOCKING_NOTIFICATION_CLOSE_CHANNEL = "close-blocking-notification";
 
-console.log("Blocking notification preload script initializing");
-
 // Expose protected APIs to the renderer process
 contextBridge.exposeInMainWorld("electronBlockingNotification", {
   // Function to handle notification response
   respond: (response: number) => {
-    console.log("Sending blocking notification response:", response);
     return ipcRenderer.invoke(BLOCKING_NOTIFICATION_RESPOND_CHANNEL, response);
   },
 
   // Function to explicitly close the notification window
   close: () => {
-    console.log("Sending blocking notification close request");
     return ipcRenderer.invoke(BLOCKING_NOTIFICATION_CLOSE_CHANNEL);
   },
 
   // Function to open main window and navigate to a specific route
   openMainWindow: (route?: string) => {
-    console.log("Opening main window with route:", route);
     return ipcRenderer.invoke("open-main-window", route);
   },
 
   // Function to listen for show-blocking-notification events
-  onNotification: (callback: (data: any) => void) => {
-    console.log("Setting up blocking notification listener");
-    ipcRenderer.on(BLOCKING_NOTIFICATION_SHOW_CHANNEL, (_event, data) => {
-      console.log("Received show-blocking-notification event", data);
+  onNotification: (callback: (data: BlockingNotificationData) => void) => {
+    ipcRenderer.on(BLOCKING_NOTIFICATION_SHOW_CHANNEL, (_event, data: BlockingNotificationData) => {
       callback(data);
     });
 
     // Also listen for trigger-close events from the main process
     ipcRenderer.on("trigger-close", () => {
-      console.log("Received trigger-close event");
-      ipcRenderer.invoke(BLOCKING_NOTIFICATION_CLOSE_CHANNEL).catch((err) => {
-        console.error("Error handling trigger-close:", err);
+      ipcRenderer.invoke(BLOCKING_NOTIFICATION_CLOSE_CHANNEL).catch(() => {
+        // Error handling trigger-close silently
       });
     });
   },

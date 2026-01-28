@@ -21,7 +21,7 @@ import { VersionChecker } from "./components/version-checker/version-checker";
 import { getAppVersion } from "./helpers/version";
 
 if (typeof window !== "undefined") {
-  (window as any).__ITRACKSY_ROUTER__ = router;
+  window.__ITRACKSY_ROUTER__ = router;
 }
 
 // Initialize PostHog with enhanced CSP compatibility
@@ -87,10 +87,8 @@ function AuthenticatedApp() {
 
   // Listen for navigation events from main process (e.g., from blocking notification)
   useEffect(() => {
-    if ((window as any).electronNavigation) {
-      const cleanup = (window as any).electronNavigation.onNavigateTo((route: string) => {
-        console.log("Navigating to route:", route);
-
+    if (window.electronNavigation) {
+      const cleanup = window.electronNavigation.onNavigateTo((route: string) => {
         // Parse the route to extract path and search params
         const url = new URL(route, "http://localhost");
         const path = url.pathname;

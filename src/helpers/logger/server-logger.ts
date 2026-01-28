@@ -5,6 +5,11 @@ import * as fs from "fs";
 import * as path from "path";
 import { LogLevel } from "./types";
 
+/**
+ * Valid log argument types
+ */
+export type LogArg = unknown;
+
 // Log levels configuration
 const LOG_CONFIG = {
   development: {
@@ -64,7 +69,7 @@ export class ServerLogger {
     this.sessionId = sessionId;
   }
 
-  private async logToFile(level: LogLevel, message: string, ...args: any[]) {
+  private async logToFile(level: LogLevel, message: string, ...args: LogArg[]) {
     const timestamp = Date.now();
     const logEntry = {
       timestamp,
@@ -82,7 +87,7 @@ export class ServerLogger {
     }
   }
 
-  private async logToAxiom(level: LogLevel, message: string, ...args: any[]) {
+  private async logToAxiom(level: LogLevel, message: string, ...args: LogArg[]) {
     if (!this.axiomClient || this.environment !== "production") return;
 
     try {
@@ -108,7 +113,7 @@ export class ServerLogger {
     return config[target].includes(level);
   }
 
-  debug(message: string, ...args: any[]) {
+  debug(message: string, ...args: LogArg[]) {
     if (this.shouldLog(LogLevel.DEBUG, "file")) {
       this.logToFile(LogLevel.DEBUG, message, ...args);
     }
@@ -120,7 +125,7 @@ export class ServerLogger {
     }
   }
 
-  info(message: string, ...args: any[]) {
+  info(message: string, ...args: LogArg[]) {
     if (this.shouldLog(LogLevel.INFO, "file")) {
       this.logToFile(LogLevel.INFO, message, ...args);
     }
@@ -132,7 +137,7 @@ export class ServerLogger {
     }
   }
 
-  warn(message: string, ...args: any[]) {
+  warn(message: string, ...args: LogArg[]) {
     if (this.shouldLog(LogLevel.WARN, "file")) {
       this.logToFile(LogLevel.WARN, message, ...args);
     }
@@ -144,7 +149,7 @@ export class ServerLogger {
     }
   }
 
-  error(message: string, ...args: any[]) {
+  error(message: string, ...args: LogArg[]) {
     if (this.shouldLog(LogLevel.ERROR, "file")) {
       this.logToFile(LogLevel.ERROR, message, ...args);
     }
@@ -156,7 +161,7 @@ export class ServerLogger {
     }
   }
 
-  fatal(message: string, ...args: any[]) {
+  fatal(message: string, ...args: LogArg[]) {
     if (this.shouldLog(LogLevel.FATAL, "file")) {
       this.logToFile(LogLevel.FATAL, message, ...args);
     }

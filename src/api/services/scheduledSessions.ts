@@ -5,6 +5,29 @@ import { nanoid } from "nanoid";
 import { getCurrentUserIdLocalStorage } from "./userSettings";
 import { createTimeEntry } from "./timeEntry";
 import { logger } from "../../helpers/logger";
+import type { TimeEntry } from "@/types/ipc";
+
+// Extend NodeJS.Global for scheduled session interval tracking
+declare global {
+  var scheduledSessionInterval: ReturnType<typeof setInterval> | undefined;
+}
+
+/**
+ * Update values for scheduled session (for DB update)
+ */
+interface ScheduledSessionUpdateValues {
+  name?: string;
+  description?: string;
+  focusDuration?: number;
+  breakDuration?: number;
+  cycles?: number;
+  startTime?: string;
+  daysOfWeek?: string;
+  isActive?: boolean;
+  autoStart?: boolean;
+  updatedAt: number;
+  nextRun?: number | null;
+}
 
 export interface ScheduledSession {
   id: string;
@@ -126,13 +149,15 @@ export async function updateScheduledSession(
         )
       : undefined;
 
-  const updateValues: any = {
-    ...updateData,
+  // Exclude daysOfWeek from initial spread since it needs to be stringified
+  const { daysOfWeek, ...restUpdateData } = updateData;
+  const updateValues: ScheduledSessionUpdateValues = {
+    ...restUpdateData,
     updatedAt: now,
   };
 
-  if (updateData.daysOfWeek) {
-    updateValues.daysOfWeek = JSON.stringify(updateData.daysOfWeek);
+  if (daysOfWeek) {
+    updateValues.daysOfWeek = JSON.stringify(daysOfWeek);
   }
 
   if (nextRun !== undefined) {
@@ -294,7 +319,7 @@ export async function executeScheduledSession(sessionId: string): Promise<boolea
  */
 async function askUserAboutScheduledSession(
   scheduledSession: ScheduledSession,
-  activeEntry: any
+  activeEntry: TimeEntry
 ): Promise<"stop_current_start_scheduled" | "queue_scheduled" | "skip_scheduled" | "cancelled"> {
   try {
     // Import the notification service
@@ -491,16 +516,16 @@ export function initializeScheduledSessionMonitoring(): void {
   }, 60000); // Check every minute
 
   // Store interval ID for cleanup if needed
-  (global as any).scheduledSessionInterval = interval;
+  global.scheduledSessionInterval = interval;
 }
 
 /**
  * Stop scheduled session monitoring
  */
-function stopScheduledSessionMonitoring(): void {
-  const interval = (global as any).scheduledSessionInterval;
+export function stopScheduledSessionMonitoring(): void {
+  const interval = global.scheduledSessionInterval;
   if (interval) {
     clearInterval(interval);
-    delete (global as any).scheduledSessionInterval;
+    global.scheduledSessionInterval = undefined;
   }
 }

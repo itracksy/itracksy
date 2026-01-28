@@ -30,7 +30,7 @@ export const getFocusPerformanceByPeriod = async (
   const timezoneOffset = new Date().getTimezoneOffset();
 
   // Create date expressions based on period
-  let dateExpr: any;
+  let dateExpr: SQL<string>;
   let dateFormat: string;
 
   switch (period) {
