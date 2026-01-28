@@ -8,6 +8,8 @@ iTracksy is an Electron-based productivity app that tracks time, monitors focus 
 
 ## Development Commands
 
+**IMPORTANT**: Always use scripts defined in `package.json` as the source of truth. Run `npm run` to see all available scripts.
+
 ```bash
 # Development
 npm run dev              # Start Electron app in development mode
@@ -35,6 +37,10 @@ npm run db:studio        # Open Drizzle Studio
 npm run make             # Build distributable
 npm run mac-build        # Build for macOS
 npm run win-build        # Build for Windows
+
+# Release (requires commit and push first)
+npm run release:draft    # Create draft release via GitHub Actions
+npm run release:no-draft # Create and publish release immediately
 
 # Other
 npm run storybook        # Start Storybook for component development
