@@ -9,6 +9,8 @@ import {
   setPermissions,
   updateUserSettings,
   getDetailedPermissionStatus,
+  getVerifiedPermissionStatus,
+  resetPermissionVerificationCache,
   getUserPreferences,
   updateUserPreferences,
   resetUserPreferences,
@@ -38,6 +40,13 @@ export const userRouter = t.router({
   }),
   getDetailedPermissionStatus: protectedProcedure.query(async ({ ctx }) => {
     return getDetailedPermissionStatus();
+  }),
+  getVerifiedPermissionStatus: protectedProcedure.query(async ({ ctx }) => {
+    return getVerifiedPermissionStatus();
+  }),
+  resetPermissionCache: protectedProcedure.mutation(async ({ ctx }) => {
+    resetPermissionVerificationCache();
+    return { success: true };
   }),
   setPermissions: protectedProcedure
     .input(

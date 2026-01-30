@@ -28,6 +28,7 @@ import {
   clearPausedSession,
   getPausedSession,
 } from "./sessionPause";
+import { PERMISSION_ERROR_CHANNEL } from "../../helpers/ipc/permission/permission-channels";
 
 // Export debug utilities for development
 let trackingIntervalId: NodeJS.Timeout | null = null;
@@ -36,7 +37,9 @@ let isTrackingPaused: boolean = false;
 let systemMonitorUnsubscribe: (() => void) | null = null;
 
 let isAccessibilityError: boolean = false;
+let lastPermissionRetryTime: number = 0;
 const NOTIFICATION_COOLDOWN = 10 * 1000; // 10 seconds in milliseconds
+const PERMISSION_RETRY_INTERVAL = 60 * 1000; // Retry permission check every 60 seconds
 
 /**
  * Force resume tracking - used when user explicitly clicks Resume in the dialog
@@ -251,8 +254,19 @@ export const startTracking = async (): Promise<void> => {
         }
       }
 
+      // Reset permission error flag periodically to retry
       if (isAccessibilityError) {
-        return;
+        const now = Date.now();
+        if (now - lastPermissionRetryTime >= PERMISSION_RETRY_INTERVAL) {
+          logger.info("[Tracking] Resetting permission error flag to retry", {
+            lastRetryTime: new Date(lastPermissionRetryTime).toISOString(),
+            timeSinceLastRetry: now - lastPermissionRetryTime,
+          });
+          isAccessibilityError = false;
+          lastPermissionRetryTime = now;
+        } else {
+          return;
+        }
       }
 
       const getWindows = await import("get-windows");
@@ -329,21 +343,50 @@ export const startTracking = async (): Promise<void> => {
       }
     } catch (error) {
       // Check if the error is related to accessibility/screen recording permissions
+      const errorStdout =
+        error && typeof error === "object" && "stdout" in error
+          ? (error as { stdout: unknown }).stdout
+          : null;
       const isPermissionError = Boolean(
-        error &&
-          typeof error === "object" &&
-          "stdout" in error &&
-          typeof error.stdout === "string" &&
-          error.stdout.includes("permission")
+        typeof errorStdout === "string" && errorStdout.includes("permission")
       );
 
       if (isPermissionError) {
-        // Only log permission error once to avoid log spam
+        // Only log and notify on first occurrence to avoid spam
         if (!isAccessibilityError) {
           logger.warn(
-            "[startTracking] Screen recording permission required - tracking paused until granted"
+            "[startTracking] Screen recording permission required - tracking paused until granted",
+            {
+              errorStdout,
+              willRetryIn: `${PERMISSION_RETRY_INTERVAL / 1000} seconds`,
+            }
           );
           isAccessibilityError = true;
+          lastPermissionRetryTime = Date.now();
+
+          // Notify renderer about permission issue
+          try {
+            const { BrowserWindow } = await import("electron");
+            const windows = BrowserWindow.getAllWindows();
+            windows.forEach((win) => {
+              if (!win.isDestroyed()) {
+                win.webContents.send(PERMISSION_ERROR_CHANNEL, {
+                  type: "screen-recording",
+                  message:
+                    "Screen recording permission is not working. Please re-grant permission.",
+                  timestamp: Date.now(),
+                });
+              }
+            });
+            logger.info("[startTracking] Sent permission-error notification to renderer", {
+              windowCount: windows.length,
+              channel: PERMISSION_ERROR_CHANNEL,
+            });
+          } catch (ipcError) {
+            logger.error("[startTracking] Failed to send permission-error to renderer", {
+              ipcError,
+            });
+          }
         }
         // Don't throw - just skip tracking until permission is granted
         return;

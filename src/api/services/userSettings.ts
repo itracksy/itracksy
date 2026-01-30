@@ -41,6 +41,9 @@ export function checkAccessibilityPermission(): boolean {
 
 /**
  * Checks if screen recording permission is granted (macOS only)
+ * This uses the system API which can sometimes report "granted" even when
+ * the actual screen capture doesn't work. Use verifyScreenRecordingPermission()
+ * for a more reliable check.
  * @returns boolean indicating if permission is granted, true for non-macOS platforms
  */
 export function checkScreenRecordingPermission(): boolean {
@@ -52,6 +55,114 @@ export function checkScreenRecordingPermission(): boolean {
     logger.error("[checkScreenRecordingPermission] Error checking permission", { error });
     return false;
   }
+}
+
+// Cache for verified permission state
+let lastVerifiedPermissionState: boolean | null = null;
+let lastVerificationTime: number = 0;
+const VERIFICATION_CACHE_MS = 30000; // Cache verification result for 30 seconds
+
+/**
+ * Verifies screen recording permission by actually attempting to get active window.
+ * This is more reliable than checkScreenRecordingPermission() as it tests real functionality.
+ * Results are cached for 30 seconds to avoid performance impact.
+ * @returns Promise<boolean> indicating if permission actually works
+ */
+export async function verifyScreenRecordingPermission(): Promise<boolean> {
+  if (!isMacOS) {
+    logger.debug("[verifyScreenRecordingPermission] Non-macOS platform, returning true");
+    return true;
+  }
+
+  // Return cached result if still valid
+  const now = Date.now();
+  if (lastVerifiedPermissionState !== null && now - lastVerificationTime < VERIFICATION_CACHE_MS) {
+    logger.debug("[verifyScreenRecordingPermission] Returning cached result", {
+      cachedState: lastVerifiedPermissionState,
+      cacheAge: now - lastVerificationTime,
+      cacheMaxAge: VERIFICATION_CACHE_MS,
+    });
+    return lastVerifiedPermissionState;
+  }
+
+  // First check the system API - if it says no, don't bother testing
+  const systemSaysGranted = checkScreenRecordingPermission();
+  logger.info("[verifyScreenRecordingPermission] System API check", {
+    systemSaysGranted,
+  });
+
+  if (!systemSaysGranted) {
+    logger.info(
+      "[verifyScreenRecordingPermission] System API says not granted, skipping actual test"
+    );
+    lastVerifiedPermissionState = false;
+    lastVerificationTime = now;
+    return false;
+  }
+
+  // System says granted, but let's verify by actually trying to get a window
+  logger.info(
+    "[verifyScreenRecordingPermission] System says granted, performing actual verification test"
+  );
+  try {
+    const getWindows = await import("get-windows");
+    const result = await getWindows.activeWindow({
+      accessibilityPermission: true,
+      screenRecordingPermission: true,
+    });
+    // If we get here without error, permission works
+    logger.info("[verifyScreenRecordingPermission] Actual test PASSED", {
+      hasResult: !!result,
+      resultOwner: result?.owner?.name,
+    });
+    lastVerifiedPermissionState = true;
+    lastVerificationTime = now;
+    return true;
+  } catch (error) {
+    // Check if this is a permission error
+    const errorStdout =
+      error && typeof error === "object" && "stdout" in error
+        ? (error as { stdout: unknown }).stdout
+        : null;
+    const isPermissionError = Boolean(
+      typeof errorStdout === "string" && errorStdout.includes("permission")
+    );
+
+    logger.warn("[verifyScreenRecordingPermission] Actual test failed", {
+      isPermissionError,
+      errorStdout: typeof errorStdout === "string" ? errorStdout.substring(0, 200) : null,
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
+
+    if (isPermissionError) {
+      logger.warn(
+        "[verifyScreenRecordingPermission] MISMATCH: System reports granted but actual test failed - permission not working"
+      );
+      lastVerifiedPermissionState = false;
+      lastVerificationTime = now;
+      return false;
+    }
+
+    // Other errors (e.g., no window focused) don't indicate permission issues
+    logger.info(
+      "[verifyScreenRecordingPermission] Non-permission error (possibly no window focused), treating as success"
+    );
+    lastVerifiedPermissionState = true;
+    lastVerificationTime = now;
+    return true;
+  }
+}
+
+/**
+ * Reset the verified permission cache - call this when user toggles permissions
+ */
+export function resetPermissionVerificationCache(): void {
+  logger.info("[resetPermissionVerificationCache] Resetting permission verification cache", {
+    previousState: lastVerifiedPermissionState,
+    previousTime: lastVerificationTime > 0 ? new Date(lastVerificationTime).toISOString() : null,
+  });
+  lastVerifiedPermissionState = null;
+  lastVerificationTime = 0;
 }
 
 /**
@@ -240,7 +351,7 @@ export async function getPermissions() {
 }
 
 /**
- * Get detailed permission status with explanations
+ * Get detailed permission status with explanations (sync version using system API)
  */
 export function getDetailedPermissionStatus(): {
   accessibility: {
@@ -275,6 +386,50 @@ export function getDetailedPermissionStatus(): {
       systemPreferencesPath: "System Settings > Privacy & Security > Screen Recording",
     },
     allGranted: accessibilityGranted && screenRecordingGranted,
+    platform: process.platform,
+  };
+}
+
+/**
+ * Get verified permission status - actually tests if permissions work
+ * This is more reliable than getDetailedPermissionStatus() but is async
+ */
+export async function getVerifiedPermissionStatus(): Promise<{
+  accessibility: {
+    granted: boolean;
+    required: boolean;
+    description: string;
+    systemPreferencesPath: string;
+  };
+  screenRecording: {
+    granted: boolean;
+    verified: boolean;
+    required: boolean;
+    description: string;
+    systemPreferencesPath: string;
+  };
+  allGranted: boolean;
+  platform: string;
+}> {
+  const accessibilityGranted = checkAccessibilityPermission();
+  const screenRecordingGranted = checkScreenRecordingPermission();
+  const screenRecordingVerified = await verifyScreenRecordingPermission();
+
+  return {
+    accessibility: {
+      granted: accessibilityGranted,
+      required: isMacOS,
+      description: "Required to track active applications and window information",
+      systemPreferencesPath: "System Settings > Privacy & Security > Accessibility",
+    },
+    screenRecording: {
+      granted: screenRecordingGranted,
+      verified: screenRecordingVerified,
+      required: isMacOS,
+      description: "Required to access browser URLs and window content for detailed tracking",
+      systemPreferencesPath: "System Settings > Privacy & Security > Screen Recording",
+    },
+    allGranted: accessibilityGranted && screenRecordingVerified,
     platform: process.platform,
   };
 }

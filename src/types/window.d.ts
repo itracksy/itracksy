@@ -10,6 +10,7 @@ import type {
   ElectronBlockingNotificationAPI,
   ElectronNavigationAPI,
   ElectronSessionPauseAPI,
+  ElectronPermissionAPI,
 } from "./ipc";
 
 declare global {
@@ -44,6 +45,11 @@ declare global {
      * Session pause API (exposed in main preload)
      */
     electronSessionPause?: ElectronSessionPauseAPI;
+
+    /**
+     * Permission API (exposed in main preload)
+     */
+    electronPermission?: ElectronPermissionAPI;
   }
 }
 

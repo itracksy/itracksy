@@ -177,3 +177,19 @@ export interface ElectronSessionPauseAPI {
   ) => void;
   removePauseStateListener: () => void;
 }
+
+/**
+ * Permission error data from main process
+ */
+export interface PermissionErrorData {
+  type: "screen-recording" | "accessibility";
+  message: string;
+  timestamp: number;
+}
+
+/**
+ * Permission API exposed to renderer
+ */
+export interface ElectronPermissionAPI {
+  onPermissionError: (callback: (data: PermissionErrorData) => void) => () => void;
+}
