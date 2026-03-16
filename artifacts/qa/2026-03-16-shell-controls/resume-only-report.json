@@ -1,0 +1,33 @@
+{
+  "before": "05:59",
+  "paused": "05:59",
+  "after": "05:58",
+  "labelsAfterPause": [
+    "Show iTracksy",
+    "Toggle Clock",
+    "",
+    "Resume Focus Session",
+    "Stop Focus Session",
+    "",
+    "Quit"
+  ],
+  "labelsBeforeResumeClick": [
+    "Show iTracksy",
+    "Toggle Clock",
+    "",
+    "Resume Focus Session",
+    "Stop Focus Session",
+    "",
+    "Quit"
+  ],
+  "labelsAfterResumeClick": [
+    "Show iTracksy",
+    "Toggle Clock",
+    "",
+    "Resume Focus Session",
+    "Stop Focus Session",
+    "",
+    "Quit"
+  ],
+  "delta": 1
+}

@@ -1,0 +1,97 @@
+{
+  "inventory": {
+    "claims": [
+      "Electron CI/e2e startup reaches the main window instead of hanging on initialization.",
+      "The initial Focus page renders actionable content instead of an indefinite Loading state.",
+      "The primary Focus session flow can start and return to a completed/review state.",
+      "Sidebar navigation to Settings and Projects works with normal user clicks.",
+      "The primary Focus view remains usable at the launched window size and a reduced-height viewport pass."
+    ],
+    "controls": [
+      "Sidebar links: Focus, Projects, Settings",
+      "Primary action: Start Focus",
+      "Active-session action: STOP",
+      "Reduced-height viewport pass"
+    ],
+    "exploratory": [
+      "Fresh-user launch after deleting the persisted current user id",
+      "Reduced-height viewport pass after interacting with the session flow"
+    ]
+  },
+  "checks": {
+    "launchLoaded": true,
+    "focusPageVisible": true,
+    "initialViewportPrimaryControlsVisible": true,
+    "initialViewportSidebarVisible": false,
+    "focusStarted": true,
+    "focusStopped": true,
+    "settingsRouteLoaded": true,
+    "projectsRouteLoaded": true,
+    "smallViewportPrimaryControlsVisible": true,
+    "smallViewportSidebarVisible": false
+  },
+  "metrics": {
+    "initial": {
+      "innerWidth": 1400,
+      "innerHeight": 1000,
+      "clientWidth": 1400,
+      "clientHeight": 1000,
+      "scrollWidth": 1400,
+      "scrollHeight": 1000,
+      "canScrollX": false,
+      "canScrollY": false,
+      "sidebar": null,
+      "primaryButton": {
+        "top": 600,
+        "right": 715,
+        "bottom": 648,
+        "left": 493,
+        "width": 222,
+        "height": 48
+      }
+    },
+    "small": {
+      "innerWidth": 1400,
+      "innerHeight": 896,
+      "clientWidth": 1400,
+      "clientHeight": 896,
+      "scrollWidth": 1400,
+      "scrollHeight": 896,
+      "canScrollX": false,
+      "canScrollY": false,
+      "sidebar": null,
+      "primaryButton": {
+        "top": 600,
+        "right": 715,
+        "bottom": 648,
+        "left": 493,
+        "width": 222,
+        "height": 48
+      }
+    }
+  },
+  "artifacts": {
+    "focusInitial": "/Users/owner/source/itracksy.com/itracksy/artifacts/qa/2026-03-16-playwright/focus-initial.png",
+    "focusActive": "/Users/owner/source/itracksy.com/itracksy/artifacts/qa/2026-03-16-playwright/focus-active.png",
+    "focusReview": "/Users/owner/source/itracksy.com/itracksy/artifacts/qa/2026-03-16-playwright/focus-review.png",
+    "settings": "/Users/owner/source/itracksy.com/itracksy/artifacts/qa/2026-03-16-playwright/settings.png",
+    "projects": "/Users/owner/source/itracksy.com/itracksy/artifacts/qa/2026-03-16-playwright/projects.png",
+    "focusSmall": "/Users/owner/source/itracksy.com/itracksy/artifacts/qa/2026-03-16-playwright/focus-small.png"
+  },
+  "errors": {
+    "pageErrors": [],
+    "consoleErrors": [],
+    "requestFailures": [],
+    "stderr": [
+      "Main: Icon file does not exist at path /Users/owner/source/itracksy.com/itracksy/.vite/build/resources/icon_16x16.png",
+      "[tRPC] query utils.getAppVersion failed {\n  durationMs: 0,\n  type: 'query',\n  path: 'utils.getAppVersion',\n  userId: null,\n  error: TRPCError: User not authenticated\n      at /Users/owner/source/itracksy.com/itracksy/.vite/build/main-BPQGPIlN.js:36:58375\n      at callRecursive (/Users/owner/source/itracksy.com/itracksy/node_modules/@trpc/server/dist/index.js:453:38)\n      at next (/Users/owner/source/itracksy.com/itracksy/node_modules/@trpc/server/dist/index.js:462:32)\n      at /Users/owner/source/itracksy.com/itracksy/.vite/build/main-BPQGPIlN.js:36:58103\n      at callRecursive (/Users/owner/source/itracksy.com/itracksy/node_modules/@trpc/server/dist/index.js:453:38)\n      at resolve (/Users/owner/source/itracksy.com/itracksy/node_modules/@trpc/server/dist/index.js:483:30)\n      at Bl (/Users/owner/source/itracksy.com/itracksy/.vite/build/main-BPQGPIlN.js:1:2844)\n      at Yl (/Users/owner/source/itracksy.com/itracksy/.vite/build/main-BPQGPIlN.js:1:10326) {\n    code: 'UNAUTHORIZED',\n    [cause]: undefined\n  }\n}",
+      "[70373:0316/093326.729689:ERROR:CONSOLE(1)] \"Request Autofill.enable failed. {\"code\":-32601,\"message\":\"'Autofill.enable' wasn't found\"}\", source: devtools://devtools/bundled/core/protocol_client/protocol_client.js (1)\n[70373:0316/093326.729729:ERROR:CONSOLE(1)] \"Request Autofill.setAddresses failed. {\"code\":-32601,\"message\":\"'Autofill.setAddresses' wasn't found\"}\", source: devtools://devtools/bundled/core/protocol_client/protocol_client.js (1)",
+      "[70373:0316/093336.845178:ERROR:CONSOLE(1)] \"Request Autofill.enable failed. {\"code\":-32601,\"message\":\"'Autofill.enable' wasn't found\"}\", source: devtools://devtools/bundled/core/protocol_client/protocol_client.js (1)\n[70373:0316/093336.845247:ERROR:CONSOLE(1)] \"Request Autofill.setAddresses failed. {\"code\":-32601,\"message\":\"'Autofill.setAddresses' wasn't found\"}\", source: devtools://devtools/bundled/core/protocol_client/protocol_client.js (1)",
+      "[startTracking] Screen recording permission required - tracking paused until granted {\n  errorStdout: 'get-windows requires the accessibility permission in “System Settings › Privacy & Security › Accessibility”.\\n',\n  willRetryIn: '60 seconds'\n}"
+    ]
+  },
+  "notes": [
+    "Visual review of focus-initial.png and focus-small.png confirms the sidebar is fully visible. The false sidebar-fit booleans came from a selector mismatch in the numeric probe, so screenshots were treated as the source of truth.",
+    "The captured reduced-height pass measured 1400x896 CSS pixels in this Electron run."
+  ]
+}

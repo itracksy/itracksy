@@ -1,0 +1,116 @@
+{
+  "bundle": "/Users/owner/source/itracksy.com/itracksy/.vite/build/main.js",
+  "startedAt": "2026-03-16T08:59:59.710Z",
+  "initial": {
+    "state": {
+      "systemState": {
+        "isLocked": false,
+        "isSleeping": false,
+        "isActive": true,
+        "hasPausedSession": false,
+        "isManuallyPaused": false,
+        "pausedSessionId": null,
+        "pausedAt": null
+      },
+      "activeEntry": null,
+      "bodyText": "iTracksy\nFocus & Productivity\nFOCUS\nFocus\nSchedule\nPRODUCTIVITY\nProjects\nAnalytics\nReports\nCLASSIFICATION\nCategories\nClassify\nTOOLS\nMusic\nLogs\nSettings\n\nStart Session\n\nReady to focus?\n\nResume: Break Time\n\nSend Feedback\nToggle Sidebar\nFocus\nBreak\n25:00\nTimed\nUnlimited\nDuration\n25 min\n5m\n8h\nStart Focus\nSet Daily Focus Target\n\nTrack your progress and get motivated!\n\nSet Target\nActivity (Last 3 Months)\n1\nday streak\n6m\navg/day\nDec\nJan\nFeb\nMar\nM\nW\nF\nTotal: 6m\nLess\nMore"
+    },
+    "trayTitle": "",
+    "trayLabels": []
+  },
+  "initialScreenshot": "/Users/owner/source/itracksy.com/itracksy/artifacts/qa/2026-03-16-shell-controls/stop-initial-fresh.png",
+  "running": {
+    "state": {
+      "systemState": {
+        "isLocked": false,
+        "isSleeping": false,
+        "isActive": true,
+        "hasPausedSession": false,
+        "isManuallyPaused": false,
+        "pausedSessionId": null,
+        "pausedAt": null
+      },
+      "activeEntry": {
+        "id": "7NYT2gQuiy5lFak7_kDRM",
+        "isFocusMode": true,
+        "startTime": 1773651600009,
+        "endTime": null,
+        "description": "Focus Session"
+      },
+      "bodyText": "iTracksy\nFocus & Productivity\nFOCUS\nFocus\nSchedule\nPRODUCTIVITY\nProjects\nAnalytics\nReports\nCLASSIFICATION\nCategories\nClassify\nTOOLS\nMusic\nLogs\nSettings\nFOCUS SESSION\n\nFocus Session\n\nStop\nBreak\nBreak:\nmin\nSend Feedback\nToggle Sidebar\nCurrent Session\nFocus Session\n25 min\n25:00\n0% complete\n+5 MIN\nPAUSE\nSTOP\nTASK ASSIGNMENT\nClick to assign a task\nAssign\nReview Current Session\nSet Daily Focus Target\n\nTrack your progress and get motivated!\n\nSet Target\nActivity (Last 3 Months)\n1\nday streak\n6m\navg/day\nDec\nJan\nFeb\nMar\nM\nW\nF\nTotal: 6m\nLess\nMore\nFocus Session Started\nYour 25-minute focus session has begun.\nNotification Focus Session StartedYour 25-minute focus session has begun."
+    },
+    "trayTitle": "",
+    "trayLabels": [
+      "Show iTracksy",
+      "Toggle Clock",
+      "",
+      "Pause Focus Session",
+      "Stop Focus Session",
+      "",
+      "Quit"
+    ]
+  },
+  "runningScreenshot": "/Users/owner/source/itracksy.com/itracksy/artifacts/qa/2026-03-16-shell-controls/stop-running-focus.png",
+  "paused": {
+    "state": {
+      "systemState": {
+        "isLocked": false,
+        "isSleeping": false,
+        "isActive": true,
+        "hasPausedSession": true,
+        "isManuallyPaused": true,
+        "pausedSessionId": "7NYT2gQuiy5lFak7_kDRM",
+        "pausedAt": 1773651607362
+      },
+      "activeEntry": {
+        "id": "7NYT2gQuiy5lFak7_kDRM",
+        "isFocusMode": true,
+        "startTime": 1773651600009,
+        "endTime": null,
+        "description": "Focus Session"
+      },
+      "bodyText": "iTracksy\nFocus & Productivity\nFOCUS\nFocus\nSchedule\nPRODUCTIVITY\nProjects\nAnalytics\nReports\nCLASSIFICATION\nCategories\nClassify\nTOOLS\nMusic\nLogs\nSettings\nFOCUS SESSION\n\nFocus Session\n\nStop\nBreak\nBreak:\nmin\nSend Feedback\nToggle Sidebar\nCurrent Session\nFocus Session\n25 min\n24:53\nPAUSED\n+5 MIN\nRESUME\nSTOP\nTASK ASSIGNMENT\nClick to assign a task\nAssign\nReview Current Session\nSet Daily Focus Target\n\nTrack your progress and get motivated!\n\nSet Target\nActivity (Last 3 Months)\n1\nday streak\n6m\navg/day\nDec\nJan\nFeb\nMar\nM\nW\nF\nTotal: 6m\nLess\nMore\nSession Paused\nYour session has been paused. Click Resume to continue.\nNotification Session PausedYour session has been paused. Click Resume to continue."
+    },
+    "trayTitle": "🎯 00:05",
+    "trayLabels": [
+      "Show iTracksy",
+      "Toggle Clock",
+      "",
+      "Resume Focus Session",
+      "Stop Focus Session",
+      "",
+      "Quit"
+    ]
+  },
+  "pausedScreenshot": "/Users/owner/source/itracksy.com/itracksy/artifacts/qa/2026-03-16-shell-controls/stop-paused-focus.png",
+  "trayStopClick": {
+    "ok": true
+  },
+  "afterStop": {
+    "state": {
+      "systemState": {
+        "isLocked": false,
+        "isSleeping": false,
+        "isActive": true,
+        "hasPausedSession": false,
+        "isManuallyPaused": false,
+        "pausedSessionId": null,
+        "pausedAt": null
+      },
+      "activeEntry": null,
+      "bodyText": "iTracksy\nFocus & Productivity\nFOCUS\nFocus\nSchedule\nPRODUCTIVITY\nProjects\nAnalytics\nReports\nCLASSIFICATION\nCategories\nClassify\nTOOLS\nMusic\nLogs\nSettings\n\nStart Session\n\nReady to focus?\n\nResume: Break Time\n\nSend Feedback\nToggle Sidebar\nFocus\nBreak\n25:00\nTimed\nUnlimited\nDuration\n25 min\n5m\n8h\nStart Focus\nSet Daily Focus Target\n\nTrack your progress and get motivated!\n\nSet Target\nActivity (Last 3 Months)\n1\nday streak\n6m\navg/day\nDec\nJan\nFeb\nMar\nM\nW\nF\nTotal: 6m\nLess\nMore"
+    },
+    "trayTitle": "",
+    "trayLabels": ["Show iTracksy", "Toggle Clock", "", "No Active Session", "", "Quit"]
+  },
+  "afterStopScreenshot": "/Users/owner/source/itracksy.com/itracksy/artifacts/qa/2026-03-16-shell-controls/stop-after-focus.png",
+  "finishedAt": "2026-03-16T09:00:24.285Z",
+  "assertions": {
+    "trayStopInvoked": true,
+    "activeEntryCleared": true,
+    "pausedSessionCleared": true,
+    "trayTitleCleared": true,
+    "trayMenuReset": true
+  },
+  "result": "passed"
+}

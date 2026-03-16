@@ -115,3 +115,4 @@ local.db
 .env
 logs.txt
 screenshots/
+.playwright-cli
