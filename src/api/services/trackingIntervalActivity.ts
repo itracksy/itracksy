@@ -89,6 +89,15 @@ const updateTrayForActiveSystem = async (): Promise<void> => {
       return;
     }
 
+    const pausedSession = getPausedSession();
+    if (pausedSession?.timeEntryId === activeEntry.id) {
+      const tray = getTray();
+      if (tray) {
+        tray.setTitle("⏸");
+      }
+      return;
+    }
+
     // Update tray with current session info
     const durationInSeconds = Math.floor((Date.now() - activeEntry.startTime) / 1000);
     const formattedDuration = formatDuration(durationInSeconds);
@@ -193,6 +202,27 @@ export const startTracking = async (): Promise<void> => {
         if (tray) {
           tray.setTitle("");
         }
+        return;
+      }
+
+      const pausedSession = getPausedSession();
+      const isActiveEntryPaused = pausedSession?.timeEntryId === activeEntry.id;
+      if (isActiveEntryPaused) {
+        const tray = getTray();
+        if (tray) {
+          tray.setTitle("⏸");
+        }
+
+        const elapsedSeconds = Math.max(
+          0,
+          Math.floor(((pausedSession?.pausedAt ?? Date.now()) - activeEntry.startTime) / 1000)
+        );
+
+        await sendClockUpdate({
+          activeEntry,
+          currentTime: Date.now(),
+          elapsedSeconds,
+        });
         return;
       }
 

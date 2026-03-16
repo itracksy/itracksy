@@ -7,6 +7,7 @@ import { sendClockUpdate } from "../../helpers/ipc/clock/clock-listeners";
 import { showClockWindow } from "../../main/windows/clock";
 import { getTray } from "../../main";
 import { isClockVisibilityEnabled } from "./userSettings";
+import { logger } from "../../helpers/logger";
 
 export type TimeEntry = typeof timeEntries.$inferSelect;
 export type TimeEntryInsert = typeof timeEntries.$inferInsert;
@@ -64,6 +65,13 @@ export async function createTimeEntry(
     }
   }
 
+  try {
+    const { refreshSessionShellControls } = await import("../../main/session-shell-controls");
+    await refreshSessionShellControls();
+  } catch (error) {
+    logger.error("[TimeEntry] Failed to refresh shell controls after create", { error });
+  }
+
   return created[0];
 }
 
@@ -71,17 +79,21 @@ export async function updateTimeEntry(
   id: string,
   timeEntry: Partial<TimeEntryInsert>
 ): Promise<TimeEntry> {
+  let wasRunningEntry = false;
+
   // If endTime is being updated, calculate the duration
   if (timeEntry.endTime) {
     const entry = await db
       .select({
         startTime: timeEntries.startTime,
+        endTime: timeEntries.endTime,
       })
       .from(timeEntries)
       .where(eq(timeEntries.id, id))
       .limit(1);
 
     if (entry[0]) {
+      wasRunningEntry = entry[0].endTime == null;
       const startTime = new Date(entry[0].startTime).getTime();
       const endTime = new Date(timeEntry.endTime).getTime();
       const duration = Math.floor((endTime - startTime) / 1000); // Convert ms to seconds
@@ -98,6 +110,11 @@ export async function updateTimeEntry(
   // If endTime is set (session stopped), send update to clock window
   if (timeEntry.endTime) {
     try {
+      if (wasRunningEntry) {
+        const { clearPausedSession } = await import("./sessionPause");
+        clearPausedSession();
+      }
+
       // Send clock update to notify that the session has stopped
       await sendClockUpdate({
         activeEntry: null, // No active entry since it was stopped
@@ -115,6 +132,13 @@ export async function updateTimeEntry(
       console.error("Failed to send clock update:", error);
       // Don't throw error here to avoid breaking the time entry update
     }
+  }
+
+  try {
+    const { refreshSessionShellControls } = await import("../../main/session-shell-controls");
+    await refreshSessionShellControls();
+  } catch (error) {
+    logger.error("[TimeEntry] Failed to refresh shell controls after update", { error });
   }
 
   return updated[0];

@@ -37,6 +37,10 @@ import {
 } from "@/context/board";
 import { trpcClient } from "@/utils/trpc";
 import { usePomodoroSounds } from "@/hooks/usePomodoroSounds";
+import {
+  isPauseStateRelevantToSession,
+  shouldRefetchActiveSessionForPauseState,
+} from "./active-session-pause-state";
 
 const warningMessages = [
   "⏰ Tick tock! Time's flying!",
@@ -110,22 +114,29 @@ export function ActiveSession({ activeTimeEntry }: ActiveSessionProps) {
           requiresResume?: boolean;
           activeEntry?: any;
         }) => {
-          // Only update if the pause state is for this session
-          if (state.timeEntryId === activeTimeEntry?.id || !state.isPaused) {
-            setIsPaused(state.isPaused);
-            setPausedAt(state.pausedAt);
+          if (!isPauseStateRelevantToSession(state, activeTimeEntry?.id)) {
+            return;
+          }
 
-            // Show resume dialog if required
-            if (state.requiresResume && state.activeEntry) {
-              setPendingResumeEntry(state.activeEntry);
-              setShowResumeDialog(true);
-            }
+          setIsPaused(state.isPaused);
+          setPausedAt(state.pausedAt);
+
+          // External resume/stop updates can change the active query result underneath this
+          // component, so refetch before the next render tick.
+          if (shouldRefetchActiveSessionForPauseState(state)) {
+            void queryClient.refetchQueries({ queryKey: ["timeEntries", "active"] });
+          }
+
+          // Show resume dialog if required
+          if (state.requiresResume && state.activeEntry) {
+            setPendingResumeEntry(state.activeEntry);
+            setShowResumeDialog(true);
           }
         }
       );
       return () => electronSessionPause.removePauseStateListener();
     }
-  }, [activeTimeEntry?.id]);
+  }, [activeTimeEntry?.id, queryClient]);
 
   const handleExtendTime = async () => {
     if (!activeTimeEntry) return;

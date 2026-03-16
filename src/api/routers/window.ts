@@ -1,23 +1,14 @@
 import { z } from "zod";
 import { protectedProcedure, t } from "../trpc";
-import { BrowserWindow, Tray } from "electron";
 import { logger } from "../../helpers/logger";
 import { hideClockWindow, showClockWindow } from "../../main/windows/clock";
-
-// Global references to main window and tray
-let mainWindowRef: BrowserWindow | null = null;
-let trayRef: Tray | null = null;
-
-// Function to set references (called from main process)
-export const setWindowReferences = (mainWindow: BrowserWindow, tray: Tray | null) => {
-  mainWindowRef = mainWindow;
-  trayRef = tray;
-};
+import { getMainWindowReference, getTrayReference } from "../../main/window-references";
 
 export const windowRouter = t.router({
   // WIN_MINIMIZE_CHANNEL
   minimize: protectedProcedure.mutation(async () => {
     try {
+      const mainWindowRef = getMainWindowReference();
       if (!mainWindowRef) {
         throw new Error("Main window not available");
       }
@@ -32,6 +23,7 @@ export const windowRouter = t.router({
   // WIN_MAXIMIZE_CHANNEL
   maximize: protectedProcedure.mutation(async () => {
     try {
+      const mainWindowRef = getMainWindowReference();
       if (!mainWindowRef) {
         throw new Error("Main window not available");
       }
@@ -51,6 +43,7 @@ export const windowRouter = t.router({
   // WIN_CLOSE_CHANNEL
   close: protectedProcedure.mutation(async () => {
     try {
+      const mainWindowRef = getMainWindowReference();
       if (!mainWindowRef) {
         throw new Error("Main window not available");
       }
@@ -67,6 +60,7 @@ export const windowRouter = t.router({
     .input(z.object({ title: z.string() }))
     .mutation(async ({ input }) => {
       try {
+        const trayRef = getTrayReference();
         if (!trayRef) {
           throw new Error("Tray not available");
         }

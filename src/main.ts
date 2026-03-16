@@ -4,7 +4,6 @@ import {
   app,
   BrowserWindow,
   Tray,
-  Menu,
   nativeImage,
   Notification,
   session,
@@ -17,11 +16,10 @@ import registerListeners from "./helpers/ipc/listeners-register";
 import { router } from "./api";
 import { initializeDatabase } from "./api/db/init";
 import { createContext } from "./api/trpc";
-import { setWindowReferences } from "./api/routers/window";
+import { setMainWindowReference, setTrayReference } from "./main/window-references";
 
 import { logger } from "./helpers/logger";
 import { startTracking } from "./api/services/trackingIntervalActivity";
-import { toggleClockWindow } from "./main/windows/clock";
 import {
   checkAccessibilityPermission,
   checkScreenRecordingPermission,
@@ -31,6 +29,8 @@ import {
 import { initializeAutoStart } from "./api/services/autoStart";
 import { initializeScheduledSessionMonitoring } from "./api/services/scheduledSessions";
 import { initializeSystemMonitor } from "./api/services/systemMonitor";
+import { refreshSessionShellControls } from "./main/session-shell-controls";
+import { createStartupPermissionChecker } from "./main/startup-permissions";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 // IMPORTANT: This MUST be at the very top before any other code runs,
@@ -218,37 +218,10 @@ async function createTray() {
   logger.debug("Main: Created nativeImage, isEmpty:", icon.isEmpty());
 
   tray = new Tray(icon);
-
-  const contextMenu = Menu.buildFromTemplate([
-    {
-      label: "Show iTracksy",
-      click: () => {
-        if (mainWindow) {
-          mainWindow.show();
-          mainWindow.focus();
-        }
-      },
-    },
-    {
-      label: "Toggle Clock",
-      click: () => {
-        toggleClockWindow();
-      },
-    },
-    { type: "separator" },
-    { type: "separator" },
-    {
-      label: "Quit",
-      click: () => {
-        app.quit();
-      },
-    },
-  ]);
-
-  tray.setContextMenu(contextMenu);
+  setTrayReference(tray);
   tray.setToolTip("iTracksy");
-
   tray.setTitle("");
+  await refreshSessionShellControls();
 
   tray.on("click", () => {
     showMainWindow();
@@ -297,7 +270,8 @@ function createWindow(): void {
   }
 
   // Set up window references for tRPC window router
-  setWindowReferences(mainWindow, tray);
+  setMainWindowReference(mainWindow);
+  void refreshSessionShellControls();
 
   // Register other IPC listeners (excluding window listeners)
   registerListeners(mainWindow, tray);
@@ -313,78 +287,16 @@ function createWindow(): void {
 /**
  * Check and request necessary macOS permissions for browser URL tracking
  */
-async function checkAndRequestPermissions(): Promise<void> {
-  // Only check permissions on macOS
-  if (process.platform !== "darwin") {
-    logger.debug("Not on macOS, skipping permission checks");
-    return;
-  }
-
-  logger.debug("Checking macOS permissions for browser URL tracking");
-
-  const hasAccessibility = checkAccessibilityPermission();
-  const hasScreenRecording = checkScreenRecordingPermission();
-
-  logger.debug("Permission status:", { hasAccessibility, hasScreenRecording });
-
-  // If both permissions are already granted, no need to show dialog
-  if (hasAccessibility && hasScreenRecording) {
-    logger.debug("All permissions already granted");
-    return;
-  }
-
-  // Show dialog explaining why permissions are needed
-  const permissionsNeeded = [];
-  if (!hasAccessibility) permissionsNeeded.push("Accessibility");
-  if (!hasScreenRecording) permissionsNeeded.push("Screen Recording");
-
-  const response = await dialog.showMessageBox({
-    type: "info",
-    title: "Permissions Required",
-    message: "iTracksy needs system permissions to track browser activity",
-    detail: `To track browser URLs and provide accurate time tracking, iTracksy requires the following macOS permissions:\n\n• ${permissionsNeeded.join("\n• ")}\n\nThese permissions allow the app to:\n- Detect which applications you're using\n- Extract browser URLs for website tracking\n- Provide detailed activity reports\n\nYour privacy is protected - all data stays on your device.`,
-    buttons: ["Grant Permissions", "Skip for Now"],
-    defaultId: 0,
-    cancelId: 1,
-  });
-
-  if (response.response === 0) {
-    // User chose to grant permissions
-    logger.debug("User chose to grant permissions");
-
-    if (!hasAccessibility) {
-      logger.debug("Requesting Accessibility permission");
-      await requestAccessibilityPermission();
-    }
-
-    if (!hasScreenRecording) {
-      logger.debug("Requesting Screen Recording permission");
-      await requestScreenRecordingPermission();
-    }
-
-    // Show follow-up dialog with instructions
-    await dialog.showMessageBox({
-      type: "info",
-      title: "Permission Setup Complete",
-      message: "System Preferences has been opened",
-      detail:
-        "Please:\n\n1. Add iTracksy to the permission lists\n2. Enable the checkboxes next to iTracksy\n3. Restart the app for changes to take effect\n\nNote: You may need to restart iTracksy after granting permissions for them to take effect.",
-      buttons: ["OK"],
-    });
-  } else {
-    logger.debug("User chose to skip permissions");
-
-    // Show warning about limited functionality
-    await dialog.showMessageBox({
-      type: "warning",
-      title: "Limited Functionality",
-      message: "Some features will be unavailable",
-      detail:
-        "Without these permissions, iTracksy cannot:\n• Track browser URLs\n• Provide detailed website analytics\n• Classify web-based activities\n\nYou can grant these permissions later in the Settings page.",
-      buttons: ["OK"],
-    });
-  }
-}
+const checkAndRequestPermissions = createStartupPermissionChecker({
+  ci: process.env.CI,
+  platform: process.platform,
+  logger,
+  checkAccessibilityPermission,
+  checkScreenRecordingPermission,
+  showMessageBox: (options) => dialog.showMessageBox(options),
+  requestAccessibilityPermission,
+  requestScreenRecordingPermission,
+});
 
 // Ensure single instance - prevent multiple app instances
 const gotTheLock = app.requestSingleInstanceLock();
@@ -481,49 +393,6 @@ app.whenReady().then(async () => {
       callback({ cancel: true });
     }
   );
-
-  // Check and request Accessibility and Screen Recording permissions on macOS
-  if (process.platform === "darwin") {
-    const accessibilityGranted = await checkAccessibilityPermission();
-    const screenRecordingGranted = await checkScreenRecordingPermission();
-
-    if (!accessibilityGranted) {
-      const result = await dialog.showMessageBox({
-        type: "info",
-        buttons: ["OK"],
-        title: "Accessibility Permission Required",
-        message:
-          "iTracksy requires Accessibility permissions to function correctly. Please enable it in System Preferences > Security & Privacy > Privacy > Accessibility.",
-      });
-      if (result.response === 0) {
-        // Open System Preferences if the user clicks OK
-        const { exec } = require("child_process");
-        exec(
-          "open 'x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility'"
-        );
-      }
-    }
-
-    if (!screenRecordingGranted) {
-      const result = await dialog.showMessageBox({
-        type: "info",
-        buttons: ["OK"],
-        title: "Screen Recording Permission Required",
-        message:
-          "iTracksy requires Screen Recording permissions to function correctly. Please enable it in System Preferences > Security & Privacy > Privacy > Screen Recording.",
-      });
-      if (result.response === 0) {
-        // Open System Preferences if the user clicks OK
-        const { exec } = require("child_process");
-        exec(
-          "open 'x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenRecording'"
-        );
-      }
-    }
-  }
-
-  // Check and request additional permissions for browser URL tracking
-  await checkAndRequestPermissions();
 });
 
 // Handle app quit

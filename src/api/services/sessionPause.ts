@@ -12,6 +12,23 @@ interface PausedSession {
 
 let pausedSession: PausedSession | null = null;
 
+const sendUnpausedStateUpdate = (): void => {
+  sendPauseStateUpdate({
+    isPaused: false,
+    pausedAt: null,
+    timeEntryId: null,
+  });
+};
+
+const refreshShellControls = async (): Promise<void> => {
+  try {
+    const { refreshSessionShellControls } = await import("../../main/session-shell-controls");
+    await refreshSessionShellControls();
+  } catch (error) {
+    logger.error("[SessionPause] Failed to refresh shell controls", { error });
+  }
+};
+
 /**
  * Pause the current active time entry when system becomes inactive
  */
@@ -45,6 +62,7 @@ export const pauseActiveSession = async (): Promise<void> => {
     logger.info(
       `[SessionPause] Paused session ${activeEntry.id} at ${new Date(Date.now()).toISOString()}`
     );
+    await refreshShellControls();
   } catch (error) {
     logger.error("[SessionPause] Error pausing session", { error });
   }
@@ -92,6 +110,8 @@ export const resumeActiveSession = async (): Promise<void> => {
         reason: !activeEntry ? "no active entry" : "id mismatch",
       });
       pausedSession = null;
+      sendUnpausedStateUpdate();
+      await refreshShellControls();
       return;
     }
 
@@ -111,22 +131,16 @@ export const resumeActiveSession = async (): Promise<void> => {
     pausedSession = null;
 
     // Notify renderer immediately
-    sendPauseStateUpdate({
-      isPaused: false,
-      pausedAt: null,
-      timeEntryId: null,
-    });
+    sendUnpausedStateUpdate();
+    await refreshShellControls();
   } catch (error) {
     logger.error("[SessionPause] Error resuming session", { error });
     // Clear paused state even on error to prevent stuck states
     pausedSession = null;
 
     // Notify renderer even on error
-    sendPauseStateUpdate({
-      isPaused: false,
-      pausedAt: null,
-      timeEntryId: null,
-    });
+    sendUnpausedStateUpdate();
+    await refreshShellControls();
   }
 };
 
@@ -142,6 +156,8 @@ export const getPausedSession = (): PausedSession | null => {
  */
 export const clearPausedSession = (): void => {
   pausedSession = null;
+  sendUnpausedStateUpdate();
+  void refreshShellControls();
 };
 
 /**
@@ -193,6 +209,7 @@ export const manualPauseSession = async (): Promise<{
     logger.info(
       `[SessionPause] Manually paused session ${activeEntry.id} at ${new Date(now).toISOString()}`
     );
+    await refreshShellControls();
 
     return { success: true, pausedAt: now };
   } catch (error) {
@@ -238,6 +255,8 @@ export const manualResumeSession = async (): Promise<{
     const activeEntry = await getActiveTimeEntry(userId);
     if (!activeEntry || activeEntry.id !== pausedSession.timeEntryId) {
       pausedSession = null;
+      sendUnpausedStateUpdate();
+      await refreshShellControls();
       return { success: false, adjustedBy: 0, error: "Session has changed or ended" };
     }
 
@@ -255,11 +274,8 @@ export const manualResumeSession = async (): Promise<{
     pausedSession = null;
 
     // Notify renderer immediately
-    sendPauseStateUpdate({
-      isPaused: false,
-      pausedAt: null,
-      timeEntryId: null,
-    });
+    sendUnpausedStateUpdate();
+    await refreshShellControls();
 
     return { success: true, adjustedBy: pausedDuration };
   } catch (error) {
@@ -267,11 +283,8 @@ export const manualResumeSession = async (): Promise<{
     pausedSession = null;
 
     // Notify renderer even on error
-    sendPauseStateUpdate({
-      isPaused: false,
-      pausedAt: null,
-      timeEntryId: null,
-    });
+    sendUnpausedStateUpdate();
+    await refreshShellControls();
 
     return {
       success: false,

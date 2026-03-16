@@ -5,6 +5,33 @@ import { app } from "electron";
 import { getDatabasePath } from "../../utils/paths";
 import { logger } from "../../helpers/logger";
 
+interface ResolveMigrationsPathOptions {
+  readonly appPath: string;
+  readonly cwd: string;
+  readonly isPackaged: boolean;
+  readonly resourcesPath: string;
+  readonly fileExists?: (path: string) => boolean;
+}
+
+const DRIZZLE_META_JOURNAL_PATH = path.join("meta", "_journal.json");
+
+export const resolveMigrationsPath = ({
+  appPath,
+  cwd,
+  isPackaged,
+  resourcesPath,
+  fileExists = fs.existsSync,
+}: ResolveMigrationsPathOptions): string => {
+  const candidates = isPackaged
+    ? [path.join(resourcesPath, "drizzle"), path.join(appPath, "drizzle")]
+    : [path.join(appPath, "drizzle"), path.join(cwd, "drizzle")];
+
+  return (
+    candidates.find((candidate) => fileExists(path.join(candidate, DRIZZLE_META_JOURNAL_PATH))) ??
+    candidates[0]
+  );
+};
+
 const initDb = async () => {
   const dbPath = getDatabasePath().replace("file:", "");
   logger.info("Database path:", dbPath);
@@ -30,9 +57,12 @@ const initDb = async () => {
   const dbInstance = initializeDbClient();
 
   // Get migrations path based on environment
-  const migrationsPath = app.isPackaged
-    ? path.join(process.resourcesPath, "drizzle")
-    : path.join(app.getAppPath(), "drizzle");
+  const migrationsPath = resolveMigrationsPath({
+    appPath: app.getAppPath(),
+    cwd: process.cwd(),
+    isPackaged: app.isPackaged,
+    resourcesPath: process.resourcesPath,
+  });
 
   logger.info("Migrations folder path:", migrationsPath);
 
